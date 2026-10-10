@@ -1,14 +1,42 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import { Button, Input } from "@courseweb/ui";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import {
+  Button,
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  Input,
+} from "@courseweb/ui";
+import { ExternalLink, Lock } from "lucide-react";
 import useDictionary from "@/dictionaries/useDictionary";
 import { getContributionErrorMessage } from "./contribution-error";
+import { extractAcixstore } from "./acixstore";
 
 type CourseStatisticsCopy = {
   title: string;
   description: string;
-  steps: { sign_in: string; copy: string };
+  school_url: string;
+  school_name: string;
+  copied: string;
+  detected: string;
+  open_guide: string;
+  open_school: string;
+  step_indicator: string;
+  step_label: string;
+  back: string;
+  next: string;
+  finish: string;
+  steps: {
+    open_school: { title: string; description: string };
+    find_code: { title: string; description: string; caption: string };
+    paste: { title: string; description: string };
+    result: { title: string; description: string };
+  };
   session_label: string;
   privacy: string;
   submit: string;
@@ -17,6 +45,12 @@ type CourseStatisticsCopy = {
   result: string;
   already_up_to_date: string;
   no_data: string;
+  no_data_count: string;
+  semester_status: {
+    saved: string;
+    already_up_to_date: string;
+    no_data: string;
+  };
   errors: {
     invalid_session: string;
     session_expired: string;
@@ -31,8 +65,7 @@ type CourseStatisticsCopy = {
 type ContributionState =
   | { kind: "idle" }
   | { kind: "loading"; completed: number; total: number }
-  | { kind: "success"; courses: number; semesters: number; upToDate: number }
-  | { kind: "up_to_date"; semesters: number }
+  | { kind: "result"; results: SemesterContribution[] }
   | { kind: "no_data" }
   | { kind: "error"; code: string };
 
@@ -42,11 +75,40 @@ type ContributionResult = {
 };
 
 type SemesterOption = { value: string; label: string };
+type SemesterContribution = SemesterOption & {
+  status: ContributionResult["status"];
+  savedCourses: number;
+};
+type GuideStep = 1 | 2 | 3 | 4;
 
 const API_BASE = import.meta.env.VITE_COURSEWEB_API_URL as string;
+const CCXP_ENTRY_URL = "https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/";
+const ADDRESS_PREFIX = "…/INQUIRE/select_entry.php?ACIXSTORE=";
+const ADDRESS_VALUE = "abc123";
+const ADDRESS_SUFFIX = "&hint=…";
 
 const replaceCount = (template: string, count: number) =>
   template.replace("{count}", String(count));
+
+const getResultCounts = (results: SemesterContribution[]) =>
+  results.reduce(
+    (counts, result) => ({
+      savedCourses: counts.savedCourses + result.savedCourses,
+      savedSemesters:
+        counts.savedSemesters + (result.status === "saved" ? 1 : 0),
+      upToDateSemesters:
+        counts.upToDateSemesters +
+        (result.status === "already_up_to_date" ? 1 : 0),
+      noDataSemesters:
+        counts.noDataSemesters + (result.status === "no_data" ? 1 : 0),
+    }),
+    {
+      savedCourses: 0,
+      savedSemesters: 0,
+      upToDateSemesters: 0,
+      noDataSemesters: 0,
+    },
+  );
 
 const getStatusMessages = (
   state: ContributionState,
@@ -65,33 +127,43 @@ const getStatusMessages = (
             },
           ]
         : [];
-    case "success":
+    case "result": {
+      const counts = getResultCounts(state.results);
       return [
-        {
-          key: "result",
-          className: "text-sm",
-          text: copy.result
-            .replace("{courses}", String(state.courses))
-            .replace("{semesters}", String(state.semesters)),
-        },
-        ...(state.upToDate > 0
+        ...(counts.savedSemesters > 0
+          ? [
+              {
+                key: "result",
+                className: "text-sm",
+                text: copy.result
+                  .replace("{courses}", String(counts.savedCourses))
+                  .replace("{semesters}", String(counts.savedSemesters)),
+              },
+            ]
+          : []),
+        ...(counts.upToDateSemesters > 0
           ? [
               {
                 key: "already-up-to-date",
                 className: "text-sm text-muted-foreground",
-                text: replaceCount(copy.already_up_to_date, state.upToDate),
+                text: replaceCount(
+                  copy.already_up_to_date,
+                  counts.upToDateSemesters,
+                ),
+              },
+            ]
+          : []),
+        ...(counts.noDataSemesters > 0
+          ? [
+              {
+                key: "no-data",
+                className: "text-sm text-muted-foreground",
+                text: replaceCount(copy.no_data_count, counts.noDataSemesters),
               },
             ]
           : []),
       ];
-    case "up_to_date":
-      return [
-        {
-          key: "already-up-to-date",
-          className: "text-sm",
-          text: replaceCount(copy.already_up_to_date, state.semesters),
-        },
-      ];
+    }
     case "no_data":
       return [{ key: "no-data", className: "text-sm", text: copy.no_data }];
     default:
@@ -99,13 +171,18 @@ const getStatusMessages = (
   }
 };
 
-const postContribution = async (session: string, semester?: string) => {
+const postContribution = async (
+  session: string,
+  semester?: string,
+  signal?: AbortSignal,
+) => {
   const body = new URLSearchParams({ ACIXSTORE: session });
   if (semester) body.set("semester", semester);
   const response = await fetch(`${API_BASE}/contribute/grades`, {
     method: "POST",
     headers: { "content-type": "application/x-www-form-urlencoded" },
     body,
+    signal,
   });
   const data = (await response.json()) as
     | { semesters: SemesterOption[] }
@@ -117,86 +194,133 @@ const postContribution = async (session: string, semester?: string) => {
   return data;
 };
 
+type AddressBarIllustrationProps = {
+  schoolName: string;
+  copiedLabel: string;
+};
+
+const AddressBarIllustration = ({
+  schoolName,
+  copiedLabel,
+}: AddressBarIllustrationProps) => {
+  const [reducedMotion, setReducedMotion] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+  );
+  const [urlVisible, setUrlVisible] = useState(false);
+  const [selectionActive, setSelectionActive] = useState(false);
+  const [copiedVisible, setCopiedVisible] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const handleChange = () => setReducedMotion(mediaQuery.matches);
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
+  }, []);
+
+  useEffect(() => {
+    if (reducedMotion) {
+      setUrlVisible(true);
+      setSelectionActive(true);
+      setCopiedVisible(true);
+      return;
+    }
+
+    const timers = new Set<number>();
+    const schedule = (callback: () => void, delay: number) => {
+      const timer = window.setTimeout(() => {
+        timers.delete(timer);
+        callback();
+      }, delay);
+      timers.add(timer);
+    };
+    const restart = () => {
+      timers.forEach((timer) => window.clearTimeout(timer));
+      timers.clear();
+      setUrlVisible(false);
+      setSelectionActive(false);
+      setCopiedVisible(false);
+      schedule(() => setUrlVisible(true), 150);
+      schedule(() => setSelectionActive(true), 900);
+      schedule(() => setCopiedVisible(true), 1_650);
+    };
+
+    restart();
+    const loop = window.setInterval(restart, 5_000);
+
+    return () => {
+      timers.forEach((timer) => window.clearTimeout(timer));
+      window.clearInterval(loop);
+    };
+  }, [reducedMotion]);
+
+  return (
+    <div
+      className="w-full overflow-hidden rounded-lg border border-border bg-muted p-3"
+      aria-hidden="true"
+    >
+      <div className="overflow-hidden rounded-md border border-border bg-background">
+        <div className="flex h-9 items-center gap-1 border-b border-border bg-muted px-3">
+          <span className="h-2 w-2 rounded-full bg-muted-foreground/50" />
+          <span className="h-2 w-2 rounded-full bg-muted-foreground/50" />
+          <span className="h-2 w-2 rounded-full bg-muted-foreground/50" />
+          <div className="ml-2 min-w-0 max-w-[12rem] rounded-t-md border-x border-t border-border bg-background px-3 py-1 text-xs text-foreground">
+            <span className="block truncate">{schoolName}</span>
+          </div>
+        </div>
+
+        <div className="border-b border-border bg-muted p-3">
+          <div className="flex min-w-0 items-center gap-2 rounded-full border border-border bg-background px-3 py-2">
+            <Lock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            <div className="min-w-0 flex-1 overflow-hidden">
+              <div
+                className={`whitespace-nowrap font-mono text-[8px] leading-4 text-foreground motion-safe:transition-opacity motion-safe:duration-300 sm:text-xs ${urlVisible || reducedMotion ? "opacity-100" : "opacity-0"}`}
+              >
+                <span>{ADDRESS_PREFIX}</span>
+                <span className="relative inline-block">
+                  <span
+                    className={`absolute inset-0 origin-left bg-primary motion-safe:transition-transform motion-safe:duration-700 motion-safe:ease-out motion-reduce:transition-none ${selectionActive ? "scale-x-100" : "scale-x-0"}`}
+                  />
+                  <span
+                    className={`relative z-10 motion-safe:transition-colors motion-safe:duration-500 motion-reduce:transition-none ${selectionActive ? "text-primary-foreground" : ""}`}
+                  >
+                    {ADDRESS_VALUE}
+                  </span>
+                </span>
+                <span>{ADDRESS_SUFFIX}</span>
+              </div>
+            </div>
+          </div>
+          <p
+            className={`min-h-4 text-center text-xs text-muted-foreground motion-safe:transition-opacity motion-safe:duration-300 ${copiedVisible || reducedMotion ? "opacity-100" : "opacity-0"}`}
+          >
+            {copiedLabel}
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-3 px-4 py-4">
+          <span className="h-2 w-2/3 rounded-full bg-muted" />
+          <span className="h-2 w-5/6 rounded-full bg-muted" />
+          <span className="h-2 w-1/2 rounded-full bg-muted" />
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const CourseStatisticsContribution = () => {
   const dict = useDictionary();
   const copy = dict.contribute.course_statistics as CourseStatisticsCopy;
-  const [session, setSession] = useState("");
+  const [open, setOpen] = useState(false);
+  const [step, setStep] = useState<GuideStep>(1);
+  const [highestStep, setHighestStep] = useState<GuideStep>(1);
+  const [sessionInput, setSessionInput] = useState("");
   const [state, setState] = useState<ContributionState>({ kind: "idle" });
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const submittedSession = session.trim();
-    if (!submittedSession) return;
-    setState({ kind: "loading", completed: 0, total: 0 });
-
-    try {
-      const discovery = (await postContribution(submittedSession)) as {
-        semesters: SemesterOption[];
-      };
-      if (discovery.semesters.length === 0) {
-        setSession("");
-        setState({ kind: "no_data" });
-        return;
-      }
-      setState({
-        kind: "loading",
-        completed: 0,
-        total: discovery.semesters.length,
-      });
-
-      const totals = await discovery.semesters.reduce(
-        async (totalsPromise, semester) => {
-          const previous = await totalsPromise;
-          const result = (await postContribution(
-            submittedSession,
-            semester.value,
-          )) as ContributionResult;
-          const next = {
-            savedCourses: previous.savedCourses + result.savedCourses,
-            savedSemesters:
-              previous.savedSemesters + (result.status === "saved" ? 1 : 0),
-            upToDateSemesters:
-              previous.upToDateSemesters +
-              (result.status === "already_up_to_date" ? 1 : 0),
-            noDataSemesters:
-              previous.noDataSemesters + (result.status === "no_data" ? 1 : 0),
-          };
-          setState((current) => ({
-            kind: "loading",
-            completed: current.kind === "loading" ? current.completed + 1 : 0,
-            total: discovery.semesters.length,
-          }));
-          return next;
-        },
-        Promise.resolve({
-          savedCourses: 0,
-          savedSemesters: 0,
-          upToDateSemesters: 0,
-          noDataSemesters: 0,
-        }),
-      );
-
-      setSession("");
-      if (totals.savedSemesters > 0) {
-        setState({
-          kind: "success",
-          courses: totals.savedCourses,
-          semesters: totals.savedSemesters,
-          upToDate: totals.upToDateSemesters,
-        });
-      } else if (totals.upToDateSemesters > 0) {
-        setState({ kind: "up_to_date", semesters: totals.upToDateSemesters });
-      } else if (totals.noDataSemesters > 0) {
-        setState({ kind: "no_data" });
-      }
-    } catch (error) {
-      setSession("");
-      setState({
-        kind: "error",
-        code: error instanceof Error ? error.message : "unknown",
-      });
-    }
-  };
+  const runId = useRef(0);
+  const activeController = useRef<AbortController | null>(null);
+  const stepHeading = useRef<HTMLHeadingElement>(null);
+  const sessionInputRef = useRef<HTMLInputElement>(null);
 
   const busy = state.kind === "loading";
   const errorMessage =
@@ -204,6 +328,142 @@ const CourseStatisticsContribution = () => {
       ? getContributionErrorMessage(copy.errors, state.code)
       : null;
   const statusMessages = getStatusMessages(state, copy);
+  const validSession = extractAcixstore(sessionInput);
+
+  useEffect(() => {
+    if (!open) return;
+    const focusStep = window.setTimeout(() => {
+      if (step === 3) {
+        sessionInputRef.current?.focus();
+      } else {
+        stepHeading.current?.focus();
+      }
+    }, 0);
+    return () => window.clearTimeout(focusStep);
+  }, [open, step]);
+
+  const clearRun = () => {
+    activeController.current?.abort();
+    activeController.current = null;
+    runId.current += 1;
+    setSessionInput("");
+    setState({ kind: "idle" });
+    setStep(1);
+    setHighestStep(1);
+  };
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      clearRun();
+      setOpen(false);
+      return;
+    }
+    setOpen(true);
+  };
+
+  const openGuide = () => {
+    clearRun();
+    setOpen(true);
+  };
+
+  const goToStep = (nextStep: GuideStep) => {
+    if (busy || nextStep > highestStep) return;
+    setStep(nextStep);
+  };
+
+  const goBack = () => {
+    if (busy) return;
+    if (step === 4) {
+      setSessionInput("");
+      setState({ kind: "idle" });
+      setStep(3);
+      return;
+    }
+    setStep((current) => Math.max(1, current - 1) as GuideStep);
+  };
+
+  const goNext = () => {
+    if (step === 3 || step === 4) return;
+    const nextStep = (step + 1) as GuideStep;
+    setStep(nextStep);
+    setHighestStep((current) => Math.max(current, nextStep) as GuideStep);
+  };
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const submittedSession = extractAcixstore(sessionInput);
+    if (!submittedSession) return;
+
+    const currentRunId = runId.current + 1;
+    runId.current = currentRunId;
+    const controller = new AbortController();
+    activeController.current = controller;
+    setStep(4);
+    setHighestStep(4);
+    setState({ kind: "loading", completed: 0, total: 0 });
+
+    const isCurrentRun = () => runId.current === currentRunId;
+
+    try {
+      const discovery = (await postContribution(
+        submittedSession,
+        undefined,
+        controller.signal,
+      )) as { semesters: SemesterOption[] };
+      if (!isCurrentRun()) return;
+      if (discovery.semesters.length === 0) {
+        activeController.current = null;
+        setSessionInput("");
+        setState({ kind: "no_data" });
+        return;
+      }
+
+      setState({
+        kind: "loading",
+        completed: 0,
+        total: discovery.semesters.length,
+      });
+
+      const results: SemesterContribution[] = [];
+      for (const semester of discovery.semesters) {
+        const result = (await postContribution(
+          submittedSession,
+          semester.value,
+          controller.signal,
+        )) as ContributionResult;
+        if (!isCurrentRun()) return;
+        results.push({
+          ...semester,
+          status: result.status,
+          savedCourses: result.savedCourses,
+        });
+        setState((current) => ({
+          kind: "loading",
+          completed: current.kind === "loading" ? current.completed + 1 : 0,
+          total: discovery.semesters.length,
+        }));
+      }
+
+      activeController.current = null;
+      setSessionInput("");
+      setState({ kind: "result", results });
+    } catch (error) {
+      if (!isCurrentRun()) return;
+      activeController.current = null;
+      setSessionInput("");
+      setState({
+        kind: "error",
+        code: error instanceof Error ? error.message : "unknown",
+      });
+    }
+  };
+
+  const stepCopy = [
+    copy.steps.open_school,
+    copy.steps.find_code,
+    copy.steps.paste,
+    copy.steps.result,
+  ][step - 1];
 
   return (
     <section className="flex flex-col gap-4">
@@ -211,45 +471,202 @@ const CourseStatisticsContribution = () => {
       <p className="text-muted-foreground leading-relaxed">
         {copy.description}
       </p>
-      <ol className="list-decimal pl-4 text-muted-foreground leading-relaxed">
-        <li>{copy.steps.sign_in}</li>
-        <li>{copy.steps.copy}</li>
-      </ol>
-      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-        <label className="flex flex-col gap-2" htmlFor="acixstore">
-          <span className="font-medium">{copy.session_label}</span>
-          <Input
-            id="acixstore"
-            type="password"
-            autoComplete="off"
-            value={session}
-            onChange={(event) => setSession(event.target.value)}
-            disabled={busy}
-          />
-        </label>
-        <p className="text-sm text-muted-foreground leading-relaxed">
-          {copy.privacy}
-        </p>
-        <div>
-          <Button type="submit" disabled={busy || !session.trim()}>
-            {busy ? copy.loading : copy.submit}
-          </Button>
-        </div>
-      </form>
-      {statusMessages.length > 0 ? (
-        <output className="flex flex-col gap-4" aria-live="polite">
-          {statusMessages.map(({ key, className, text }) => (
-            <p key={key} className={className}>
-              {text}
-            </p>
-          ))}
-        </output>
-      ) : null}
-      {errorMessage ? (
-        <p className="text-sm text-destructive" role="alert">
-          {errorMessage}
-        </p>
-      ) : null}
+      <div>
+        <Button variant="outline" onClick={openGuide}>
+          {copy.open_guide}
+        </Button>
+      </div>
+
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+        <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100%-1rem)] overflow-hidden p-4 sm:max-w-5xl sm:w-full">
+          <DialogHeader className="pr-4 text-left sm:text-left">
+            <DialogTitle>{copy.title}</DialogTitle>
+            <DialogDescription className="leading-relaxed">
+              {stepCopy.title}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="min-h-0 overflow-y-auto">
+            <div className="flex flex-col gap-4">
+              <h3
+                ref={stepHeading}
+                tabIndex={-1}
+                className="font-bold leading-snug focus:outline-none"
+              >
+                {stepCopy.title}
+              </h3>
+
+              {step === 1 ? (
+                <>
+                  <p className="leading-relaxed">{stepCopy.description}</p>
+                  <div className="flex flex-col items-start gap-2">
+                    <Button variant="outline" asChild>
+                      <a
+                        href={CCXP_ENTRY_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {copy.open_school}
+                        <ExternalLink aria-hidden="true" />
+                      </a>
+                    </Button>
+                    <p className="break-all text-sm leading-relaxed text-muted-foreground">
+                      {copy.school_url}
+                    </p>
+                  </div>
+                </>
+              ) : null}
+
+              {step === 2 ? (
+                <>
+                  <p className="leading-relaxed">{stepCopy.description}</p>
+                  <AddressBarIllustration
+                    schoolName={copy.school_name}
+                    copiedLabel={copy.copied}
+                  />
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {copy.steps.find_code.caption}
+                  </p>
+                </>
+              ) : null}
+
+              {step === 3 ? (
+                <form
+                  id="course-statistics-contribution-form"
+                  className="flex flex-col gap-4"
+                  onSubmit={handleSubmit}
+                >
+                  <p className="leading-relaxed">{stepCopy.description}</p>
+                  <label className="flex flex-col gap-2" htmlFor="acixstore">
+                    <span className="font-medium">{copy.session_label}</span>
+                    <Input
+                      ref={sessionInputRef}
+                      id="acixstore"
+                      type="text"
+                      autoComplete="off"
+                      value={sessionInput}
+                      onChange={(event) => setSessionInput(event.target.value)}
+                      disabled={busy}
+                    />
+                  </label>
+                  {validSession ? (
+                    <p className="text-sm leading-relaxed text-muted-foreground">
+                      {copy.detected.replace(
+                        "{value}",
+                        `${validSession.slice(0, 4)}....`,
+                      )}
+                    </p>
+                  ) : null}
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {copy.privacy}
+                  </p>
+                </form>
+              ) : null}
+
+              {step === 4 ? (
+                <>
+                  <p className="leading-relaxed">
+                    {busy ? copy.loading : stepCopy.description}
+                  </p>
+                  {statusMessages.length > 0 ? (
+                    <output className="flex flex-col gap-4" aria-live="polite">
+                      {statusMessages.map(({ key, className, text }) => (
+                        <p key={key} className={className}>
+                          {text}
+                        </p>
+                      ))}
+                    </output>
+                  ) : null}
+                  {state.kind === "result" && state.results.length > 0 ? (
+                    <ul className="divide-y divide-border border-y border-border">
+                      {state.results.map((result) => (
+                        <li
+                          key={result.value}
+                          className="flex flex-row gap-4 py-4"
+                        >
+                          <span className="min-w-0 flex-1">{result.label}</span>
+                          <span className="shrink-0 text-right text-sm text-muted-foreground">
+                            {copy.semester_status[result.status]}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                  {errorMessage ? (
+                    <p className="text-sm text-destructive" role="alert">
+                      {errorMessage}
+                    </p>
+                  ) : null}
+                </>
+              ) : null}
+            </div>
+          </div>
+
+          <DialogFooter className="flex-col gap-2 sm:flex-col sm:space-x-0">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <div
+                  className="flex items-center gap-1"
+                  role="tablist"
+                  aria-label={copy.step_indicator}
+                >
+                  {[1, 2, 3, 4].map((stepNumber) => (
+                    <button
+                      key={stepNumber}
+                      type="button"
+                      role="tab"
+                      aria-label={copy.step_label.replace(
+                        "{step}",
+                        String(stepNumber),
+                      )}
+                      aria-selected={stepNumber === step}
+                      disabled={busy || stepNumber > highestStep}
+                      className={`rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default ${stepNumber === step ? "h-2.5 w-2.5 bg-primary" : "h-2 w-2 bg-muted-foreground/40"}`}
+                      onClick={() => goToStep(stepNumber as GuideStep)}
+                    />
+                  ))}
+                </div>
+                <span className="text-sm text-muted-foreground">
+                  {step} / 4
+                </span>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={step === 1 || busy}
+                  onClick={goBack}
+                >
+                  {copy.back}
+                </Button>
+                {step < 3 ? (
+                  <Button type="button" size="sm" onClick={goNext}>
+                    {copy.next}
+                  </Button>
+                ) : null}
+                {step === 3 ? (
+                  <Button
+                    type="submit"
+                    form="course-statistics-contribution-form"
+                    size="sm"
+                    disabled={busy || !validSession}
+                  >
+                    {copy.submit}
+                  </Button>
+                ) : null}
+                {step === 4 ? (
+                  <DialogClose asChild>
+                    <Button type="button" size="sm" disabled={busy}>
+                      {copy.finish}
+                    </Button>
+                  </DialogClose>
+                ) : null}
+              </div>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 };

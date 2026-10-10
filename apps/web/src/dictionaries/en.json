@@ -1646,9 +1646,35 @@
     "course_statistics": {
       "title": "Share course statistics",
       "description": "Share the school's course average and standard-deviation table. It says nothing about you.",
+      "school_url": "https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/",
+      "school_name": "NTHU CCXP",
+      "copied": "Copied",
+      "detected": "Detected ACIXSTORE value: {value}",
+      "open_guide": "How to share course statistics",
+      "open_school": "Open the school system",
+      "step_indicator": "Guide step",
+      "step_label": "Go to step {step}",
+      "back": "Back",
+      "next": "Next",
+      "finish": "Done",
       "steps": {
-        "sign_in": "Sign in to the school's CCXP system.",
-        "copy": "Copy the ACIXSTORE value from the address bar."
+        "open_school": {
+          "title": "Open the school system",
+          "description": "Go to the school system and sign in with your student account."
+        },
+        "find_code": {
+          "title": "Find the ACIXSTORE code",
+          "description": "After signing in, look at the browser address bar.",
+          "caption": "Copy exactly the value after ACIXSTORE= and before the next &."
+        },
+        "paste": {
+          "title": "Paste the code",
+          "description": "Paste the value, the full address-bar URL, or the ACIXSTORE= fragment."
+        },
+        "result": {
+          "title": "Contribution status",
+          "description": "Review the result for each semester below."
+        }
       },
       "session_label": "ACIXSTORE value",
       "privacy": "The value is used once and is not stored.",
@@ -1658,6 +1684,12 @@
       "result": "Saved {courses} course statistics across {semesters} semesters.",
       "already_up_to_date": "Course statistics are already up to date for {count} semesters.",
       "no_data": "No course statistics were available for these semesters.",
+      "no_data_count": "No course statistics were available for {count} semesters.",
+      "semester_status": {
+        "saved": "Saved",
+        "already_up_to_date": "Already up to date",
+        "no_data": "No data"
+      },
       "errors": {
         "invalid_session": "That ACIXSTORE value is not valid.",
         "session_expired": "The CCXP session has expired. Copy a new ACIXSTORE value and try again.",
