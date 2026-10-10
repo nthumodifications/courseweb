@@ -807,6 +807,50 @@ function buildSitemapXML(courses: any[]): string {
     })
     .join("\n");
 
+  const nonInstructorNames = new Set([
+    "EMS境外專班",
+    "清華學院學士班",
+    "SNHCC Prog",
+    "服科所全體教師",
+  ]);
+  const instructorNames = [
+    ...new Set(
+      courses.flatMap((course) =>
+        Array.isArray(course.teacher_zh) ? course.teacher_zh : [],
+      ),
+    ),
+  ].filter(
+    (name) =>
+      typeof name === "string" &&
+      name.trim().length > 0 &&
+      !nonInstructorNames.has(name.trim()),
+  );
+  const instructorUrls = instructorNames
+    .flatMap((name) => {
+      const routeName = encodeURIComponent(encodeURIComponent(name));
+      const zhUrl = `https://nthumods.com/zh/courses/instructor/${routeName}`;
+      const enUrl = `https://nthumods.com/en/courses/instructor/${routeName}`;
+      return [
+        `  <url>
+    <loc>${zhUrl}</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.60</priority>
+    <xhtml:link rel="alternate" hreflang="zh-TW" href="${zhUrl}"/>
+    <xhtml:link rel="alternate" hreflang="en" href="${enUrl}"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="${zhUrl}"/>
+  </url>`,
+        `  <url>
+    <loc>${enUrl}</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.55</priority>
+    <xhtml:link rel="alternate" hreflang="zh-TW" href="${zhUrl}"/>
+    <xhtml:link rel="alternate" hreflang="en" href="${enUrl}"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="${zhUrl}"/>
+  </url>`,
+      ];
+    })
+    .join("\n");
+
   const majorDepts = [
     "EE",
     "CS",
@@ -853,6 +897,7 @@ function buildSitemapXML(courses: any[]): string {
           http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
 ${staticUrls}
 ${courseUrls}
+${instructorUrls}
 ${deptUrls}
 </urlset>`;
 }
@@ -886,7 +931,7 @@ async function generateSitemap(env: Env): Promise<Response> {
       const pageSize = 1000;
       while (true) {
         const res = await supabaseFetch(
-          `courses?select=raw_id,semester&semester=eq.${sem}&limit=${pageSize}&offset=${offset}`,
+          `courses?select=raw_id,semester,teacher_zh&semester=eq.${sem}&limit=${pageSize}&offset=${offset}`,
         );
         if (!res.ok) break;
         const rows = (await res.json()) as any[];

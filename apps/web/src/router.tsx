@@ -241,6 +241,10 @@ export const router = createBrowserRouter([
               {
                 path: ROUTE_PATHS.instructor,
                 element: <InstructorPage />,
+                handle: {
+                  title: "Instructor",
+                  titleZh: "授課教師",
+                },
               },
               {
                 path: "courses/:courseId",
