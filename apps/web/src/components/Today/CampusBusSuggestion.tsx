@@ -12,6 +12,7 @@ import useTime from "@/hooks/useTime";
 import type { UpcomingEvent } from "@/hooks/useUpcomingEvents";
 import {
   findNextCampusBus,
+  hasNoClassToday,
   type CampusClass,
 } from "@/helpers/campusBusSuggestion";
 
@@ -22,12 +23,6 @@ type CampusBusSuggestionProps = {
 const CampusBusSuggestion: FC<CampusBusSuggestionProps> = ({ events }) => {
   const dict = useDictionary();
   const now = useTime(60_000);
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["all_bus_data"],
-    queryFn: getAllBusData,
-    staleTime: 5 * 60 * 1000,
-  });
-
   const classes = useMemo<CampusClass[]>(
     () =>
       events
@@ -40,9 +35,20 @@ const CampusBusSuggestion: FC<CampusBusSuggestionProps> = ({ events }) => {
         })),
     [events],
   );
+  const holidayToday = useMemo(
+    () => hasNoClassToday(events, now),
+    [events, now],
+  );
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["all_bus_data"],
+    queryFn: getAllBusData,
+    staleTime: 5 * 60 * 1000,
+    enabled: classes.length > 0,
+  });
   const suggestion = useMemo(
-    () => (data ? findNextCampusBus(classes, data, now) : null),
-    [classes, data, now],
+    () =>
+      data && !holidayToday ? findNextCampusBus(classes, data, now) : null,
+    [classes, data, holidayToday, now],
   );
 
   if (isLoading || error || !suggestion) return null;
@@ -51,7 +57,7 @@ const CampusBusSuggestion: FC<CampusBusSuggestionProps> = ({ events }) => {
   const destination =
     suggestion.campus === "nanda" ? dict.bus.nanda : dict.bus.main_campus;
   const busProps: Omit<BusListingItemProps, "refTime"> = {
-    tab: suggestion.direction === "up" ? "north_gate" : "nanda",
+    tab: suggestion.direction === "down" ? "nanda" : "north_gate",
     startTime: suggestion.departureTime,
     Icon,
     line: suggestion.line,

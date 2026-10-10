@@ -23,8 +23,16 @@ export type CampusBusSuggestion = {
 };
 
 const CLOCK_PATTERN = /^(\d{1,2}):(\d{2})$/;
-const DURATION_PATTERN = /\d+/;
 const NANDA_VENUE_PATTERN = /南大|nanda/i;
+const HOLIDAY_TITLE_PATTERN =
+  /國慶|國定假日|放假|休假|假日|補假|停課|holiday|no[\s-]?class|day off/i;
+
+// The API's Nanda fallback documents about 20 minutes in both directions;
+// RouteInfo.duration is only the service-validity date range.
+const CAMPUS_BUS_TRAVEL_MINUTES = {
+  down: 20,
+  up: 20,
+} as const;
 
 const parseClockMinutes = (value: string): number | null => {
   const match = CLOCK_PATTERN.exec(value.trim());
@@ -36,16 +44,11 @@ const parseClockMinutes = (value: string): number | null => {
   return hours * 60 + minutes;
 };
 
-const parseDurationMinutes = (value: string): number | null => {
-  const match = DURATION_PATTERN.exec(value);
-  if (!match) return null;
-
-  const minutes = Number.parseInt(match[0]!, 10);
-  return minutes > 0 ? minutes : null;
-};
-
 const getTaipeiClockMinutes = (date: Date) =>
   parseClockMinutes(formatInTimeZone(date, CAMPUS_BUS_TIME_ZONE, "HH:mm"));
+
+const getTaipeiDate = (date: Date) =>
+  formatInTimeZone(date, CAMPUS_BUS_TIME_ZONE, "yyyy-MM-dd");
 
 const getTaipeiDay = (date: Date) =>
   Number.parseInt(formatInTimeZone(date, CAMPUS_BUS_TIME_ZONE, "i"), 10);
@@ -57,6 +60,30 @@ export const getVenueCampus = (venue?: string): Campus | null => {
   if (!venue) return null;
   if (NANDA_VENUE_PATTERN.exec(venue)) return "nanda";
   return getBuildingDefinition(venue) ? "main" : null;
+};
+
+type CampusCalendarEvent = {
+  source: string;
+  title: string;
+  start: Date;
+  allDay: boolean;
+  courseDate?: { type?: string };
+};
+
+export const hasNoClassToday = (
+  events: readonly CampusCalendarEvent[],
+  now: Date,
+) => {
+  const today = getTaipeiDate(now);
+  return events.some(
+    (event) =>
+      getTaipeiDate(event.start) === today &&
+      ((event.source === "academic" &&
+        event.allDay &&
+        HOLIDAY_TITLE_PATTERN.test(event.title)) ||
+        (event.source === "course-date" &&
+          event.courseDate?.type === "no_class")),
+  );
 };
 
 const getNextClass = (
@@ -83,16 +110,14 @@ const getNextClass = (
 const routeForCampus = (campus: Campus, data: CompleteBusData) =>
   campus === "nanda"
     ? {
-        direction: "up" as const,
+        direction: "down" as const,
         schedule: data.nanda.weekday.toward_south_campus,
         weekendSchedule: data.nanda.weekend.toward_south_campus,
-        duration: data.nanda.toward_south_campus_info.duration,
       }
     : {
-        direction: "down" as const,
+        direction: "up" as const,
         schedule: data.nanda.weekday.toward_main_campus,
         weekendSchedule: data.nanda.weekend.toward_main_campus,
-        duration: data.nanda.toward_main_campus_info.duration,
       };
 
 const getEligibleSchedule = (
@@ -102,13 +127,13 @@ const getEligibleSchedule = (
 ): {
   direction: "up" | "down";
   schedule: NandaBusDepartureDetails[];
-  duration: string;
+  travelMinutes: number;
 } => {
   const route = routeForCampus(campus, data);
   return {
     direction: route.direction,
     schedule: day >= 6 ? route.weekendSchedule : route.schedule,
-    duration: route.duration,
+    travelMinutes: CAMPUS_BUS_TRAVEL_MINUTES[route.direction],
   };
 };
 
@@ -127,13 +152,11 @@ export const findNextCampusBus = (
   const currentTime = getTaipeiClockMinutes(now);
   if (classStart === null || currentTime === null) return null;
 
-  const { direction, schedule, duration } = getEligibleSchedule(
+  const { direction, schedule, travelMinutes } = getEligibleSchedule(
     campus,
     data,
     getTaipeiDay(now),
   );
-  const travelMinutes = parseDurationMinutes(duration);
-  if (travelMinutes === null) return null;
 
   const departure = schedule
     .filter(
