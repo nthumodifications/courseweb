@@ -107,8 +107,11 @@ const GradesWidget: FC<GradesWidgetProps> = ({
             <span className="text-xs">{dict.common.load_error}</span>
           </div>
         ) : !hasData ? (
-          <div className="py-4 text-xs text-muted-foreground">
-            {dict.grade.widget_empty} {fullPageLink}
+          <div className="flex flex-col gap-2">
+            <div className="py-4 text-sm text-muted-foreground">
+              {dict.grade.widget_empty}
+            </div>
+            {fullPageLink}
           </div>
         ) : (
           <div className="flex items-center justify-between">
