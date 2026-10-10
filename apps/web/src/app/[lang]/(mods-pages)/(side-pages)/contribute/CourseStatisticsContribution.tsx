@@ -30,6 +30,7 @@ type CourseStatisticsCopy = {
   step_label: string;
   back: string;
   next: string;
+  retry: string;
   finish: string;
   steps: {
     open_school: { title: string; description: string };
@@ -58,6 +59,7 @@ type CourseStatisticsCopy = {
     school_response_invalid: string;
     invalid_semester: string;
     storage_error: string;
+    rate_limited: string;
     unknown: string;
   };
 };
@@ -67,7 +69,13 @@ type ContributionState =
   | { kind: "loading"; completed: number; total: number }
   | { kind: "result"; results: SemesterContribution[] }
   | { kind: "no_data" }
-  | { kind: "error"; code: string };
+  | {
+      kind: "error";
+      code: string;
+      session?: string;
+      results?: SemesterContribution[];
+      remaining?: SemesterOption[];
+    };
 
 type ContributionResult = {
   status: "saved" | "already_up_to_date" | "no_data";
@@ -171,6 +179,12 @@ const getStatusMessages = (
   }
 };
 
+const getDisplayedResults = (state: ContributionState) => {
+  if (state.kind === "result") return state.results;
+  if (state.kind === "error") return state.results ?? [];
+  return [];
+};
+
 const postContribution = async (
   session: string,
   semester?: string,
@@ -189,6 +203,7 @@ const postContribution = async (
     | ContributionResult
     | { error: string };
   if (!response.ok) {
+    if (response.status === 429) throw new Error("rate_limited");
     throw new Error("error" in data ? data.error : "unknown");
   }
   return data;
@@ -368,6 +383,7 @@ const CourseStatisticsContribution = () => {
 
   const goToStep = (nextStep: GuideStep) => {
     if (busy || nextStep > highestStep) return;
+    if (nextStep === 4 && state.kind === "idle") return;
     setStep(nextStep);
   };
 
@@ -377,6 +393,7 @@ const CourseStatisticsContribution = () => {
       setSessionInput("");
       setState({ kind: "idle" });
       setStep(3);
+      setHighestStep(3);
       return;
     }
     setStep((current) => Math.max(1, current - 1) as GuideStep);
@@ -389,11 +406,7 @@ const CourseStatisticsContribution = () => {
     setHighestStep((current) => Math.max(current, nextStep) as GuideStep);
   };
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const submittedSession = extractAcixstore(sessionInput);
-    if (!submittedSession) return;
-
+  const beginRun = () => {
     const currentRunId = runId.current + 1;
     runId.current = currentRunId;
     const controller = new AbortController();
@@ -401,46 +414,57 @@ const CourseStatisticsContribution = () => {
     setStep(4);
     setHighestStep(4);
     setState({ kind: "loading", completed: 0, total: 0 });
+    return { currentRunId, controller };
+  };
+
+  const setContributionError = (
+    error: unknown,
+    session: string,
+    results: SemesterContribution[] = [],
+    remaining: SemesterOption[] = [],
+  ) => {
+    const code = error instanceof Error ? error.message : "unknown";
+    if (code === "rate_limited") {
+      setState({ kind: "error", code, session, results, remaining });
+      return;
+    }
+    setState({ kind: "error", code });
+  };
+
+  const runSemesters = async (
+    session: string,
+    semesters: SemesterOption[],
+    initialResults: SemesterContribution[],
+    currentRunId: number,
+    controller: AbortController,
+  ) => {
+    const total = initialResults.length + semesters.length;
+    let results = initialResults;
+    let nextSemesterIndex = 0;
+    setState({ kind: "loading", completed: results.length, total });
 
     const isCurrentRun = () => runId.current === currentRunId;
-
     try {
-      const discovery = (await postContribution(
-        submittedSession,
-        undefined,
-        controller.signal,
-      )) as { semesters: SemesterOption[] };
-      if (!isCurrentRun()) return;
-      if (discovery.semesters.length === 0) {
-        activeController.current = null;
-        setSessionInput("");
-        setState({ kind: "no_data" });
-        return;
-      }
-
-      setState({
-        kind: "loading",
-        completed: 0,
-        total: discovery.semesters.length,
-      });
-
-      const results: SemesterContribution[] = [];
-      for (const semester of discovery.semesters) {
+      for (; nextSemesterIndex < semesters.length; nextSemesterIndex += 1) {
+        const semester = semesters[nextSemesterIndex];
         const result = (await postContribution(
-          submittedSession,
+          session,
           semester.value,
           controller.signal,
         )) as ContributionResult;
         if (!isCurrentRun()) return;
-        results.push({
-          ...semester,
-          status: result.status,
-          savedCourses: result.savedCourses,
-        });
+        results = [
+          ...results,
+          {
+            ...semester,
+            status: result.status,
+            savedCourses: result.savedCourses,
+          },
+        ];
         setState((current) => ({
           kind: "loading",
-          completed: current.kind === "loading" ? current.completed + 1 : 0,
-          total: discovery.semesters.length,
+          completed: results.length,
+          total,
         }));
       }
 
@@ -451,11 +475,77 @@ const CourseStatisticsContribution = () => {
       if (!isCurrentRun()) return;
       activeController.current = null;
       setSessionInput("");
-      setState({
-        kind: "error",
-        code: error instanceof Error ? error.message : "unknown",
-      });
+      setContributionError(
+        error,
+        session,
+        results,
+        semesters.slice(nextSemesterIndex),
+      );
     }
+  };
+
+  const runDiscovery = async (
+    session: string,
+    currentRunId: number,
+    controller: AbortController,
+  ) => {
+    const isCurrentRun = () => runId.current === currentRunId;
+    try {
+      const discovery = (await postContribution(
+        session,
+        undefined,
+        controller.signal,
+      )) as { semesters: SemesterOption[] };
+      if (!isCurrentRun()) return;
+      if (discovery.semesters.length === 0) {
+        activeController.current = null;
+        setSessionInput("");
+        setState({ kind: "no_data" });
+        return;
+      }
+      await runSemesters(
+        session,
+        discovery.semesters,
+        [],
+        currentRunId,
+        controller,
+      );
+    } catch (error) {
+      if (!isCurrentRun()) return;
+      activeController.current = null;
+      setSessionInput("");
+      setContributionError(error, session);
+    }
+  };
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const submittedSession = extractAcixstore(sessionInput);
+    if (!submittedSession) return;
+    const { currentRunId, controller } = beginRun();
+    await runDiscovery(submittedSession, currentRunId, controller);
+  };
+
+  const retryContribution = () => {
+    if (
+      state.kind !== "error" ||
+      state.code !== "rate_limited" ||
+      !state.session
+    ) {
+      return;
+    }
+    const { currentRunId, controller } = beginRun();
+    if (state.remaining && state.remaining.length > 0) {
+      void runSemesters(
+        state.session,
+        state.remaining,
+        state.results ?? [],
+        currentRunId,
+        controller,
+      );
+      return;
+    }
+    void runDiscovery(state.session, currentRunId, controller);
   };
 
   const stepCopy = [
@@ -464,6 +554,7 @@ const CourseStatisticsContribution = () => {
     copy.steps.paste,
     copy.steps.result,
   ][step - 1];
+  const displayedResults = getDisplayedResults(state);
 
   return (
     <section className="flex flex-col gap-4">
@@ -577,9 +668,9 @@ const CourseStatisticsContribution = () => {
                       ))}
                     </output>
                   ) : null}
-                  {state.kind === "result" && state.results.length > 0 ? (
+                  {displayedResults.length > 0 ? (
                     <ul className="divide-y divide-border border-y border-border">
-                      {state.results.map((result) => (
+                      {displayedResults.map((result) => (
                         <li
                           key={result.value}
                           className="flex flex-row gap-4 py-4"
@@ -593,9 +684,22 @@ const CourseStatisticsContribution = () => {
                     </ul>
                   ) : null}
                   {errorMessage ? (
-                    <p className="text-sm text-destructive" role="alert">
-                      {errorMessage}
-                    </p>
+                    <>
+                      <p className="text-sm text-destructive" role="alert">
+                        {errorMessage}
+                      </p>
+                      {state.kind === "error" &&
+                      state.code === "rate_limited" ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={retryContribution}
+                        >
+                          {copy.retry}
+                        </Button>
+                      ) : null}
+                    </>
                   ) : null}
                 </>
               ) : null}
@@ -607,19 +711,17 @@ const CourseStatisticsContribution = () => {
               <div className="flex items-center gap-2">
                 <div
                   className="flex items-center gap-1"
-                  role="tablist"
                   aria-label={copy.step_indicator}
                 >
                   {[1, 2, 3, 4].map((stepNumber) => (
                     <button
                       key={stepNumber}
                       type="button"
-                      role="tab"
                       aria-label={copy.step_label.replace(
                         "{step}",
                         String(stepNumber),
                       )}
-                      aria-selected={stepNumber === step}
+                      aria-current={stepNumber === step ? "step" : undefined}
                       disabled={busy || stepNumber > highestStep}
                       className={`rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default ${stepNumber === step ? "h-2.5 w-2.5 bg-primary" : "h-2 w-2 bg-muted-foreground/40"}`}
                       onClick={() => goToStep(stepNumber as GuideStep)}

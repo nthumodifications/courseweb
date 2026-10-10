@@ -12,6 +12,7 @@ const messages = {
   school_response_invalid: "invalid school response",
   invalid_semester: "invalid semester",
   storage_error: "storage error",
+  rate_limited: "rate limited",
   unknown: "generic error",
 };
 

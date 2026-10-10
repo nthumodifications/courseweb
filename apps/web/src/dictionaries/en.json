@@ -1656,6 +1656,7 @@
       "step_label": "Go to step {step}",
       "back": "Back",
       "next": "Next",
+      "retry": "Retry remaining semesters",
       "finish": "Done",
       "steps": {
         "open_school": {
@@ -1697,6 +1698,7 @@
         "school_response_invalid": "The school system returned an unexpected page.",
         "invalid_semester": "The selected semester was not accepted by the school system.",
         "storage_error": "The course statistics could not be saved. Try again later.",
+        "rate_limited": "Too many contributions are being processed. Retry the remaining semesters shortly.",
         "unknown": "The course statistics could not be shared. Try again later."
       }
     },

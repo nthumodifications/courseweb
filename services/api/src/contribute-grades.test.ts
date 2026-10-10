@@ -10,6 +10,7 @@ import type {
 import app, {
   fetchSemesterOptions,
   fetchSemesterPage,
+  courseCodeFromRawId,
   normalizeCourseCode,
   parseSemesterOptions,
   parseSemesterPage,
@@ -37,6 +38,10 @@ const fixtureResponse = async (name: string) =>
 
 const limiter = {
   limit: async () => ({ success: true }),
+} as unknown as RateLimit;
+
+const blockedLimiter = {
+  limit: async () => ({ success: false }),
 } as unknown as RateLimit;
 
 const emptyDatabase = () => {
@@ -223,6 +228,15 @@ const request = (body: Record<string, string>, database = emptyDatabase()) =>
   );
 
 describe("course statistics parser", () => {
+  test.each([
+    ["11410AES 470200", "AES470200"],
+    ["11420PE  206097", "PE206097"],
+    ["11510EECS205001", "EECS205001"],
+    ["11430CSR 100100", "CSR100100"],
+  ])("derives the section course code from %s", (rawId, expected) => {
+    expect(courseCodeFromRawId(rawId)).toBe(expected);
+  });
+
   test("reads all semester options from the form", async () => {
     const options = parseSemesterOptions(await fixture("JH84201.html"));
 
@@ -560,6 +574,20 @@ describe("course statistics routes", () => {
       });
     }));
 
+  test("returns the typed rate-limit error", async () => {
+    const response = await app.fetch(
+      new Request("https://api.example.test/grades", {
+        method: "POST",
+        headers: { "content-type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ ACIXSTORE: "s".repeat(24) }),
+      }),
+      { DB: emptyDatabase(), CONTRIBUTE_RATE_LIMITER: blockedLimiter },
+    );
+
+    expect(response.status).toBe(429);
+    expect(await response.json()).toMatchObject({ error: "rate_limited" });
+  });
+
   test("returns public statistics with a five-minute cache header", () =>
     withDatabase(async (database) => {
       insertStatistic(database, {
@@ -583,6 +611,73 @@ describe("course statistics routes", () => {
         statistics: [{ semester: "11430" }],
       });
     }));
+
+  test("returns fixture rows for the section request made by the course page", () =>
+    withDatabase(async (database) => {
+      setResultFetch(await fixtureResponse("JH84202_114_30.html"));
+      await refreshSemester(
+        asD1(database),
+        "s".repeat(24),
+        "114|30",
+        new Date("2026-01-01T00:00:00.000Z"),
+      );
+
+      for (const rawId of ["11430CSR 100100", "11430EECS205000"]) {
+        const response = await app.fetch(
+          new Request(
+            `https://api.example.test/grades/${encodeURIComponent(courseCodeFromRawId(rawId))}`,
+          ),
+          { DB: asD1(database), CONTRIBUTE_RATE_LIMITER: limiter },
+        );
+        const body = (await response.json()) as {
+          courseCode: string;
+          statistics: Array<{ rawId: string }>;
+        };
+
+        expect(response.status).toBe(200);
+        expect(body.courseCode).toBe(courseCodeFromRawId(rawId));
+        expect(body.statistics.some((row) => row.rawId === rawId)).toBe(true);
+      }
+    }));
+
+  test("limits public statistics to the newest 40 rows with a stable tie-break", () =>
+    withDatabase(async (database) => {
+      for (let index = 0; index < 45; index += 1) {
+        const semester = index >= 43 ? "11444" : String(11400 + index);
+        insertStatistic(database, {
+          rawId: `${semester}EECS205001-${index}`,
+          courseCode: "EECS205001",
+          semester,
+          enrollment: index,
+          scale: "gpa",
+          average: 3,
+          stdDev: 1,
+        });
+      }
+
+      const response = await app.fetch(
+        new Request("https://api.example.test/grades/EECS205001"),
+        { DB: asD1(database), CONTRIBUTE_RATE_LIMITER: limiter },
+      );
+      const body = (await response.json()) as {
+        statistics: Array<{ rawId: string; semester: string }>;
+      };
+
+      expect(body.statistics).toHaveLength(40);
+      expect(body.statistics[0]?.semester).toBe("11444");
+      expect(body.statistics[0]?.rawId).toBe("11444EECS205001-43");
+      expect(body.statistics.at(-1)?.semester).toBe("11405");
+    }));
+
+  test("returns a short cache header for missing statistics", async () => {
+    const response = await app.fetch(
+      new Request("https://api.example.test/grades/EECS205001"),
+      { DB: emptyDatabase(), CONTRIBUTE_RATE_LIMITER: limiter },
+    );
+
+    expect(response.status).toBe(404);
+    expect(response.headers.get("Cache-Control")).toBe("public, max-age=60");
+  });
 
   test.each([
     { requestedCourseCode: "CSR100100", storedCourseCode: "CSR 100100" },

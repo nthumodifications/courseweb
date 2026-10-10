@@ -16,6 +16,18 @@ export type FormattedCourseStatistic = CourseStatistic & {
   stdDevLabel: string;
 };
 
+export const normalizeCourseCode = (value: string) =>
+  value.normalize("NFKC").replace(/\s+/g, "").toUpperCase();
+
+export const courseCodeFromRawId = (rawId: string) =>
+  normalizeCourseCode(rawId.slice(5));
+
+const normalizeRawCourseId = (rawId: string) =>
+  rawId.normalize("NFKC").replace(/\s+/g, "").toUpperCase();
+
+export const courseStatisticsKey = (semester: string, rawId: string) =>
+  `${semester}:${normalizeRawCourseId(rawId)}`;
+
 const isCourseStatistic = (row: CourseStatistic) =>
   row.semester.trim().length > 0 &&
   Number.isSafeInteger(row.enrollment) &&

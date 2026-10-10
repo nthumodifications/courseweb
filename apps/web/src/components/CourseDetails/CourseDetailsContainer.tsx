@@ -57,6 +57,10 @@ import CourseGradeStatistics, {
   type CourseGradeStatisticsResponse,
 } from "./CourseGradeStatistics";
 import {
+  courseCodeFromRawId,
+  courseStatisticsKey,
+} from "./courseGradeStatisticsLogic";
+import {
   getPttToggleLabel,
   normalizePttReview,
   parsePttResponse,
@@ -281,7 +285,7 @@ const CourseDetailContainer = ({
         ":courseCode"
       ].$get({
         param: {
-          courseCode: `${course!.department}${course!.course}`,
+          courseCode: courseCodeFromRawId(course!.raw_id),
         },
       });
       if (!res.ok) throw new Error("Failed to load course grade statistics");
@@ -437,13 +441,12 @@ const CourseDetailContainer = ({
   const missingSyllabus = course.course_syllabus == null;
   const bilingualNamesAreAligned =
     (course.teacher_zh?.length ?? 0) === (course.teacher_en?.length ?? 0);
-  const teacherBySemester = new Map<string, readonly string[]>();
+  const teacherByCourse = new Map<string, readonly string[]>();
   for (const offering of [course, ...otherClasses]) {
-    const teachers = [
-      ...(teacherBySemester.get(offering.semester) ?? []),
-      ...(offering.teacher_zh ?? []),
-    ];
-    teacherBySemester.set(offering.semester, [...new Set(teachers)]);
+    teacherByCourse.set(
+      courseStatisticsKey(offering.semester, offering.raw_id),
+      offering.teacher_zh ?? [],
+    );
   }
 
   return (
@@ -865,7 +868,7 @@ const CourseDetailContainer = ({
                 lang={lang}
                 statistics={contributedGradeStatistics?.statistics}
                 error={contributedGradeStatisticsError}
-                teacherBySemester={teacherBySemester}
+                teacherByCourse={teacherByCourse}
                 copy={{
                   title: dict.course.details.past_grade_statistics,
                   semester: dict.course.details.semester,

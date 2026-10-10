@@ -82,6 +82,9 @@ const normalizeText = (value: string | null | undefined) =>
 export const normalizeCourseCode = (value: string) =>
   value.normalize("NFKC").replace(/\s+/g, "").toUpperCase();
 
+export const courseCodeFromRawId = (rawId: string) =>
+  normalizeCourseCode(rawId.slice(5));
+
 const compactSemester = (value: string) => value.replace("|", "");
 
 const parseNumber = (value: string) => {
@@ -189,7 +192,7 @@ export function parseSemesterPage(
       const stdDev = gpaComplete ? gpaStdDev! : percentStdDev!;
       return {
         rawId,
-        courseCode: normalizeCourseCode(rawId.slice(5)),
+        courseCode: courseCodeFromRawId(rawId),
         semester: compact,
         enrollment,
         scale,
@@ -532,7 +535,7 @@ export async function refreshSemester(
 
 const contributionRateLimit = rateLimitMiddleware({
   limiter: "CONTRIBUTE_RATE_LIMITER",
-  errorMessage: "Too many contribution requests. Please try again later.",
+  errorMessage: "rate_limited",
 });
 
 const app = new Hono<{ Bindings: Bindings }>()
@@ -579,21 +582,21 @@ const app = new Hono<{ Bindings: Bindings }>()
       const requestedCourseCode = normalizeText(
         c.req.valid("param").courseCode,
       );
-      const courseCode = normalizeCourseCode(
-        /^\d{5}/.test(requestedCourseCode)
-          ? requestedCourseCode.slice(5)
-          : requestedCourseCode,
-      );
+      const courseCode = /^\d{5}/.test(requestedCourseCode)
+        ? courseCodeFromRawId(requestedCourseCode)
+        : normalizeCourseCode(requestedCourseCode);
       try {
         const rows = await c.env.DB.prepare(
           `SELECT "rawId", "courseCode", "semester", "enrollment", "scale", "average", "stdDev", "updatedAt"
            FROM "CourseStatistic"
            WHERE UPPER(REPLACE("courseCode", ' ', '')) = ?
-           ORDER BY "semester" DESC`,
+           ORDER BY "semester" DESC, "rawId" ASC
+           LIMIT 40`,
         )
           .bind(courseCode)
           .all<CourseStatisticRow & { updatedAt: string }>();
         if (rows.results.length === 0) {
+          c.header("Cache-Control", "public, max-age=60");
           return c.json({ error: "nothing_found" }, 404);
         }
         c.header("Cache-Control", "public, max-age=300");

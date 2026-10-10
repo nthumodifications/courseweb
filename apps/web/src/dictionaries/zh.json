@@ -1656,6 +1656,7 @@
       "step_label": "前往第 {step} 步",
       "back": "上一步",
       "next": "下一步",
+      "retry": "重試剩餘學期",
       "finish": "完成",
       "steps": {
         "open_school": {
@@ -1697,6 +1698,7 @@
         "school_response_invalid": "學校系統回傳了無法辨識的頁面。",
         "invalid_semester": "學校系統不接受這個學期。",
         "storage_error": "課程統計無法儲存，請稍後再試。",
+        "rate_limited": "目前有太多貢獻正在處理，請稍後重試剩餘學期。",
         "unknown": "課程統計無法分享，請稍後再試。"
       }
     },

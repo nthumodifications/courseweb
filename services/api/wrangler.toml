@@ -86,7 +86,7 @@ name = "CONTRIBUTE_RATE_LIMITER"
 namespace_id = "1007"
 
   [ratelimits.simple]
-  limit = 5
+  limit = 30
   period = 60
 
 [triggers]

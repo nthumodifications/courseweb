@@ -10,6 +10,7 @@ import {
 } from "@courseweb/ui";
 import { InstructorLink } from "@/components/Courses/InstructorLink";
 import {
+  courseStatisticsKey,
   formatCourseStatistics,
   type CourseStatistic,
 } from "./courseGradeStatisticsLogic";
@@ -34,7 +35,7 @@ type CourseGradeStatisticsProps = {
   lang: string;
   statistics?: readonly CourseStatistic[];
   error?: unknown;
-  teacherBySemester: ReadonlyMap<string, readonly string[]>;
+  teacherByCourse: ReadonlyMap<string, readonly string[]>;
   copy: CourseGradeStatisticsCopy;
 };
 
@@ -42,7 +43,7 @@ const CourseGradeStatistics = ({
   lang,
   statistics,
   error,
-  teacherBySemester,
+  teacherByCourse,
   copy,
 }: CourseGradeStatisticsProps) => {
   if (error || !statistics) return null;
@@ -69,7 +70,10 @@ const CourseGradeStatistics = ({
         </TableHeader>
         <TableBody>
           {rows.map((row) => {
-            const teachers = teacherBySemester.get(row.semester) ?? [];
+            const teachers =
+              teacherByCourse.get(
+                courseStatisticsKey(row.semester, row.rawId),
+              ) ?? [];
             const scaleLabel =
               row.scale === "gpa" ? copy.gpaScale : copy.percentScale;
             const formattedValues = [

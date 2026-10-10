@@ -5,6 +5,7 @@ export const contributionErrorCodes = [
   "school_response_invalid",
   "invalid_semester",
   "storage_error",
+  "rate_limited",
 ] as const;
 
 export type ContributionErrorCode = (typeof contributionErrorCodes)[number];
