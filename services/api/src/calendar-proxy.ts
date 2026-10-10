@@ -11,20 +11,33 @@ interface AppEnv {
 const isCalendarData = (value: string) =>
   value.startsWith("BEGIN:VCALENDAR") && value.includes("END:VCALENDAR");
 
+const CALENDAR_ERROR = "Calendar unavailable";
+
+const calendarErrorResponse = (status: number) =>
+  new Response(CALENDAR_ERROR, {
+    status,
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+      "X-Content-Type-Options": "nosniff",
+    },
+  });
+
+const calendarRequestSchema = z.object({
+  token: z.string().min(1).max(4096),
+  type: z.enum(["basic", "full"]).default("basic"),
+});
+
+const calendarParamsSchema = z.object({
+  userId: z.string().min(1).max(256),
+});
+
 const app = new Hono<{ Bindings: AppEnv }>().get(
   "/ical/:userId",
-  zValidator(
-    "query",
-    z.object({
-      token: z.string(),
-      type: z.enum(["basic", "full"]).default("basic"),
-    }),
+  zValidator("query", calendarRequestSchema, (result) =>
+    result.success ? undefined : calendarErrorResponse(400),
   ),
-  zValidator(
-    "param",
-    z.object({
-      userId: z.string(),
-    }),
+  zValidator("param", calendarParamsSchema, (result) =>
+    result.success ? undefined : calendarErrorResponse(400),
   ),
   async (c) => {
     try {
@@ -55,10 +68,7 @@ const app = new Hono<{ Bindings: AppEnv }>().get(
       // Check if the request was successful
       if (!response.ok) {
         console.error("Error fetching calendar", response.status);
-        return c.json({
-          error: `Failed to fetch calendar: ${response.statusText}`,
-          status: response.status,
-        });
+        return calendarErrorResponse(502);
       }
 
       const contentType = response.headers
@@ -67,13 +77,13 @@ const app = new Hono<{ Bindings: AppEnv }>().get(
         .trim()
         .toLowerCase();
       if (contentType !== "text/calendar") {
-        return c.json({ error: "Unexpected calendar response" }, 502);
+        return calendarErrorResponse(502);
       }
 
       // Get the calendar data
       const calendarData = await response.text();
       if (!isCalendarData(calendarData)) {
-        return c.json({ error: "Invalid calendar response" }, 502);
+        return calendarErrorResponse(502);
       }
 
       // Set the appropriate headers for the iCalendar file
@@ -87,10 +97,7 @@ const app = new Hono<{ Bindings: AppEnv }>().get(
       return c.body(calendarData);
     } catch (error) {
       console.error("Error proxying calendar request:", error);
-      return c.json(
-        { error: "Internal server error while fetching calendar" },
-        500,
-      );
+      return calendarErrorResponse(500);
     }
   },
 );
