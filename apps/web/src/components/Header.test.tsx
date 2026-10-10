@@ -1,16 +1,52 @@
 import { act, createElement } from "react";
 import { createRoot } from "react-dom/client";
 import { JSDOM } from "jsdom";
-import { afterAll, describe, expect, mock, test } from "bun:test";
+import { describe, expect, mock, test } from "bun:test";
 import {
   getSyncedStorageBackupKey,
   getSyncedStorageKey,
 } from "@/hooks/syncedStorage";
+import en from "@/dictionaries/en.json";
 
 const user = {
   id_token: "test-id-token",
   profile: { name: "Test User", sub: "account-a" },
 };
+const moduleDom = new JSDOM("<!doctype html><html><body></body></html>");
+const moduleGlobalKeys = [
+  "window",
+  "document",
+  "navigator",
+  "HTMLElement",
+  "Element",
+  "Node",
+  "DocumentFragment",
+  "MutationObserver",
+  "ResizeObserver",
+  "IS_REACT_ACT_ENVIRONMENT",
+] as const;
+const previousModuleGlobals = Object.fromEntries(
+  moduleGlobalKeys.map((key) => [
+    key,
+    (globalThis as Record<string, unknown>)[key],
+  ]),
+);
+Object.assign(globalThis, {
+  window: moduleDom.window,
+  document: moduleDom.window.document,
+  navigator: moduleDom.window.navigator,
+  HTMLElement: moduleDom.window.HTMLElement,
+  Element: moduleDom.window.Element,
+  Node: moduleDom.window.Node,
+  DocumentFragment: moduleDom.window.DocumentFragment,
+  MutationObserver: moduleDom.window.MutationObserver,
+  ResizeObserver: class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  },
+  IS_REACT_ACT_ENVIRONMENT: true,
+});
 const signoutRedirect = mock(async () => {});
 const removeUser = mock(async () => {});
 const clearStaleState = mock(async () => {});
@@ -40,7 +76,24 @@ const forEachStorageKey = (keys: string[], callback: (key: string) => void) => {
   }
 };
 
+const testDictionary = {
+  ...en,
+  settings: {
+    ...en.settings,
+    account: {
+      ...en.settings.account,
+      signout: "Sign out",
+      signin: "Sign in",
+      logoutConfimation: "Confirm logout",
+      logoutDescription: "Clear local data?",
+      keepLocalData: "Keep local data",
+      logout: "Log out",
+    },
+  },
+};
+
 mock.module("@courseweb/ui", () => ({
+  ...actualUi,
   SidebarTrigger: button,
   DropdownMenu: dropdownMenu,
   DropdownMenuContent: passthrough,
@@ -48,7 +101,6 @@ mock.module("@courseweb/ui", () => ({
   DropdownMenuLabel: passthrough,
   DropdownMenuSeparator: passthrough,
   DropdownMenuTrigger: passthrough,
-  Button: button,
   Checkbox: ({ checked, onCheckedChange, ...props }: Record<string, unknown>) =>
     createElement("input", {
       ...props,
@@ -59,7 +111,6 @@ mock.module("@courseweb/ui", () => ({
           event.target.checked,
         ),
     }),
-  Label: passthrough,
   AlertDialog: ({ open, children }: Record<string, unknown>) =>
     open ? createElement("div", null, children as never) : null,
   AlertDialogAction: button,
@@ -71,7 +122,11 @@ mock.module("@courseweb/ui", () => ({
   AlertDialogTitle: passthrough,
   useIsMobile: () => false,
 }));
-mock.module("lucide-react", () => ({ LogIn: () => null, LogOut: () => null }));
+mock.module("lucide-react", () => ({
+  ...actualIcons,
+  LogIn: () => null,
+  LogOut: () => null,
+}));
 mock.module("react-oidc-context", () => ({
   useAuth: () => ({
     isAuthenticated: true,
@@ -84,32 +139,28 @@ mock.module("react-oidc-context", () => ({
 }));
 mock.module("rxdb-hooks", () => ({ useRxCollection: () => null }));
 mock.module("@/dictionaries/useDictionary", () => ({
-  default: () => ({
-    common: { cancel: "Cancel" },
-    settings: {
-      account: {
-        signout: "Sign out",
-        signin: "Sign in",
-        logoutConfimation: "Confirm logout",
-        logoutDescription: "Clear local data?",
-        keepLocalData: "Keep local data",
-        logout: "Log out",
-      },
-    },
-  }),
+  default: () => testDictionary,
 }));
 
 const { default: Header } = await import("./Header");
 
-describe("Header local-data logout", () => {
-  afterAll(() => {
-    mock.module("@courseweb/ui", () => actualUi);
-    mock.module("lucide-react", () => actualIcons);
-    mock.module("react-oidc-context", () => actualOidcContext);
-    mock.module("rxdb-hooks", () => actualRxdbHooks);
-    mock.module("@/dictionaries/useDictionary", () => actualDictionary);
-  });
+const globalObject = globalThis as Record<string, unknown>;
+for (const key of moduleGlobalKeys) {
+  const value = previousModuleGlobals[key];
+  if (value === undefined) delete globalObject[key];
+  else globalObject[key] = value;
+}
+moduleDom.window.close();
 
+// Keep the mocks local to Header's module import while other files share this
+// Bun process and may import their components concurrently.
+mock.module("@courseweb/ui", () => actualUi);
+mock.module("lucide-react", () => actualIcons);
+mock.module("react-oidc-context", () => actualOidcContext);
+mock.module("rxdb-hooks", () => actualRxdbHooks);
+mock.module("@/dictionaries/useDictionary", () => actualDictionary);
+
+describe("Header local-data logout", () => {
   test("clears synced records and their backups when local data is not kept", async () => {
     const dom = new JSDOM("<!doctype html><html><body></body></html>", {
       url: "http://localhost/",

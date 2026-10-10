@@ -1,4 +1,4 @@
-import { describe, expect, mock, test } from "bun:test";
+import { afterAll, describe, expect, mock, test } from "bun:test";
 import { fromZonedTime } from "date-fns-tz";
 import type { CalendarEventInternal } from "@/components/Calendar/calendar.types";
 import type { MinimalCourse } from "@/types/courses";
@@ -7,10 +7,18 @@ import type { CourseDate } from "@/hooks/useCourseDates";
 process.env.VITE_COURSEWEB_API_URL ??= "https://api.example.test";
 process.env.VITE_NTHUMODS_AUTH_URL ??= "https://auth.example.test";
 
+const actualApi = await import("@/config/api");
+const actualAuth = await import("@/config/auth");
 mock.module("@/config/api", () => ({ default: {} }));
 mock.module("@/config/auth", () => ({ default: {} }));
 
-const { expandCalendarEvent } = await import("./useUpcomingEvents");
+const { expandCalendarEvent, getTaipeiDayStart, groupConsecutiveEmptyDays } =
+  await import("./useUpcomingEvents");
+
+afterAll(() => {
+  mock.module("@/config/api", () => actualApi);
+  mock.module("@/config/auth", () => actualAuth);
+});
 
 const TAIPEI_TIME_ZONE = "Asia/Taipei";
 
@@ -52,6 +60,32 @@ const course = {
 } as MinimalCourse;
 
 describe("upcoming event recurrence", () => {
+  test("groups consecutive empty days without dropping populated days", () => {
+    const days = [1, 2, 3, 4, 5].map(
+      (day) => new Date(`2026-09-${day.toString().padStart(2, "0")}T00:00:00Z`),
+    );
+
+    expect(
+      groupConsecutiveEmptyDays(days, (day) =>
+        [2, 3].includes(day.getUTCDate()),
+      ).map((group) => ({
+        kind: group.kind,
+        days: group.days.map((day) => day.getUTCDate()),
+      })),
+    ).toEqual([
+      { kind: "day", days: [1] },
+      { kind: "range", days: [2, 3] },
+      { kind: "day", days: [4] },
+      { kind: "day", days: [5] },
+    ]);
+  });
+
+  test("normalizes an instant to its Taipei day start", () => {
+    expect(getTaipeiDayStart(new Date("2026-09-10T20:00:00.000Z"))).toEqual(
+      taipeiDate("2026-09-11T00:00"),
+    );
+  });
+
   test("uses the anchored Jan 31 monthly policy", () => {
     const occurrences = expand(
       event("2026-01-31T09:00", "2026-01-31T10:00", {

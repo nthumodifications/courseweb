@@ -4,6 +4,12 @@ interface Env {
   ASSETS: Fetcher;
 }
 
+declare global {
+  interface CacheStorage {
+    readonly default: Cache;
+  }
+}
+
 const STATIC_ASSET_EXTENSION_PATTERN =
   /\.(?:js|mjs|css|map|json|woff2|woff|ttf|png|jpg|svg|webp|ico)$/i;
 

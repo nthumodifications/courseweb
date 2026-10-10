@@ -3,10 +3,10 @@ import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import supabase_server from "./config/supabase_server";
 
-// ── Inlined from @courseweb/shared ───────────────────────────────────────────
-// Importing @courseweb/shared via the root tsconfig path alias resolves to the
-// package's TypeScript source files, which are outside this package's rootDir.
-// The constants and logic needed here are small enough to inline directly.
+// ── Worker-local mirror of packages/shared/src/constants/semester.ts ─────────
+// The Worker cannot import @courseweb/shared here: its package export points at
+// dist, which CI does not build, and the source file is outside this package's
+// rootDir. timetable-ics.test.ts compares this table with the canonical source.
 
 export const SCHEDULE_TIME_SLOTS = [
   { time: "1", start: "08:00", end: "08:50" },
@@ -216,6 +216,8 @@ export function firstOccurrence(
 export function generateTimetableIcs(
   courses: CourseRow[],
   semObj: { begins: Date; ends: Date },
+  _academicSelectionPeriods?: unknown[],
+  generatedAt = new Date(),
 ): string {
   // semObj.begins = new Date(year, month, day) — UTC midnight in a UTC runtime.
   // Subtract 8h to get the UTC equivalent of Taipei midnight, identical to
@@ -254,7 +256,7 @@ export function generateTimetableIcs(
 
       // UID and DTSTAMP are REQUIRED per RFC 5545 §3.6.1
       const uid = `${row.raw_id}-${ev.dayOfWeek}-${ev.startTime}@nthumods.com`;
-      const dtstamp = formatDateTime(new Date());
+      const dtstamp = formatDateTime(generatedAt);
 
       eventBlocks.push(
         [
@@ -306,7 +308,18 @@ const app = new Hono().get(
     const coursesParam = c.req.query(`semester_${semester}`);
     const courseIds = coursesParam?.split(",").filter(Boolean) ?? [];
 
-    if (!semObj || courseIds.length === 0) {
+    if (!semObj) {
+      // Never echo the raw query value into the log or the response.
+      const shown = /^\d{5}$/.test(semester) ? semester : "invalid";
+      const message = `Bad Request: unsupported semester "${shown}"; no calendar generated`;
+      console.error(`[timetable-ics] ${message}`);
+      return new Response(message, {
+        status: 400,
+        headers: { "Content-Type": "text/plain; charset=utf-8" },
+      });
+    }
+
+    if (courseIds.length === 0) {
       return new Response("Bad Request: missing semester or course ids", {
         status: 400,
       });

@@ -1,4 +1,6 @@
-import { describe, it, expect } from "bun:test";
+import { describe, it, expect, spyOn } from "bun:test";
+import timetableIcsApp from "./timetable-ics";
+import { semesterInfo as canonicalSemesterInfo } from "../../../packages/shared/src/constants/semester";
 import {
   generateTimetableIcs,
   courseToEvents,
@@ -213,9 +215,20 @@ function validateIcs(ics: string): string[] {
 // ─── Test data ───────────────────────────────────────────────────────────────
 
 const SEMESTER_11320 = SEMESTER_INFO.find((s) => s.id === "11320")!;
+const SEMESTER_11510 = SEMESTER_INFO.find((s) => s.id === "11510")!;
 
 const SAMPLE_COURSE: CourseRow = {
   raw_id: "11320CS 135700",
+  name_zh: "資料結構",
+  name_en: "Data Structures",
+  times: ["M3M4"],
+  venues: ["台達館105"],
+  teacher_zh: ["王大明"],
+  teacher_en: ["Da-Ming Wang"],
+};
+
+const SNAPSHOT_COURSE_11510: CourseRow = {
+  raw_id: "11510CS 101000",
   name_zh: "資料結構",
   name_en: "Data Structures",
   times: ["M3M4"],
@@ -792,6 +805,73 @@ describe("generateTimetableIcs – all semesters", () => {
       const errors = validateIcs(ics);
       expect(errors).toHaveLength(0);
     }
+  });
+});
+
+describe("semester data", () => {
+  it("keeps the Worker mirror equal to the canonical shared table", () => {
+    const normalize = (semesters: typeof SEMESTER_INFO) =>
+      semesters.map(({ id, begins, ends }) => ({
+        id,
+        begins: begins.getTime(),
+        ends: ends.getTime(),
+      }));
+
+    expect(normalize(SEMESTER_INFO)).toEqual(normalize(canonicalSemesterInfo));
+  });
+});
+
+describe("timetable ICS route", () => {
+  it("rejects an unsupported semester with a clear error and log", async () => {
+    const errorSpy = spyOn(console, "error").mockImplementation(() => {});
+
+    try {
+      const response = await timetableIcsApp.request(
+        "/calendar.ics?semester=11610&semester_11610=11610-CS-101",
+      );
+
+      expect(response.status).toBe(400);
+      expect(await response.text()).toBe(
+        'Bad Request: unsupported semester "11610"; no calendar generated',
+      );
+      expect(errorSpy).toHaveBeenCalledWith(
+        '[timetable-ics] Bad Request: unsupported semester "11610"; no calendar generated',
+      );
+    } finally {
+      errorSpy.mockRestore();
+    }
+  });
+});
+
+describe("generateTimetableIcs – 11510 compatibility", () => {
+  it("keeps the fixed 11510 feed byte-identical", () => {
+    const ics = generateTimetableIcs(
+      [SNAPSHOT_COURSE_11510],
+      SEMESTER_11510,
+      undefined,
+      new Date(Date.UTC(2026, 9, 9, 12, 0, 0)),
+    );
+
+    expect(ics).toBe(
+      [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//NTHUMods//Timetable//EN",
+        "X-WR-CALNAME:NTHUMods",
+        "BEGIN:VEVENT",
+        "UID:11510CS 101000-0-2@nthumods.com",
+        "DTSTAMP:20261009T120000Z",
+        "DTSTART:20260907T021000Z",
+        "DTEND:20260907T040000Z",
+        "RRULE:FREQ=WEEKLY;BYDAY=MO;INTERVAL=1;UNTIL=20261226T160000Z",
+        "SUMMARY:資料結構",
+        "DESCRIPTION:Data Structures\\n王大明\\nDa-Ming Wang\\nhttps://nthumods.com/",
+        " courses/11510CS%20101000",
+        "LOCATION:台達館105",
+        "END:VEVENT",
+        "END:VCALENDAR",
+      ].join("\r\n") + "\r\n",
+    );
   });
 });
 

@@ -145,6 +145,63 @@ const AccessibleColorPicker = ({
   );
 };
 
+const EventDatePicker = ({
+  value,
+  onSelect,
+  dateFormat,
+  locale,
+  placeholder,
+  className,
+  disabled,
+  ariaLabel,
+  id,
+}: {
+  value?: Date;
+  onSelect: (date: Date) => void;
+  dateFormat: string;
+  locale: NonNullable<Parameters<typeof formatTaipei>[2]>["locale"];
+  placeholder: string;
+  className: string;
+  disabled?: boolean;
+  ariaLabel?: string;
+  id?: string;
+}) => (
+  <Popover modal={true}>
+    <PopoverTrigger asChild>
+      <FormControl>
+        <Button
+          type="button"
+          id={id}
+          variant="outline"
+          className={cn(className, !value && "text-muted-foreground")}
+          disabled={disabled}
+          aria-label={ariaLabel}
+        >
+          <CalendarIcon className="mr-2 h-4 w-4" />
+          {value ? (
+            formatTaipei(value, dateFormat, { locale })
+          ) : (
+            <span>{placeholder}</span>
+          )}
+        </Button>
+      </FormControl>
+    </PopoverTrigger>
+    <PopoverPortal>
+      <PopoverContent className="w-auto p-0">
+        <ShadcnCalendar
+          mode="single"
+          selected={value ? toTaipeiWallClock(value) : undefined}
+          onSelect={(date) => {
+            if (date) onSelect(date);
+          }}
+          initialFocus
+          defaultMonth={value ? toTaipeiWallClock(value) : undefined}
+        />
+      </PopoverContent>
+    </PopoverPortal>
+  </Popover>
+);
+
 export const EventForm = ({
   defaultEvent,
   onSubmit,
@@ -402,63 +459,32 @@ export const EventForm = ({
           <FormItem>
             <FormLabel>{dict.calendar.form.start}</FormLabel>
             <div className="flex flex-row space-x-2">
-              <Popover modal={true}>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      type="button"
-                      variant={"outline"}
-                      className={cn(
-                        "flex-1 justify-start text-left font-normal",
-                        !field.value && "text-muted-foreground",
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {field.value ? (
-                        formatTaipei(field.value, "yyyy-LL-dd (EE)", {
-                          locale: getLocale(language),
-                        })
-                      ) : (
-                        <span>{dict.calendar.form.pick_date}</span>
-                      )}
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverPortal>
-                  <PopoverContent className="w-auto p-0">
-                    <ShadcnCalendar
-                      mode="single"
-                      selected={toTaipeiWallClock(field.value)}
-                      onSelect={(d) => {
-                        if (!d) return;
-                        // Preserve time when changing date
-                        const currentTime = toTaipeiWallClock(field.value);
-                        const newDate = setTaipeiWallClock(
-                          fromTaipeiCalendarDate(d),
-                          {
-                            hours: currentTime.getHours(),
-                            minutes: currentTime.getMinutes(),
-                          },
-                        );
+              <EventDatePicker
+                value={field.value}
+                dateFormat="yyyy-LL-dd (EE)"
+                locale={getLocale(language)}
+                placeholder={dict.calendar.form.pick_date}
+                className="flex-1 justify-start text-left font-normal"
+                onSelect={(date) => {
+                  // Preserve time when changing date
+                  const currentTime = toTaipeiWallClock(field.value);
+                  const newDate = setTaipeiWallClock(
+                    fromTaipeiCalendarDate(date),
+                    {
+                      hours: currentTime.getHours(),
+                      minutes: currentTime.getMinutes(),
+                    },
+                  );
 
-                        // Calculate difference to maintain duration
-                        const diff =
-                          form.getValues("end").getTime() -
-                          field.value.getTime();
+                  // Calculate difference to maintain duration
+                  const diff =
+                    form.getValues("end").getTime() - field.value.getTime();
 
-                        field.onChange(newDate);
-                        form.setValue(
-                          "end",
-                          new Date(newDate.getTime() + diff),
-                        );
-                        form.trigger("end");
-                      }}
-                      initialFocus
-                      defaultMonth={toTaipeiWallClock(field.value)}
-                    />
-                  </PopoverContent>
-                </PopoverPortal>
-              </Popover>
+                  field.onChange(newDate);
+                  form.setValue("end", new Date(newDate.getTime() + diff));
+                  form.trigger("end");
+                }}
+              />
 
               <FormControl>
                 <Input
@@ -510,52 +536,23 @@ export const EventForm = ({
           <FormItem>
             <FormLabel>{dict.calendar.form.end}</FormLabel>
             <div className="flex flex-row space-x-2">
-              <Popover modal={true}>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      type="button"
-                      variant={"outline"}
-                      className={cn(
-                        "flex-1 justify-start text-left font-normal",
-                        !field.value && "text-muted-foreground",
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {field.value ? (
-                        formatTaipei(field.value, "yyyy-LL-dd (EE)", {
-                          locale: getLocale(language),
-                        })
-                      ) : (
-                        <span>{dict.calendar.form.pick_date}</span>
-                      )}
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverPortal>
-                  <PopoverContent className="w-auto p-0">
-                    <ShadcnCalendar
-                      mode="single"
-                      selected={toTaipeiWallClock(field.value)}
-                      onSelect={(d) => {
-                        if (!d) return;
-                        // Preserve time when changing date
-                        const currentTime = toTaipeiWallClock(field.value);
-                        const newDate = setTaipeiWallClock(
-                          fromTaipeiCalendarDate(d),
-                          {
-                            hours: currentTime.getHours(),
-                            minutes: currentTime.getMinutes(),
-                          },
-                        );
-                        field.onChange(newDate);
-                      }}
-                      initialFocus
-                      defaultMonth={toTaipeiWallClock(field.value)}
-                    />
-                  </PopoverContent>
-                </PopoverPortal>
-              </Popover>
+              <EventDatePicker
+                value={field.value}
+                dateFormat="yyyy-LL-dd (EE)"
+                locale={getLocale(language)}
+                placeholder={dict.calendar.form.pick_date}
+                className="flex-1 justify-start text-left font-normal"
+                onSelect={(date) => {
+                  // Preserve time when changing date
+                  const currentTime = toTaipeiWallClock(field.value);
+                  field.onChange(
+                    setTaipeiWallClock(fromTaipeiCalendarDate(date), {
+                      hours: currentTime.getHours(),
+                      minutes: currentTime.getMinutes(),
+                    }),
+                  );
+                }}
+              />
 
               <FormControl>
                 <Input
@@ -593,56 +590,30 @@ export const EventForm = ({
         render={({ field }) => (
           <FormItem>
             <FormLabel>{dict.calendar.form.start_date}</FormLabel>
-            <Popover modal={true}>
-              <PopoverTrigger asChild>
-                <FormControl>
-                  <Button
-                    type="button"
-                    variant={"outline"}
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !field.value && "text-muted-foreground",
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {field.value ? (
-                      formatTaipei(field.value, "yyyy-LL-dd (EE)", {
-                        locale: getLocale(language),
-                      })
-                    ) : (
-                      <span>{dict.calendar.form.pick_date}</span>
-                    )}
-                  </Button>
-                </FormControl>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <ShadcnCalendar
-                  mode="single"
-                  selected={toTaipeiWallClock(field.value)}
-                  onSelect={(d) => {
-                    if (!d) return;
+            <EventDatePicker
+              value={field.value}
+              dateFormat="yyyy-LL-dd (EE)"
+              locale={getLocale(language)}
+              placeholder={dict.calendar.form.pick_date}
+              className="w-full justify-start text-left font-normal"
+              onSelect={(date) => {
+                // Calculate current event duration in days
+                const diffInDays = differenceInTaipeiCalendarDays(
+                  form.getValues("end"),
+                  form.getValues("start"),
+                );
 
-                    // Calculate current event duration in days
-                    const diffInDays = differenceInTaipeiCalendarDays(
-                      form.getValues("end"),
-                      form.getValues("start"),
-                    );
+                // Update start and end dates while maintaining duration
+                const startDate = fromTaipeiCalendarDate(date);
+                const endDate = endOfTaipeiDay(
+                  addTaipeiDays(startDate, diffInDays),
+                );
 
-                    // Update start and end dates while maintaining duration
-                    const startDate = fromTaipeiCalendarDate(d);
-                    const endDate = endOfTaipeiDay(
-                      addTaipeiDays(startDate, diffInDays),
-                    );
-
-                    field.onChange(startDate);
-                    form.setValue("end", endDate);
-                    form.trigger("end");
-                  }}
-                  defaultMonth={toTaipeiWallClock(field.value)}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
+                field.onChange(startDate);
+                form.setValue("end", endDate);
+                form.trigger("end");
+              }}
+            />
             <FormMessage />
           </FormItem>
         )}
@@ -654,55 +625,27 @@ export const EventForm = ({
         render={({ field }) => (
           <FormItem>
             <FormLabel>{dict.calendar.form.end_date}</FormLabel>
-            <Popover modal={true}>
-              <PopoverTrigger asChild>
-                <FormControl>
-                  <Button
-                    type="button"
-                    variant={"outline"}
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !field.value && "text-muted-foreground",
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {field.value ? (
-                      formatTaipei(field.value, "yyyy-LL-dd (EE)", {
-                        locale: getLocale(language),
-                      })
-                    ) : (
-                      <span>{dict.calendar.form.pick_date}</span>
-                    )}
-                  </Button>
-                </FormControl>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <ShadcnCalendar
-                  mode="single"
-                  selected={toTaipeiWallClock(field.value)}
-                  onSelect={(d) => {
-                    if (!d) return;
+            <EventDatePicker
+              value={field.value}
+              dateFormat="yyyy-LL-dd (EE)"
+              locale={getLocale(language)}
+              placeholder={dict.calendar.form.pick_date}
+              className="w-full justify-start text-left font-normal"
+              onSelect={(date) => {
+                // Ensure end date is not before start date
+                const startDate = form.getValues("start");
+                const endDate = fromTaipeiCalendarDate(date);
+                if (getTaipeiDateKey(endDate) < getTaipeiDateKey(startDate)) {
+                  form.setError("end", {
+                    type: "manual",
+                    message: dict.calendar.form.end_before_start,
+                  });
+                  return;
+                }
 
-                    // Ensure end date is not before start date
-                    const startDate = form.getValues("start");
-                    const endDate = fromTaipeiCalendarDate(d);
-                    if (
-                      getTaipeiDateKey(endDate) < getTaipeiDateKey(startDate)
-                    ) {
-                      form.setError("end", {
-                        type: "manual",
-                        message: dict.calendar.form.end_before_start,
-                      });
-                      return;
-                    }
-
-                    field.onChange(endOfTaipeiDay(endDate));
-                  }}
-                  initialFocus
-                  defaultMonth={toTaipeiWallClock(field.value)}
-                />
-              </PopoverContent>
-            </Popover>
+                field.onChange(endOfTaipeiDay(endDate));
+              }}
+            />
             <FormMessage />
           </FormItem>
         )}
@@ -814,10 +757,7 @@ export const EventForm = ({
                         aria-label={dict.calendar.form.on_date}
                       />
                       <div className="flex-1">
-                        <Label
-                          htmlFor="repeat-date-value"
-                          className="block mb-1"
-                        >
+                        <Label htmlFor="repeat-date" className="block mb-1">
                           {dict.calendar.form.on_date}
                         </Label>
                         <FormField
@@ -825,59 +765,26 @@ export const EventForm = ({
                           name="repeat.value"
                           render={({ field: valueField }) => (
                             <>
-                              <Popover modal={true}>
-                                <PopoverTrigger asChild>
-                                  <FormControl>
-                                    <Button
-                                      id="repeat-date-value"
-                                      type="button"
-                                      variant={"outline"}
-                                      className="w-full justify-start text-left"
-                                      aria-label={dict.calendar.form.on_date}
-                                      disabled={repeatMode !== "date"}
-                                    >
-                                      <CalendarIcon className="mr-2 h-4 w-4" />
-                                      {repeatMode === "date" &&
-                                      typeof valueField.value === "number" ? (
-                                        formatTaipei(
-                                          new Date(valueField.value),
-                                          "PPP",
-                                          {
-                                            locale: getLocale(language),
-                                          },
-                                        )
-                                      ) : (
-                                        <span>
-                                          {dict.calendar.form.pick_end_date}
-                                        </span>
-                                      )}
-                                    </Button>
-                                  </FormControl>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0">
-                                  {repeatMode === "date" && (
-                                    <ShadcnCalendar
-                                      mode="single"
-                                      selected={toTaipeiWallClock(
-                                        new Date(valueField.value),
-                                      )}
-                                      onSelect={(v) =>
-                                        valueField.onChange(
-                                          v
-                                            ? fromTaipeiCalendarDate(
-                                                v,
-                                              ).getTime()
-                                            : Date.now(),
-                                        )
-                                      }
-                                      initialFocus
-                                      defaultMonth={toTaipeiWallClock(
-                                        new Date(valueField.value),
-                                      )}
-                                    />
-                                  )}
-                                </PopoverContent>
-                              </Popover>
+                              <EventDatePicker
+                                value={
+                                  repeatMode === "date" &&
+                                  typeof valueField.value === "number"
+                                    ? new Date(valueField.value)
+                                    : undefined
+                                }
+                                dateFormat="PPP"
+                                locale={getLocale(language)}
+                                placeholder={dict.calendar.form.pick_end_date}
+                                className="w-full justify-start text-left"
+                                ariaLabel={dict.calendar.form.on_date}
+                                id="repeat-date-value"
+                                disabled={repeatMode !== "date"}
+                                onSelect={(date) =>
+                                  valueField.onChange(
+                                    fromTaipeiCalendarDate(date).getTime(),
+                                  )
+                                }
+                              />
                               <FormMessage />
                             </>
                           )}

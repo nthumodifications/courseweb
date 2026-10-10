@@ -13,6 +13,7 @@ import { cn } from "@courseweb/ui";
 import { CalendarClock } from "lucide-react";
 import {
   getCustomSlotTimeRange,
+  getTimetableSlotTimes,
   getTimetableTimeRangePosition,
   timetableGridEnd,
   timetableGridStart,
@@ -61,6 +62,7 @@ const TimetableSlotVertical = forwardRef<HTMLDivElement, TimetableSlotProps>(
       TIMETABLE_FONT_FAMILIES[preferences.fontFamily ?? "system"];
     const customItem = course.customItem;
     const customSlot = course.customSlot;
+    const { start: startSlot, end: endSlot } = getTimetableSlotTimes(course);
     const customRange = customSlot ? getCustomSlotTimeRange(customSlot) : null;
     const extendedHours = tableDim.extendedHours;
     const customPosition =
@@ -111,12 +113,9 @@ const TimetableSlotVertical = forwardRef<HTMLDivElement, TimetableSlotProps>(
             </span>
           ) : null;
         case "time":
-          return display.time &&
-            scheduleTimeSlots[course.startTime] &&
-            scheduleTimeSlots[course.endTime] ? (
+          return display.time && startSlot && endSlot ? (
             <span key="time" className={cn(fontSizeClass, textAlign)}>
-              {scheduleTimeSlots[course.startTime].start} -{" "}
-              {scheduleTimeSlots[course.endTime].end}
+              {startSlot.start} - {endSlot.end}
             </span>
           ) : null;
         case "teacher":

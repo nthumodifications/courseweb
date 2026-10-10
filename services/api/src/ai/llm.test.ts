@@ -12,6 +12,7 @@ import {
   readableProviderMessage,
   streamChatWithTools,
   TOOL_CALL_BUDGET_ERROR,
+  type LlmEnv,
   validateAgainstSchema,
 } from "./llm";
 import type { Context } from "hono";
@@ -21,6 +22,41 @@ const originalFetch = globalThis.fetch;
 afterEach(() => {
   globalThis.fetch = originalFetch;
 });
+
+const workerMessage = (message: Record<string, unknown>) => ({
+  choices: [{ message }],
+});
+
+const collectChatEvents = async (
+  env: LlmEnv,
+  prompt = "hello",
+  userGeminiKey?: string,
+) => {
+  const events = [];
+  for await (const event of streamChatWithTools(
+    { env } as unknown as Context,
+    [{ role: "user", content: prompt }],
+    {},
+    { env, userGeminiKey },
+  )) {
+    events.push(event);
+  }
+  return events;
+};
+
+const groqStreamResponse = (content: string) =>
+  new Response(
+    `data: ${JSON.stringify({ choices: [{ delta: { content } }] })}\n\ndata: [DONE]\n\n`,
+  );
+
+const mockGeminiThenGroq = (urls: string[], groqContent: string) =>
+  mock(async (input) => {
+    const url = String(input);
+    urls.push(url);
+    return url.includes("generativelanguage.googleapis.com")
+      ? new Response("data: {}\n\n")
+      : groqStreamResponse(groqContent);
+  });
 
 describe("LLM provider helpers", () => {
   it("allows only HTTPS PDF hosts on the explicit allowlist", () => {
@@ -412,6 +448,111 @@ describe("normalizeWorkersAiOutput", () => {
       },
     });
     expect(events.at(-1)).toEqual({ type: "done" });
+  });
+
+  it("falls through when a provider returns an empty final answer", async () => {
+    const calls: string[] = [];
+    const env: LlmEnv = {
+      AI_PROVIDER_ORDER: "workers-ai",
+      WORKERS_AI_CHAT_MODELS: "empty-model,answer-model",
+      AI: {
+        run: async (model: string) => {
+          calls.push(model);
+          return workerMessage({
+            content: model === "empty-model" ? null : "The answer",
+          });
+        },
+      },
+    };
+    const events = await collectChatEvents(env);
+
+    expect(calls).toEqual(["empty-model", "answer-model"]);
+    expect(events).toContainEqual({ type: "text", data: "The answer" });
+    expect(events).not.toContainEqual(
+      expect.objectContaining({ type: "error" }),
+    );
+    expect(events.at(-1)).toEqual({ type: "done" });
+  });
+
+  it("falls through after tool use when the next answer is empty", async () => {
+    const calls: string[] = [];
+    const env: LlmEnv = {
+      AI_PROVIDER_ORDER: "workers-ai",
+      WORKERS_AI_CHAT_MODELS: "tool-model,answer-model",
+      AI: {
+        run: async (model: string) => {
+          calls.push(model);
+          if (model === "tool-model" && calls.length === 1) {
+            return workerMessage({
+              content: null,
+              tool_calls: [
+                {
+                  id: "call-1",
+                  function: { name: "unknown_tool", arguments: "{}" },
+                },
+              ],
+            });
+          }
+          if (model === "tool-model") {
+            return workerMessage({ content: null });
+          }
+          return workerMessage({ content: "The closing answer" });
+        },
+      },
+    };
+    const events = await collectChatEvents(env, "use a tool");
+
+    expect(calls).toEqual(["tool-model", "tool-model", "answer-model"]);
+    expect(events).toContainEqual({
+      type: "text",
+      data: "The closing answer",
+    });
+    expect(events.at(-1)).toEqual({ type: "done" });
+  });
+
+  it("reports an error when every provider returns an empty answer", async () => {
+    const urls: string[] = [];
+    globalThis.fetch = mockGeminiThenGroq(
+      urls,
+      "   ",
+    ) as unknown as typeof fetch;
+    const env: LlmEnv = {
+      AI_PROVIDER_ORDER: "gemini,groq",
+      GOOGLE_AI_API_KEY: "gemini-key",
+      GEMINI_CHAT_MODELS: "gemini-empty",
+      GROQ_API_KEY: "groq-key",
+      GROQ_CHAT_MODELS: "groq-empty",
+    };
+    const events = await collectChatEvents(env);
+
+    expect(events).toContainEqual(
+      expect.objectContaining({ type: "error", code: "unavailable" }),
+    );
+    expect(events.at(-1)).toEqual({ type: "done" });
+    expect(urls).toHaveLength(2);
+    expect(urls[0]).toContain("generativelanguage.googleapis.com");
+    expect(urls[1]).toContain("api.groq.com");
+  });
+
+  it("does not fall through after a user-key provider returns blank", async () => {
+    const urls: string[] = [];
+    globalThis.fetch = mockGeminiThenGroq(
+      urls,
+      "answer",
+    ) as unknown as typeof fetch;
+    const env: LlmEnv = {
+      AI_PROVIDER_ORDER: "groq",
+      GEMINI_CHAT_MODELS: "user-key-model",
+      GROQ_API_KEY: "server-groq-key",
+      GROQ_CHAT_MODELS: "server-model",
+    };
+    const events = await collectChatEvents(env, "hello", "user-gemini-key");
+
+    expect(urls).toHaveLength(1);
+    expect(urls[0]).toContain("generativelanguage.googleapis.com");
+    expect(events).toContainEqual(
+      expect.objectContaining({ type: "error", code: "unavailable" }),
+    );
   });
 
   it("does not send unknown or unused context fields to the model", async () => {

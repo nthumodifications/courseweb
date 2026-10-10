@@ -1,3 +1,5 @@
+// Canonical semester table. The Worker-local mirror and its synchronization
+// test live in services/api/src/timetable-ics.ts and timetable-ics.test.ts.
 export const semesterInfo = [
   {
     id: "10810",
