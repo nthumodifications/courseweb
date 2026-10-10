@@ -15,6 +15,7 @@ import {
   getSyncedStorageBackupKey,
   getSyncedStorageKey,
   mergeCourseStorage,
+  mergeStringArray,
   reconcileSyncedData,
 } from "./syncedStorage";
 
@@ -290,6 +291,184 @@ describe("useSyncedStorage remote read states", () => {
     );
 
     expect(rendered.getResult()?.[0]).toEqual(expected);
+
+    await cleanupSyncedStorage(rendered);
+  });
+
+  test("uses a newer remote course clear without uploading local data back", async () => {
+    setupDom();
+    window.localStorage.setItem("nthumods_device_id", "device-a");
+    const storageKey = getSyncedStorageKey("courses", user.profile.sub);
+    window.localStorage.setItem(
+      storageKey,
+      JSON.stringify({
+        value: { "11410": ["LOCAL-COURSE"] },
+        lastModified: 100,
+        updatedAt: 100,
+        deviceId: "device-a",
+      }),
+    );
+    get.mockImplementationOnce(
+      async () =>
+        new Response(
+          JSON.stringify({
+            value: {},
+            lastModified: 200,
+            updatedAt: 200,
+            deviceId: "device-b",
+          }),
+          { status: 200 },
+        ),
+    );
+
+    const rendered = await renderSyncedStorage(() =>
+      useSyncedStorage("courses", {}, mergeCourseStorage),
+    );
+    await waitForResult(
+      rendered.getResult,
+      (result) => JSON.stringify(result?.[0]) === JSON.stringify({}),
+    );
+
+    expect(rendered.getResult()?.[0]).toEqual({});
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    });
+    expect(post).not.toHaveBeenCalled();
+
+    await cleanupSyncedStorage(rendered);
+  });
+
+  test("uses a newer remote favourites clear without uploading local data back", async () => {
+    setupDom();
+    window.localStorage.setItem("nthumods_device_id", "device-a");
+    window.localStorage.setItem(
+      getSyncedStorageKey("course_favourites", user.profile.sub),
+      JSON.stringify({
+        value: ["LOCAL-FAVOURITE"],
+        lastModified: 100,
+        updatedAt: 100,
+        deviceId: "device-a",
+      }),
+    );
+    get.mockImplementationOnce(
+      async () =>
+        new Response(
+          JSON.stringify({
+            value: [],
+            lastModified: 200,
+            updatedAt: 200,
+            deviceId: "device-b",
+          }),
+          { status: 200 },
+        ),
+    );
+
+    const rendered = await renderSyncedStorage(() =>
+      useSyncedStorage("course_favourites", [], mergeStringArray),
+    );
+    await waitForResult(
+      rendered.getResult,
+      (result) => JSON.stringify(result?.[0]) === JSON.stringify([]),
+    );
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    });
+
+    expect(rendered.getResult()?.[0]).toEqual([]);
+    expect(post).not.toHaveBeenCalled();
+
+    await cleanupSyncedStorage(rendered);
+  });
+
+  test("uploads a signed-in edit to the account record", async () => {
+    setupDom();
+    window.localStorage.setItem("nthumods_device_id", "device-a");
+    const accountStorageKey = getSyncedStorageKey("courses", user.profile.sub);
+    window.localStorage.setItem(
+      accountStorageKey,
+      JSON.stringify({
+        value: {},
+        lastModified: -1,
+        updatedAt: -1,
+        deviceId: "device-a",
+      }),
+    );
+    window.localStorage.setItem(
+      "courses",
+      JSON.stringify({
+        value: { "11410": ["LEGACY-COURSE"] },
+        lastModified: 100,
+      }),
+    );
+    window.localStorage.setItem(
+      getSyncedStorageKey("courses"),
+      JSON.stringify({
+        value: { "11410": ["ANONYMOUS-COURSE"] },
+        lastModified: 100,
+        updatedAt: 100,
+        deviceId: "device-a",
+      }),
+    );
+    get.mockImplementationOnce(
+      async () =>
+        new Response(JSON.stringify({ error: "Not found" }), { status: 404 }),
+    );
+
+    const rendered = await renderSyncedStorage(() =>
+      useSyncedStorage("courses", {}, mergeCourseStorage),
+    );
+    await waitForResult(rendered.getResult);
+
+    expect(rendered.getResult()?.[0]).toEqual({});
+    const updateData = rendered.getResult()?.[1] as (
+      value: Record<string, string[]>,
+    ) => void;
+    await act(async () => {
+      updateData({ "11410": ["ACCOUNT-COURSE"] });
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    });
+    const storedAccountData = JSON.parse(
+      window.localStorage.getItem(accountStorageKey)!,
+    );
+    expect(storedAccountData).toMatchObject({
+      value: { "11410": ["ACCOUNT-COURSE"] },
+    });
+    expect(storedAccountData.updatedAt).toBeGreaterThan(-1);
+    expect(post).toHaveBeenCalledWith(
+      expect.objectContaining({ param: { key: "courses" } }),
+      expect.anything(),
+    );
+
+    await cleanupSyncedStorage(rendered);
+  });
+
+  test("does not write on an idle load with an unchanged remote snapshot", async () => {
+    setupDom();
+    window.localStorage.setItem("nthumods_device_id", "device-a");
+    const storageKey = getSyncedStorageKey("courses", user.profile.sub);
+    const snapshot = {
+      value: { "11410": ["UNCHANGED-COURSE"] },
+      lastModified: 100,
+      updatedAt: 100,
+      deviceId: "device-a",
+    };
+    window.localStorage.setItem(storageKey, JSON.stringify(snapshot));
+    get.mockImplementationOnce(
+      async () => new Response(JSON.stringify(snapshot), { status: 200 }),
+    );
+
+    const rendered = await renderSyncedStorage(() =>
+      useSyncedStorage("courses", {}, mergeCourseStorage),
+    );
+    await waitForResult(rendered.getResult);
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    });
+
+    expect(rendered.getResult()?.[0]).toEqual({
+      "11410": ["UNCHANGED-COURSE"],
+    });
+    expect(post).toHaveBeenCalledTimes(0);
 
     await cleanupSyncedStorage(rendered);
   });
