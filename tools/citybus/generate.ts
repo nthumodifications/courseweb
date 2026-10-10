@@ -6,6 +6,7 @@ import {
   normalizeScheduleRecords,
   type AnyRecord,
 } from "./normalize";
+import { sanitizeLogValue } from "./logging";
 
 const BASE = "https://tdx.transportdata.tw/api/basic/v2/Bus";
 const TOKEN_URL =
@@ -367,5 +368,5 @@ for (const route of routes) {
   );
 }
 console.log(
-  `Wrote ${routes.length} routes (${rawRoutes.length} city, ${new Set(intercityStops.map((row) => row.RouteUID)).size} intercity)`,
+  `Wrote ${sanitizeLogValue(routes.length)} routes (${sanitizeLogValue(rawRoutes.length)} city, ${sanitizeLogValue(new Set(intercityStops.map((row) => row.RouteUID)).size)} intercity)`,
 );
