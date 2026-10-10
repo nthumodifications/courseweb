@@ -930,6 +930,15 @@
           },
           "youbike": {
             "title": "YouBike"
+          },
+          "shops": {
+            "title": "目前營業中的店家"
+          },
+          "upcoming-events": {
+            "title": "即將到來的行程"
+          },
+          "grades": {
+            "title": "成績與 GPA"
           }
         },
         "weather": {
@@ -1260,6 +1269,8 @@
     "no_phone": "無",
     "area_placeholder": "選擇地區",
     "area_all": "全部",
+    "no_open": "目前沒有營業中的店家",
+    "separator": "・",
     "load_error": "無法載入店家資料。",
     "view_on_map": "在地圖中查看",
     "map_unavailable": "校園地圖尚未涵蓋此地點"
@@ -1363,6 +1374,7 @@
     "sign_in": "登入",
     "predicted_term_gpa": "預估本學期 GPA",
     "projected_cumulative_gpa": "預估累計 GPA",
+    "widget_empty": "尚無 GPA 資料。",
     "credits_counted": "計算學分",
     "current_gpa": "起始累計 GPA",
     "completed_credits": "歷史前學分",

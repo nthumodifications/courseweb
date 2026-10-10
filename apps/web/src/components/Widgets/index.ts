@@ -9,4 +9,7 @@ export { default as LibraryWidget } from "./LibraryWidget";
 export { default as LaundryWidget } from "./LaundryWidget";
 export { default as SportsVenuesWidget } from "./SportsVenuesWidget";
 export { default as YouBikeWidget } from "./YouBikeWidget";
+export { default as ShopsWidget } from "./ShopsWidget";
+export { default as UpcomingEventsWidget } from "./UpcomingEventsWidget";
+export { default as GradesWidget } from "./GradesWidget";
 export { default as WidgetGrid } from "./WidgetGrid";

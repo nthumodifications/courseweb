@@ -9,7 +9,10 @@ export type WidgetType =
   | "library"
   | "laundry"
   | "sports-venues"
-  | "youbike";
+  | "youbike"
+  | "shops"
+  | "upcoming-events"
+  | "grades";
 
 export interface WidgetConfig {
   id: string; // unique instance uuid
@@ -49,6 +52,14 @@ export const DEFAULT_DASHBOARD_CONFIG: DashboardConfig = {
       enabled: false,
     },
     { id: "youbike-default", type: "youbike", order: 10, enabled: false },
+    { id: "shops-default", type: "shops", order: 11, enabled: false },
+    {
+      id: "upcoming-events-default",
+      type: "upcoming-events",
+      order: 12,
+      enabled: false,
+    },
+    { id: "grades-default", type: "grades", order: 13, enabled: false },
   ],
 };
 
@@ -136,6 +147,27 @@ export const WIDGET_DEFINITIONS: WidgetDefinition[] = [
     label: "YouBike",
     labelZh: "YouBike",
     description: "Your favourite station availability",
+    defaultEnabled: false,
+  },
+  {
+    type: "shops",
+    label: "Shops open now",
+    labelZh: "目前營業中的店家",
+    description: "Campus shops and restaurants open now",
+    defaultEnabled: false,
+  },
+  {
+    type: "upcoming-events",
+    label: "Upcoming events",
+    labelZh: "即將到來的行程",
+    description: "Your next calendar and academic dates",
+    defaultEnabled: false,
+  },
+  {
+    type: "grades",
+    label: "Grades and GPA",
+    labelZh: "成績與 GPA",
+    description: "Estimated semester and cumulative GPA",
     defaultEnabled: false,
   },
 ];

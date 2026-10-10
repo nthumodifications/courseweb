@@ -930,6 +930,15 @@
           },
           "youbike": {
             "title": "YouBike"
+          },
+          "shops": {
+            "title": "Shops open now"
+          },
+          "upcoming-events": {
+            "title": "Upcoming events"
+          },
+          "grades": {
+            "title": "Grades and GPA"
           }
         },
         "weather": {
@@ -1260,6 +1269,8 @@
     "no_phone": "None",
     "area_placeholder": "Select area",
     "area_all": "Anywhere",
+    "no_open": "No shops are open now",
+    "separator": "·",
     "load_error": "Unable to load shop data.",
     "view_on_map": "View on map",
     "map_unavailable": "This location is not yet covered by the campus map"
@@ -1363,6 +1374,7 @@
     "sign_in": "Sign in",
     "predicted_term_gpa": "Predicted term GPA",
     "projected_cumulative_gpa": "Projected cumulative GPA",
+    "widget_empty": "No GPA data yet.",
     "credits_counted": "Credits counted",
     "current_gpa": "Starting cumulative GPA",
     "completed_credits": "Credits before history",
