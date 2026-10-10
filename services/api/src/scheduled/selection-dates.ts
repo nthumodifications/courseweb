@@ -37,10 +37,11 @@ const MAX_SOURCE_BODY_BYTES = 2 * 1024 * 1024;
 const MAX_DISCOVERY_CANDIDATES = 3;
 const SELECTION_LLM_TIMEOUT_MS = 15_000;
 export const MAX_SELECTION_CACHE_AGE_MS = 36 * 60 * 60 * 1000;
-const DATE_PATTERN =
-  /(?:(\d{3,4})\s*[-/.年]\s*)?(\d{1,2})\s*[-/.月]\s*(\d{1,2})\s*日?/g;
+const FULL_DATE_PATTERN =
+  /(\d{3,4})\s*[-/.年]\s*(\d{1,2})\s*[-/.月]\s*(\d{1,2})\s*日?/g;
+const SHORT_DATE_PATTERN = /(\d{1,2})\s*[-/.月]\s*(\d{1,2})\s*日?/g;
 const DATE_KEY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
-const TIME_EVIDENCE_PATTERN = /(?:^|[^\d])(\d{1,2})[:：](\d{2})(?!\d)/g;
+const TIME_EVIDENCE_PATTERN = /(\d{1,2})[:：](\d{2})/g;
 const TIME_PATTERN = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
 
 type HtmlElement = {
@@ -205,8 +206,45 @@ const rocOrGregorianYear = (value: string) => {
   return year < 1000 ? year + 1911 : year;
 };
 
+type DateMatch = {
+  0: string;
+  1: string | undefined;
+  2: string;
+  3: string;
+  index: number;
+};
+
+const dateMatches = (value: string): DateMatch[] => {
+  const fullMatches = [...value.matchAll(FULL_DATE_PATTERN)].map((match) => ({
+    0: match[0],
+    1: match[1],
+    2: match[2]!,
+    3: match[3]!,
+    index: match.index,
+  }));
+  const shortMatches = [...value.matchAll(SHORT_DATE_PATTERN)]
+    .filter(
+      (match) =>
+        !fullMatches.some(
+          (fullMatch) =>
+            match.index >= fullMatch.index &&
+            match.index < fullMatch.index + fullMatch[0].length,
+        ),
+    )
+    .map((match) => ({
+      0: match[0],
+      1: undefined,
+      2: match[1]!,
+      3: match[2]!,
+      index: match.index,
+    }));
+  return [...fullMatches, ...shortMatches].sort(
+    (left, right) => left.index - right.index,
+  );
+};
+
 const parseDateRange = (value: string, rocYear: number) => {
-  const dates = [...value.matchAll(DATE_PATTERN)];
+  const dates = dateMatches(value);
   if (dates.length < 2) return null;
   const first = dates[0]!;
   const second = dates[1]!;
@@ -255,17 +293,37 @@ const phaseFromLabel = (label: string): SelectionPhase | null => {
     lowerLabel.includes("withdrawal")
   )
     return "withdrawal";
-  const round = label.match(/第\s*([123])\s*次選課/);
-  if (round) return `round-${round[1]}` as SelectionPhase;
-  const englishRound = label.match(/\b(1st|2nd|3rd)\b.*selection/i);
-  if (englishRound) {
-    return `round-${{ "1st": 1, "2nd": 2, "3rd": 3 }[englishRound[1]!]}` as SelectionPhase;
+  let roundIndex = label.indexOf("第");
+  while (roundIndex >= 0) {
+    let cursor = roundIndex + 1;
+    while (cursor < label.length && /\s/.test(label[cursor]!)) cursor += 1;
+    const roundNumber = label[cursor];
+    cursor += 1;
+    while (cursor < label.length && /\s/.test(label[cursor]!)) cursor += 1;
+    if (
+      (roundNumber === "1" || roundNumber === "2" || roundNumber === "3") &&
+      label.startsWith("次選課", cursor)
+    ) {
+      return `round-${roundNumber}` as SelectionPhase;
+    }
+    roundIndex = label.indexOf("第", roundIndex + 1);
+  }
+
+  const englishRoundPattern = /\b(1st|2nd|3rd)\b/gi;
+  let englishRound: RegExpExecArray | null;
+  while ((englishRound = englishRoundPattern.exec(label)) !== null) {
+    const afterRound = englishRound.index + englishRound[0].length;
+    if (label.slice(afterRound).toLowerCase().includes("selection")) {
+      return `round-${
+        { "1st": 1, "2nd": 2, "3rd": 3 }[englishRound[1]!.toLowerCase()]
+      }` as SelectionPhase;
+    }
   }
   return null;
 };
 
 const semesterParts = (semester: string) => {
-  const match = semester.match(/^(\d{3})(10|20)$/);
+  const match = /^(\d{3})(10|20)$/.exec(semester);
   if (!match) throw new Error(`Unsupported semester id: ${semester}`);
   return { rocYear: Number(match[1]), term: match[2] === "10" ? 1 : 2 };
 };
@@ -408,6 +466,8 @@ export async function discoverSelectionSources(
   fetcher: SelectionFetcher = fetch,
 ): Promise<Map<string, DiscoveredSelectionSource | null>> {
   const linksBySemester = new Map<string, Map<string, string>>();
+  // Keep official-host requests sequential to respect rate limits and preserve
+  // listing/candidate order when resolving ambiguous sources.
   for (const listingUrl of SELECTION_DISCOVERY_URLS) {
     try {
       const html = await fetchHtml(listingUrl, fetcher);
@@ -548,8 +608,7 @@ const logicalRows = (table: HtmlElement): LogicalCell[][] => {
   return rows;
 };
 
-const hasDateRange = (value: string) =>
-  [...value.matchAll(DATE_PATTERN)].length >= 2;
+const hasDateRange = (value: string) => dateMatches(value).length >= 2;
 
 const scheduleTables = (document: HtmlDocument) =>
   Array.from(document.querySelectorAll("table")).filter((table) => {
@@ -632,7 +691,7 @@ const parseScheduleTable = (
       );
     }
     seen.add(phase);
-    const specialEnd = dateText.match(/(\d{1,2}:\d{2})\s*截止/i)?.[1];
+    const specialEnd = /(\d{1,2}:\d{2})\s*截止/i.exec(dateText)?.[1];
     periods.push({
       id: `course-selection:${target.semester}:${phase}`,
       semester: target.semester,
@@ -751,7 +810,7 @@ const extractDateEvidence = (
   target: SelectionSourceTarget,
 ): DateEvidence => {
   const { rocYear } = semesterParts(target.semester);
-  const matches = [...normalizeFullWidthDigits(value).matchAll(DATE_PATTERN)];
+  const matches = dateMatches(normalizeFullWidthDigits(value));
   const keys = new Set<string>();
   let previousYear = rocYear + 1911;
   let previousMonth: number | undefined;
@@ -773,10 +832,14 @@ const extractDateEvidence = (
 };
 
 const extractTimeEvidence = (value: string) => {
+  const normalized = normalizeFullWidthDigits(value);
   const times = new Set<string>();
-  for (const match of normalizeFullWidthDigits(value).matchAll(
-    TIME_EVIDENCE_PATTERN,
-  )) {
+  for (const match of normalized.matchAll(TIME_EVIDENCE_PATTERN)) {
+    const previous = normalized[match.index - 1];
+    const next = normalized[match.index + match[0].length];
+    if ((previous && /\d/.test(previous)) || (next && /\d/.test(next))) {
+      continue;
+    }
     const hour = Number(match[1]);
     const minute = Number(match[2]);
     if (hour <= 23 && minute <= 59) {
@@ -788,7 +851,7 @@ const extractTimeEvidence = (value: string) => {
 
 const normalizeLlmDate = (value: string, target: SelectionSourceTarget) => {
   const normalized = normalizeFullWidthDigits(value.trim());
-  const matches = [...normalized.matchAll(DATE_PATTERN)];
+  const matches = dateMatches(normalized);
   if (
     matches.length !== 1 ||
     matches[0]![0]!.replace(/\s/g, "") !== normalized.replace(/\s/g, "")
@@ -894,7 +957,7 @@ export async function extractSelectionDocument(
 
 const dateValue = (dateKey: string) => {
   if (typeof dateKey !== "string") return NaN;
-  const match = dateKey.match(DATE_KEY_PATTERN);
+  const match = DATE_KEY_PATTERN.exec(dateKey);
   if (!match) return NaN;
   const key = toDateKey(Number(match[1]), Number(match[2]), Number(match[3]));
   return key === dateKey
@@ -1124,6 +1187,82 @@ export const getSelectionSourceTargets = (now = new Date()) => {
   }));
 };
 
+type SyncSelectionSource =
+  | DiscoveredSelectionSource
+  | (SelectionSourceTarget & { resolution: "seed-fallback" });
+
+const resolveSelectionSource = (
+  target: SelectionSourceTarget,
+  discovered: Map<string, DiscoveredSelectionSource | null>,
+): SyncSelectionSource => {
+  const discoveredSource = discovered.get(target.semester);
+  if (discovered.has(target.semester) && !discoveredSource) {
+    throw new Error("ambiguous official sources");
+  }
+  if (discoveredSource) return discoveredSource;
+  if (target.url) return { ...target, resolution: "seed-fallback" };
+  throw new Error("no official source discovered or seeded");
+};
+
+const syncSelectionTarget = async (
+  env: SelectionScraperEnv,
+  target: SelectionSourceTarget,
+  discovered: Map<string, DiscoveredSelectionSource | null>,
+): Promise<"saved" | "skipped"> => {
+  const source = resolveSelectionSource(target, discovered);
+  console.log(
+    `[selection-dates] ${target.semester} source=${source.resolution} url=${source.url}`,
+  );
+  const discoveredHtml = "html" in source ? source.html : undefined;
+  const html = discoveredHtml ?? (await fetchHtml(source.url, fetch));
+  const contentHash = await sha256(html);
+  const existing = await readStoredSelectionSchedule(env.DB, target.semester);
+  const existingIsComplete =
+    existing !== null &&
+    validateSelectionPeriods(existing.periods, target.semester).length === 0;
+  if (existingIsComplete && existing.metadata.contentHash === contentHash) {
+    if (!isSelectionCacheFresh(existing.metadata.fetchedAt)) {
+      await storeSelectionSchedule(env.DB, {
+        ...existing,
+        metadata: {
+          ...existing.metadata,
+          sourceUrl: source.url,
+          fetchedAt: new Date().toISOString(),
+          sourceResolution: source.resolution,
+        },
+      });
+      console.log(`[selection-dates] ${target.semester} cache refreshed`);
+      return "saved";
+    }
+    console.log(`[selection-dates] ${target.semester} unchanged; skipped`);
+    return "skipped";
+  }
+
+  const extracted = await extractSelectionDocument(html, target, env);
+  const validationErrors = validateSelectionPeriods(
+    extracted.periods,
+    target.semester,
+  );
+  if (validationErrors.length > 0) {
+    throw new Error(`validation failed: ${validationErrors.join("; ")}`);
+  }
+  await storeSelectionSchedule(env.DB, {
+    semester: target.semester,
+    periods: extracted.periods,
+    metadata: {
+      sourceUrl: source.url,
+      fetchedAt: new Date().toISOString(),
+      contentHash,
+      extractionMethod: extracted.extractionMethod,
+      sourceResolution: source.resolution,
+    },
+  });
+  console.log(
+    `[selection-dates] saved ${target.semester} via ${extracted.extractionMethod}`,
+  );
+  return "saved";
+};
+
 export async function syncSelectionDates(
   env: SelectionScraperEnv,
   now = new Date(),
@@ -1137,75 +1276,12 @@ export async function syncSelectionDates(
   const discovered = await discoverSelectionSources(
     targets.map((target) => target.semester),
   );
+  // Target processing remains ordered because each target reads and then
+  // updates its cache before the next scheduled source is handled.
   for (const target of targets) {
     try {
-      const discoveredSource = discovered.get(target.semester);
-      if (discovered.has(target.semester) && !discoveredSource) {
-        throw new Error("ambiguous official sources");
-      }
-      const source =
-        discoveredSource ??
-        (target.url
-          ? { ...target, resolution: "seed-fallback" as const }
-          : null);
-      if (!source) throw new Error("no official source discovered or seeded");
-      console.log(
-        `[selection-dates] ${target.semester} source=${source.resolution} url=${source.url}`,
-      );
-      const html =
-        ("html" in source ? source.html : undefined) ??
-        (await fetchHtml(source.url, fetch));
-      const contentHash = await sha256(html);
-      const existing = await readStoredSelectionSchedule(
-        env.DB,
-        target.semester,
-      );
-      const existingIsComplete =
-        existing !== null &&
-        validateSelectionPeriods(existing.periods, target.semester).length ===
-          0;
-      if (existingIsComplete && existing.metadata.contentHash === contentHash) {
-        if (!isSelectionCacheFresh(existing.metadata.fetchedAt)) {
-          await storeSelectionSchedule(env.DB, {
-            ...existing,
-            metadata: {
-              ...existing.metadata,
-              sourceUrl: source.url,
-              fetchedAt: new Date().toISOString(),
-              sourceResolution: source.resolution,
-            },
-          });
-          console.log(`[selection-dates] ${target.semester} cache refreshed`);
-          result.saved.push(target.semester);
-          continue;
-        }
-        console.log(`[selection-dates] ${target.semester} unchanged; skipped`);
-        result.skipped.push(target.semester);
-        continue;
-      }
-      const extracted = await extractSelectionDocument(html, target, env);
-      const validationErrors = validateSelectionPeriods(
-        extracted.periods,
-        target.semester,
-      );
-      if (validationErrors.length > 0) {
-        throw new Error(`validation failed: ${validationErrors.join("; ")}`);
-      }
-      await storeSelectionSchedule(env.DB, {
-        semester: target.semester,
-        periods: extracted.periods,
-        metadata: {
-          sourceUrl: source.url,
-          fetchedAt: new Date().toISOString(),
-          contentHash,
-          extractionMethod: extracted.extractionMethod,
-          sourceResolution: source.resolution,
-        },
-      });
-      console.log(
-        `[selection-dates] saved ${target.semester} via ${extracted.extractionMethod}`,
-      );
-      result.saved.push(target.semester);
+      const outcome = await syncSelectionTarget(env, target, discovered);
+      result[outcome].push(target.semester);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.error(

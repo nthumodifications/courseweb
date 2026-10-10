@@ -28,6 +28,13 @@ const target = (semester: string): SelectionSourceTarget => ({
   url: SELECTION_SOURCE_URLS[semester as keyof typeof SELECTION_SOURCE_URLS],
 });
 
+const singlePhaseHtml = (label: string, dateText: string) => `
+  <h2>115學年度第1學期選課日程表</h2>
+  <table>
+    <tr><th>選課階段</th><th>開放日期</th></tr>
+    <tr><td>${label}</td><td>${dateText}</td></tr>
+  </table>`;
+
 describe("official selection schedule parser", () => {
   test.each([
     ["11510", currentHtml, 7, "2026-06-15", "2026-11-20"],
@@ -106,6 +113,58 @@ describe("official selection schedule parser", () => {
       /no known selection phases found/,
     );
     expect(performance.now() - startedAt).toBeLessThan(1_000);
+  });
+
+  test.each([
+    ["empty date text", ""],
+    [
+      "long repeated whitespace",
+      `115${" ".repeat(20_000)}/6${" ".repeat(20_000)}/15～115/6/17`,
+    ],
+    ["long digit run", `115/6/15～${"9".repeat(20_000)} 115/6/17`],
+  ] as const)("handles date edge case: %s", (name, dateText) => {
+    if (name === "empty date text") {
+      expect(() =>
+        parseSelectionHtml(
+          singlePhaseHtml("第1次選課", dateText),
+          target("11510"),
+        ),
+      ).toThrow(/no known selection phases found/);
+      return;
+    }
+
+    expect(
+      parseSelectionHtml(
+        singlePhaseHtml("第1次選課", dateText),
+        target("11510"),
+      ).periods[0],
+    ).toMatchObject({ startDate: "2026-06-15", endDate: "2026-06-17" });
+  });
+
+  test.each([
+    ["empty label", ""],
+    [
+      "long repeated whitespace",
+      `第${" ".repeat(20_000)}1${" ".repeat(20_000)}次選課`,
+    ],
+    ["long digit run", `1st ${"9".repeat(20_000)} selection`],
+  ] as const)("handles phase label edge case: %s", (name, label) => {
+    if (name === "empty label") {
+      expect(() =>
+        parseSelectionHtml(
+          singlePhaseHtml(label, "115/6/15～115/6/17"),
+          target("11510"),
+        ),
+      ).toThrow(/no known selection phases found/);
+      return;
+    }
+
+    expect(
+      parseSelectionHtml(
+        singlePhaseHtml(label, "115/6/15～115/6/17"),
+        target("11510"),
+      ).periods[0]!.phase,
+    ).toBe("round-1");
   });
 });
 
