@@ -30,8 +30,7 @@ const REPORT_AREAS = [
   "other",
 ] as const;
 type ReportLabel =
-  | (typeof REPORT_TYPES)[number]
-  | (typeof REPORT_AREAS)[number];
+  (typeof REPORT_TYPES)[number] | (typeof REPORT_AREAS)[number];
 const REPORT_ROUTE_PATTERNS = [
   "/[lang]/timetable",
   "/[lang]/calendar",
@@ -576,22 +575,11 @@ const app = new Hono<{ Bindings: Bindings }>()
     zValidator(
       "query",
       z.object({
-        tag: z.string(),
+        tag: z.string().trim().min(1).max(100),
       }),
     ),
     async (c) => {
       const { tag } = c.req.valid("query");
-
-      // Validate tag parameter
-      if (!tag || tag.trim().length === 0) {
-        return c.json(
-          {
-            error: "Tag parameter is required",
-            code: "MISSING_TAG",
-          } as ErrorResponse,
-          400,
-        );
-      }
 
       const {
         GITHUB_CLIENT_ID,

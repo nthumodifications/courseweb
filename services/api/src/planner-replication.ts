@@ -46,6 +46,17 @@ type UuidCheckpoint = {
 
 type ModelIdField = "id" | "uuid";
 
+const MAX_REPLICATION_BATCH_SIZE = 100;
+const MAX_REPLICATION_PUSH_ROWS = 100;
+const replicationIdSchema = z.string().trim().max(256);
+const replicationTimestampSchema = z.literal("").or(z.string().datetime());
+const replicationBatchSizeSchema = z.coerce
+  .number()
+  .int()
+  .min(1)
+  .max(MAX_REPLICATION_BATCH_SIZE)
+  .optional();
+
 type Checkpoint<T extends ModelIdField> = T extends "id"
   ? IdCheckpoint
   : UuidCheckpoint;
@@ -231,9 +242,9 @@ const app = new Hono<{ Bindings: Bindings }>()
     zValidator(
       "query",
       z.object({
-        id: z.string(),
-        serverTimestamp: z.string(),
-        batchSize: z.coerce.number().optional(),
+        id: replicationIdSchema,
+        serverTimestamp: replicationTimestampSchema,
+        batchSize: replicationBatchSizeSchema,
       }),
     ),
     async (c) => {
@@ -295,23 +306,25 @@ const app = new Hono<{ Bindings: Bindings }>()
     "/folders/push",
     zValidator(
       "json",
-      z.array(
-        z.object({
-          newDocumentState: z
-            .object({
-              id: z.string(),
-              _deleted: z.boolean(),
-            })
-            .passthrough(),
-          assumedMasterState: z
-            .object({
-              id: z.string(),
-              _deleted: z.boolean(),
-            })
-            .passthrough()
-            .optional(),
-        }),
-      ),
+      z
+        .array(
+          z.object({
+            newDocumentState: z
+              .object({
+                id: z.string(),
+                _deleted: z.boolean(),
+              })
+              .passthrough(),
+            assumedMasterState: z
+              .object({
+                id: z.string(),
+                _deleted: z.boolean(),
+              })
+              .passthrough()
+              .optional(),
+          }),
+        )
+        .max(MAX_REPLICATION_PUSH_ROWS),
     ),
     async (c) => {
       try {
@@ -376,9 +389,9 @@ const app = new Hono<{ Bindings: Bindings }>()
     zValidator(
       "query",
       z.object({
-        uuid: z.string(),
-        serverTimestamp: z.string(),
-        batchSize: z.coerce.number().optional(),
+        uuid: replicationIdSchema,
+        serverTimestamp: replicationTimestampSchema,
+        batchSize: replicationBatchSizeSchema,
       }),
     ),
     async (c) => {
@@ -458,23 +471,25 @@ const app = new Hono<{ Bindings: Bindings }>()
     "/items/push",
     zValidator(
       "json",
-      z.array(
-        z.object({
-          newDocumentState: z
-            .object({
-              uuid: z.string(),
-              _deleted: z.boolean(),
-            })
-            .passthrough(),
-          assumedMasterState: z
-            .object({
-              uuid: z.string(),
-              _deleted: z.boolean(),
-            })
-            .passthrough()
-            .optional(),
-        }),
-      ),
+      z
+        .array(
+          z.object({
+            newDocumentState: z
+              .object({
+                uuid: z.string(),
+                _deleted: z.boolean(),
+              })
+              .passthrough(),
+            assumedMasterState: z
+              .object({
+                uuid: z.string(),
+                _deleted: z.boolean(),
+              })
+              .passthrough()
+              .optional(),
+          }),
+        )
+        .max(MAX_REPLICATION_PUSH_ROWS),
     ),
     async (c) => {
       try {
@@ -563,9 +578,9 @@ const app = new Hono<{ Bindings: Bindings }>()
     zValidator(
       "query",
       z.object({
-        id: z.string(),
-        serverTimestamp: z.string(),
-        batchSize: z.coerce.number().optional(),
+        id: replicationIdSchema,
+        serverTimestamp: replicationTimestampSchema,
+        batchSize: replicationBatchSizeSchema,
       }),
     ),
     async (c) => {
@@ -640,23 +655,25 @@ const app = new Hono<{ Bindings: Bindings }>()
     "/plannerdata/push",
     zValidator(
       "json",
-      z.array(
-        z.object({
-          newDocumentState: z
-            .object({
-              id: z.string(),
-              _deleted: z.boolean(),
-            })
-            .passthrough(),
-          assumedMasterState: z
-            .object({
-              id: z.string(),
-              _deleted: z.boolean(),
-            })
-            .passthrough()
-            .optional(),
-        }),
-      ),
+      z
+        .array(
+          z.object({
+            newDocumentState: z
+              .object({
+                id: z.string(),
+                _deleted: z.boolean(),
+              })
+              .passthrough(),
+            assumedMasterState: z
+              .object({
+                id: z.string(),
+                _deleted: z.boolean(),
+              })
+              .passthrough()
+              .optional(),
+          }),
+        )
+        .max(MAX_REPLICATION_PUSH_ROWS),
     ),
     async (c) => {
       try {
@@ -764,9 +781,9 @@ const app = new Hono<{ Bindings: Bindings }>()
     zValidator(
       "query",
       z.object({
-        id: z.string(),
-        serverTimestamp: z.string(),
-        batchSize: z.coerce.number().optional(),
+        id: replicationIdSchema,
+        serverTimestamp: replicationTimestampSchema,
+        batchSize: replicationBatchSizeSchema,
       }),
     ),
     async (c) => {
@@ -828,23 +845,25 @@ const app = new Hono<{ Bindings: Bindings }>()
     "/semesters/push",
     zValidator(
       "json",
-      z.array(
-        z.object({
-          newDocumentState: z
-            .object({
-              id: z.string(),
-              _deleted: z.boolean(),
-            })
-            .passthrough(),
-          assumedMasterState: z
-            .object({
-              id: z.string(),
-              _deleted: z.boolean(),
-            })
-            .passthrough()
-            .optional(),
-        }),
-      ),
+      z
+        .array(
+          z.object({
+            newDocumentState: z
+              .object({
+                id: z.string(),
+                _deleted: z.boolean(),
+              })
+              .passthrough(),
+            assumedMasterState: z
+              .object({
+                id: z.string(),
+                _deleted: z.boolean(),
+              })
+              .passthrough()
+              .optional(),
+          }),
+        )
+        .max(MAX_REPLICATION_PUSH_ROWS),
     ),
     async (c) => {
       try {

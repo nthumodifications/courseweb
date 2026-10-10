@@ -171,8 +171,8 @@ const app = new Hono<{ Bindings: Bindings }>()
       "query",
       z.object({
         semester: z.string().optional(),
-        limit: z.coerce.number().max(50).default(24),
-        offset: z.coerce.number().default(0),
+        limit: z.coerce.number().int().min(1).max(50).default(24),
+        offset: z.coerce.number().int().min(0).max(10_000).default(0),
       }),
     ),
     async (c) => {

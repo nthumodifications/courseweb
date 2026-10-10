@@ -7,6 +7,13 @@ import { rateLimitMiddleware } from "./utils/rate-limit";
 import { getSafeShortlinkUrl } from "./utils/shortlink-url";
 
 const MAX_SHORTLINK_URL_LENGTH = 8192;
+const SHORTLINK_REQUEST_TIMEOUT_MS = 8_000;
+
+const unavailable = () =>
+  new Response(JSON.stringify({ error: "Short link service unavailable" }), {
+    status: 502,
+    headers: { "Content-Type": "application/json" },
+  });
 
 const endpoint = (key: string, accountID: string, namespaceID: string) =>
   `https://api.cloudflare.com/client/v4/accounts/${accountID}/storage/kv/namespaces/${namespaceID}/values/${encodeURIComponent(key)}`;
@@ -60,24 +67,32 @@ const app = new Hono<{ Bindings: Bindings }>()
       // TTL: 2 months
       const ttl = 60 * 60 * 24 * 30 * 2;
 
-      const res = await fetch(
-        endpoint(
-          key,
-          CLOUDFLARE_WORKER_ACCOUNT_ID,
-          CLOUDFLARE_KV_SHORTLINKS_NAMESPACE,
-        ) + `?expiration_ttl=${ttl}`,
-        {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${CLOUDFLARE_KV_API_TOKEN}`,
-            "Content-Type": "application/json",
+      let res: { success?: boolean };
+      try {
+        const response = await fetch(
+          endpoint(
+            key,
+            CLOUDFLARE_WORKER_ACCOUNT_ID,
+            CLOUDFLARE_KV_SHORTLINKS_NAMESPACE,
+          ) + `?expiration_ttl=${ttl}`,
+          {
+            method: "PUT",
+            headers: {
+              Authorization: `Bearer ${CLOUDFLARE_KV_API_TOKEN}`,
+              "Content-Type": "application/json",
+            },
+            body: safeUrl,
+            signal: AbortSignal.timeout(SHORTLINK_REQUEST_TIMEOUT_MS),
           },
-          body: safeUrl,
-        },
-      ).then((response) => response.json() as any);
+        );
+        if (!response.ok) return unavailable();
+        res = (await response.json()) as { success?: boolean };
+      } catch {
+        return unavailable();
+      }
 
       if (!res.success) {
-        throw new Error("Failed to create short link");
+        return unavailable();
       }
 
       return c.text(`https://nthumods.com/l/${key}`);
@@ -88,7 +103,7 @@ const app = new Hono<{ Bindings: Bindings }>()
     zValidator(
       "param",
       z.object({
-        key: z.string(),
+        key: z.string().trim().min(1).max(128),
       }),
     ),
     async (c) => {
@@ -102,23 +117,36 @@ const app = new Hono<{ Bindings: Bindings }>()
         CLOUDFLARE_KV_SHORTLINKS_NAMESPACE: string;
         CLOUDFLARE_KV_API_TOKEN: string;
       }>(c);
-      const text = await fetch(
-        endpoint(
-          key,
-          CLOUDFLARE_WORKER_ACCOUNT_ID!,
-          CLOUDFLARE_KV_SHORTLINKS_NAMESPACE!,
-        ),
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${CLOUDFLARE_KV_API_TOKEN}`,
-            "Content-Type": "text/plain",
+      let response: Response;
+      try {
+        response = await fetch(
+          endpoint(
+            key,
+            CLOUDFLARE_WORKER_ACCOUNT_ID!,
+            CLOUDFLARE_KV_SHORTLINKS_NAMESPACE!,
+          ),
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${CLOUDFLARE_KV_API_TOKEN}`,
+              "Content-Type": "text/plain",
+            },
+            signal: AbortSignal.timeout(SHORTLINK_REQUEST_TIMEOUT_MS),
           },
-        },
-      ).then((response) => response.text());
+        );
+      } catch {
+        return c.json({ error: "Short link service unavailable" }, 502);
+      }
+      if (!response.ok) {
+        if (response.status === 404) {
+          return c.json({ error: { message: "Link does not exist" } }, 404);
+        }
+        return c.json({ error: "Short link service unavailable" }, 502);
+      }
+      const text = await response.text();
 
       if (!text) {
-        throw new Error("Short link not found");
+        return c.json({ error: { message: "Link does not exist" } }, 404);
       }
       return c.text(text);
     },

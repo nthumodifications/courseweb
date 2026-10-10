@@ -105,6 +105,14 @@ const mockGithub = (issueResponse = githubIssue) => {
 };
 
 describe("issue creation abuse controls", () => {
+  it("rejects oversized issue tag filters before GitHub access", async () => {
+    const requests = mockGithub();
+    const response = await issue.request(`/?tag=${"x".repeat(201)}`, {}, {});
+
+    expect(response.status).toBe(400);
+    expect(requests).toHaveLength(0);
+  });
+
   it("rejects titles and bodies over their size limits", async () => {
     const titleResponse = await postIssue(
       { title: "x".repeat(201), body: "valid description", labels: [] },

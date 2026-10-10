@@ -44,35 +44,110 @@ const PEO_SCHEMA = {
   properties: {
     name_en: { type: "string" },
     time_periods: { type: "array", items: { type: "string" } },
-    monday: { type: "array", items: { type: "object", properties: {
-      open: { type: "string" }, close: { type: "string" },
-    }, required: ["open", "close"] } },
-    tuesday: { type: "array", items: { type: "object", properties: {
-      open: { type: "string" }, close: { type: "string" },
-    }, required: ["open", "close"] } },
-    wednesday: { type: "array", items: { type: "object", properties: {
-      open: { type: "string" }, close: { type: "string" },
-    }, required: ["open", "close"] } },
-    thursday: { type: "array", items: { type: "object", properties: {
-      open: { type: "string" }, close: { type: "string" },
-    }, required: ["open", "close"] } },
-    friday: { type: "array", items: { type: "object", properties: {
-      open: { type: "string" }, close: { type: "string" },
-    }, required: ["open", "close"] } },
-    saturday: { type: "array", items: { type: "object", properties: {
-      open: { type: "string" }, close: { type: "string" },
-    }, required: ["open", "close"] } },
-    sunday: { type: "array", items: { type: "object", properties: {
-      open: { type: "string" }, close: { type: "string" },
-    }, required: ["open", "close"] } },
-    holiday: { type: "array", items: { type: "object", properties: {
-      open: { type: "string" }, close: { type: "string" },
-    }, required: ["open", "close"] } },
-    notes: { type: "string", description: "Use an empty string when there are no notes" },
+    monday: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          open: { type: "string" },
+          close: { type: "string" },
+        },
+        required: ["open", "close"],
+      },
+    },
+    tuesday: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          open: { type: "string" },
+          close: { type: "string" },
+        },
+        required: ["open", "close"],
+      },
+    },
+    wednesday: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          open: { type: "string" },
+          close: { type: "string" },
+        },
+        required: ["open", "close"],
+      },
+    },
+    thursday: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          open: { type: "string" },
+          close: { type: "string" },
+        },
+        required: ["open", "close"],
+      },
+    },
+    friday: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          open: { type: "string" },
+          close: { type: "string" },
+        },
+        required: ["open", "close"],
+      },
+    },
+    saturday: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          open: { type: "string" },
+          close: { type: "string" },
+        },
+        required: ["open", "close"],
+      },
+    },
+    sunday: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          open: { type: "string" },
+          close: { type: "string" },
+        },
+        required: ["open", "close"],
+      },
+    },
+    holiday: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          open: { type: "string" },
+          close: { type: "string" },
+        },
+        required: ["open", "close"],
+      },
+    },
+    notes: {
+      type: "string",
+      description: "Use an empty string when there are no notes",
+    },
   },
   required: [
-    "name_en", "monday", "tuesday", "wednesday", "thursday", "friday",
-    "saturday", "sunday", "holiday", "notes",
+    "name_en",
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
+    "holiday",
+    "notes",
   ],
 } as const;
 
@@ -117,14 +192,22 @@ export async function parsePdfWithProviders(
     });
     const parsed = result.data;
     const days = [
-      "monday", "tuesday", "wednesday", "thursday", "friday", "saturday",
-      "sunday", "holiday",
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+      "sunday",
+      "holiday",
     ] as const;
     const hours = {} as DaySchedule;
     for (const day of days) hours[day] = toSlots(parsed[day]);
     hours.notes = typeof parsed.notes === "string" ? parsed.notes : null;
     if (isUnreadableWeek(hours)) {
-      console.warn(`[peo] ${facilityNameZh}: no open slots and no reason given, treating as unparsed`);
+      console.warn(
+        `[peo] ${facilityNameZh}: no open slots and no reason given, treating as unparsed`,
+      );
       return null;
     }
     return {
@@ -141,7 +224,13 @@ export async function parsePdfWithProviders(
 }
 
 const WEEK_DAYS = [
-  "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+  "sunday",
 ] as const;
 
 export function isEmptyWeek(hours: DaySchedule): boolean {
@@ -163,7 +252,9 @@ export async function syncPeoOpeningTimes(
   forceSemester?: string,
   { onlyMissing = false }: { onlyMissing?: boolean } = {},
 ): Promise<void> {
-  const pageResponse = await fetch(PEO_PAGE_URL);
+  const pageResponse = await fetch(PEO_PAGE_URL, {
+    signal: AbortSignal.timeout(8_000),
+  });
   if (!pageResponse.ok) {
     throw new Error(`Failed to fetch PEO page: ${pageResponse.status}`);
   }
@@ -192,12 +283,18 @@ export async function syncPeoOpeningTimes(
         hours: null,
       });
     }
-    if (schedules.length > 0) facilities.push({ name_zh, name_en: name_zh, schedules });
+    if (schedules.length > 0)
+      facilities.push({ name_zh, name_en: name_zh, schedules });
   }
 
   const prisma = await prismaClients.fetch(env.DB);
-  const existing = await prisma.cache.findUnique({ where: { key: SPORTS_CACHE_KEY } });
-  const existingParsed = new Map<string, { name_en: string; hours: DaySchedule }>();
+  const existing = await prisma.cache.findUnique({
+    where: { key: SPORTS_CACHE_KEY },
+  });
+  const existingParsed = new Map<
+    string,
+    { name_en: string; hours: DaySchedule }
+  >();
   const cachedNameEn = new Map<string, string>();
   if (existing) {
     try {

@@ -56,7 +56,9 @@ const app = new Hono()
       const windowStart = start.toISOString().slice(0, 10);
       const windowEnd = end.toISOString().slice(0, 10);
       const CALENDAR_API_URL = `https://www.googleapis.com/calendar/v3/calendars/nthu.acad%40gmail.com/events?key=${CALENDAR_API_KEY}&timeMin=${upstreamStart.toISOString().slice(0, 10)}T00:00:00Z&timeMax=${windowEnd}T00:00:00Z`;
-      const res = await fetch(CALENDAR_API_URL);
+      const res = await fetch(CALENDAR_API_URL, {
+        signal: AbortSignal.timeout(8_000),
+      });
       if (!res.ok) {
         // Google reports a revoked, deleted or API-disabled key as a 400
         // API_KEY_INVALID. Surface that as a distinct upstream failure so it is

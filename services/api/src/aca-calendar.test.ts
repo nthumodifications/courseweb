@@ -66,4 +66,22 @@ describe("academic calendar overlap filtering", () => {
       expect.objectContaining({ id: "straddles-month" }),
     ]);
   });
+
+  test("sets a timeout on the Google Calendar request", async () => {
+    process.env.CALENDAR_API_KEY = "test-key";
+    let requestInit: RequestInit | undefined;
+    globalThis.fetch = mock(
+      async (_input: RequestInfo | URL, init?: RequestInit) => {
+        requestInit = init;
+        return googleCalendarResponse(new Request(String(_input)));
+      },
+    ) as unknown as typeof fetch;
+
+    const response = await app.request(
+      "/?start=2026-09-14T00:00:00.000Z&end=2026-09-21T00:00:00.000Z",
+    );
+
+    expect(response.status).toBe(200);
+    expect(requestInit?.signal).toBeInstanceOf(AbortSignal);
+  });
 });

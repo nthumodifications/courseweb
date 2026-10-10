@@ -45,6 +45,27 @@ const call = (app: Hono, headers: Record<string, string> = {}) =>
   app.request("/protected", { headers });
 
 describe("auth middleware status codes", () => {
+  it.each([
+    ["an opaque token with a scope", "Bearer opaque-token", "calendar"],
+    ["an opaque token without a scope", "Bearer opaque-token", undefined],
+  ])("keeps HEAD-accepted %s", async (_shape, header, scope) => {
+    stubIntrospection(
+      new Response(
+        JSON.stringify({
+          active: true,
+          username: "u1",
+          ...(scope ? { scope } : {}),
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        },
+      ),
+    );
+    const res = await call(buildApp(), { Authorization: header });
+    expect(res.status).toBe(200);
+  });
+
   it("returns 401, not 500, when the Authorization header is missing", async () => {
     const res = await call(buildApp());
     expect(res.status).toBe(401);
@@ -103,6 +124,50 @@ describe("auth middleware status codes", () => {
     const res = await call(buildApp(), { Authorization: "Bearer ok" });
     expect(res.status).toBe(500);
   });
+
+  it("rejects an active token without a verified subject", async () => {
+    stubIntrospection(
+      new Response(JSON.stringify({ active: true, scope: "calendar" }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    const res = await call(buildApp(["calendar"]), {
+      Authorization: "Bearer subjectless",
+    });
+    expect(res.status).toBe(401);
+  });
+
+  it("returns a bad-gateway error for malformed introspection JSON", async () => {
+    stubIntrospection(new Response("not json", { status: 200 }));
+
+    const res = await call(buildApp(), { Authorization: "Bearer malformed" });
+
+    expect(res.status).toBe(502);
+  });
+
+  it.each([
+    ["null", null],
+    ["a number", 42],
+    ["a string", "active"],
+    ["an array", []],
+  ])(
+    "rejects %s introspection JSON as unauthenticated",
+    async (_label, payload) => {
+      stubIntrospection(
+        new Response(JSON.stringify(payload), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      );
+
+      const res = await call(buildApp(), {
+        Authorization: "Bearer malformed-shape",
+      });
+
+      expect(res.status).toBe(401);
+    },
+  );
 
   it("does not rewrite a downstream handler's status as an auth failure", async () => {
     stubIntrospection(activeToken("calendar"));

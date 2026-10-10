@@ -23,6 +23,36 @@ const getContribDates = async (c: Context, courseId: string) => {
     }));
 };
 
+const MAX_COURSE_IDS = 2_000;
+const COURSE_QUERY_CHUNK_SIZE = 100;
+const courseIdSchema = z.string().trim().min(1).max(100);
+const courseListSchema = z.union([
+  courseIdSchema,
+  z.array(courseIdSchema).min(1).max(MAX_COURSE_IDS),
+]);
+
+const queryInChunks = async <T>(
+  ids: string[],
+  query: (chunk: string[]) => PromiseLike<{ data: T[] | null; error: unknown }>,
+): Promise<{ data: T[]; error: unknown }> => {
+  const uniqueIds = [...new Set(ids)];
+  const data: T[] = [];
+
+  for (
+    let start = 0;
+    start < uniqueIds.length;
+    start += COURSE_QUERY_CHUNK_SIZE
+  ) {
+    const result = await query(
+      uniqueIds.slice(start, start + COURSE_QUERY_CHUNK_SIZE),
+    );
+    if (result.error) return { data: [], error: result.error };
+    data.push(...(result.data ?? []));
+  }
+
+  return { data, error: null };
+};
+
 const app = new Hono()
   .get(
     "/",
@@ -30,7 +60,7 @@ const app = new Hono()
       "query",
       z.object({
         //expect courses to be string if 1 item, array if multiple
-        courses: z.union([z.string(), z.array(z.string())]),
+        courses: courseListSchema,
       }),
     ),
     async (c) => {
@@ -38,10 +68,9 @@ const app = new Hono()
 
       const courses = Array.isArray(_courses) ? _courses : [_courses];
 
-      const { data, error } = await supabase_server(c)
-        .from("courses")
-        .select("*")
-        .in("raw_id", courses);
+      const { data, error } = await queryInChunks<any>(courses, (chunk) =>
+        supabase_server(c).from("courses").select("*").in("raw_id", chunk),
+      );
       if (error) {
         console.error(error);
         throw new Error("Failed to fetch course data");
@@ -54,16 +83,15 @@ const app = new Hono()
     zValidator(
       "query",
       z.object({
-        courses: z.union([z.string(), z.array(z.string())]),
+        courses: courseListSchema,
       }),
     ),
     async (c) => {
       const { courses: _courses } = c.req.valid("query");
       const courses = Array.isArray(_courses) ? _courses : [_courses];
-      const { data, error } = await supabase_server(c)
-        .from("course_dates")
-        .select("*")
-        .in("raw_id", courses);
+      const { data, error } = await queryInChunks<any>(courses, (chunk) =>
+        supabase_server(c).from("course_dates").select("*").in("raw_id", chunk),
+      );
       if (error) {
         console.error(error);
         return c.json([]);
@@ -84,7 +112,7 @@ const app = new Hono()
     zValidator(
       "param",
       z.object({
-        courseId: z.string(),
+        courseId: courseIdSchema,
       }),
     ),
     async (c) => {
@@ -104,7 +132,7 @@ const app = new Hono()
     zValidator(
       "param",
       z.object({
-        courseId: z.string(),
+        courseId: courseIdSchema,
       }),
     ),
     async (c) => {
@@ -127,7 +155,7 @@ const app = new Hono()
     zValidator(
       "param",
       z.object({
-        courseId: z.string(),
+        courseId: courseIdSchema,
       }),
     ),
     async (c) => {
@@ -147,7 +175,7 @@ const app = new Hono()
     zValidator(
       "param",
       z.object({
-        courseId: z.string(),
+        courseId: courseIdSchema,
       }),
     ),
     async (c) => {
@@ -231,7 +259,7 @@ const app = new Hono()
     zValidator(
       "param",
       z.object({
-        courseId: z.string(),
+        courseId: courseIdSchema,
       }),
     ),
     async (c) => {
@@ -285,7 +313,7 @@ const app = new Hono()
     zValidator(
       "param",
       z.object({
-        courseId: z.string(),
+        courseId: courseIdSchema,
       }),
     ),
     (c) => {
@@ -301,7 +329,7 @@ const app = new Hono()
     zValidator(
       "param",
       z.object({
-        courseId: z.string(),
+        courseId: courseIdSchema,
       }),
     ),
     async (c) => {
@@ -328,7 +356,7 @@ const app = new Hono()
     zValidator(
       "param",
       z.object({
-        courseId: z.string(),
+        courseId: courseIdSchema,
       }),
     ),
     async (c) => {

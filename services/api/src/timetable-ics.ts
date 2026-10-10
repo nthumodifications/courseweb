@@ -57,6 +57,8 @@ export type CourseRow = {
   teacher_en: string[] | null;
 };
 
+const COURSE_QUERY_CHUNK_SIZE = 100;
+
 type TimeslotEvent = {
   course: CourseRow;
   venue: string;
@@ -325,24 +327,52 @@ const app = new Hono().get(
       });
     }
 
-    try {
-      const { data, error } = await supabase_server(c)
-        .from("courses")
-        .select(
-          "raw_id, name_zh, name_en, times, venues, teacher_zh, teacher_en",
-        )
-        .in("raw_id", courseIds);
+    if (courseIds.some((id) => id.length > 100)) {
+      return new Response("Bad Request: too many or oversized course ids", {
+        status: 400,
+      });
+    }
 
-      if (error || !data || data.length === 0) {
-        if (error)
-          console.error("Supabase error fetching courses for ICS:", error);
+    try {
+      const supabase = supabase_server(c);
+      const data: CourseRow[] = [];
+      const uniqueCourseIds = [...new Set(courseIds)];
+
+      for (
+        let index = 0;
+        index < uniqueCourseIds.length;
+        index += COURSE_QUERY_CHUNK_SIZE
+      ) {
+        const { data: chunkData, error } = await supabase
+          .from("courses")
+          .select(
+            "raw_id, name_zh, name_en, times, venues, teacher_zh, teacher_en",
+          )
+          .in(
+            "raw_id",
+            uniqueCourseIds.slice(index, index + COURSE_QUERY_CHUNK_SIZE),
+          );
+
+        if (error || !chunkData) {
+          if (error)
+            console.error("Supabase error fetching courses for ICS:", error);
+          return new Response(EMPTY_CALENDAR, {
+            status: 200,
+            headers: CALENDAR_HEADERS,
+          });
+        }
+
+        data.push(...(chunkData as CourseRow[]));
+      }
+
+      if (data.length === 0) {
         return new Response(EMPTY_CALENDAR, {
           status: 200,
           headers: CALENDAR_HEADERS,
         });
       }
 
-      const icsContent = generateTimetableIcs(data as CourseRow[], semObj);
+      const icsContent = generateTimetableIcs(data, semObj);
 
       return new Response(icsContent, {
         status: 200,

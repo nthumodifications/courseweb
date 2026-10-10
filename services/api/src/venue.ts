@@ -7,6 +7,7 @@ import { venueRateLimitMiddleware } from "./utils/rate-limit";
 
 const PEO_OCCUPANCY_API =
   "https://peo178.et.nthu.edu.tw/api/verify/count/report";
+const PEO_OCCUPANCY_TIMEOUT_MS = 8_000;
 
 type PeoOccupancyItem = {
   project_id: string;
@@ -38,15 +39,21 @@ const app = new Hono<{ Bindings: Bindings }>()
     return c.json(filteredData.map((item) => item.venue));
   })
   .get("/occupancy", async (c) => {
-    const res = await fetch(PEO_OCCUPANCY_API);
-    if (!res.ok) {
+    try {
+      const res = await fetch(PEO_OCCUPANCY_API, {
+        signal: AbortSignal.timeout(PEO_OCCUPANCY_TIMEOUT_MS),
+      });
+      if (!res.ok) {
+        return c.json({ error: "Failed to fetch occupancy data" }, 502);
+      }
+      const json = (await res.json()) as PeoOccupancyResponse;
+      if (json.status !== 200) {
+        return c.json({ error: "Upstream API error" }, 502);
+      }
+      return c.json(json.data);
+    } catch {
       return c.json({ error: "Failed to fetch occupancy data" }, 502);
     }
-    const json = (await res.json()) as PeoOccupancyResponse;
-    if (json.status !== 200) {
-      return c.json({ error: "Upstream API error" }, 502);
-    }
-    return c.json(json.data);
   })
   .get(
     "/:venueId/courses",
