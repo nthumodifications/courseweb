@@ -85,6 +85,7 @@ describe("official selection schedule parser", () => {
 
   test("handles a date cell that spans rows without shifting the date column", () => {
     const html = `
+      <h2>115學年度第1學期選課日程表</h2>
       <table><thead><tr><th>選課階段</th><th>開放日期</th><th>備註</th></tr></thead>
         <tbody><tr><td>第1次選課</td><td rowspan="2">115/6/15～115/6/17</td><td rowspan="2">每日開放</td></tr>
         <tr><td>不相關列</td></tr></tbody>
@@ -96,7 +97,7 @@ describe("official selection schedule parser", () => {
   });
 
   test("handles a 1 MB adversarial phase label promptly", () => {
-    const html = `<table><tr><th>選課階段</th><th>開放日期</th></tr>
+    const html = `<h2>115學年度第1學期選課日程表</h2><table><tr><th>選課階段</th><th>開放日期</th></tr>
       <tr><td>add${" ".repeat(1_000_000)}drop</td><td>not a date</td></tr>
     </table>`;
     const startedAt = performance.now();
@@ -130,6 +131,11 @@ describe("selection schedule validation", () => {
       "same-day period",
       replacePeriod(validPeriods, "round-1", { endDate: "2026-06-15" }),
       "start must be before",
+    ],
+    [
+      "impossible calendar date",
+      replacePeriod(validPeriods, "round-1", { startDate: "2026-02-30" }),
+      "invalid date",
     ],
     [
       "outside the semester margin",
@@ -175,7 +181,10 @@ describe("selection schedule validation", () => {
   });
 
   test("rejects a page from the adjacent semester", () => {
-    const wrongSemester = parseSelectionHtml(nextHtml, target("11510"));
+    expect(() => parseSelectionHtml(nextHtml, target("11510"))).toThrow(
+      /does not identify 11510/,
+    );
+    const wrongSemester = parseSelectionHtml(nextHtml, target("11520"));
     expect(validateSelectionPeriods(wrongSemester.periods, "11510")).toEqual(
       expect.arrayContaining([expect.stringContaining("outside")]),
     );
@@ -224,7 +233,7 @@ describe("scheduled sync", () => {
       "course_selection_schedule:11510",
       JSON.stringify({
         semester: "11510",
-        periods: [],
+        periods: parseSelectionHtml(currentHtml, target("11510")).periods,
         metadata: {
           sourceUrl: SELECTION_SOURCE_URLS["11510"],
           fetchedAt: "2099-10-09T18:00:00.000Z",
@@ -273,24 +282,21 @@ describe("scheduled sync", () => {
     expect(db.rows.get("course_selection_schedule:11510")).toBe(previous);
   });
 
-  test("retains a previously stored phase when the new page omits it", async () => {
+  test("keeps prior data and cache age when the new page is incomplete", async () => {
     const db = new FakeD1();
-    const previous = parseSelectionHtml(currentHtml, target("11510")).periods;
-    db.rows.set(
-      "course_selection_schedule:11510",
-      JSON.stringify({
-        semester: "11510",
-        periods: previous,
-        metadata: {
-          sourceUrl: SELECTION_SOURCE_URLS["11510"],
-          fetchedAt: "2026-10-09T18:00:00.000Z",
-          contentHash: "old-hash",
-          extractionMethod: "parser",
-        },
-      }),
-    );
+    const previous = JSON.stringify({
+      semester: "11510",
+      periods: parseSelectionHtml(currentHtml, target("11510")).periods,
+      metadata: {
+        sourceUrl: SELECTION_SOURCE_URLS["11510"],
+        fetchedAt: "2026-10-09T18:00:00.000Z",
+        contentHash: "old-hash",
+        extractionMethod: "parser",
+      },
+    });
+    db.rows.set("course_selection_schedule:11510", previous);
     const missingWithdrawal = currentHtml.replace(
-      /<tr class="stage-withdraw">[\s\S]*?<\/tr>/,
+      /<tr>\s*<td>停修申請<\/td>[\s\S]*?<\/tr>/,
       "",
     );
     globalThis.fetch = mock(async (input: RequestInfo | URL) =>
@@ -307,14 +313,79 @@ describe("scheduled sync", () => {
       [target("11510")],
     );
 
+    expect(result).toEqual({ saved: [], skipped: [], failed: ["11510"] });
+    expect(db.runCount).toBe(0);
+    expect(db.rows.get("course_selection_schedule:11510")).toBe(previous);
+  });
+
+  test("replaces the schedule when an optional phase is removed", async () => {
+    const db = new FakeD1();
+    const previous = parseSelectionHtml(currentHtml, target("11510")).periods;
+    db.rows.set(
+      "course_selection_schedule:11510",
+      JSON.stringify({
+        semester: "11510",
+        periods: previous,
+        metadata: {
+          sourceUrl: SELECTION_SOURCE_URLS["11510"],
+          fetchedAt: "2026-10-09T18:00:00.000Z",
+          contentHash: "old-hash",
+          extractionMethod: "parser",
+        },
+      }),
+    );
+    const withoutNewStudents = currentHtml.replace(
+      /<tr>\s*<td>新生選課<\/td>[\s\S]*?<\/tr>/,
+      "",
+    );
+    globalThis.fetch = mock(async (input: RequestInfo | URL) =>
+      String(input).includes("403-1208")
+        ? new Response(
+            '<a href="/p/404-1208-306079.php?Lang=zh-tw">115上重要選課日期</a>',
+          )
+        : new Response(withoutNewStudents),
+    ) as unknown as typeof fetch;
+
+    const result = await syncSelectionDates(
+      { DB: db } as never,
+      new Date("2026-10-10T00:00:00Z"),
+      [target("11510")],
+    );
+
     expect(result).toEqual({ saved: ["11510"], skipped: [], failed: [] });
     expect(
       JSON.parse(db.rows.get("course_selection_schedule:11510")!).periods,
-    ).toEqual(
+    ).not.toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ phase: "withdrawal" }),
+        expect.objectContaining({ phase: "new-students" }),
       ]),
     );
+  });
+
+  test("continues processing the next target after one source fails", async () => {
+    const db = new FakeD1();
+    const listing = `
+      <a href="${SELECTION_SOURCE_URLS["11510"]}">115上重要選課日期</a>
+      <a href="${SELECTION_SOURCE_URLS["11520"]}">115下重要選課日期</a>`;
+    globalThis.fetch = mock(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("403-1208")) return new Response(listing);
+      if (url.includes("306079"))
+        return new Response("unavailable", { status: 503 });
+      return new Response(nextHtml);
+    }) as unknown as typeof fetch;
+
+    const result = await syncSelectionDates(
+      { DB: db } as never,
+      new Date("2026-10-10T00:00:00Z"),
+      [target("11510"), target("11520")],
+    );
+
+    expect(result).toEqual({
+      saved: ["11520"],
+      skipped: [],
+      failed: ["11510"],
+    });
   });
 
   test("reads dynamically discovered future semester cache rows", async () => {
@@ -340,51 +411,72 @@ describe("scheduled sync", () => {
     ]);
   });
 
-  test("uses the LLM only after deterministic parsing fails", async () => {
-    const result = await extractSelectionDocument(
-      "<p>unreadable source</p>",
-      target("11510"),
-      {},
-      async () => ({
-        periods: [
-          {
-            phase: "round-1",
-            startDate: "2026-06-15",
-            endDate: "2026-06-17",
-            sourceSummary: "第1次選課 115/6/15-6/17",
-          },
-        ],
+  const malformedCurrentHtml = currentHtml.replace(
+    "</tbody>",
+    "<tr><td>第1次選課</td><td>115/6/15～115/6/17</td></tr></tbody>",
+  );
+  const validLlmData = () => ({
+    periods: parseSelectionHtml(currentHtml, target("11510")).periods.map(
+      ({ phase, startDate, endDate, startTime, endTime, sourceSummary }) => ({
+        phase,
+        startDate,
+        endDate,
+        startTime,
+        endTime,
+        sourceSummary,
       }),
-    );
-
-    expect(result).toMatchObject({
-      extractionMethod: "llm",
-      periods: [{ phase: "round-1", audience: "unspecified" }],
-    });
+    ),
   });
 
-  test("rejects LLM dates that belong outside the requested semester", async () => {
+  test("rejects an in-bounds LLM date that is absent from the source", async () => {
+    const data = validLlmData();
+    data.periods[0] = {
+      ...data.periods[0]!,
+      startDate: "2026-07-01",
+      endDate: "2026-07-02",
+    };
+
+    await expect(
+      extractSelectionDocument(
+        malformedCurrentHtml,
+        target("11510"),
+        {},
+        async () => data,
+      ),
+    ).rejects.toThrow(/not evidenced/);
+  });
+
+  test("rejects an impossible LLM calendar date", async () => {
+    const data = validLlmData();
+    data.periods[0] = {
+      ...data.periods[0]!,
+      startDate: "2026-02-30",
+      endDate: "2026-03-01",
+    };
+
+    await expect(
+      extractSelectionDocument(
+        malformedCurrentHtml,
+        target("11510"),
+        {},
+        async () => data,
+      ),
+    ).rejects.toThrow(/invalid LLM date/);
+  });
+
+  test("accepts evidence-backed LLM dates after parser failure", async () => {
     const result = await extractSelectionDocument(
-      "<p>unreadable source</p>",
+      malformedCurrentHtml,
       target("11510"),
       {},
-      async () => ({
-        periods: [
-          {
-            phase: "round-1",
-            startDate: "2027-04-27",
-            endDate: "2027-04-29",
-            sourceSummary: "wrong-semester fallback",
-          },
-        ],
-      }),
+      async () => validLlmData(),
     );
 
-    expect(
-      validateSelectionPeriods(result.periods, "11510").some((error) =>
-        error.includes("outside"),
-      ),
-    ).toBe(true);
+    expect(result.extractionMethod).toBe("llm");
+    expect(result.periods[0]).toMatchObject({
+      phase: "round-1",
+      startDate: "2026-06-15",
+    });
   });
 
   test.each([
@@ -401,10 +493,15 @@ describe("scheduled sync", () => {
           ),
       ) as typeof fetch;
       await expect(
-        extractSelectionDocument("<p>unreadable source</p>", target("11510"), {
-          GROQ_API_KEY: "test-key",
-          AI_PROVIDER_ORDER: "groq",
-        }),
+        extractSelectionDocument(
+          "<h2>115學年度第1學期選課日程表</h2><p>unreadable source</p>",
+          target("11510"),
+          {
+            GROQ_API_KEY: "test-key",
+            AI_PROVIDER_ORDER: "groq",
+            SELECTION_LLM_PROVIDER: "groq",
+          },
+        ),
       ).rejects.toThrow(expected);
     },
   );
@@ -426,7 +523,13 @@ describe("scheduled sync", () => {
     expect(findSelectionSourceLinks(listing, "11520")).toEqual([
       SELECTION_SOURCE_URLS["11520"],
     ]);
-    const fetcher = mock(async () => new Response(listing));
+    const fetcher = mock(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("403-1208")) return new Response(listing);
+      if (url.includes("306079")) return new Response(currentHtml);
+      if (url.includes("306080")) return new Response(nextHtml);
+      return new Response("not found", { status: 404 });
+    });
     const discovered = await discoverSelectionSources(
       ["11510", "11520"],
       fetcher as unknown as typeof fetch,
@@ -443,7 +546,66 @@ describe("scheduled sync", () => {
         resolution: "discovery",
       }),
     ]);
-    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(fetcher).toHaveBeenCalledTimes(4);
+  });
+
+  test("ignores a decoy link and decoy table when identity is explicit", async () => {
+    const decoyUrl =
+      "https://curricul.site.nthu.edu.tw/p/404-1208-decoy.php?Lang=zh-tw";
+    const listing = `
+      <a href="${decoyUrl}">115上重要選課日期</a>
+      <a href="${SELECTION_SOURCE_URLS["11510"]}">115上重要選課日期</a>`;
+    const decoyPage = `<h2>114學年度第2學期選課日程表</h2>${currentHtml.replace(
+      /<h2>[\s\S]*?<\/h2>/,
+      "",
+    )}`;
+    const decoyTable = `
+      <h2>114學年度第2學期選課日程表</h2>
+      <table><tr><th>選課階段</th><th>開放日期</th></tr>
+        <tr><td>第1次選課</td><td>114/12/1～114/12/2</td></tr>
+      </table>`;
+    const fetcher = mock(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("403-1208")) return new Response(listing);
+      if (url === decoyUrl) return new Response(decoyPage);
+      return new Response(`${currentHtml}${decoyTable}`);
+    });
+
+    const discovered = await discoverSelectionSources(
+      ["11510"],
+      fetcher as unknown as typeof fetch,
+    );
+
+    expect(discovered.get("11510")).toEqual(
+      expect.objectContaining({ url: SELECTION_SOURCE_URLS["11510"] }),
+    );
+    expect(
+      parseSelectionHtml(`${currentHtml}${decoyTable}`, target("11510"))
+        .periods,
+    ).toHaveLength(7);
+    expect(
+      fetcher.mock.calls.some(([input]) => String(input) === decoyUrl),
+    ).toBe(true);
+  });
+
+  test("rejects two valid discovered schedules as ambiguous", async () => {
+    const alternateUrl =
+      "https://curricul.site.nthu.edu.tw/p/404-1208-alternate.php?Lang=zh-tw";
+    const listing = `
+      <a href="${SELECTION_SOURCE_URLS["11510"]}">115上重要選課日期</a>
+      <a href="${alternateUrl}">115上重要選課日期</a>`;
+    const fetcher = mock(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("403-1208")) return new Response(listing);
+      return new Response(currentHtml);
+    });
+
+    const discovered = await discoverSelectionSources(
+      ["11510"],
+      fetcher as unknown as typeof fetch,
+    );
+
+    expect(discovered.get("11510")).toBeNull();
   });
 
   test("rolls ROC semesters over at Taipei midnight", () => {

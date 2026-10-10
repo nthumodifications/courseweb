@@ -17,6 +17,11 @@ const googleCalendarResponse = (request: Request) => {
   const timeMax = url.searchParams.get("timeMax")?.slice(0, 10) ?? "";
   const events = [
     academicEvent(
+      "google-round-1",
+      "115學年度第1學期第1次選課開始(至27日止) 1st Course Selection (8/25-8/27)",
+      "2026-08-25",
+    ),
+    academicEvent(
       "straddles-today",
       "115學年度第1學期加退選開始(至20日止) Add-or-Drop Selection (9/3-9/20)",
       "2026-09-03",
@@ -97,5 +102,59 @@ describe("academic calendar overlap filtering", () => {
         }),
       }),
     ]);
+  });
+
+  test("suppresses only Google phases represented by the stored schedule", async () => {
+    process.env.CALENDAR_API_KEY = "test-key";
+    globalThis.fetch = mock(async (input: RequestInfo | URL) =>
+      googleCalendarResponse(new Request(input)),
+    ) as unknown as typeof fetch;
+    const db = {
+      prepare: () => ({
+        bind: () => ({
+          all: async () => ({
+            results: [
+              {
+                data: JSON.stringify({
+                  semester: "11510",
+                  periods: [
+                    {
+                      id: "course-selection:11510:round-1",
+                      semester: "11510",
+                      phase: "round-1",
+                      audience: "unspecified",
+                      startDate: "2026-08-25",
+                      endDate: "2026-08-27",
+                      sourceEventId: "scraped:11510:round-1",
+                      sourceSummary: "第1次選課 115/8/25～115/8/27",
+                    },
+                  ],
+                  metadata: { fetchedAt: "2026-10-09T18:00:00.000Z" },
+                }),
+              },
+            ],
+          }),
+        }),
+      }),
+    };
+
+    const response = await app.request(
+      "/?start=2026-08-20T00:00:00.000Z&end=2026-09-21T00:00:00.000Z",
+      {},
+      { DB: db, CALENDAR_API_KEY: "test-key" } as never,
+    );
+    const body = await response.json();
+
+    expect(body).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: "straddles-today" }),
+        expect.objectContaining({ id: "scraped:11510:round-1" }),
+      ]),
+    );
+    expect(body).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: "google-round-1" }),
+      ]),
+    );
   });
 });

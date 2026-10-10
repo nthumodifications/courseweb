@@ -110,8 +110,12 @@ const app = new Hono()
       const storedSchedules = await readStoredSelectionSchedules(
         (c.env as { DB?: D1Database } | undefined)?.DB,
       );
-      const storedSemesters = new Set(
-        storedSchedules.map((schedule) => schedule.semester),
+      const storedPhases = new Set(
+        storedSchedules.flatMap((schedule) =>
+          schedule.periods.map(
+            (period) => `${schedule.semester}:${period.phase}`,
+          ),
+        ),
       );
       const googleEvents = calendarDatas
         .map((item) => {
@@ -128,7 +132,9 @@ const app = new Hono()
         .filter(
           (event) =>
             !event.courseSelectionPeriod ||
-            !storedSemesters.has(event.courseSelectionPeriod.semester),
+            !storedPhases.has(
+              `${event.courseSelectionPeriod.semester}:${event.courseSelectionPeriod.phase}`,
+            ),
         );
       const scrapedEvents = selectionSchedulesToEvents(
         storedSchedules,

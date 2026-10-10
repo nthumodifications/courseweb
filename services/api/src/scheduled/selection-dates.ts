@@ -6,7 +6,12 @@ import {
   type CourseSelectionPeriodDetails,
   type CourseSelectionPhase,
 } from "../course-selection-periods";
-import { generateJSON, type GenerateJsonOptions, type LlmEnv } from "../ai/llm";
+import {
+  generateJSON,
+  type GenerateJsonOptions,
+  type LlmEnv,
+  type ProviderName,
+} from "../ai/llm";
 
 export const SELECTION_SOURCE_URLS = {
   "11510": "https://curricul.site.nthu.edu.tw/p/404-1208-306079.php?Lang=zh-tw",
@@ -27,8 +32,15 @@ const CACHE_PREFIX = "course_selection_schedule:";
 const SOURCE_USER_AGENT = "NTHUMods-selection-dates/1.0";
 const TAIPEI_TIME_ZONE = "Asia/Taipei";
 const SEMESTER_BOUND_MARGIN_DAYS = 120;
+const SOURCE_FETCH_TIMEOUT_MS = 15_000;
+const MAX_SOURCE_BODY_BYTES = 2 * 1024 * 1024;
+const MAX_DISCOVERY_CANDIDATES = 3;
+const SELECTION_LLM_TIMEOUT_MS = 15_000;
 export const MAX_SELECTION_CACHE_AGE_MS = 36 * 60 * 60 * 1000;
-const DATE_PATTERN = /(?:(\d{3,4})\s*[/.-]\s*)?(\d{1,2})\s*[/.-]\s*(\d{1,2})/g;
+const DATE_PATTERN =
+  /(?:(\d{3,4})\s*[-/.年]\s*)?(\d{1,2})\s*[-/.月]\s*(\d{1,2})\s*日?/g;
+const DATE_KEY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
+const TIME_EVIDENCE_PATTERN = /(?:^|[^\d])(\d{1,2})[:：](\d{2})(?!\d)/g;
 const TIME_PATTERN = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
 
 type HtmlElement = {
@@ -64,6 +76,25 @@ const PHASE_AUDIENCE: Record<SelectionPhase, CourseSelectionAudience> = {
   "inter-school": "inter-school",
   withdrawal: "unspecified",
 };
+
+const REQUIRED_PHASES_BY_TERM = {
+  "10": [
+    "round-1",
+    "round-2",
+    "round-3",
+    "add-drop",
+    "inter-school",
+    "withdrawal",
+  ],
+  "20": [
+    "round-1",
+    "round-2",
+    "round-3",
+    "add-drop",
+    "inter-school",
+    "withdrawal",
+  ],
+} as const satisfies Record<"10" | "20", readonly SelectionPhase[]>;
 
 export type SelectionSourceTarget = {
   semester: string;
@@ -126,7 +157,15 @@ const llmResultSchema = z
   .object({ periods: z.array(llmPeriodSchema).min(1) })
   .strict();
 
-const normalizeText = (value: string) => value.replace(/\s+/g, " ").trim();
+const normalizeFullWidthDigits = (value: string) =>
+  value.replace(/[０-９]/g, (digit) =>
+    String.fromCharCode(
+      digit.charCodeAt(0) - "０".charCodeAt(0) + "0".charCodeAt(0),
+    ),
+  );
+
+const normalizeText = (value: string) =>
+  normalizeFullWidthDigits(value.replace(/\s+/g, " ")).trim();
 
 const padTime = (value: string) => {
   const [hour, minute] = value.split(":");
@@ -144,6 +183,12 @@ const parseTimeRange = (value: string) => {
 };
 
 const toDateKey = (year: number, month: number, day: number) => {
+  if (
+    !Number.isInteger(year) ||
+    !Number.isInteger(month) ||
+    !Number.isInteger(day)
+  )
+    return null;
   const date = new Date(Date.UTC(year, month - 1, day));
   if (
     date.getUTCFullYear() !== year ||
@@ -210,9 +255,9 @@ const phaseFromLabel = (label: string): SelectionPhase | null => {
     lowerLabel.includes("withdrawal")
   )
     return "withdrawal";
-  const round = /第\s*([123])\s*次選課/.exec(label);
+  const round = label.match(/第\s*([123])\s*次選課/);
   if (round) return `round-${round[1]}` as SelectionPhase;
-  const englishRound = /\b(1st|2nd|3rd)\b.*selection/i.exec(label);
+  const englishRound = label.match(/\b(1st|2nd|3rd)\b.*selection/i);
   if (englishRound) {
     return `round-${{ "1st": 1, "2nd": 2, "3rd": 3 }[englishRound[1]!]}` as SelectionPhase;
   }
@@ -220,7 +265,7 @@ const phaseFromLabel = (label: string): SelectionPhase | null => {
 };
 
 const semesterParts = (semester: string) => {
-  const match = /^(\d{3})(10|20)$/.exec(semester);
+  const match = semester.match(/^(\d{3})(10|20)$/);
   if (!match) throw new Error(`Unsupported semester id: ${semester}`);
   return { rocYear: Number(match[1]), term: match[2] === "10" ? 1 : 2 };
 };
@@ -240,11 +285,27 @@ const titleMatchesSemester = (value: string, semester: string) => {
   return termPattern.test(title);
 };
 
+const pageIdentityMatches = (document: HtmlDocument, semester: string) =>
+  document
+    .querySelectorAll("title,h1,h2,h3,h4,h5,h6")
+    .some((heading) =>
+      titleMatchesSemester(heading.textContent ?? "", semester),
+    );
+
+const htmlHasPageIdentity = (html: string, semester: string) => {
+  const { document: parsedDocument } = parseHTML(html);
+  return pageIdentityMatches(
+    parsedDocument as unknown as HtmlDocument,
+    semester,
+  );
+};
+
 export type SelectionSourceResolution = "discovery" | "seed-fallback";
 
 export type DiscoveredSelectionSource = SelectionSourceTarget & {
   resolution: "discovery";
   discoveryUrl: string;
+  html: string;
 };
 
 const resolveOfficialUrl = (href: string, baseUrl: string) => {
@@ -278,68 +339,150 @@ export function findSelectionSourceLinks(
 
 type SelectionFetcher = typeof fetch;
 
+const readBoundedResponseBody = async (body: ReadableStream<Uint8Array>) => {
+  const reader = body.getReader();
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+  while (true) {
+    const chunk = await reader.read();
+    if (chunk.done) break;
+    totalBytes += chunk.value.byteLength;
+    if (totalBytes > MAX_SOURCE_BODY_BYTES) {
+      await reader.cancel().catch(() => undefined);
+      throw new Error(`source body exceeds ${MAX_SOURCE_BODY_BYTES} bytes`);
+    }
+    chunks.push(chunk.value);
+  }
+  const bodyBytes = new Uint8Array(totalBytes);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bodyBytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return new TextDecoder().decode(bodyBytes);
+};
+
 const fetchHtml = async (url: string, fetcher: SelectionFetcher) => {
-  const response = await fetcher(url, {
-    method: "GET",
-    headers: { Accept: "text/html", "User-Agent": SOURCE_USER_AGENT },
-  });
-  if (!response.ok) throw new Error(`source returned HTTP ${response.status}`);
-  return response.text();
+  const controller = new AbortController();
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  const fetchAndRead = async () => {
+    const response = await fetcher(url, {
+      method: "GET",
+      headers: { Accept: "text/html", "User-Agent": SOURCE_USER_AGENT },
+      signal: controller.signal,
+    });
+    if (!response.ok)
+      throw new Error(`source returned HTTP ${response.status}`);
+    const declaredLength = Number(response.headers.get("content-length"));
+    if (
+      Number.isFinite(declaredLength) &&
+      declaredLength > MAX_SOURCE_BODY_BYTES
+    ) {
+      throw new Error(`source body exceeds ${MAX_SOURCE_BODY_BYTES} bytes`);
+    }
+    if (!response.body) throw new Error("source response has no body");
+    return readBoundedResponseBody(response.body);
+  };
+
+  try {
+    return await Promise.race([
+      fetchAndRead(),
+      new Promise<never>((_, reject) => {
+        timeout = setTimeout(() => {
+          controller.abort();
+          reject(
+            new Error(
+              `source request timed out after ${SOURCE_FETCH_TIMEOUT_MS}ms`,
+            ),
+          );
+        }, SOURCE_FETCH_TIMEOUT_MS);
+      }),
+    ]);
+  } finally {
+    if (timeout) clearTimeout(timeout);
+  }
 };
 
 export async function discoverSelectionSources(
   semesters: string[],
   fetcher: SelectionFetcher = fetch,
-): Promise<Map<string, DiscoveredSelectionSource>> {
-  const remaining = new Set(semesters);
-  const discovered = new Map<string, DiscoveredSelectionSource>();
-  await discoverSelectionSourcesSequentially(
-    [...SELECTION_DISCOVERY_URLS],
-    remaining,
-    discovered,
-    fetcher,
-  );
-  return discovered;
-}
-
-const discoverSelectionSourcesSequentially = async (
-  listingUrls: readonly string[],
-  remaining: Set<string>,
-  discovered: Map<string, DiscoveredSelectionSource>,
-  fetcher: SelectionFetcher,
-): Promise<void> => {
-  const [listingUrl, ...rest] = listingUrls;
-  if (!listingUrl || remaining.size === 0) return;
-
-  try {
-    const html = await fetchHtml(listingUrl, fetcher);
-    for (const semester of remaining) {
-      const url = findSelectionSourceLinks(html, semester, listingUrl)[0];
-      if (!url) continue;
-      discovered.set(semester, {
-        semester,
-        url,
-        resolution: "discovery",
-        discoveryUrl: listingUrl,
-      });
-      remaining.delete(semester);
+): Promise<Map<string, DiscoveredSelectionSource | null>> {
+  const linksBySemester = new Map<string, Map<string, string>>();
+  for (const listingUrl of SELECTION_DISCOVERY_URLS) {
+    try {
+      const html = await fetchHtml(listingUrl, fetcher);
+      for (const semester of semesters) {
+        const links = findSelectionSourceLinks(html, semester, listingUrl);
+        const candidates =
+          linksBySemester.get(semester) ?? new Map<string, string>();
+        for (const link of links) {
+          if (candidates.size >= MAX_DISCOVERY_CANDIDATES) break;
+          candidates.set(link, listingUrl);
+        }
+        if (candidates.size > 0) linksBySemester.set(semester, candidates);
+      }
+    } catch (error) {
+      console.warn(
+        "[selection-dates] discovery listing failed at " +
+          listingUrl +
+          ": " +
+          (error instanceof Error ? error.message : String(error)),
+      );
     }
-  } catch (error) {
-    console.warn(
-      "[selection-dates] discovery listing failed at " +
-        listingUrl +
-        ": " +
-        (error instanceof Error ? error.message : String(error)),
-    );
   }
 
-  await discoverSelectionSourcesSequentially(
-    rest,
-    remaining,
-    discovered,
-    fetcher,
-  );
-};
+  const discovered = new Map<string, DiscoveredSelectionSource | null>();
+  for (const semester of semesters) {
+    const links = linksBySemester.get(semester) ?? new Map<string, string>();
+    const urls = [...links.keys()];
+    const candidates: Array<{
+      url: string;
+      html: string;
+      discoveryUrl: string;
+    }> = [];
+    for (const url of urls) {
+      try {
+        const html = await fetchHtml(url, fetcher);
+        const { document: parsedDocument } = parseHTML(html);
+        const document = parsedDocument as unknown as HtmlDocument;
+        if (pageIdentityMatches(document, semester)) {
+          candidates.push({ url, html, discoveryUrl: links.get(url)! });
+        }
+      } catch (error) {
+        console.warn(
+          `[selection-dates] candidate failed for ${semester} at ${url}: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+    }
+    if (candidates.length === 0) continue;
+
+    const valid = candidates.filter((candidate) => {
+      try {
+        const parsed = parseSelectionHtml(candidate.html, {
+          semester,
+          url: candidate.url,
+        });
+        return validateSelectionPeriods(parsed.periods, semester).length === 0;
+      } catch {
+        return false;
+      }
+    });
+    if (valid.length > 1 || (valid.length === 0 && candidates.length > 1)) {
+      console.warn(`[selection-dates] ambiguous sources for ${semester}`);
+      discovered.set(semester, null);
+      continue;
+    }
+    const selected = valid[0] ?? candidates[0]!;
+    discovered.set(semester, {
+      semester,
+      url: selected.url,
+      resolution: "discovery",
+      discoveryUrl: selected.discoveryUrl,
+      html: selected.html,
+    });
+  }
+  return discovered;
+}
 
 export class SelectionDocumentParseError extends Error {
   constructor(message: string) {
@@ -427,14 +570,24 @@ const headingBeforeTableMatches = (table: HtmlElement, semester: string) => {
         : null;
       const heading =
         directHeading ?? sibling.querySelector("h1,h2,h3,h4,h5,h6");
-      if (heading && titleMatchesSemester(heading.textContent ?? "", semester))
-        return true;
+      if (heading) {
+        return titleMatchesSemester(heading.textContent ?? "", semester);
+      }
       sibling = sibling.previousElementSibling;
     }
     node = node.parentElement;
   }
   return false;
 };
+
+const tableIdentityMatches = (
+  table: HtmlElement,
+  document: HtmlDocument,
+  semester: string,
+  tableCount: number,
+) =>
+  headingBeforeTableMatches(table, semester) ||
+  (tableCount === 1 && pageIdentityMatches(document, semester));
 
 const parseScheduleTable = (
   table: HtmlElement,
@@ -479,7 +632,7 @@ const parseScheduleTable = (
       );
     }
     seen.add(phase);
-    const specialEnd = /(\d{1,2}:\d{2})\s*截止/i.exec(dateText)?.[1];
+    const specialEnd = dateText.match(/(\d{1,2}:\d{2})\s*截止/i)?.[1];
     periods.push({
       id: `course-selection:${target.semester}:${phase}`,
       semester: target.semester,
@@ -505,6 +658,11 @@ export function parseSelectionHtml(
 ): { periods: ScrapedSelectionPeriod[]; extractionMethod: "parser" } {
   const { document: parsedDocument } = parseHTML(html);
   const document = parsedDocument as unknown as HtmlDocument;
+  if (!pageIdentityMatches(document, target.semester)) {
+    throw new SelectionDocumentParseError(
+      `document title or heading does not identify ${target.semester}`,
+    );
+  }
   const tables = scheduleTables(document);
   if (tables.length === 0)
     throw new SelectionDocumentParseError("schedule table not found");
@@ -512,11 +670,14 @@ export function parseSelectionHtml(
     document.querySelector(".time-notice")?.textContent ?? "",
   );
   const contextualTables = tables.filter((table) =>
-    headingBeforeTableMatches(table, target.semester),
+    tableIdentityMatches(table, document, target.semester, tables.length),
   );
-  const candidates = (
-    contextualTables.length > 0 ? contextualTables : tables
-  ).map((table) => {
+  if (contextualTables.length === 0) {
+    throw new SelectionDocumentParseError(
+      `schedule table heading does not identify ${target.semester}`,
+    );
+  }
+  const candidates = contextualTables.map((table) => {
     try {
       const periods = parseScheduleTable(table, target, generalTimes);
       return {
@@ -530,44 +691,168 @@ export function parseSelectionHtml(
       };
     }
   });
-  const best = candidates
-    .filter((candidate) => candidate.periods.length > 0)
-    .sort((left, right) => left.errors.length - right.errors.length)[0];
-  if (!best)
+  const validCandidates = candidates.filter(
+    (candidate) => candidate.periods.length > 0,
+  );
+  if (validCandidates.length > 1) {
+    throw new SelectionDocumentParseError(
+      `ambiguous schedule tables for ${target.semester}`,
+    );
+  }
+  const candidate = validCandidates[0];
+  if (!candidate)
     throw new SelectionDocumentParseError("no known selection phases found");
-  return { periods: best.periods, extractionMethod: "parser" };
+  return { periods: candidate.periods, extractionMethod: "parser" };
 }
 
 const htmlToText = (html: string) => {
-  const { document: parsedDocument } = parseHTML(html);
+  const { document: parsedDocument } = parseHTML(`<body>${html}</body>`);
   const document = parsedDocument as unknown as HtmlDocument;
-  return normalizeText(document.body?.textContent ?? html).slice(0, 50_000);
+  const bodyText = document.querySelector("body")?.textContent ?? "";
+  return normalizeText(bodyText.trim() ? bodyText : html);
 };
 
 export type SelectionLlmDataExtractor = (
   options: GenerateJsonOptions,
 ) => Promise<unknown>;
 
+const selectionLlmProvider = (env: LlmEnv): ProviderName => {
+  const configured = env.SELECTION_LLM_PROVIDER?.trim() as
+    | ProviderName
+    | undefined;
+  const providers: ProviderName[] = [
+    "gemini",
+    "groq",
+    "cerebras",
+    "openrouter",
+    "mistral",
+    "workers-ai",
+  ];
+  if (configured && providers.includes(configured)) return configured;
+  if (configured)
+    throw new Error(`unsupported selection LLM provider: ${configured}`);
+  return "workers-ai";
+};
+
 const defaultLlmDataExtractor: SelectionLlmDataExtractor = async (options) =>
-  (await generateJSON(options)).data;
+  (
+    await generateJSON({
+      ...options,
+      provider: selectionLlmProvider(options.env),
+      model: options.env.SELECTION_LLM_MODEL,
+      timeoutMs: SELECTION_LLM_TIMEOUT_MS,
+    })
+  ).data;
+
+type DateEvidence = { keys: Set<string>; invalid: boolean };
+
+const extractDateEvidence = (
+  value: string,
+  target: SelectionSourceTarget,
+): DateEvidence => {
+  const { rocYear } = semesterParts(target.semester);
+  const matches = [...normalizeFullWidthDigits(value).matchAll(DATE_PATTERN)];
+  const keys = new Set<string>();
+  let previousYear = rocYear + 1911;
+  let previousMonth: number | undefined;
+  let invalid = false;
+  for (const match of matches) {
+    const month = Number(match[2]);
+    const day = Number(match[3]);
+    let year = match[1] ? rocOrGregorianYear(match[1]) : previousYear;
+    if (!match[1] && previousMonth !== undefined && month < previousMonth) {
+      year += 1;
+    }
+    const key = toDateKey(year, month, day);
+    if (!key) invalid = true;
+    else keys.add(key);
+    previousYear = year;
+    previousMonth = month;
+  }
+  return { keys, invalid };
+};
+
+const extractTimeEvidence = (value: string) => {
+  const times = new Set<string>();
+  for (const match of normalizeFullWidthDigits(value).matchAll(
+    TIME_EVIDENCE_PATTERN,
+  )) {
+    const hour = Number(match[1]);
+    const minute = Number(match[2]);
+    if (hour <= 23 && minute <= 59) {
+      times.add(padTime(`${hour}:${match[2]}`));
+    }
+  }
+  return times;
+};
+
+const normalizeLlmDate = (value: string, target: SelectionSourceTarget) => {
+  const normalized = normalizeFullWidthDigits(value.trim());
+  const matches = [...normalized.matchAll(DATE_PATTERN)];
+  if (
+    matches.length !== 1 ||
+    matches[0]![0]!.replace(/\s/g, "") !== normalized.replace(/\s/g, "")
+  ) {
+    throw new SelectionDocumentParseError(`invalid LLM date: ${value}`);
+  }
+  const match = matches[0]!;
+  const { rocYear } = semesterParts(target.semester);
+  const year = match[1] ? rocOrGregorianYear(match[1]) : rocYear + 1911;
+  const dateKey = toDateKey(year, Number(match[2]), Number(match[3]));
+  if (!dateKey)
+    throw new SelectionDocumentParseError(`invalid LLM date: ${value}`);
+  return dateKey;
+};
 
 const fromLlmData = (
   value: unknown,
   target: SelectionSourceTarget,
+  sourceText: string,
 ): ScrapedSelectionPeriod[] => {
   const parsed = llmResultSchema.parse(value);
-  return parsed.periods.map((period) => ({
-    id: `course-selection:${target.semester}:${period.phase}`,
-    semester: target.semester,
-    phase: period.phase,
-    audience: PHASE_AUDIENCE[period.phase],
-    startDate: period.startDate,
-    endDate: period.endDate,
-    sourceEventId: `scraped:${target.semester}:${period.phase}`,
-    sourceSummary: period.sourceSummary,
-    startTime: period.startTime,
-    endTime: period.endTime,
-  }));
+  const dateEvidence = extractDateEvidence(sourceText, target);
+  const timeEvidence = extractTimeEvidence(sourceText);
+  return parsed.periods.map((period) => {
+    const startDate = normalizeLlmDate(period.startDate, target);
+    const endDate = normalizeLlmDate(period.endDate, target);
+    const summaryEvidence = extractDateEvidence(period.sourceSummary, target);
+    if (
+      !dateEvidence.keys.has(startDate) ||
+      !dateEvidence.keys.has(endDate) ||
+      dateEvidence.invalid ||
+      summaryEvidence.invalid ||
+      [...summaryEvidence.keys].some((date) => !dateEvidence.keys.has(date))
+    ) {
+      throw new SelectionDocumentParseError(
+        `LLM date is not evidenced by the official document for ${period.phase}`,
+      );
+    }
+    for (const time of [period.startTime, period.endTime]) {
+      if (time && !timeEvidence.has(time)) {
+        throw new SelectionDocumentParseError(
+          `LLM time is not evidenced by the official document for ${period.phase}`,
+        );
+      }
+    }
+    const summaryTimes = extractTimeEvidence(period.sourceSummary);
+    if ([...summaryTimes].some((time) => !timeEvidence.has(time))) {
+      throw new SelectionDocumentParseError(
+        `LLM summary time is not evidenced by the official document for ${period.phase}`,
+      );
+    }
+    return {
+      id: `course-selection:${target.semester}:${period.phase}`,
+      semester: target.semester,
+      phase: period.phase,
+      audience: PHASE_AUDIENCE[period.phase],
+      startDate,
+      endDate,
+      sourceEventId: `scraped:${target.semester}:${period.phase}`,
+      sourceSummary: period.sourceSummary,
+      startTime: period.startTime,
+      endTime: period.endTime,
+    };
+  });
 };
 
 export async function extractSelectionDocument(
@@ -580,26 +865,41 @@ export async function extractSelectionDocument(
   extractionMethod: "parser" | "llm";
 }> {
   try {
-    return parseSelectionHtml(html, target);
+    const parsed = parseSelectionHtml(html, target);
+    const errors = validateSelectionPeriods(parsed.periods, target.semester);
+    if (errors.length > 0)
+      throw new SelectionDocumentParseError(errors.join("; "));
+    return parsed;
   } catch (parserError) {
     console.warn(
       `[selection-dates] deterministic parser failed for ${target.semester}: ${parserError instanceof Error ? parserError.message : String(parserError)}`,
     );
+    if (!htmlHasPageIdentity(html, target.semester)) throw parserError;
+    const sourceText = htmlToText(html);
     const data = await llmDataExtractor({
       env,
       purpose: "bulk",
       system:
         "Extract NTHU course-selection schedule dates from the supplied official document. Use only explicit rows. Map only these phase ids: round-1, round-2, round-3, new-students, add-drop, inter-school, withdrawal. Return only JSON matching the schema; never infer missing dates.",
-      text: `Semester: ${target.semester}\nOfficial document text:\n${htmlToText(html)}`,
+      text: `Semester: ${target.semester}\nOfficial document text:\n${sourceText.slice(0, 50_000)}`,
       schema: SELECTION_LLM_SCHEMA,
     });
-    return { periods: fromLlmData(data, target), extractionMethod: "llm" };
+    const periods = fromLlmData(data, target, sourceText);
+    const errors = validateSelectionPeriods(periods, target.semester);
+    if (errors.length > 0)
+      throw new SelectionDocumentParseError(errors.join("; "));
+    return { periods, extractionMethod: "llm" };
   }
 }
 
 const dateValue = (dateKey: string) => {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return NaN;
-  return Date.parse(`${dateKey}T00:00:00Z`);
+  if (typeof dateKey !== "string") return NaN;
+  const match = dateKey.match(DATE_KEY_PATTERN);
+  if (!match) return NaN;
+  const key = toDateKey(Number(match[1]), Number(match[2]), Number(match[3]));
+  return key === dateKey
+    ? Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
+    : NaN;
 };
 
 const shiftDate = (dateKey: string, days: number) => {
@@ -678,6 +978,12 @@ export function validateSelectionPeriods(
       errors.push(`invalid start time for ${period.phase}`);
     if (period.endTime && !TIME_PATTERN.test(period.endTime))
       errors.push(`invalid end time for ${period.phase}`);
+  }
+
+  const requiredPhases =
+    REQUIRED_PHASES_BY_TERM[semesterParts(semester).term === 1 ? "10" : "20"];
+  for (const phase of requiredPhases) {
+    if (!seen.has(phase)) errors.push(`missing required phase: ${phase}`);
   }
 
   for (let i = 0; i < periods.length; i += 1) {
@@ -818,17 +1124,6 @@ export const getSelectionSourceTargets = (now = new Date()) => {
   }));
 };
 
-const mergeSelectionPeriods = (
-  previous: ScrapedSelectionPeriod[] | undefined,
-  current: ScrapedSelectionPeriod[],
-) => {
-  const currentPhases = new Set(current.map((period) => period.phase));
-  return [
-    ...current,
-    ...(previous ?? []).filter((period) => !currentPhases.has(period.phase)),
-  ];
-};
-
 export async function syncSelectionDates(
   env: SelectionScraperEnv,
   now = new Date(),
@@ -844,8 +1139,12 @@ export async function syncSelectionDates(
   );
   for (const target of targets) {
     try {
+      const discoveredSource = discovered.get(target.semester);
+      if (discovered.has(target.semester) && !discoveredSource) {
+        throw new Error("ambiguous official sources");
+      }
       const source =
-        discovered.get(target.semester) ??
+        discoveredSource ??
         (target.url
           ? { ...target, resolution: "seed-fallback" as const }
           : null);
@@ -853,13 +1152,19 @@ export async function syncSelectionDates(
       console.log(
         `[selection-dates] ${target.semester} source=${source.resolution} url=${source.url}`,
       );
-      const html = await fetchHtml(source.url, fetch);
+      const html =
+        ("html" in source ? source.html : undefined) ??
+        (await fetchHtml(source.url, fetch));
       const contentHash = await sha256(html);
       const existing = await readStoredSelectionSchedule(
         env.DB,
         target.semester,
       );
-      if (existing?.metadata.contentHash === contentHash) {
+      const existingIsComplete =
+        existing !== null &&
+        validateSelectionPeriods(existing.periods, target.semester).length ===
+          0;
+      if (existingIsComplete && existing.metadata.contentHash === contentHash) {
         if (!isSelectionCacheFresh(existing.metadata.fetchedAt)) {
           await storeSelectionSchedule(env.DB, {
             ...existing,
@@ -886,35 +1191,9 @@ export async function syncSelectionDates(
       if (validationErrors.length > 0) {
         throw new Error(`validation failed: ${validationErrors.join("; ")}`);
       }
-      const periods = mergeSelectionPeriods(
-        existing?.periods,
-        extracted.periods,
-      );
-      const retainedPhases = periods
-        .filter(
-          (period) =>
-            !extracted.periods.some(
-              (current) => current.phase === period.phase,
-            ),
-        )
-        .map((period) => period.phase);
-      if (retainedPhases.length > 0) {
-        console.warn(
-          `[selection-dates] ${target.semester} retained missing phases: ${retainedPhases.join(", ")}`,
-        );
-      }
-      const mergedValidationErrors = validateSelectionPeriods(
-        periods,
-        target.semester,
-      );
-      if (mergedValidationErrors.length > 0) {
-        throw new Error(
-          `validation failed after retaining prior phases: ${mergedValidationErrors.join("; ")}`,
-        );
-      }
       await storeSelectionSchedule(env.DB, {
         semester: target.semester,
-        periods,
+        periods: extracted.periods,
         metadata: {
           sourceUrl: source.url,
           fetchedAt: new Date().toISOString(),

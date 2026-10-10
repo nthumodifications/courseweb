@@ -29,6 +29,7 @@ import youbike from "./youbike";
 import { syncPeoOpeningTimes } from "./scheduled/peo-opening-times";
 import { syncSelectionDates } from "./scheduled/selection-dates";
 import { D1Database } from "@cloudflare/workers-types";
+import type { ProviderName } from "./ai/llm";
 import usage from "./usage";
 import { syncUsageTick } from "./usage/collector";
 
@@ -46,6 +47,8 @@ export type Bindings = {
   OPENROUTER_API_KEY?: string;
   MISTRAL_API_KEY?: string;
   AI_PROVIDER_ORDER?: string;
+  SELECTION_LLM_PROVIDER?: ProviderName;
+  SELECTION_LLM_MODEL?: string;
   AI?: Ai;
   VENUE_RATE_LIMITER: RateLimit;
   AI_RATE_LIMITER?: RateLimit;
@@ -105,8 +108,8 @@ export default {
       ctx.waitUntil(syncPeoOpeningTimes(env));
     }
     if (event.cron === "0 2 * * *") {
-      // Three bounded GETs keep official selection data at <24h maximum
-      // staleness while staying well below Worker subrequest/CPU limits.
+      // Up to 8 bounded GETs plus two single-attempt AI calls keep official
+      // selection data at <24h maximum staleness within Worker limits.
       ctx.waitUntil(syncSelectionDates(env));
     } else if (event.cron === "*/10 * * * *") {
       ctx.waitUntil(syncUsageTick(env));
