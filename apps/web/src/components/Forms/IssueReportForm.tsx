@@ -64,6 +64,13 @@ type ApiError = {
   status?: number;
 };
 
+type ApiResponse = {
+  readonly headers: Headers;
+  readonly status: number;
+  json(): Promise<unknown>;
+  text(): Promise<string>;
+};
+
 type ServiceWorkerState = IssueDiagnostics["serviceWorker"];
 type AppliedIssueField = "reportType" | "reportArea" | "diagnostics";
 
@@ -91,7 +98,7 @@ const readServiceWorkerState = async (): Promise<ServiceWorkerState> => {
   }
 };
 
-const parseApiError = async (response: Response): Promise<ApiError> => {
+const parseApiError = async (response: ApiResponse): Promise<ApiError> => {
   try {
     const contentType = response.headers.get("content-type");
     if (contentType?.includes("application/json")) {
@@ -329,12 +336,12 @@ export const useIssueReport = ({
           actual: reportType === "bug" ? actual : "",
         }),
         labels: ["generic"],
-        turnstileToken: token,
+        turnstileToken: token ?? undefined,
         reportType,
         reportArea,
         diagnostics: getAttachedDiagnostics(attachDiagnostics, diagnostics),
       },
-    } as any);
+    });
 
     if (!response.ok) throw await parseApiError(response);
 
