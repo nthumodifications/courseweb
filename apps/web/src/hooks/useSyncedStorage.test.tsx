@@ -1,14 +1,24 @@
-import { act, createElement } from "react";
+import {
+  act,
+  createElement,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { createRoot } from "react-dom/client";
 import { JSDOM } from "jsdom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterAll, afterEach, describe, expect, mock, test } from "bun:test";
+import { captureGlobalState } from "@/test-utils/global-state";
 import {
   getSyncedStorageBackupKey,
   getSyncedStorageKey,
   mergeCourseStorage,
   reconcileSyncedData,
 } from "./syncedStorage";
+
+process.env.VITE_NTHUMODS_AUTH_URL ??= "https://auth.example.test";
 
 const get = mock(
   async () =>
@@ -21,6 +31,17 @@ const user = {
   profile: { name: "Test User", sub: "account-a" },
 };
 const actualOidcContext = await import("react-oidc-context");
+const actualAuth = await import("@/config/auth");
+const actualUsehooksTs = await import("usehooks-ts");
+
+const restoreGlobals = captureGlobalState([
+  "window",
+  "document",
+  "navigator",
+  "StorageEvent",
+  "IS_REACT_ACT_ENVIRONMENT",
+]);
+let activeDom: JSDOM | undefined;
 
 type HookResult = readonly [unknown, unknown, boolean, boolean];
 
@@ -28,6 +49,7 @@ const setupDom = () => {
   const dom = new JSDOM("<!doctype html><html><body></body></html>", {
     url: "http://localhost/",
   });
+  activeDom = dom;
   Object.assign(globalThis, {
     window: dom.window,
     document: dom.window.document,
@@ -94,13 +116,69 @@ mock.module("@/config/auth", () => ({
   default: { api: { kv: { ":key": { $get: get, $post: post } } } },
 }));
 
+const useTestLocalStorage = <T,>(
+  key: string,
+  initialValue: T,
+): [T, (next: T | ((previous: T) => T)) => void] => {
+  const initialValueRef = useRef(initialValue);
+  initialValueRef.current = initialValue;
+  const read = () => {
+    if (typeof window === "undefined") return initialValueRef.current;
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return initialValueRef.current;
+    try {
+      return JSON.parse(raw) as T;
+    } catch {
+      return initialValueRef.current;
+    }
+  };
+  const [value, setValue] = useState(read);
+  const update = useCallback(
+    (next: T | ((previous: T) => T)) => {
+      const nextValue =
+        typeof next === "function"
+          ? (next as (previous: T) => T)(read())
+          : next;
+      window.localStorage.setItem(key, JSON.stringify(nextValue));
+      window.dispatchEvent(new window.StorageEvent("local-storage", { key }));
+      setValue(nextValue);
+    },
+    [key],
+  );
+  useEffect(() => {
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key && event.key !== key) return;
+      setValue(read());
+    };
+    window.addEventListener("storage", handleStorage);
+    window.addEventListener("local-storage", handleStorage);
+    setValue(read());
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener("local-storage", handleStorage);
+    };
+  }, [key]);
+  return [value, update];
+};
+
+mock.module("usehooks-ts", () => ({
+  ...actualUsehooksTs,
+  useLocalStorage: useTestLocalStorage,
+}));
+
+const { default: useSyncedStorage } = await import("./useSyncedStorage");
+mock.module("usehooks-ts", () => actualUsehooksTs);
+
 describe("useSyncedStorage remote read states", () => {
   afterAll(() => {
     mock.module("react-oidc-context", () => actualOidcContext);
-    mock.module("@/config/auth", () => ({ default: {} }));
+    mock.module("@/config/auth", () => actualAuth);
   });
 
   afterEach(() => {
+    activeDom?.window.close();
+    activeDom = undefined;
+    restoreGlobals();
     get.mockReset();
     post.mockReset();
     get.mockImplementation(
@@ -114,7 +192,6 @@ describe("useSyncedStorage remote read states", () => {
 
   test("settles local data after a GET error without POST, then reconciles after success", async () => {
     setupDom();
-    const { default: useSyncedStorage } = await import("./useSyncedStorage");
     window.localStorage.setItem("nthumods_device_id", "device-a");
     window.localStorage.setItem(
       getSyncedStorageKey("grades", user.profile.sub),
@@ -188,7 +265,6 @@ describe("useSyncedStorage remote read states", () => {
       JSON.stringify(local),
     );
 
-    const { default: useSyncedStorage } = await import("./useSyncedStorage");
     const rendered = await renderSyncedStorage(() =>
       useSyncedStorage("courses", {}, mergeCourseStorage),
     );

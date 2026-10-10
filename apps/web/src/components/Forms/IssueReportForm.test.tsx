@@ -3,9 +3,37 @@ import { createRoot } from "react-dom/client";
 import { Simulate } from "react-dom/test-utils";
 import { JSDOM } from "jsdom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { describe, expect, mock, test } from "bun:test";
+import { afterAll, afterEach, describe, expect, mock, test } from "bun:test";
+import { captureGlobalState } from "@/test-utils/global-state";
 
 process.env.VITE_COURSEWEB_API_URL ??= "https://api.example.test";
+
+const restoreGlobals = captureGlobalState([
+  "window",
+  "document",
+  "navigator",
+  "HTMLElement",
+  "MutationObserver",
+  "Node",
+  "DocumentFragment",
+  "ResizeObserver",
+  "IS_REACT_ACT_ENVIRONMENT",
+]);
+const moduleDom = new JSDOM("<!doctype html><html><body></body></html>");
+Object.assign(globalThis, {
+  window: moduleDom.window,
+  document: moduleDom.window.document,
+  navigator: moduleDom.window.navigator,
+});
+const actualApi = await import("@/config/api");
+const actualDictionary = await import("@/dictionaries/useDictionary");
+const actualOidcContext = await import("react-oidc-context");
+const actualRouter = await import("react-router-dom");
+const actualTurnstile = await import("react-turnstile");
+const actualGtag = await import("@/lib/gtag");
+moduleDom.window.close();
+restoreGlobals();
+let activeDom: JSDOM | undefined;
 (
   globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
 ).IS_REACT_ACT_ENVIRONMENT = true;
@@ -65,6 +93,7 @@ const renderInQueryClient = async (element: React.ReactNode) => {
   const dom = new JSDOM("<!doctype html><html><body></body></html>", {
     url: "http://localhost/en/issues",
   });
+  activeDom = dom;
   Object.assign(globalThis, {
     window: dom.window,
     document: dom.window.document,
@@ -228,4 +257,19 @@ describe("issue report integration", () => {
     rendered.queryClient.clear();
     rendered.dom.window.close();
   });
+});
+
+afterEach(() => {
+  activeDom?.window.close();
+  activeDom = undefined;
+  restoreGlobals();
+});
+
+afterAll(() => {
+  mock.module("@/config/api", () => actualApi);
+  mock.module("@/dictionaries/useDictionary", () => actualDictionary);
+  mock.module("react-oidc-context", () => actualOidcContext);
+  mock.module("react-router-dom", () => actualRouter);
+  mock.module("react-turnstile", () => actualTurnstile);
+  mock.module("@/lib/gtag", () => actualGtag);
 });

@@ -9,9 +9,26 @@ import {
 import { createRoot } from "react-dom/client";
 import { JSDOM } from "jsdom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { afterEach, describe, expect, mock, test } from "bun:test";
+import { afterAll, afterEach, describe, expect, mock, test } from "bun:test";
+import { captureGlobalState } from "@/test-utils/global-state";
 
 process.env.VITE_COURSEWEB_API_URL ??= "https://api.example.test";
+process.env.VITE_NTHUMODS_AUTH_URL ??= "https://auth.example.test";
+const actualOidcContext = await import("react-oidc-context");
+const actualApi = await import("@/config/api");
+const actualAuth = await import("@/config/auth");
+const actualGtag = await import("@/lib/gtag");
+const actualSettings = await import("@/hooks/contexts/settings");
+const actualDictionary = await import("@/dictionaries/useDictionary");
+const actualRouter = await import("react-router-dom");
+const actualUsehooksTs = await import("usehooks-ts");
+const restoreGlobals = captureGlobalState([
+  "window",
+  "document",
+  "navigator",
+  "StorageEvent",
+  "IS_REACT_ACT_ENVIRONMENT",
+]);
 (
   globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
 ).IS_REACT_ACT_ENVIRONMENT = true;
@@ -169,6 +186,20 @@ const { default: TimetableSlotVertical } = await import(
 );
 mock.module("@/dictionaries/useDictionary", () => actualDictionary);
 
+restoreGlobals();
+moduleDom.window.close();
+
+afterAll(() => {
+  mock.module("react-oidc-context", () => actualOidcContext);
+  mock.module("@/config/api", () => actualApi);
+  mock.module("@/config/auth", () => actualAuth);
+  mock.module("@/lib/gtag", () => actualGtag);
+  mock.module("@/hooks/contexts/settings", () => actualSettings);
+  mock.module("@/dictionaries/useDictionary", () => actualDictionary);
+  mock.module("react-router-dom", () => actualRouter);
+  mock.module("usehooks-ts", () => actualUsehooksTs);
+});
+
 const COURSES_KEY = "nthumods-storage-anonymous-courses";
 const PREFERENCES_KEY =
   "nthumods-storage-anonymous-timetable_display_preferences";
@@ -225,6 +256,7 @@ const renderTimetable = async (
     document: dom.window.document,
     navigator: dom.window.navigator,
     StorageEvent: dom.window.StorageEvent,
+    IS_REACT_ACT_ENVIRONMENT: true,
   });
   for (const [key, value] of Object.entries(seed)) {
     window.localStorage.setItem(key, syncedRecord(value));
@@ -270,6 +302,7 @@ const renderTimetable = async (
     });
     queryClient.clear();
     dom.window.close();
+    restoreGlobals();
   };
 
   return { container, cleanup, readState, waitFor, writeStorage };
@@ -278,6 +311,7 @@ const renderTimetable = async (
 describe("timetable provider render stability", () => {
   afterEach(() => {
     courseResponseData = [];
+    restoreGlobals();
   });
 
   test("settles when the provider and empty course list mount", async () => {

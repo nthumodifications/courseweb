@@ -1,7 +1,8 @@
 import { act, createElement } from "react";
 import { createRoot } from "react-dom/client";
 import { JSDOM } from "jsdom";
-import { describe, expect, mock, test } from "bun:test";
+import { afterAll, afterEach, describe, expect, mock, test } from "bun:test";
+import { captureGlobalState } from "@/test-utils/global-state";
 
 const user = {
   id_token: "test-id-token",
@@ -17,6 +18,27 @@ const authState = {
   revokeTokens: mock(async () => {}),
 };
 const actualDictionary = await import("@/dictionaries/useDictionary");
+
+const restoreGlobals = captureGlobalState([
+  "window",
+  "document",
+  "navigator",
+  "localStorage",
+  "IS_REACT_ACT_ENVIRONMENT",
+]);
+const moduleDom = new JSDOM("<!doctype html><html><body></body></html>");
+Object.assign(globalThis, {
+  window: moduleDom.window,
+  document: moduleDom.window.document,
+  navigator: moduleDom.window.navigator,
+});
+const actualUi = await import("@courseweb/ui");
+const actualOidcContext = await import("react-oidc-context");
+const actualRxdbHooks = await import("rxdb-hooks");
+const actualDictionary = await import("@/dictionaries/useDictionary");
+moduleDom.window.close();
+restoreGlobals();
+let activeDom: JSDOM | undefined;
 
 const passthrough = ({ children, ...props }: Record<string, unknown>) =>
   createElement("div", props, children as never);
@@ -67,6 +89,7 @@ const renderAccountSection = async () => {
   const dom = new JSDOM("<!doctype html><html><body></body></html>", {
     url: "http://localhost/en/settings",
   });
+  activeDom = dom;
   Object.assign(globalThis, {
     window: dom.window,
     document: dom.window.document,
@@ -109,4 +132,17 @@ describe("AccountSection", () => {
 
     await act(async () => root.unmount());
   });
+});
+
+afterEach(() => {
+  activeDom?.window.close();
+  activeDom = undefined;
+  restoreGlobals();
+});
+
+afterAll(() => {
+  mock.module("@courseweb/ui", () => actualUi);
+  mock.module("react-oidc-context", () => actualOidcContext);
+  mock.module("rxdb-hooks", () => actualRxdbHooks);
+  mock.module("@/dictionaries/useDictionary", () => actualDictionary);
 });

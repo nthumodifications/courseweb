@@ -1,4 +1,4 @@
-import { describe, expect, mock, test } from "bun:test";
+import { afterAll, describe, expect, mock, test } from "bun:test";
 import {
   aggregateModuleOfferings,
   aggregateModuleHistoryRows,
@@ -14,6 +14,8 @@ import {
   rankModuleSearchResults,
   serializePostgresArrayElement,
 } from "./modules";
+
+const actualSupabase = await import("@/config/supabase");
 
 type SupabaseCall = {
   table: string;
@@ -64,6 +66,10 @@ const fakeSupabase = {
 };
 
 mock.module("@/config/supabase", () => ({ default: fakeSupabase }));
+
+afterAll(() => {
+  mock.module("@/config/supabase", () => actualSupabase);
+});
 
 type ModuleOfferingRow = Parameters<typeof aggregateModuleOfferings>[0][number];
 type ModuleSearchRow = Parameters<typeof aggregateModuleSearchRows>[0][number];

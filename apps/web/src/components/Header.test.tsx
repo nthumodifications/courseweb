@@ -1,7 +1,8 @@
 import { act, createElement } from "react";
 import { createRoot } from "react-dom/client";
 import { JSDOM } from "jsdom";
-import { describe, expect, mock, test } from "bun:test";
+import { afterEach, describe, expect, mock, test } from "bun:test";
+import { captureGlobalState } from "@/test-utils/global-state";
 import {
   getSyncedStorageBackupKey,
   getSyncedStorageKey,
@@ -160,11 +161,18 @@ mock.module("react-oidc-context", () => actualOidcContext);
 mock.module("rxdb-hooks", () => actualRxdbHooks);
 mock.module("@/dictionaries/useDictionary", () => actualDictionary);
 
+const restoreTestGlobals = captureGlobalState([
+  ...moduleGlobalKeys,
+  "localStorage",
+]);
+let activeTestDom: JSDOM | undefined;
+
 describe("Header local-data logout", () => {
   test("clears synced records and their backups when local data is not kept", async () => {
     const dom = new JSDOM("<!doctype html><html><body></body></html>", {
       url: "http://localhost/",
     });
+    activeTestDom = dom;
     Object.assign(globalThis, {
       window: dom.window,
       document: dom.window.document,
@@ -209,4 +217,10 @@ describe("Header local-data logout", () => {
 
     await act(async () => root.unmount());
   });
+});
+
+afterEach(() => {
+  activeTestDom?.window.close();
+  activeTestDom = undefined;
+  restoreTestGlobals();
 });
