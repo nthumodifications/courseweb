@@ -28,6 +28,7 @@ import {
 import { fetchJsonWithIdleTimeout } from "./deadline";
 import type { WorkerRequest } from "./worker-protocol";
 import { normalizeSyllabusKeywords } from "../syllabus-text";
+import { LOCAL_PARITY_CASES } from "./parity-cases";
 
 const fixturePath = `${import.meta.dir}/__fixtures__/courses-11510.json`;
 const fixture = JSON.parse(
@@ -485,6 +486,26 @@ describe("local course search", () => {
     expect(matchesLocalQuery(prepareSearchRecord(environment!), "環境")).toBe(
       true,
     );
+  });
+
+  test("matches the fixed fixture parity matrix", async () => {
+    const { engine } = createEngine();
+
+    for (const parityCase of LOCAL_PARITY_CASES) {
+      const result = await engine.search(
+        "11510",
+        request({
+          ...parityCase.params,
+          query: parityCase.query,
+          hitsPerPage: 1000,
+        }),
+      );
+      expect({ name: parityCase.name, count: result.nbHits }).toEqual({
+        name: parityCase.name,
+        count: parityCase.ids.length,
+      });
+      expect(result.hits.map((hit) => hit.objectID)).toEqual(parityCase.ids);
+    }
   });
 
   test("applies facet AND/OR, numeric, filter expressions, null arrays, and time semantics", async () => {
