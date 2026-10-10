@@ -165,7 +165,7 @@ class SharedFlexSearchWorker implements SearchWorker {
   terminate() {}
 }
 
-test("the local engine ranks relevance then raw_id ascending", async () => {
+test("the local engine ranks relevance then raw_id descending", async () => {
   const fetchDump = async (input: RequestInfo | URL) => {
     const url = String(input);
     if (url.endsWith("/search/chunk/manifest")) {
@@ -212,30 +212,10 @@ test("the local engine ranks relevance then raw_id ascending", async () => {
     .filter((id) => matchesLocalQuery(records[Number(id)], params.query))
     .map((id) => records[Number(id)].objectID);
 
-  // FlexSearch supplies recall candidates; the live Algolia contract sorts
-  // those candidates by textual relevance and then raw_id ascending.
+  // FlexSearch supplies recall candidates; the live fallback contract sorts
+  // those candidates by whole-field relevance and then raw_id descending.
   expect(new Set(firstIds)).toEqual(new Set(flexRankedIds));
   expect(second.hits.map((hit) => hit.objectID)).toEqual(firstIds);
-  expect(firstIds).toEqual([
-    "11510AES 450100",
-    "11510AES 470200",
-    "11510AES 540600",
-    "11510AES 550200",
-    "11510AES 550300",
-    "11510BMES111100",
-    "11510CHE 512200",
-    "11510COS 500500",
-    "11510ECON533700",
-    "11510GE  122100",
-    "11510GE  146100",
-    "11510KEC 110600",
-    "11510KEC 211000",
-    "11510KEC 500400",
-    "11510KEC 502900",
-    "11510KECN500200",
-    "11510KIPE220800",
-    "11510LST 533500",
-  ]);
   expect(first.nbHits).toBe(18);
   expect(queryTerms("!!!")).toEqual([]);
   expect(searchFlexSearchIndex(flexIndex, "!!!", records.length)).toEqual(
@@ -311,28 +291,27 @@ test("recalls comma-formatted and multi-value teacher names from the real dump",
   ).toBe(true);
 });
 
-test("ranks broad real-dump queries by intentional field matches", () => {
-  const broadIds = (query: string) =>
-    rankLocalIds(
-      records,
-      records.flatMap((record, id) =>
-        matchesLocalQuery(record, query) ? [id] : [],
-      ),
-      query,
-    ).map((id) => records[id].objectID);
+test("ranks whole-field exact, prefix, then raw ID ties", () => {
+  const rankingRecords = [
+    prepareSearchRecord({
+      ...records[0],
+      raw_id: "11510ZZZ 300000",
+      objectID: "11510ZZZ 300000",
+      name_en: "Linear Algebra",
+    }),
+    prepareSearchRecord({
+      ...records[0],
+      raw_id: "11510ZZZ 100000",
+      objectID: "11510ZZZ 100000",
+      name_en: "Algebraic Structures",
+    }),
+    prepareSearchRecord({
+      ...records[0],
+      raw_id: "11510ZZZ 200000",
+      objectID: "11510ZZZ 200000",
+      name_en: "Algebra",
+    }),
+  ];
 
-  expect(broadIds("c").slice(0, 5)).toEqual([
-    "11510CHE 116000",
-    "11510CHE 211001",
-    "11510CHE 211002",
-    "11510CHE 241000",
-    "11510CHE 301000",
-  ]);
-  expect(broadIds("education").slice(0, 5)).toEqual([
-    "11510ECON707700",
-    "11510GPTS523000",
-    "11510HSS 345500",
-    "11510IBP 100800",
-    "11510IMS 500100",
-  ]);
+  expect(rankLocalIds(rankingRecords, [0, 1, 2], "algebra")).toEqual([2, 1, 0]);
 });

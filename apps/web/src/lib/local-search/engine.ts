@@ -31,7 +31,7 @@ import {
   isCjkCharacter,
   matchesLocalQueryTerms,
   queryTerms,
-  searchableLatinTokenGroups,
+  searchableTokenGroups,
 } from "./tokenizer";
 import type {
   SearchWorker,
@@ -114,7 +114,6 @@ type LoadedChunk = {
   ids: number[];
   facetValues: string[][][];
   shortLatinPrefixes: Map<string, Set<number>>;
-  shortLatinRankScores: Map<string, Map<number, number>>;
   manifest: SearchManifestEntry;
 };
 
@@ -453,57 +452,18 @@ const buildShortLatinPrefixIndex = (
   records: readonly SearchProjectionRecord[],
 ) => {
   const prefixes = new Map<string, Set<number>>();
-  const rankScores = new Map<string, Map<number, number>>();
-  const setRankScore = (prefix: string, id: number, score: number) => {
-    const scores = rankScores.get(prefix) ?? new Map<number, number>();
-    scores.set(id, Math.max(scores.get(id) ?? 0, score));
-    rankScores.set(prefix, scores);
-  };
-  const addRankPrefixes = (
-    value: string,
-    id: number,
-    score: (prefix: string) => number,
-  ) => {
-    for (let length = 1; length <= Math.min(2, value.length); length += 1) {
-      const prefix = value.slice(0, length);
-      setRankScore(prefix, id, score(prefix));
-    }
-  };
   for (const [id, record] of records.entries()) {
-    const values = searchableFieldValues(record);
-    const latinGroups = searchableLatinTokenGroups(record);
-    for (const token of latinGroups.flat()) {
+    for (const token of searchableTokenGroups(record).flat()) {
       if ([...token].some(isCjkCharacter)) continue;
-      for (let length = 1; length <= Math.min(3, token.length); length += 1) {
+      for (let length = 1; length <= Math.min(1, token.length); length += 1) {
         const prefix = token.slice(0, length);
         const ids = prefixes.get(prefix) ?? new Set<number>();
         ids.add(id);
         prefixes.set(prefix, ids);
       }
     }
-
-    for (const value of values[1] ?? []) {
-      addRankPrefixes(value, id, (prefix) =>
-        value === prefix ? 120_000 : 100_000,
-      );
-    }
-    for (const field of [0, 2]) {
-      for (const value of values[field] ?? []) {
-        addRankPrefixes(value, id, () => 95_000);
-      }
-    }
-    for (const field of [3, 5, 4, 6, 7]) {
-      let score = [70_000, 68_000];
-      if (field === 3 || field === 5) score = [90_000, 88_000];
-      else if (field === 4 || field === 6) score = [80_000, 78_000];
-      for (const token of latinGroups[field] ?? []) {
-        addRankPrefixes(token, id, (prefix) =>
-          token === prefix ? score[0]! : score[1]!,
-        );
-      }
-    }
   }
-  return { prefixes, rankScores };
+  return prefixes;
 };
 
 const buildFacetValueRows = (records: readonly SearchProjectionRecord[]) =>
@@ -696,14 +656,13 @@ export class LocalSearchEngine {
     // Pay the Latin matcher cache cost during chunk load, not the first
     // broad query (where it would look like search latency).
     const facetValueRows = buildFacetValueRows(records);
-    const shortLatinIndex = buildShortLatinPrefixIndex(records);
+    const shortLatinPrefixes = buildShortLatinPrefixIndex(records);
     return {
       records,
       index,
       ids: records.map((_, id) => id),
       facetValues: facetValueRows,
-      shortLatinPrefixes: shortLatinIndex.prefixes,
-      shortLatinRankScores: shortLatinIndex.rankScores,
+      shortLatinPrefixes,
       manifest,
     };
   }
@@ -927,7 +886,7 @@ export class LocalSearchEngine {
     }
     const shortLatinPrefix =
       terms.length === 1 &&
-      terms[0]!.length <= 3 &&
+      terms[0]!.length === 1 &&
       ![...terms[0]!].some(isCjkCharacter)
         ? (chunk.shortLatinPrefixes.get(terms[0]!) ?? new Set<number>())
         : undefined;
@@ -963,12 +922,7 @@ export class LocalSearchEngine {
         }
       }
     }
-    const rankedIds = rankLocalIdsByTerms(
-      chunk.records,
-      ids,
-      terms,
-      chunk.shortLatinRankScores,
-    );
+    const rankedIds = rankLocalIdsByTerms(chunk.records, ids, terms);
     const start = page * hitsPerPage;
     const selected =
       hitsPerPage === 0 ? [] : rankedIds.slice(start, start + hitsPerPage);
