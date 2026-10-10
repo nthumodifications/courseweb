@@ -160,9 +160,7 @@ describe("calendar event repeat date", () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
 
-    const calendar = document.querySelector<HTMLElement>(
-      '[role="dialog"] [role="grid"]',
-    );
+    const calendar = document.querySelector<HTMLElement>('[role="grid"]');
     if (!calendar) throw new Error(document.body.innerHTML);
     expect(calendar).not.toBeNull();
     const dateButton = Array.from(
