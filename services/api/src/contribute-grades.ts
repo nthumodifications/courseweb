@@ -79,6 +79,9 @@ class ContributionError extends Error {
 const normalizeText = (value: string | null | undefined) =>
   (value ?? "").replace(/\s+/g, " ").trim();
 
+export const normalizeCourseCode = (value: string) =>
+  value.normalize("NFKC").replace(/\s+/g, "").toUpperCase();
+
 const compactSemester = (value: string) => value.replace("|", "");
 
 const parseNumber = (value: string) => {
@@ -123,7 +126,7 @@ export function parseSemesterPage(
 
   const doc = parseHTML(html).document;
   const bodyText = normalizeText(doc.body?.textContent);
-  const expectedCountMatch = bodyText.match(/共\s*(\d+)\s*科目/);
+  const expectedCountMatch = /共\s*(\d+)\s*科目/.exec(bodyText);
   const expectedCount = expectedCountMatch
     ? Number.parseInt(expectedCountMatch[1], 10)
     : 0;
@@ -186,7 +189,7 @@ export function parseSemesterPage(
       const stdDev = gpaComplete ? gpaStdDev! : percentStdDev!;
       return {
         rawId,
-        courseCode: rawId.slice(5),
+        courseCode: normalizeCourseCode(rawId.slice(5)),
         semester: compact,
         enrollment,
         scale,
@@ -279,7 +282,7 @@ type SemesterMeta = {
   updatedAt: string;
 };
 
-const readSemesterMeta = async (db: D1Database, semester: string) =>
+const readSemesterMeta = (db: D1Database, semester: string) =>
   db
     .prepare(
       `SELECT "semester", "contentHash", "courseCount", "updatedAt"
@@ -315,16 +318,25 @@ const makeUpsertStatement = (
   expectedMeta: SemesterMeta | null,
 ): D1PreparedStatement => {
   const placeholders = rows.map(() => "(?, ?, ?, ?, ?, ?, ?, ?)").join(", ");
-  const values = rows.flatMap((row) => [
-    row.rawId,
-    row.courseCode,
-    row.semester,
-    row.enrollment,
-    row.scale,
-    row.average,
-    row.stdDev,
-    updatedAt,
-  ]);
+  const values = [
+    ...rows.flatMap((row) => [
+      row.rawId,
+      row.courseCode,
+      row.semester,
+      row.enrollment,
+      row.scale,
+      row.average,
+      row.stdDev,
+      updatedAt,
+    ]),
+    ...(expectedMeta
+      ? [
+          expectedMeta.semester,
+          expectedMeta.contentHash,
+          expectedMeta.updatedAt,
+        ]
+      : [rows[0].semester]),
+  ];
   const guard = expectedMeta
     ? `EXISTS (
          SELECT 1 FROM "CourseStatisticSemester"
@@ -333,15 +345,6 @@ const makeUpsertStatement = (
     : `NOT EXISTS (
          SELECT 1 FROM "CourseStatisticSemester" WHERE "semester" = ?
        )`;
-  values.push(
-    ...(expectedMeta
-      ? [
-          expectedMeta.semester,
-          expectedMeta.contentHash,
-          expectedMeta.updatedAt,
-        ]
-      : [rows[0].semester]),
-  );
   return db
     .prepare(
       `INSERT INTO "CourseStatistic"
@@ -368,17 +371,19 @@ const writeSemester = async (
   expectedMeta: SemesterMeta | null,
 ) => {
   const updatedAt = now.toISOString();
-  const statements: D1PreparedStatement[] = [];
-  for (let i = 0; i < parsed.rows.length; i += MAX_ROWS_PER_STATEMENT) {
-    statements.push(
+  const upsertStatements = Array.from(
+    { length: Math.ceil(parsed.rows.length / MAX_ROWS_PER_STATEMENT) },
+    (_, index) =>
       makeUpsertStatement(
         db,
-        parsed.rows.slice(i, i + MAX_ROWS_PER_STATEMENT),
+        parsed.rows.slice(
+          index * MAX_ROWS_PER_STATEMENT,
+          (index + 1) * MAX_ROWS_PER_STATEMENT,
+        ),
         updatedAt,
         expectedMeta,
       ),
-    );
-  }
+  );
   const guard = expectedMeta
     ? `EXISTS (
          SELECT 1 FROM "CourseStatisticSemester"
@@ -390,47 +395,38 @@ const writeSemester = async (
   const guardValues = expectedMeta
     ? [expectedMeta.semester, expectedMeta.contentHash, expectedMeta.updatedAt]
     : [semester];
-  statements.push(
-    db
-      .prepare(
-        `DELETE FROM "CourseStatistic"
-         WHERE "semester" = ? AND "updatedAt" < ? AND ${guard}`,
-      )
-      .bind(semester, updatedAt, ...guardValues),
-  );
-  statements.push(
-    expectedMeta
-      ? db
-          .prepare(
-            `UPDATE "CourseStatisticSemester"
-             SET "contentHash" = ?, "courseCount" = ?, "updatedAt" = ?
-             WHERE "semester" = ? AND "contentHash" = ? AND "updatedAt" = ?`,
-          )
-          .bind(
-            contentHash,
-            parsed.expectedCount,
-            updatedAt,
-            semester,
-            expectedMeta.contentHash,
-            expectedMeta.updatedAt,
-          )
-      : db
-          .prepare(
-            `INSERT INTO "CourseStatisticSemester"
-               ("semester", "contentHash", "courseCount", "updatedAt")
-             SELECT ?, ?, ?, ?
-             WHERE NOT EXISTS (
-               SELECT 1 FROM "CourseStatisticSemester" WHERE "semester" = ?
-             )`,
-          )
-          .bind(
-            semester,
-            contentHash,
-            parsed.expectedCount,
-            updatedAt,
-            semester,
-          ),
-  );
+  const deleteStatement = db
+    .prepare(
+      `DELETE FROM "CourseStatistic"
+       WHERE "semester" = ? AND "updatedAt" < ? AND ${guard}`,
+    )
+    .bind(semester, updatedAt, ...guardValues);
+  const metadataStatement = expectedMeta
+    ? db
+        .prepare(
+          `UPDATE "CourseStatisticSemester"
+           SET "contentHash" = ?, "courseCount" = ?, "updatedAt" = ?
+           WHERE "semester" = ? AND "contentHash" = ? AND "updatedAt" = ?`,
+        )
+        .bind(
+          contentHash,
+          parsed.expectedCount,
+          updatedAt,
+          semester,
+          expectedMeta.contentHash,
+          expectedMeta.updatedAt,
+        )
+    : db
+        .prepare(
+          `INSERT INTO "CourseStatisticSemester"
+             ("semester", "contentHash", "courseCount", "updatedAt")
+           SELECT ?, ?, ?, ?
+           WHERE NOT EXISTS (
+             SELECT 1 FROM "CourseStatisticSemester" WHERE "semester" = ?
+           )`,
+        )
+        .bind(semester, contentHash, parsed.expectedCount, updatedAt, semester);
+  const statements = [...upsertStatements, deleteStatement, metadataStatement];
   const results = await db.batch(statements);
   return Boolean(results.at(-1)?.meta?.changes);
 };
@@ -583,13 +579,17 @@ const app = new Hono<{ Bindings: Bindings }>()
       const requestedCourseCode = normalizeText(
         c.req.valid("param").courseCode,
       );
-      const courseCode = /^\d{5}/.test(requestedCourseCode)
-        ? requestedCourseCode.slice(5)
-        : requestedCourseCode;
+      const courseCode = normalizeCourseCode(
+        /^\d{5}/.test(requestedCourseCode)
+          ? requestedCourseCode.slice(5)
+          : requestedCourseCode,
+      );
       try {
         const rows = await c.env.DB.prepare(
           `SELECT "rawId", "courseCode", "semester", "enrollment", "scale", "average", "stdDev", "updatedAt"
-           FROM "CourseStatistic" WHERE "courseCode" = ? ORDER BY "semester" DESC`,
+           FROM "CourseStatistic"
+           WHERE UPPER(REPLACE("courseCode", ' ', '')) = ?
+           ORDER BY "semester" DESC`,
         )
           .bind(courseCode)
           .all<CourseStatisticRow & { updatedAt: string }>();
@@ -597,7 +597,13 @@ const app = new Hono<{ Bindings: Bindings }>()
           return c.json({ error: "nothing_found" }, 404);
         }
         c.header("Cache-Control", "public, max-age=300");
-        return c.json({ courseCode, statistics: rows.results });
+        return c.json({
+          courseCode,
+          statistics: rows.results.map((row) => ({
+            ...row,
+            courseCode: normalizeCourseCode(row.courseCode),
+          })),
+        });
       } catch {
         return c.json({ error: "storage_error" }, 500);
       }

@@ -1,3 +1,4 @@
+-- CreateTable
 CREATE TABLE "CourseStatistic" (
     "rawId" TEXT NOT NULL PRIMARY KEY,
     "courseCode" TEXT NOT NULL,
@@ -9,12 +10,7 @@ CREATE TABLE "CourseStatistic" (
     "updatedAt" DATETIME NOT NULL
 );
 
-CREATE INDEX "CourseStatistic_courseCode_idx"
-    ON "CourseStatistic"("courseCode");
-
-CREATE INDEX "CourseStatistic_semester_idx"
-    ON "CourseStatistic"("semester");
-
+-- CreateTable
 CREATE TABLE "CourseStatisticSemester" (
     "semester" TEXT NOT NULL PRIMARY KEY,
     "contentHash" TEXT NOT NULL,
@@ -22,5 +18,11 @@ CREATE TABLE "CourseStatisticSemester" (
     "updatedAt" DATETIME NOT NULL
 );
 
-CREATE INDEX "CourseStatisticSemester_updatedAt_idx"
-    ON "CourseStatisticSemester"("updatedAt");
+-- CreateIndex
+CREATE INDEX "CourseStatistic_courseCode_idx" ON "CourseStatistic"("courseCode");
+
+-- CreateIndex
+CREATE INDEX "CourseStatistic_semester_idx" ON "CourseStatistic"("semester");
+
+-- CreateIndex
+CREATE INDEX "CourseStatisticSemester_updatedAt_idx" ON "CourseStatisticSemester"("updatedAt");

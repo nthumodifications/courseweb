@@ -10,6 +10,7 @@ import type {
 import app, {
   fetchSemesterOptions,
   fetchSemesterPage,
+  normalizeCourseCode,
   parseSemesterOptions,
   parseSemesterPage,
   refreshSemester,
@@ -25,19 +26,14 @@ afterEach(() => {
   console.log = originalLog;
 });
 
+const fixtureFile = (name: string) =>
+  Bun.file(new URL(`./fixtures/ccxp/${name}`, import.meta.url));
+
 const fixture = async (name: string) =>
-  new TextDecoder("big5").decode(
-    await Bun.file(
-      new URL(`./fixtures/ccxp/${name}`, import.meta.url),
-    ).arrayBuffer(),
-  );
+  new TextDecoder("big5").decode(await fixtureFile(name).arrayBuffer());
 
 const fixtureResponse = async (name: string) =>
-  new Response(
-    await Bun.file(
-      new URL(`./fixtures/ccxp/${name}`, import.meta.url),
-    ).arrayBuffer(),
-  );
+  new Response(await fixtureFile(name).arrayBuffer());
 
 const limiter = {
   limit: async () => ({ success: true }),
@@ -153,6 +149,43 @@ class SQLiteD1 {
 
 const asD1 = (database: SQLiteD1) => database as unknown as D1Database;
 
+const withDatabase = async <T>(
+  callback: (database: SQLiteD1) => Promise<T>,
+) => {
+  const database = new SQLiteD1();
+  try {
+    return await callback(database);
+  } finally {
+    database.close();
+  }
+};
+
+type StatisticFixture = {
+  rawId: string;
+  courseCode: string;
+  semester: string;
+  enrollment: number;
+  scale: "gpa" | "percent";
+  average: number;
+  stdDev: number;
+};
+
+const insertStatistic = (database: SQLiteD1, statistic: StatisticFixture) => {
+  database.sqlite.run(
+    `INSERT INTO "CourseStatistic"
+      ("rawId", "courseCode", "semester", "enrollment", "scale", "average", "stdDev", "updatedAt")
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    statistic.rawId,
+    statistic.courseCode,
+    statistic.semester,
+    statistic.enrollment,
+    statistic.scale,
+    statistic.average,
+    statistic.stdDev,
+    "2026-01-01T00:00:00.000Z",
+  );
+};
+
 const resultResponse = (rows: number, semester = "114|30") => {
   const compact = semester.replace("|", "");
   const body = [
@@ -210,6 +243,7 @@ describe("course statistics parser", () => {
     expect(result.expectedCount).toBe(15);
     expect(result.rows).toHaveLength(15);
     expect(result.rows[0]).toMatchObject({ scale: "percent", average: 85.59 });
+    expect(result.rows[0]?.courseCode).toBe("CSR100100");
     expect(result.rows[2]).toMatchObject({
       scale: "gpa",
       average: 3,
@@ -302,9 +336,8 @@ describe("course statistics contribution security", () => {
 });
 
 describe("course statistics persistence", () => {
-  test("successfully writes rows and keeps every statement under the D1 parameter limit", async () => {
-    const database = new SQLiteD1();
-    try {
+  test("successfully writes rows and keeps every statement under the D1 parameter limit", () =>
+    withDatabase(async (database) => {
       setResultFetch(await fixtureResponse("JH84202_114_30.html"));
 
       const result = await refreshSemester(
@@ -328,14 +361,10 @@ describe("course statistics persistence", () => {
           .query('SELECT COUNT(*) AS "count" FROM "CourseStatistic"')
           .get(),
       ).toEqual({ count: 15 });
-    } finally {
-      database.close();
-    }
-  });
+    }));
 
-  test("skips course writes when the page hash is unchanged", async () => {
-    const database = new SQLiteD1();
-    try {
+  test("skips course writes when the page hash is unchanged", () =>
+    withDatabase(async (database) => {
       setResultFetch(
         await fixtureResponse("JH84202_114_30.html"),
         await fixtureResponse("JH84202_114_30.html"),
@@ -361,14 +390,10 @@ describe("course statistics persistence", () => {
           .query('SELECT COUNT(*) AS "count" FROM "CourseStatistic"')
           .get(),
       ).toEqual({ count: 15 });
-    } finally {
-      database.close();
-    }
-  });
+    }));
 
-  test("uses the six-hour cooldown without an upstream call", async () => {
-    const database = new SQLiteD1();
-    try {
+  test("uses the six-hour cooldown without an upstream call", () =>
+    withDatabase(async (database) => {
       setResultFetch(await fixtureResponse("JH84202_114_30.html"));
       await refreshSemester(
         asD1(database),
@@ -391,14 +416,10 @@ describe("course statistics persistence", () => {
 
       expect(result).toMatchObject({ status: "already_up_to_date" });
       expect(upstreamCalls).toBe(0);
-    } finally {
-      database.close();
-    }
-  });
+    }));
 
-  test("does not delete existing rows when a refresh page is empty", async () => {
-    const database = new SQLiteD1();
-    try {
+  test("does not delete existing rows when a refresh page is empty", () =>
+    withDatabase(async (database) => {
       setResultFetch(
         await fixtureResponse("JH84202_114_30.html"),
         await fixtureResponse("JH84202_115_10.html"),
@@ -429,83 +450,78 @@ describe("course statistics persistence", () => {
           )
           .get(),
       ).toEqual({ count: 15 });
-    } finally {
-      database.close();
-    }
-  });
+    }));
 
-  test("lets the winner of concurrent refreshes discard the loser's stale result", async () => {
-    const database = new SQLiteD1();
-    let firstBatchStarted!: () => void;
-    const firstBatchReady = new Promise<void>((resolve) => {
-      firstBatchStarted = resolve;
-    });
-    let releaseFirstBatch!: () => void;
-    const release = new Promise<void>((resolve) => {
-      releaseFirstBatch = resolve;
-    });
-    try {
-      setResultFetch(resultResponse(14));
-      await refreshSemester(
-        asD1(database),
-        "s".repeat(24),
-        "114|30",
-        new Date("2025-12-31T00:00:00.000Z"),
-      );
-      database.batchStatementCounts.length = 0;
-      database.boundParameterCounts.length = 0;
-      database.queryCount = 0;
-      database.beforeBatch = async (call) => {
-        if (call === 1) {
-          firstBatchStarted();
-          await release;
-        }
-      };
-      setResultFetch(resultResponse(15), resultResponse(16));
-      const older = refreshSemester(
-        asD1(database),
-        "s".repeat(24),
-        "114|30",
-        new Date("2026-01-01T00:00:00.000Z"),
-      );
-      await firstBatchReady;
-      const newer = refreshSemester(
-        asD1(database),
-        "s".repeat(24),
-        "114|30",
-        new Date("2026-01-01T01:00:00.000Z"),
-      );
-
-      await expect(newer).resolves.toMatchObject({
-        status: "saved",
-        savedCourses: 16,
+  test("lets the winner of concurrent refreshes discard the loser's stale result", () =>
+    withDatabase(async (database) => {
+      let firstBatchStarted!: () => void;
+      const firstBatchReady = new Promise<void>((resolve) => {
+        firstBatchStarted = resolve;
       });
-      releaseFirstBatch();
-      await expect(older).resolves.toMatchObject({
-        status: "already_up_to_date",
-        savedCourses: 16,
+      let releaseFirstBatch!: () => void;
+      const release = new Promise<void>((resolve) => {
+        releaseFirstBatch = resolve;
       });
-      expect(
-        database.sqlite
-          .query('SELECT COUNT(*) AS "count" FROM "CourseStatistic"')
-          .get(),
-      ).toEqual({ count: 16 });
-      expect(
-        database.sqlite
-          .query(
-            'SELECT "courseCount" FROM "CourseStatisticSemester" WHERE "semester" = "11430"',
-          )
-          .get(),
-      ).toEqual({ courseCount: 16 });
-    } finally {
-      releaseFirstBatch();
-      database.close();
-    }
-  });
+      try {
+        setResultFetch(resultResponse(14));
+        await refreshSemester(
+          asD1(database),
+          "s".repeat(24),
+          "114|30",
+          new Date("2025-12-31T00:00:00.000Z"),
+        );
+        database.batchStatementCounts.length = 0;
+        database.boundParameterCounts.length = 0;
+        database.queryCount = 0;
+        database.beforeBatch = async (call) => {
+          if (call === 1) {
+            firstBatchStarted();
+            await release;
+          }
+        };
+        setResultFetch(resultResponse(15), resultResponse(16));
+        const older = refreshSemester(
+          asD1(database),
+          "s".repeat(24),
+          "114|30",
+          new Date("2026-01-01T00:00:00.000Z"),
+        );
+        await firstBatchReady;
+        const newer = refreshSemester(
+          asD1(database),
+          "s".repeat(24),
+          "114|30",
+          new Date("2026-01-01T01:00:00.000Z"),
+        );
 
-  test("persists a full-size semester within the paid-plan D1 query and statement limits", async () => {
-    const database = new SQLiteD1();
-    try {
+        await expect(newer).resolves.toMatchObject({
+          status: "saved",
+          savedCourses: 16,
+        });
+        releaseFirstBatch();
+        await expect(older).resolves.toMatchObject({
+          status: "already_up_to_date",
+          savedCourses: 16,
+        });
+        expect(
+          database.sqlite
+            .query('SELECT COUNT(*) AS "count" FROM "CourseStatistic"')
+            .get(),
+        ).toEqual({ count: 16 });
+        expect(
+          database.sqlite
+            .query(
+              'SELECT "courseCount" FROM "CourseStatisticSemester" WHERE "semester" = "11430"',
+            )
+            .get(),
+        ).toEqual({ courseCount: 16 });
+      } finally {
+        releaseFirstBatch();
+      }
+    }));
+
+  test("persists a full-size semester within the paid-plan D1 query and statement limits", () =>
+    withDatabase(async (database) => {
       setResultFetch(resultResponse(2_900));
       const result = await refreshSemester(
         asD1(database),
@@ -525,16 +541,12 @@ describe("course statistics persistence", () => {
           .query('SELECT COUNT(*) AS "count" FROM "CourseStatistic"')
           .get(),
       ).toEqual({ count: 2_900 });
-    } finally {
-      database.close();
-    }
-  });
+    }));
 });
 
 describe("course statistics routes", () => {
-  test("returns a successful write from the public contribution route", async () => {
-    const database = new SQLiteD1();
-    try {
+  test("returns a successful write from the public contribution route", () =>
+    withDatabase(async (database) => {
       setResultFetch(await fixtureResponse("JH84202_114_30.html"));
       const response = await request(
         { ACIXSTORE: "s".repeat(24), semester: "114|30" },
@@ -546,27 +558,19 @@ describe("course statistics routes", () => {
         status: "saved",
         savedCourses: 15,
       });
-    } finally {
-      database.close();
-    }
-  });
+    }));
 
-  test("returns public statistics with a five-minute cache header", async () => {
-    const database = new SQLiteD1();
-    try {
-      database.sqlite.run(
-        `INSERT INTO "CourseStatistic"
-          ("rawId", "courseCode", "semester", "enrollment", "scale", "average", "stdDev", "updatedAt")
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        "11430EECS205000",
-        "EECS205000",
-        "11430",
-        10,
-        "gpa",
-        3,
-        1,
-        "2026-01-01T00:00:00.000Z",
-      );
+  test("returns public statistics with a five-minute cache header", () =>
+    withDatabase(async (database) => {
+      insertStatistic(database, {
+        rawId: "11430EECS205000",
+        courseCode: "EECS205000",
+        semester: "11430",
+        enrollment: 10,
+        scale: "gpa",
+        average: 3,
+        stdDev: 1,
+      });
       const response = await app.fetch(
         new Request("https://api.example.test/grades/EECS205000"),
         { DB: asD1(database), CONTRIBUTE_RATE_LIMITER: limiter },
@@ -578,8 +582,59 @@ describe("course statistics routes", () => {
         courseCode: "EECS205000",
         statistics: [{ semester: "11430" }],
       });
-    } finally {
-      database.close();
-    }
+    }));
+
+  test.each([
+    { requestedCourseCode: "CSR100100", storedCourseCode: "CSR 100100" },
+    { requestedCourseCode: "11430CSR 100100", storedCourseCode: "CSR100100" },
+  ])(
+    "matches $requestedCourseCode across semesters and normalizes spaces",
+    ({ requestedCourseCode, storedCourseCode }) =>
+      withDatabase(async (database) => {
+        const statistics: StatisticFixture[] = [
+          {
+            rawId: "11430CSR 100100",
+            courseCode: storedCourseCode,
+            semester: "11430",
+            enrollment: 22,
+            scale: "percent",
+            average: 85.59,
+            stdDev: 12.81,
+          },
+          {
+            rawId: "11510CSR 100100",
+            courseCode: storedCourseCode,
+            semester: "11510",
+            enrollment: 18,
+            scale: "gpa",
+            average: 3.4,
+            stdDev: 0.66,
+          },
+        ];
+        statistics.forEach((statistic) => insertStatistic(database, statistic));
+
+        const response = await app.fetch(
+          new Request(
+            `https://api.example.test/grades/${encodeURIComponent(requestedCourseCode)}`,
+          ),
+          { DB: asD1(database), CONTRIBUTE_RATE_LIMITER: limiter },
+        );
+
+        expect(response.status).toBe(200);
+        expect(await response.json()).toMatchObject({
+          courseCode: "CSR100100",
+          statistics: [
+            { semester: "11510", courseCode: "CSR100100" },
+            { semester: "11430", courseCode: "CSR100100" },
+          ],
+        });
+      }),
+  );
+
+  test.each([
+    ["CSR 100100", "CSR100100"],
+    ["ｅｅｃｓ ２０５０００", "EECS205000"],
+  ])("normalizes course code %s to %s", (input, expected) => {
+    expect(normalizeCourseCode(input)).toBe(expected);
   });
 });

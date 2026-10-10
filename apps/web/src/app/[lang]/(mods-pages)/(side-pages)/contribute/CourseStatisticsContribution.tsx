@@ -28,6 +28,14 @@ type CourseStatisticsCopy = {
   };
 };
 
+type ContributionState =
+  | { kind: "idle" }
+  | { kind: "loading"; completed: number; total: number }
+  | { kind: "success"; courses: number; semesters: number; upToDate: number }
+  | { kind: "up_to_date"; semesters: number }
+  | { kind: "no_data" }
+  | { kind: "error"; code: string };
+
 type ContributionResult = {
   status: "saved" | "already_up_to_date" | "no_data";
   savedCourses: number;
@@ -39,6 +47,57 @@ const API_BASE = import.meta.env.VITE_COURSEWEB_API_URL as string;
 
 const replaceCount = (template: string, count: number) =>
   template.replace("{count}", String(count));
+
+const getStatusMessages = (
+  state: ContributionState,
+  copy: CourseStatisticsCopy,
+) => {
+  switch (state.kind) {
+    case "loading":
+      return state.total > 0
+        ? [
+            {
+              key: "progress",
+              className: "text-sm text-muted-foreground",
+              text: copy.progress
+                .replace("{completed}", String(state.completed))
+                .replace("{total}", String(state.total)),
+            },
+          ]
+        : [];
+    case "success":
+      return [
+        {
+          key: "result",
+          className: "text-sm",
+          text: copy.result
+            .replace("{courses}", String(state.courses))
+            .replace("{semesters}", String(state.semesters)),
+        },
+        ...(state.upToDate > 0
+          ? [
+              {
+                key: "already-up-to-date",
+                className: "text-sm text-muted-foreground",
+                text: replaceCount(copy.already_up_to_date, state.upToDate),
+              },
+            ]
+          : []),
+      ];
+    case "up_to_date":
+      return [
+        {
+          key: "already-up-to-date",
+          className: "text-sm",
+          text: replaceCount(copy.already_up_to_date, state.semesters),
+        },
+      ];
+    case "no_data":
+      return [{ key: "no-data", className: "text-sm", text: copy.no_data }];
+    default:
+      return [];
+  }
+};
 
 const postContribution = async (session: string, semester?: string) => {
   const body = new URLSearchParams({ ACIXSTORE: session });
@@ -62,14 +121,7 @@ const CourseStatisticsContribution = () => {
   const dict = useDictionary();
   const copy = dict.contribute.course_statistics as CourseStatisticsCopy;
   const [session, setSession] = useState("");
-  const [state, setState] = useState<
-    | { kind: "idle" }
-    | { kind: "loading"; completed: number; total: number }
-    | { kind: "success"; courses: number; semesters: number; upToDate: number }
-    | { kind: "up_to_date"; semesters: number }
-    | { kind: "no_data" }
-    | { kind: "error"; code: string }
-  >({ kind: "idle" });
+  const [state, setState] = useState<ContributionState>({ kind: "idle" });
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -92,37 +144,49 @@ const CourseStatisticsContribution = () => {
         total: discovery.semesters.length,
       });
 
-      let savedCourses = 0;
-      let savedSemesters = 0;
-      let upToDateSemesters = 0;
-      let noDataSemesters = 0;
-      for (const semester of discovery.semesters) {
-        const result = (await postContribution(
-          submittedSession,
-          semester.value,
-        )) as ContributionResult;
-        savedCourses += result.savedCourses;
-        if (result.status === "saved") savedSemesters += 1;
-        if (result.status === "already_up_to_date") upToDateSemesters += 1;
-        if (result.status === "no_data") noDataSemesters += 1;
-        setState((current) => ({
-          kind: "loading",
-          completed: current.kind === "loading" ? current.completed + 1 : 0,
-          total: discovery.semesters.length,
-        }));
-      }
+      const totals = await discovery.semesters.reduce(
+        async (totalsPromise, semester) => {
+          const previous = await totalsPromise;
+          const result = (await postContribution(
+            submittedSession,
+            semester.value,
+          )) as ContributionResult;
+          const next = {
+            savedCourses: previous.savedCourses + result.savedCourses,
+            savedSemesters:
+              previous.savedSemesters + (result.status === "saved" ? 1 : 0),
+            upToDateSemesters:
+              previous.upToDateSemesters +
+              (result.status === "already_up_to_date" ? 1 : 0),
+            noDataSemesters:
+              previous.noDataSemesters + (result.status === "no_data" ? 1 : 0),
+          };
+          setState((current) => ({
+            kind: "loading",
+            completed: current.kind === "loading" ? current.completed + 1 : 0,
+            total: discovery.semesters.length,
+          }));
+          return next;
+        },
+        Promise.resolve({
+          savedCourses: 0,
+          savedSemesters: 0,
+          upToDateSemesters: 0,
+          noDataSemesters: 0,
+        }),
+      );
 
       setSession("");
-      if (savedSemesters > 0) {
+      if (totals.savedSemesters > 0) {
         setState({
           kind: "success",
-          courses: savedCourses,
-          semesters: savedSemesters,
-          upToDate: upToDateSemesters,
+          courses: totals.savedCourses,
+          semesters: totals.savedSemesters,
+          upToDate: totals.upToDateSemesters,
         });
-      } else if (upToDateSemesters > 0) {
-        setState({ kind: "up_to_date", semesters: upToDateSemesters });
-      } else if (noDataSemesters > 0) {
+      } else if (totals.upToDateSemesters > 0) {
+        setState({ kind: "up_to_date", semesters: totals.upToDateSemesters });
+      } else if (totals.noDataSemesters > 0) {
         setState({ kind: "no_data" });
       }
     } catch (error) {
@@ -139,6 +203,7 @@ const CourseStatisticsContribution = () => {
     state.kind === "error"
       ? getContributionErrorMessage(copy.errors, state.code)
       : null;
+  const statusMessages = getStatusMessages(state, copy);
 
   return (
     <section className="flex flex-col gap-4">
@@ -171,34 +236,14 @@ const CourseStatisticsContribution = () => {
           </Button>
         </div>
       </form>
-      {busy && state.kind === "loading" && state.total > 0 ? (
-        <p className="text-sm text-muted-foreground" role="status">
-          {copy.progress
-            .replace("{completed}", String(state.completed))
-            .replace("{total}", String(state.total))}
-        </p>
-      ) : null}
-      {state.kind === "success" ? (
-        <p className="text-sm" role="status">
-          {copy.result
-            .replace("{courses}", String(state.courses))
-            .replace("{semesters}", String(state.semesters))}
-        </p>
-      ) : null}
-      {state.kind === "success" && state.upToDate > 0 ? (
-        <p className="text-sm text-muted-foreground" role="status">
-          {replaceCount(copy.already_up_to_date, state.upToDate)}
-        </p>
-      ) : null}
-      {state.kind === "up_to_date" ? (
-        <p className="text-sm" role="status">
-          {replaceCount(copy.already_up_to_date, state.semesters)}
-        </p>
-      ) : null}
-      {state.kind === "no_data" ? (
-        <p className="text-sm" role="status">
-          {copy.no_data}
-        </p>
+      {statusMessages.length > 0 ? (
+        <output className="flex flex-col gap-4" aria-live="polite">
+          {statusMessages.map(({ key, className, text }) => (
+            <p key={key} className={className}>
+              {text}
+            </p>
+          ))}
+        </output>
       ) : null}
       {errorMessage ? (
         <p className="text-sm text-destructive" role="alert">
