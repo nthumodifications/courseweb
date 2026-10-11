@@ -101,17 +101,24 @@ describe("replication conversion utilities", () => {
     });
   });
 
-  test("batches Firestore lookups in groups of ten", async () => {
-    const ids = Array.from({ length: 21 }, (_, index) => `doc-${index}`);
-    const batchSizes: number[] = [];
-    const rows = await getContentByIds(ids, async (batch) => {
-      batchSizes.push(batch.length);
-      return batch.map((id) => ({ id }) as never);
-    });
-    expect(batchSizes).toEqual([10, 10, 1]);
-    expect(rows).toHaveLength(21);
-    expect(ids).toEqual([]);
-  });
+  test.each([
+    [21, [10, 10, 1]],
+    [0, []],
+  ])(
+    "batches %s ids without consuming the caller array",
+    async (count, expectedBatchSizes) => {
+      const ids = Array.from({ length: count }, (_, index) => `doc-${index}`);
+      const originalIds = [...ids];
+      const batchSizes: number[] = [];
+      const rows = await getContentByIds(ids, async (batch) => {
+        batchSizes.push(batch.length);
+        return batch.map((id) => ({ id }) as never);
+      });
+      expect(batchSizes).toEqual(expectedBatchSizes);
+      expect(rows).toHaveLength(count);
+      expect(ids).toEqual(originalIds);
+    },
+  );
 });
 
 describe("query parameter serialization", () => {
@@ -126,9 +133,14 @@ describe("query parameter serialization", () => {
       "q=%E7%92%B0%E5%A2%83%E5%BE%AE%E7%94%9F%E7%89%A9%E5%AD%B8&page=0&tags=AES%2CBIO",
     );
   });
+  test.each([
+    [
+      { q: "環境微生物學", missing: undefined },
+      "q=%E7%92%B0%E5%A2%83%E5%BE%AE%E7%94%9F%E7%89%A9%E5%AD%B8",
+    ],
+  ])("does not mutate query parameter input", (params, expected) => {
+    const original = { ...params };
+    expect(toQueryParams(params)).toBe(expected);
+    expect(params).toEqual(original);
+  });
 });
-
-test.todo(
-  "toQueryParams should not delete undefined keys from the caller object",
-);
-test.todo("getContentByIds should not consume the caller-owned ids array");

@@ -1,4 +1,4 @@
-import { Hono } from "hono";
+import { Hono, type Context } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import supabase_server from "./config/supabase_server";
@@ -125,10 +125,62 @@ export const CALENDAR_HEADERS = {
   "Content-Type": "text/calendar; charset=utf-8",
   "Content-Disposition": "attachment; filename=timetable.ics",
   "Cache-Control": "public, max-age=300, s-maxage=300",
+  Vary: "Accept-Encoding",
 };
 
+const CALENDAR_METADATA = [
+  "BEGIN:VCALENDAR",
+  "VERSION:2.0",
+  "PRODID:-//NTHUMods//Timetable//EN",
+  "CALSCALE:GREGORIAN",
+  "METHOD:PUBLISH",
+  "X-WR-CALNAME:NTHUMods",
+  "REFRESH-INTERVAL;VALUE=DURATION:PT5M",
+  "X-PUBLISHED-TTL:PT5M",
+];
+
 export const EMPTY_CALENDAR =
-  "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//NTHUMods//Timetable//EN\r\nX-WR-CALNAME:NTHUMods\r\nEND:VCALENDAR\r\n";
+  [...CALENDAR_METADATA, "END:VCALENDAR"].join("\r\n") + "\r\n";
+
+const CALENDAR_REFRESH_MS = 5 * 60 * 1000;
+
+const stableFeedTimestamp = (now: Date) =>
+  new Date(
+    Math.floor(now.getTime() / CALENDAR_REFRESH_MS) * CALENDAR_REFRESH_MS,
+  );
+
+const getEtag = async (body: string) => {
+  // Weak because DTSTAMP is excluded so unchanged timetable identity stays stable.
+  const identity = body.replace(/^DTSTAMP:[^\r\n]*\r\n/gm, "");
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(identity),
+  );
+  const hex = Array.from(new Uint8Array(digest), (byte) =>
+    byte.toString(16).padStart(2, "0"),
+  ).join("");
+  return `W/"${hex}"`;
+};
+
+const matchesIfNoneMatch = (value: string | undefined, etag: string) =>
+  value?.split(",").some((candidate) => {
+    const trimmed = candidate.trim();
+    return (
+      trimmed === "*" ||
+      trimmed.replace(/^W\//i, "") === etag.replace(/^W\//i, "")
+    );
+  }) ?? false;
+
+const calendarResponse = async (c: Context, body: string) => {
+  const etag = await getEtag(body);
+  const headers = new Headers(CALENDAR_HEADERS);
+  headers.set("ETag", etag);
+  const ifNoneMatch = c.req.header("If-None-Match");
+  if (matchesIfNoneMatch(ifNoneMatch, etag)) {
+    return new Response(null, { status: 304, headers });
+  }
+  return new Response(body, { status: 200, headers });
+};
 
 export function pad(i: number): string {
   return i < 10 ? `0${i}` : `${i}`;
@@ -282,18 +334,13 @@ export function generateTimetableIcs(
   }
 
   return (
-    [
-      "BEGIN:VCALENDAR",
-      "VERSION:2.0",
-      "PRODID:-//NTHUMods//Timetable//EN",
-      "X-WR-CALNAME:NTHUMods",
-      ...eventBlocks,
-      "END:VCALENDAR",
-    ].join("\r\n") + "\r\n"
+    [...CALENDAR_METADATA, ...eventBlocks, "END:VCALENDAR"].join("\r\n") +
+    "\r\n"
   );
 }
 
-const app = new Hono().get(
+const appHandler = new Hono().on(
+  ["GET", "HEAD"],
   "/calendar.ics",
   zValidator(
     "query",
@@ -356,36 +403,31 @@ const app = new Hono().get(
         if (error || !chunkData) {
           if (error)
             console.error("Supabase error fetching courses for ICS:", error);
-          return new Response(EMPTY_CALENDAR, {
-            status: 200,
-            headers: CALENDAR_HEADERS,
-          });
+          return calendarResponse(c, EMPTY_CALENDAR);
         }
 
         data.push(...(chunkData as CourseRow[]));
       }
 
       if (data.length === 0) {
-        return new Response(EMPTY_CALENDAR, {
-          status: 200,
-          headers: CALENDAR_HEADERS,
-        });
+        return calendarResponse(c, EMPTY_CALENDAR);
       }
 
-      const icsContent = generateTimetableIcs(data, semObj);
+      const icsContent = generateTimetableIcs(
+        data,
+        semObj,
+        undefined,
+        stableFeedTimestamp(new Date()),
+      );
 
-      return new Response(icsContent, {
-        status: 200,
-        headers: CALENDAR_HEADERS,
-      });
+      return calendarResponse(c, icsContent);
     } catch (e) {
       console.error("Error generating timetable ICS:", e);
-      return new Response(EMPTY_CALENDAR, {
-        status: 200,
-        headers: CALENDAR_HEADERS,
-      });
+      return calendarResponse(c, EMPTY_CALENDAR);
     }
   },
 );
+
+const app = appHandler;
 
 export default app;

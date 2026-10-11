@@ -2,6 +2,7 @@ import { Helmet } from "react-helmet-async";
 import { matchRoutes } from "react-router-dom";
 import { router } from "@/router";
 import { usePageLocation } from "@/hooks/usePageLocation";
+import { serializeJsonLd } from "@/lib/seo";
 
 interface RouteHandle {
   title?: string;
@@ -165,7 +166,7 @@ const TitleUpdater = () => {
       <meta name="twitter:image" content={DEFAULT_OG_IMAGE} />
 
       <script type="application/ld+json">
-        {JSON.stringify([websiteJsonLd, organizationJsonLd, webPageJsonLd])}
+        {serializeJsonLd([websiteJsonLd, organizationJsonLd, webPageJsonLd])}
       </script>
     </Helmet>
   );

@@ -1,5 +1,6 @@
 import { useSettings } from "@/hooks/contexts/settings";
 import { Helmet } from "react-helmet-async";
+import { serializeJsonLd } from "@/lib/seo";
 import { Tabs, TabsList, TabsTrigger } from "@courseweb/ui";
 import { useEffect, useMemo, useState } from "react";
 import useTime from "@/hooks/useTime";
@@ -419,7 +420,7 @@ const BusPage = () => {
   const seoHelmet = (
     <Helmet>
       <script type="application/ld+json">
-        {JSON.stringify(busPageJsonLd)}
+        {serializeJsonLd(busPageJsonLd)}
       </script>
     </Helmet>
   );

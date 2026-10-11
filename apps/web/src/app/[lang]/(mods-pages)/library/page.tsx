@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
+import { serializeJsonLd } from "@/lib/seo";
 import {
   BookOpen,
   ChevronRight,
@@ -183,7 +184,7 @@ const LibraryPage = () => {
       <>
         <Helmet>
           <script type="application/ld+json">
-            {JSON.stringify(pageJsonLd)}
+            {serializeJsonLd(pageJsonLd)}
           </script>
         </Helmet>
         <div className="flex flex-col px-4 py-8">
@@ -209,7 +210,9 @@ const LibraryPage = () => {
       <Helmet>
         <title>{dict.library.meta_title} | NTHUMods</title>
         <meta name="description" content={dict.library.meta_description} />
-        <script type="application/ld+json">{JSON.stringify(pageJsonLd)}</script>
+        <script type="application/ld+json">
+          {serializeJsonLd(pageJsonLd)}
+        </script>
       </Helmet>
 
       <div className="flex flex-col px-4">

@@ -1,4 +1,4 @@
-import { describe, it, expect, spyOn, mock } from "bun:test";
+import { describe, it, expect, spyOn, mock, setSystemTime } from "bun:test";
 import { semesterInfo as canonicalSemesterInfo } from "../../../packages/shared/src/constants/semester";
 import { createSupabaseServerMock } from "./test-helpers/module-mocks";
 
@@ -75,6 +75,14 @@ function extractVEvents(ics: string): string[][] {
     }
   }
   return events;
+}
+
+/** Extract complete raw VEVENT blocks, retaining RFC 5545 line folding. */
+function extractVEventBlocks(ics: string): string[] {
+  return Array.from(
+    ics.matchAll(/BEGIN:VEVENT\r\n[\s\S]*?END:VEVENT/g),
+    ([block]) => block!,
+  );
 }
 
 /**
@@ -850,6 +858,123 @@ describe("semester data", () => {
 });
 
 describe("timetable ICS route", () => {
+  it.each([
+    [
+      "valid course selection",
+      "/calendar.ics?semester=11510&semester_11510=course-1",
+      200,
+    ],
+    [
+      "explicitly empty course selection",
+      "/calendar.ics?semester=11510&semester_11510=",
+      400,
+    ],
+    ["missing course selection", "/calendar.ics?semester=11510", 400],
+    ["missing semester", "/calendar.ics?semester_11510=course-1", 400],
+    [
+      "malformed oversized course id",
+      `/calendar.ics?semester=11510&semester_11510=${"x".repeat(101)}`,
+      400,
+    ],
+    [
+      "unknown semester",
+      "/calendar.ics?semester=11610&semester_11610=course-1",
+      400,
+    ],
+  ] as const)(
+    "keeps origin/main status for %s",
+    async (_name, url, expectedStatus) => {
+      const response = await timetableIcsApp.request(url);
+
+      expect(response.status).toBe(expectedStatus);
+    },
+  );
+
+  it("supports HEAD and conditional requests without changing the feed URL", async () => {
+    setSystemTime(new Date("2026-10-09T12:00:00Z"));
+    try {
+      const url = "/calendar.ics?semester=11510&semester_11510=course-1";
+      const first = await timetableIcsApp.request(url);
+      const etag = first.headers.get("ETag");
+
+      expect(first.status).toBe(200);
+      expect(etag).toMatch(/^W\/"[0-9a-f]{64}"$/);
+      expect(first.headers.get("Cache-Control")).toBe(
+        CALENDAR_HEADERS["Cache-Control"],
+      );
+      expect(first.headers.get("Vary")).toBe("Accept-Encoding");
+      expect(first.headers.get("Content-Disposition")).toBe(
+        "attachment; filename=timetable.ics",
+      );
+      expect((await first.text()).includes("BEGIN:VEVENT")).toBe(true);
+
+      const head = await timetableIcsApp.request(url, { method: "HEAD" });
+      expect(head.status).toBe(200);
+      expect(head.headers.get("Content-Type")).toBe(
+        "text/calendar; charset=utf-8",
+      );
+      expect(await head.text()).toBe("");
+    } finally {
+      setSystemTime();
+    }
+  });
+
+  it("keeps unchanged timetable ETags stable across different DTSTAMP values", async () => {
+    setSystemTime(new Date("2026-10-09T12:00:00Z"));
+    try {
+      const url = "/calendar.ics?semester=11510&semester_11510=course-1";
+      const first = await timetableIcsApp.request(url);
+      const firstBody = await first.text();
+      const firstEtag = first.headers.get("ETag");
+
+      setSystemTime(new Date("2026-10-09T12:10:00Z"));
+      const second = await timetableIcsApp.request(url);
+      const secondBody = await second.text();
+      const secondEtag = second.headers.get("ETag");
+
+      expect(firstBody).not.toBe(secondBody);
+      expect(firstBody.match(/DTSTAMP:[^\r\n]+/)?.[0]).not.toBe(
+        secondBody.match(/DTSTAMP:[^\r\n]+/)?.[0],
+      );
+      expect(firstEtag).toBe(secondEtag);
+
+      const changed = await timetableIcsApp.request(
+        "/calendar.ics?semester=11510&semester_11510=course-2",
+      );
+      expect(changed.headers.get("ETag")).not.toBe(firstEtag);
+    } finally {
+      setSystemTime();
+    }
+  });
+
+  it.each(["strong", "weak", "list", "wildcard"] as const)(
+    "returns 304 for %s If-None-Match validators",
+    async (kind) => {
+      setSystemTime(new Date("2026-10-09T12:00:00Z"));
+      try {
+        const url = "/calendar.ics?semester=11510&semester_11510=course-1";
+        const first = await timetableIcsApp.request(url);
+        const etag = first.headers.get("ETag")!;
+        const ifNoneMatch = {
+          strong: etag.slice(2),
+          weak: etag,
+          list: `"unrelated", ${etag}`,
+          wildcard: "*",
+        }[kind];
+
+        const response = await timetableIcsApp.request(url, {
+          headers: { "If-None-Match": ifNoneMatch },
+        });
+
+        expect(response.status).toBe(304);
+        expect(response.headers.get("ETag")).toBe(etag);
+        expect(await response.text()).toBe("");
+      } finally {
+        setSystemTime();
+      }
+    },
+  );
+
   it("rejects an unsupported semester with a clear error and log", async () => {
     const errorSpy = spyOn(console, "error").mockImplementation(() => {});
 
@@ -905,7 +1030,11 @@ describe("generateTimetableIcs – 11510 compatibility", () => {
         "BEGIN:VCALENDAR",
         "VERSION:2.0",
         "PRODID:-//NTHUMods//Timetable//EN",
+        "CALSCALE:GREGORIAN",
+        "METHOD:PUBLISH",
         "X-WR-CALNAME:NTHUMods",
+        "REFRESH-INTERVAL;VALUE=DURATION:PT5M",
+        "X-PUBLISHED-TTL:PT5M",
         "BEGIN:VEVENT",
         "UID:11510CS 101000-0-2@nthumods.com",
         "DTSTAMP:20261009T120000Z",
@@ -920,6 +1049,56 @@ describe("generateTimetableIcs – 11510 compatibility", () => {
         "END:VCALENDAR",
       ].join("\r\n") + "\r\n",
     );
+  });
+
+  it("keeps every realistic VEVENT block byte-identical to origin/main", () => {
+    const ics = generateTimetableIcs(
+      [SNAPSHOT_COURSE_11510, MULTI_DAY_COURSE],
+      SEMESTER_11510,
+      undefined,
+      new Date(Date.UTC(2026, 9, 9, 12, 0, 0)),
+    );
+    expect(extractVEventBlocks(ics)).toEqual([
+      [
+        "BEGIN:VEVENT",
+        "UID:11510CS 101000-0-2@nthumods.com",
+        "DTSTAMP:20261009T120000Z",
+        "DTSTART:20260907T021000Z",
+        "DTEND:20260907T040000Z",
+        "RRULE:FREQ=WEEKLY;BYDAY=MO;INTERVAL=1;UNTIL=20261226T160000Z",
+        "SUMMARY:資料結構",
+        "DESCRIPTION:Data Structures\\n王大明\\nDa-Ming Wang\\nhttps://nthumods.com/",
+        " courses/11510CS%20101000",
+        "LOCATION:台達館105",
+        "END:VEVENT",
+      ].join("\r\n"),
+      [
+        "BEGIN:VEVENT",
+        "UID:11320EE 230100-1-0@nthumods.com",
+        "DTSTAMP:20261009T120000Z",
+        "DTSTART:20260908T000000Z",
+        "DTEND:20260908T015000Z",
+        "RRULE:FREQ=WEEKLY;BYDAY=TU;INTERVAL=1;UNTIL=20261226T160000Z",
+        "SUMMARY:電路學",
+        "DESCRIPTION:Circuit Theory\\n李小華\\nXiao-Hua Li\\nhttps://nthumods.com/co",
+        " urses/11320EE%20230100",
+        "LOCATION:工程一館201",
+        "END:VEVENT",
+      ].join("\r\n"),
+      [
+        "BEGIN:VEVENT",
+        "UID:11320EE 230100-3-0@nthumods.com",
+        "DTSTAMP:20261009T120000Z",
+        "DTSTART:20260910T000000Z",
+        "DTEND:20260910T015000Z",
+        "RRULE:FREQ=WEEKLY;BYDAY=TH;INTERVAL=1;UNTIL=20261226T160000Z",
+        "SUMMARY:電路學",
+        "DESCRIPTION:Circuit Theory\\n李小華\\nXiao-Hua Li\\nhttps://nthumods.com/co",
+        " urses/11320EE%20230100",
+        "LOCATION:工程一館201",
+        "END:VEVENT",
+      ].join("\r\n"),
+    ]);
   });
 });
 

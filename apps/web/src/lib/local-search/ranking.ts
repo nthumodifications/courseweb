@@ -33,6 +33,8 @@ export const rankLocalIdsByTerms = (
   ids: readonly number[],
   terms: readonly string[],
 ): readonly number[] => {
+  if (!terms.length) return ids;
+
   return ids
     .map((id) => ({
       id,
@@ -41,8 +43,8 @@ export const rankLocalIdsByTerms = (
     .sort((left, right) => {
       const scoreDifference = right.score - left.score;
       if (scoreDifference) return scoreDifference;
-      return records[right.id]!.objectID.localeCompare(
-        records[left.id]!.objectID,
+      return records[left.id]!.objectID.localeCompare(
+        records[right.id]!.objectID,
       );
     })
     .map(({ id }) => id);

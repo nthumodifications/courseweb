@@ -53,6 +53,7 @@ import {
   getModuleHistoryVariant,
 } from "@/lib/modules";
 import { cleanSyllabusFields } from "@/lib/syllabus-text";
+import { serializeJsonLd } from "@/lib/seo";
 import { usePrerequisiteGraphData } from "./usePrerequisiteGraphData";
 import CourseGradeStatistics, {
   type CourseGradeStatisticsResponse,
@@ -397,6 +398,8 @@ const CourseDetailContainer = ({
       .replace("{courseEn}", course?.name_en ?? "")
       .replace("{instructors}", seoInstructors)
       .replace("{semester}", seoSemester);
+  const encodedCourseId = course ? encodeURIComponent(course.raw_id) : "";
+  const courseCanonicalUrl = `https://nthumods.com/${lang}/courses/${encodedCourseId}`;
 
   // Dynamic SEO metadata for course detail pages (full-page view only)
   const courseJsonLd =
@@ -418,8 +421,8 @@ const CourseDetailContainer = ({
           })),
           courseCode: `${course.department} ${course.course}-${course.class}`,
           educationalLevel: "University",
-          inLanguage: "zh-TW",
-          url: `https://nthumods.com/${lang}/courses/${course.raw_id}`,
+          inLanguage: lang === "en" ? "en" : "zh-TW",
+          url: courseCanonicalUrl,
           offers: {
             "@type": "Offer",
             price: "0",
@@ -446,7 +449,7 @@ const CourseDetailContainer = ({
           },
           {
             name: course.name_zh,
-            url: `https://nthumods.com/${lang}/courses/${course.raw_id}`,
+            url: courseCanonicalUrl,
           },
         ]
       : null;
@@ -471,7 +474,7 @@ const CourseDetailContainer = ({
           "@type": "WebPage",
           name: `${seoCourseName} | NTHUMods`,
           description: fillSeo(dict.course.details.seo.page_description),
-          url: `https://nthumods.com/${lang}/courses/${course.raw_id}`,
+          url: courseCanonicalUrl,
           inLanguage: lang === "en" ? "en-US" : "zh-TW",
           isPartOf: { "@type": "WebSite", url: "https://nthumods.com" },
         }
@@ -547,24 +550,21 @@ const CourseDetailContainer = ({
             name="description"
             content={fillSeo(dict.course.details.seo.description)}
           />
-          <link
-            rel="canonical"
-            href={`https://nthumods.com/${lang}/courses/${course.raw_id}`}
-          />
+          <link rel="canonical" href={courseCanonicalUrl} />
           <link
             rel="alternate"
             hrefLang="zh-TW"
-            href={`https://nthumods.com/zh/courses/${course.raw_id}`}
+            href={`https://nthumods.com/zh/courses/${encodedCourseId}`}
           />
           <link
             rel="alternate"
             hrefLang="en"
-            href={`https://nthumods.com/en/courses/${course.raw_id}`}
+            href={`https://nthumods.com/en/courses/${encodedCourseId}`}
           />
           <link
             rel="alternate"
             hrefLang="x-default"
-            href={`https://nthumods.com/zh/courses/${course.raw_id}`}
+            href={`https://nthumods.com/zh/courses/${encodedCourseId}`}
           />
           <meta
             property="og:title"
@@ -574,10 +574,7 @@ const CourseDetailContainer = ({
             property="og:description"
             content={fillSeo(dict.course.details.seo.open_graph_description)}
           />
-          <meta
-            property="og:url"
-            content={`https://nthumods.com/${lang}/courses/${course.raw_id}`}
-          />
+          <meta property="og:url" content={courseCanonicalUrl} />
           <meta name="twitter:card" content="summary" />
           <meta
             name="twitter:title"
@@ -589,7 +586,7 @@ const CourseDetailContainer = ({
           />
           {courseJsonLd && (
             <script type="application/ld+json">
-              {JSON.stringify(
+              {serializeJsonLd(
                 [courseJsonLd, breadcrumbJsonLd, webPageJsonLd].filter(Boolean),
               )}
             </script>

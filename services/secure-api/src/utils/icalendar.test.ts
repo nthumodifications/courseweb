@@ -764,8 +764,12 @@ describe("iCalendar Utility", () => {
       "BEGIN:VCALENDAR\r\n" +
       "VERSION:2.0\r\n" +
       "PRODID:-//NTHUMods//Calendar//EN\r\n" +
+      "CALSCALE:GREGORIAN\r\n" +
+      "METHOD:PUBLISH\r\n" +
       "NAME:Test User's Calendar\r\n" +
       "X-WR-CALNAME:Test User's Calendar\r\n" +
+      "REFRESH-INTERVAL;VALUE=DURATION:PT5M\r\n" +
+      "X-PUBLISHED-TTL:PT5M\r\n" +
       "BEGIN:VEVENT\r\n" +
       "UID:weekly-class\r\n" +
       "SEQUENCE:0\r\n" +
@@ -793,6 +797,48 @@ describe("iCalendar Utility", () => {
       "END:VCALENDAR";
 
     expect(feed).toBe(expected);
+  });
+
+  test("keeps all calendar properties before the first VEVENT", async () => {
+    const feed = await createICalendar(
+      "test-user-id",
+      false,
+      undefined,
+      mockClient,
+      trackedFirebase([], []),
+      new Date("2026-09-01T00:00:00.000Z"),
+    );
+
+    expect(feed).toBe(
+      [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//NTHUMods//Calendar//EN",
+        "CALSCALE:GREGORIAN",
+        "METHOD:PUBLISH",
+        "NAME:Test User's Calendar",
+        "X-WR-CALNAME:Test User's Calendar",
+        "REFRESH-INTERVAL;VALUE=DURATION:PT5M",
+        "X-PUBLISHED-TTL:PT5M",
+        "END:VCALENDAR",
+      ].join("\r\n"),
+    );
+  });
+
+  test("returns a valid empty calendar when the event collection is empty", async () => {
+    const feed = await createICalendar(
+      "test-user-id",
+      false,
+      undefined,
+      mockClient,
+      trackedFirebase([], []),
+      new Date("2026-09-01T00:00:00.000Z"),
+    );
+
+    expect(feed).toContain("BEGIN:VCALENDAR\r\n");
+    expect(feed).toContain("METHOD:PUBLISH\r\n");
+    expect(feed).not.toContain("BEGIN:VEVENT");
+    expect(feed.endsWith("END:VCALENDAR")).toBe(true);
   });
 
   test("expands weekly UTC rules on the correct Taipei weekday around 08:00", async () => {
