@@ -144,6 +144,243 @@ const createTestEvent = async (includeFullDetails = true) => {
   return events[0]![0];
 };
 
+type CalendarEvent = {
+  id: string;
+  title: string;
+  start: string;
+  end: string;
+  details: string;
+  location: string;
+  allDay: boolean;
+  repeat: unknown;
+  color: string;
+  tag: string;
+  excludedDates: readonly string[];
+};
+
+const calendarEvent = (
+  id: string,
+  title: string,
+  start: string,
+  end: string,
+  details: string,
+  location: string,
+  allDay: boolean,
+  repeat: unknown,
+  color: string,
+  tag: string,
+  excludedDates: readonly string[],
+): CalendarEvent => ({
+  id,
+  title,
+  start,
+  end,
+  details,
+  location,
+  allDay,
+  repeat,
+  color,
+  tag,
+  excludedDates,
+});
+
+const calendarEventResponse = (event: CalendarEvent) => ({
+  docs: [
+    documentFor({
+      ...event,
+      actualEnd: event.end,
+      parentId: "",
+    }),
+  ],
+  empty: false,
+});
+
+const eventCase = (
+  name: string,
+  event: CalendarEvent,
+  expectedContains: readonly string[],
+  expectedNotContains: readonly string[] = [],
+) => ({ name, event, expectedContains, expectedNotContains });
+
+const calendarEventCases = [
+  eventCase(
+    "should correctly convert regular time-specific events to iCalendar format",
+    calendarEvent(
+      "event-1",
+      "Lecture: Introduction to React",
+      new Date("2025-05-19T10:00:00+08:00").toISOString(),
+      new Date("2025-05-19T12:00:00+08:00").toISOString(),
+      "Introductory lecture covering React basics and hooks",
+      "Engineering Building Room 301",
+      false,
+      null,
+      "#4285F4",
+      "lecture",
+      [],
+    ),
+    [
+      "SUMMARY:Lecture: Introduction to React",
+      "DTSTART:20250519T020000Z",
+      "DTEND:20250519T040000Z",
+      "DESCRIPTION:Introductory lecture covering React basics and hooks",
+      "LOCATION:Engineering Building Room 301",
+    ],
+    ["VALUE=DATE", "RRULE:"],
+  ),
+  eventCase(
+    "should correctly convert all-day single-day events to iCalendar format",
+    calendarEvent(
+      "event-2",
+      "Project Submission Deadline",
+      new Date("2025-05-20T00:00:00+08:00").toISOString(),
+      new Date("2025-05-20T23:59:59+08:00").toISOString(),
+      "Final deadline for submission of course project",
+      "Online via CourseWeb",
+      true,
+      null,
+      "#DB4437",
+      "assignment",
+      [],
+    ),
+    [
+      "SUMMARY:Project Submission Deadline",
+      "DTSTART;VALUE=DATE:20250520",
+      "DTEND;VALUE=DATE:20250521",
+      "DESCRIPTION:Final deadline for submission of course project",
+      "LOCATION:Online via CourseWeb",
+    ],
+  ),
+  eventCase(
+    "should correctly convert all-day multi-day events to iCalendar format",
+    calendarEvent(
+      "event-3",
+      "Reading Week",
+      new Date("2025-05-25T00:00:00+08:00").toISOString(),
+      new Date("2025-05-31T23:59:59+08:00").toISOString(),
+      "No classes during reading week",
+      "NTHU Campus",
+      true,
+      null,
+      "#0F9D58",
+      "holiday",
+      [],
+    ),
+    [
+      "SUMMARY:Reading Week",
+      "DTSTART;VALUE=DATE:20250525",
+      "DTEND;VALUE=DATE:20250601",
+      "DESCRIPTION:No classes during reading week",
+      "LOCATION:NTHU Campus",
+    ],
+  ),
+  eventCase(
+    "should correctly convert weekly recurring events to iCalendar format",
+    calendarEvent(
+      "event-4",
+      "Web Development Lab",
+      new Date("2025-05-22T14:00:00+08:00").toISOString(),
+      new Date("2025-05-22T16:00:00+08:00").toISOString(),
+      "Hands-on lab session for web development course",
+      "Computer Science Building Lab 2",
+      false,
+      { type: "weekly", interval: 1, mode: "count", value: 10 },
+      "#F4B400",
+      "lab",
+      [new Date("2025-06-05T14:00:00+08:00").toISOString()],
+    ),
+    [
+      "SUMMARY:Web Development Lab",
+      "DTSTART:20250522T060000Z",
+      "DTEND:20250522T080000Z",
+      "DESCRIPTION:Hands-on lab session for web development course",
+      "LOCATION:Computer Science Building Lab 2",
+      "RRULE:FREQ=WEEKLY;COUNT=10;INTERVAL=1",
+      "EXDATE:20250605T060000Z",
+    ],
+  ),
+  eventCase(
+    "should correctly convert daily recurring events to iCalendar format",
+    calendarEvent(
+      "event-6",
+      "Morning Check-in",
+      new Date("2025-05-19T08:30:00+08:00").toISOString(),
+      new Date("2025-05-19T08:45:00+08:00").toISOString(),
+      "Quick team sync-up meeting",
+      "Online via Teams",
+      false,
+      { type: "daily", interval: 1, mode: "count", value: 20 },
+      "#00ACC1",
+      "meeting",
+      [
+        new Date("2025-05-24T08:30:00+08:00").toISOString(),
+        new Date("2025-05-25T08:30:00+08:00").toISOString(),
+      ],
+    ),
+    [
+      "SUMMARY:Morning Check-in",
+      "DTSTART:20250519T003000Z",
+      "DTEND:20250519T004500Z",
+      "RRULE:FREQ=DAILY;COUNT=20;INTERVAL=1",
+      "EXDATE:20250524T003000Z,20250525T003000Z",
+    ],
+  ),
+  eventCase(
+    "should correctly convert monthly recurring events to iCalendar format",
+    calendarEvent(
+      "event-5",
+      "Department Meeting",
+      new Date("2025-05-05T13:00:00+08:00").toISOString(),
+      new Date("2025-05-05T14:30:00+08:00").toISOString(),
+      "Monthly department progress review meeting",
+      "Admin Building Conference Room",
+      false,
+      {
+        type: "monthly",
+        interval: 1,
+        mode: "date",
+        value: new Date("2025-12-31T00:00:00+08:00").getTime(),
+      },
+      "#AB47BC",
+      "meeting",
+      [],
+    ),
+    [
+      "SUMMARY:Department Meeting",
+      "DTSTART:20250505T050000Z",
+      "DTEND:20250505T063000Z",
+      "RRULE:FREQ=MONTHLY;INTERVAL=1;UNTIL=20251231T155959Z",
+    ],
+  ),
+  eventCase(
+    "should correctly convert yearly recurring events to iCalendar format",
+    calendarEvent(
+      "event-7",
+      "Department Anniversary",
+      new Date("2025-06-15T00:00:00+08:00").toISOString(),
+      new Date("2025-06-15T23:59:59+08:00").toISOString(),
+      "Annual celebration of department founding",
+      "University Courtyard",
+      true,
+      {
+        type: "yearly",
+        interval: 1,
+        mode: "date",
+        value: new Date("2030-06-15T00:00:00+08:00").getTime(),
+      },
+      "#FF7043",
+      "event",
+      [new Date("2026-06-15T00:00:00+08:00").toISOString()],
+    ),
+    [
+      "SUMMARY:Department Anniversary",
+      "DTSTART;VALUE=DATE:20250615",
+      "DTEND;VALUE=DATE:20250616",
+      "RRULE:FREQ=YEARLY;UNTIL=20300615;INTERVAL=1",
+      "EXDATE;VALUE=DATE:20260615",
+    ],
+  ),
+] as const;
+
 describe("iCalendar Utility", () => {
   beforeAll(() => {
     // Set our mock client before all tests
@@ -261,317 +498,21 @@ describe("iCalendar Utility", () => {
   });
 
   // Tests for specific event types
-  test("should correctly convert regular time-specific events to iCalendar format", async () => {
-    // Mock to return only the regular time-to-time event
-    mockFirebaseGet.mockImplementationOnce(() =>
-      Promise.resolve({
-        docs: [
-          {
-            id: "event-1",
-            data: () => ({
-              title: "Lecture: Introduction to React",
-              start: new Date("2025-05-19T10:00:00+08:00").toISOString(),
-              end: new Date("2025-05-19T12:00:00+08:00").toISOString(),
-              actualEnd: new Date("2025-05-19T12:00:00+08:00").toISOString(),
-              details: "Introductory lecture covering React basics and hooks",
-              location: "Engineering Building Room 301",
-              allDay: false,
-              repeat: null,
-              color: "#4285F4",
-              tag: "lecture",
-              excludedDates: [],
-              parentId: "",
-            }),
-          },
-        ],
-        empty: false,
-      }),
-    );
+  test.each(calendarEventCases)(
+    "$name",
+    async ({ event, expectedContains, expectedNotContains }) => {
+      mockFirebaseGet.mockImplementationOnce(() =>
+        Promise.resolve(calendarEventResponse(event)),
+      );
 
-    const eventText = await createTestEvent();
+      const eventText = await createTestEvent();
 
-    // Check specific properties for a regular event
-    expect(eventText).toContain("SUMMARY:Lecture: Introduction to React");
-    expect(eventText).toContain("DTSTART:20250519T020000Z");
-    expect(eventText).toContain("DTEND:20250519T040000Z");
-    expect(eventText).toContain(
-      "DESCRIPTION:Introductory lecture covering React basics and hooks",
-    );
-    expect(eventText).toContain("LOCATION:Engineering Building Room 301");
-
-    // Regular events should not have an all-day flag or recurrence rule
-    expect(eventText).not.toContain("VALUE=DATE");
-    expect(eventText).not.toContain("RRULE:");
-  });
-
-  test("should correctly convert all-day single-day events to iCalendar format", async () => {
-    // Mock to return only the all-day single-day event
-    mockFirebaseGet.mockImplementationOnce(() =>
-      Promise.resolve({
-        docs: [
-          {
-            id: "event-2",
-            data: () => ({
-              title: "Project Submission Deadline",
-              start: new Date("2025-05-20T00:00:00+08:00").toISOString(),
-              end: new Date("2025-05-20T23:59:59+08:00").toISOString(),
-              actualEnd: new Date("2025-05-20T23:59:59+08:00").toISOString(),
-              details: "Final deadline for submission of course project",
-              location: "Online via CourseWeb",
-              allDay: true,
-              repeat: null,
-              color: "#DB4437",
-              tag: "assignment",
-              excludedDates: [],
-              parentId: "",
-            }),
-          },
-        ],
-        empty: false,
-      }),
-    );
-
-    const eventText = await createTestEvent();
-
-    // Check specific properties for an all-day single-day event
-    expect(eventText).toContain("SUMMARY:Project Submission Deadline");
-
-    // All-day events should use VALUE=DATE format without time component
-    expect(eventText).toContain("DTSTART;VALUE=DATE:20250520");
-    expect(eventText).toContain("DTEND;VALUE=DATE:20250521");
-    expect(eventText).toContain(
-      "DESCRIPTION:Final deadline for submission of course project",
-    );
-    expect(eventText).toContain("LOCATION:Online via CourseWeb");
-  });
-
-  test("should correctly convert all-day multi-day events to iCalendar format", async () => {
-    // Mock to return only the all-day multi-day event
-    mockFirebaseGet.mockImplementationOnce(() =>
-      Promise.resolve({
-        docs: [
-          {
-            id: "event-3",
-            data: () => ({
-              title: "Reading Week",
-              start: new Date("2025-05-25T00:00:00+08:00").toISOString(),
-              end: new Date("2025-05-31T23:59:59+08:00").toISOString(),
-              actualEnd: new Date("2025-05-31T23:59:59+08:00").toISOString(),
-              details: "No classes during reading week",
-              location: "NTHU Campus",
-              allDay: true,
-              repeat: null,
-              color: "#0F9D58",
-              tag: "holiday",
-              excludedDates: [],
-              parentId: "",
-            }),
-          },
-        ],
-        empty: false,
-      }),
-    );
-
-    const eventText = await createTestEvent();
-
-    // Check specific properties for an all-day multi-day event
-    expect(eventText).toContain("SUMMARY:Reading Week");
-    expect(eventText).toContain("DTSTART;VALUE=DATE:20250525");
-    // End date should be after the start date
-    expect(eventText).toContain("DTEND;VALUE=DATE:20250601");
-
-    expect(eventText).toContain("DESCRIPTION:No classes during reading week");
-    expect(eventText).toContain("LOCATION:NTHU Campus");
-  });
-
-  test("should correctly convert weekly recurring events to iCalendar format", async () => {
-    // Mock to return only the weekly recurring event
-    mockFirebaseGet.mockImplementationOnce(() =>
-      Promise.resolve({
-        docs: [
-          {
-            id: "event-4",
-            data: () => ({
-              title: "Web Development Lab",
-              start: new Date("2025-05-22T14:00:00+08:00").toISOString(),
-              end: new Date("2025-05-22T16:00:00+08:00").toISOString(),
-              actualEnd: new Date("2025-05-22T16:00:00+08:00").toISOString(),
-              details: "Hands-on lab session for web development course",
-              location: "Computer Science Building Lab 2",
-              allDay: false,
-              repeat: {
-                type: "weekly",
-                interval: 1,
-                mode: "count",
-                value: 10,
-              },
-              color: "#F4B400",
-              tag: "lab",
-              excludedDates: [
-                new Date("2025-06-05T14:00:00+08:00").toISOString(), // Skip session during exam week
-              ],
-              parentId: "",
-            }),
-          },
-        ],
-        empty: false,
-      }),
-    );
-
-    const eventText = await createTestEvent();
-
-    // Check specific properties for a weekly recurring event
-    expect(eventText).toContain("SUMMARY:Web Development Lab");
-    expect(eventText).toContain("DTSTART:20250522T060000Z");
-    expect(eventText).toContain("DTEND:20250522T080000Z");
-    expect(eventText).toContain(
-      "DESCRIPTION:Hands-on lab session for web development course",
-    );
-    expect(eventText).toContain("LOCATION:Computer Science Building Lab 2");
-
-    // Check for recurrence rule - should be weekly
-    expect(eventText).toContain("RRULE:FREQ=WEEKLY;COUNT=10;INTERVAL=1");
-    expect(eventText).toContain("EXDATE:20250605T060000Z");
-  });
-
-  test("should correctly convert daily recurring events to iCalendar format", async () => {
-    // Mock to return only the daily recurring event
-    mockFirebaseGet.mockImplementationOnce(() =>
-      Promise.resolve({
-        docs: [
-          {
-            id: "event-6",
-            data: () => ({
-              title: "Morning Check-in",
-              start: new Date("2025-05-19T08:30:00+08:00").toISOString(),
-              end: new Date("2025-05-19T08:45:00+08:00").toISOString(),
-              actualEnd: new Date("2025-05-19T08:45:00+08:00").toISOString(),
-              details: "Quick team sync-up meeting",
-              location: "Online via Teams",
-              allDay: false,
-              repeat: {
-                type: "daily",
-                interval: 1,
-                mode: "count",
-                value: 20,
-              },
-              color: "#00ACC1",
-              tag: "meeting",
-              excludedDates: [
-                new Date("2025-05-24T08:30:00+08:00").toISOString(),
-                new Date("2025-05-25T08:30:00+08:00").toISOString(),
-              ],
-              parentId: "",
-            }),
-          },
-        ],
-        empty: false,
-      }),
-    );
-
-    const eventText = await createTestEvent();
-
-    // Check specific properties for a daily recurring event
-    expect(eventText).toContain("SUMMARY:Morning Check-in");
-    expect(eventText).toContain("DTSTART:20250519T003000Z");
-    expect(eventText).toContain("DTEND:20250519T004500Z");
-
-    // Check for recurrence rule - should be daily
-    expect(eventText).toContain("RRULE:FREQ=DAILY;COUNT=20;INTERVAL=1");
-    // Check for excluded dates - should have two, but the library combines them into a single property
-    expect(eventText).toContain("EXDATE:20250524T003000Z,20250525T003000Z");
-  });
-
-  test("should correctly convert monthly recurring events to iCalendar format", async () => {
-    // Mock to return only the monthly recurring event
-    mockFirebaseGet.mockImplementationOnce(() =>
-      Promise.resolve({
-        docs: [
-          {
-            id: "event-5",
-            data: () => ({
-              title: "Department Meeting",
-              start: new Date("2025-05-05T13:00:00+08:00").toISOString(),
-              end: new Date("2025-05-05T14:30:00+08:00").toISOString(),
-              actualEnd: new Date("2025-05-05T14:30:00+08:00").toISOString(),
-              details: "Monthly department progress review meeting",
-              location: "Admin Building Conference Room",
-              allDay: false,
-              repeat: {
-                type: "monthly",
-                interval: 1,
-                mode: "date",
-                value: new Date("2025-12-31T00:00:00+08:00").getTime(),
-              },
-              color: "#AB47BC",
-              tag: "meeting",
-              excludedDates: [],
-              parentId: "",
-            }),
-          },
-        ],
-        empty: false,
-      }),
-    );
-
-    const eventText = await createTestEvent();
-
-    // Check specific properties for a monthly recurring event
-    expect(eventText).toContain("SUMMARY:Department Meeting");
-    expect(eventText).toContain("DTSTART:20250505T050000Z");
-    expect(eventText).toContain("DTEND:20250505T063000Z");
-
-    // Check for recurrence rule - should be monthly with until date
-    expect(eventText).toContain(
-      "RRULE:FREQ=MONTHLY;INTERVAL=1;UNTIL=20251231T155959Z",
-    );
-  });
-
-  test("should correctly convert yearly recurring events to iCalendar format", async () => {
-    // Mock to return only the yearly recurring event
-    mockFirebaseGet.mockImplementationOnce(() =>
-      Promise.resolve({
-        docs: [
-          {
-            id: "event-7",
-            data: () => ({
-              title: "Department Anniversary",
-              start: new Date("2025-06-15T00:00:00+08:00").toISOString(),
-              end: new Date("2025-06-15T23:59:59+08:00").toISOString(),
-              actualEnd: new Date("2025-06-15T23:59:59+08:00").toISOString(),
-              details: "Annual celebration of department founding",
-              location: "University Courtyard",
-              allDay: true,
-              repeat: {
-                type: "yearly",
-                interval: 1,
-                mode: "date",
-                value: new Date("2030-06-15T00:00:00+08:00").getTime(),
-              },
-              color: "#FF7043",
-              tag: "event",
-              excludedDates: [
-                new Date("2026-06-15T00:00:00+08:00").toISOString(),
-              ],
-              parentId: "",
-            }),
-          },
-        ],
-        empty: false,
-      }),
-    );
-
-    const eventText = await createTestEvent();
-
-    // Check specific properties for a yearly recurring event
-    expect(eventText).toContain("SUMMARY:Department Anniversary");
-    expect(eventText).toContain("DTSTART;VALUE=DATE:20250615");
-    expect(eventText).toContain("DTEND;VALUE=DATE:20250616");
-
-    // Check for recurrence rule - should be yearly with until date
-    expect(eventText).toContain("RRULE:FREQ=YEARLY;UNTIL=20300615;INTERVAL=1");
-    expect(eventText).toContain("EXDATE;VALUE=DATE:20260615");
-  });
+      expectedContains.forEach((value) => expect(eventText).toContain(value));
+      expectedNotContains.forEach((value) =>
+        expect(eventText).not.toContain(value),
+      );
+    },
+  );
 
   test("proves HEAD-generated UIDs were not stable between exports", () => {
     const createHeadStyleUid = () => {
