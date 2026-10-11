@@ -14,6 +14,12 @@ function shellResponse() {
   });
 }
 
+function requestUrl(input: string | Request | URL): string {
+  if (typeof input === "string") return input;
+  if (input instanceof Request) return input.url;
+  return input.toString();
+}
+
 function installWorkerRuntime(fetchImpl: typeof fetch) {
   const previous = new Map(
     ["fetch", "HTMLRewriter", "caches"].map((key) => [
@@ -237,14 +243,9 @@ describe("Worker asset and shell caching", () => {
   test("serves bot metadata pages and deep course pages from the shell", async () => {
     const requestedUrls: string[] = [];
     const restore = installWorkerRuntime(async (input) => {
-      const requestUrl =
-        typeof input === "string"
-          ? input
-          : input instanceof Request
-            ? input.url
-            : input.toString();
-      requestedUrls.push(requestUrl);
-      if (requestUrl.startsWith("https://api.nthumods.com/course/")) {
+      const url = requestUrl(input);
+      requestedUrls.push(url);
+      if (url.startsWith("https://api.nthumods.com/course/")) {
         return new Response(
           JSON.stringify({
             raw_id: "11420PE  206097",

@@ -127,6 +127,75 @@ async function flushMicrotasks() {
   await Promise.resolve();
 }
 
+type LoadFailureOptions = {
+  query: string;
+  browser?: BrowserOptions;
+  error?: Error;
+  expectedReloads: number;
+  expectedUpdates?: number;
+  expectedStorage?: false | string;
+  systemTime?: Date;
+};
+
+async function expectLoadFailure({
+  query,
+  browser,
+  error = new Error("Failed to fetch dynamically imported module"),
+  expectedReloads,
+  expectedUpdates,
+  expectedStorage,
+  systemTime,
+}: LoadFailureOptions) {
+  jest.useFakeTimers();
+  if (systemTime) jest.setSystemTime(systemTime);
+  const fake = installBrowser(browser);
+  try {
+    const { loadWithRetry } = await import(`./chunk-recovery?${query}`);
+
+    await expect(loadWithRetry(async () => Promise.reject(error))).rejects.toBe(
+      error,
+    );
+    expect(fake.reloadCount()).toBe(expectedReloads);
+    if (expectedUpdates !== undefined) {
+      expect(fake.updateCount()).toBe(expectedUpdates);
+    }
+    if (expectedStorage === false) {
+      expect(fake.storage.has(STORAGE_KEY)).toBe(false);
+    } else if (expectedStorage !== undefined) {
+      expect(fake.storage.get(STORAGE_KEY)).toBe(expectedStorage);
+    }
+  } finally {
+    fake.restore();
+  }
+}
+
+function installReactTestBrowser() {
+  jest.useFakeTimers();
+  const fake = installBrowser({
+    storage: new Map([[STORAGE_KEY, String(Date.now())]]),
+  });
+  jest.useRealTimers();
+  const dom = new JSDOM("<!doctype html><html><body></body></html>");
+  fake.attachDocument(dom.window.document);
+  const container = dom.window.document.createElement("div");
+  dom.window.document.body.appendChild(container);
+
+  return {
+    fake,
+    dom,
+    root: createRoot(container),
+    container,
+  };
+}
+
+async function cleanupReactTestBrowser(
+  browser: ReturnType<typeof installReactTestBrowser>,
+) {
+  await act(async () => browser.root.unmount());
+  browser.dom.window.close();
+  browser.fake.restore();
+}
+
 afterEach(() => {
   jest.useRealTimers();
 });
@@ -146,38 +215,20 @@ describe("loadWithRetry", () => {
   });
 
   test("recovers only load failures, not evaluation errors", async () => {
-    jest.useFakeTimers();
-    const fake = installBrowser();
-    try {
-      const { loadWithRetry } = await import(
-        "./chunk-recovery?evaluation-error"
-      );
-      const error = new TypeError("real component runtime bug");
-
-      await expect(
-        loadWithRetry(async () => Promise.reject(error)),
-      ).rejects.toBe(error);
-      expect(fake.reloadCount()).toBe(0);
-    } finally {
-      fake.restore();
-    }
+    await expectLoadFailure({
+      query: "evaluation-error",
+      error: new TypeError("real component runtime bug"),
+      expectedReloads: 0,
+    });
   });
 
   test("does not reload while offline", async () => {
-    jest.useFakeTimers();
-    const fake = installBrowser({ online: false });
-    try {
-      const { loadWithRetry } = await import("./chunk-recovery?offline");
-      const error = new Error("Failed to fetch dynamically imported module");
-
-      await expect(
-        loadWithRetry(async () => Promise.reject(error)),
-      ).rejects.toBe(error);
-      expect(fake.reloadCount()).toBe(0);
-      expect(fake.storage.has(STORAGE_KEY)).toBe(false);
-    } finally {
-      fake.restore();
-    }
+    await expectLoadFailure({
+      query: "offline",
+      browser: { online: false },
+      expectedReloads: 0,
+      expectedStorage: false,
+    });
   });
 
   test("fails closed when session storage is unavailable", async () => {
@@ -227,37 +278,21 @@ describe("loadWithRetry", () => {
   });
 
   test("reloads once even when the service-worker update fails", async () => {
-    jest.useFakeTimers();
-    const fake = installBrowser({ updateThrows: true });
-    try {
-      const { loadWithRetry } = await import("./chunk-recovery?update-error");
-      const error = new Error("Failed to fetch dynamically imported module");
-
-      await expect(
-        loadWithRetry(async () => Promise.reject(error)),
-      ).rejects.toBe(error);
-      expect(fake.updateCount()).toBe(0);
-      expect(fake.reloadCount()).toBe(1);
-    } finally {
-      fake.restore();
-    }
+    await expectLoadFailure({
+      query: "update-error",
+      browser: { updateThrows: true },
+      expectedReloads: 1,
+      expectedUpdates: 0,
+    });
   });
 
   test("reloads once when registration.update rejects", async () => {
-    jest.useFakeTimers();
-    const fake = installBrowser({ updateRejects: true });
-    try {
-      const { loadWithRetry } = await import("./chunk-recovery?update-rejects");
-      const error = new Error("Failed to fetch dynamically imported module");
-
-      await expect(
-        loadWithRetry(async () => Promise.reject(error)),
-      ).rejects.toBe(error);
-      expect(fake.updateCount()).toBe(1);
-      expect(fake.reloadCount()).toBe(1);
-    } finally {
-      fake.restore();
-    }
+    await expectLoadFailure({
+      query: "update-rejects",
+      browser: { updateRejects: true },
+      expectedReloads: 1,
+      expectedUpdates: 1,
+    });
   });
 
   test("checks online status again after the service-worker update", async () => {
@@ -281,66 +316,42 @@ describe("loadWithRetry", () => {
   });
 
   test("sends a second failure within five minutes to the existing boundary", async () => {
-    jest.useFakeTimers();
     const now = new Date("2026-10-10T12:00:00Z");
-    jest.setSystemTime(now);
     const storage = new Map([[STORAGE_KEY, String(now.getTime())]]);
-    const fake = installBrowser({ storage });
-    try {
-      const { loadWithRetry } = await import("./chunk-recovery?within-window");
-      const error = new Error("Failed to fetch dynamically imported module");
-
-      await expect(
-        loadWithRetry(async () => Promise.reject(error)),
-      ).rejects.toBe(error);
-      expect(fake.reloadCount()).toBe(0);
-      expect(fake.storage.get(STORAGE_KEY)).toBe(String(now.getTime()));
-    } finally {
-      fake.restore();
-    }
+    await expectLoadFailure({
+      query: "within-window",
+      browser: { storage },
+      expectedReloads: 0,
+      expectedStorage: String(now.getTime()),
+      systemTime: now,
+    });
   });
 
   test("blocks a future session guard timestamp", async () => {
-    jest.useFakeTimers();
     const now = new Date("2026-10-10T12:00:00Z");
-    jest.setSystemTime(now);
     const futureAttempt = now.getTime() + 1_000;
     const storage = new Map([[STORAGE_KEY, String(futureAttempt)]]);
-    const fake = installBrowser({ storage });
-    try {
-      const { loadWithRetry } = await import("./chunk-recovery?future-guard");
-      const error = new Error("Failed to fetch dynamically imported module");
-
-      await expect(
-        loadWithRetry(async () => Promise.reject(error)),
-      ).rejects.toBe(error);
-      expect(fake.reloadCount()).toBe(0);
-      expect(fake.storage.get(STORAGE_KEY)).toBe(String(futureAttempt));
-    } finally {
-      fake.restore();
-    }
+    await expectLoadFailure({
+      query: "future-guard",
+      browser: { storage },
+      expectedReloads: 0,
+      expectedStorage: String(futureAttempt),
+      systemTime: now,
+    });
   });
 
   test("allows one more reload after five minutes", async () => {
-    jest.useFakeTimers();
     const now = new Date("2026-10-10T12:00:00Z");
-    jest.setSystemTime(now);
     const storage = new Map([
       [STORAGE_KEY, String(now.getTime() - RECOVERY_WINDOW_MS - 1)],
     ]);
-    const fake = installBrowser({ storage });
-    try {
-      const { loadWithRetry } = await import("./chunk-recovery?expired");
-      const error = new Error("Failed to fetch dynamically imported module");
-
-      await expect(
-        loadWithRetry(async () => Promise.reject(error)),
-      ).rejects.toBe(error);
-      expect(fake.reloadCount()).toBe(1);
-      expect(fake.storage.get(STORAGE_KEY)).toBe(String(now.getTime()));
-    } finally {
-      fake.restore();
-    }
+    await expectLoadFailure({
+      query: "expired",
+      browser: { storage },
+      expectedReloads: 1,
+      expectedStorage: String(now.getTime()),
+      systemTime: now,
+    });
   });
 
   test("handles Vite preload failures through the same guarded recovery", async () => {
@@ -366,15 +377,8 @@ describe("loadWithRetry", () => {
 
 describe("lazyWithRetry", () => {
   test("renders a lazy component while preserving the recovery guard", async () => {
-    jest.useFakeTimers();
-    const storage = new Map([[STORAGE_KEY, String(Date.now())]]);
-    const fake = installBrowser({ storage });
-    jest.useRealTimers();
-    const dom = new JSDOM("<!doctype html><html><body></body></html>");
-    fake.attachDocument(dom.window.document);
-    const container = dom.window.document.createElement("div");
-    dom.window.document.body.appendChild(container);
-    const root = createRoot(container);
+    const browser = installReactTestBrowser();
+    const { fake, root, container } = browser;
 
     try {
       const { lazyWithRetry } = await import("./chunk-recovery?rendered");
@@ -398,38 +402,28 @@ describe("lazyWithRetry", () => {
       expect(container.textContent).toBe("loaded");
       expect(fake.storage.has(STORAGE_KEY)).toBe(true);
     } finally {
-      await act(async () => root.unmount());
-      dom.window.close();
-      fake.restore();
+      await cleanupReactTestBrowser(browser);
     }
   });
 
   test("keeps the existing guard when a loaded component throws", async () => {
-    jest.useFakeTimers();
-    const storage = new Map([[STORAGE_KEY, String(Date.now())]]);
-    const fake = installBrowser({ storage });
-    jest.useRealTimers();
-    const dom = new JSDOM("<!doctype html><html><body></body></html>");
-    fake.attachDocument(dom.window.document);
-    const container = dom.window.document.createElement("div");
-    dom.window.document.body.appendChild(container);
-    const root = createRoot(container);
+    const browser = installReactTestBrowser();
+    const { fake, root, container } = browser;
     const errorSpy = spyOn(console, "error").mockImplementation(() => {});
 
     class ErrorBoundary extends Component<
       { children: ReactNode },
       { hasError: boolean }
     > {
-      state = { hasError: false };
+      readonly state = { hasError: false };
 
       static getDerivedStateFromError() {
         return { hasError: true };
       }
 
       render() {
-        return this.state.hasError
-          ? createElement("div", null, "boundary")
-          : this.props.children;
+        if (this.state.hasError) return createElement("div", null, "boundary");
+        return this.props.children;
       }
     }
 
@@ -460,22 +454,13 @@ describe("lazyWithRetry", () => {
       expect(fake.reloadCount()).toBe(0);
     } finally {
       errorSpy.mockRestore();
-      await act(async () => root.unmount());
-      dom.window.close();
-      fake.restore();
+      await cleanupReactTestBrowser(browser);
     }
   });
 
   test("an unrelated lazy success does not re-arm reload", async () => {
-    jest.useFakeTimers();
-    const storage = new Map([[STORAGE_KEY, String(Date.now())]]);
-    const fake = installBrowser({ storage });
-    jest.useRealTimers();
-    const dom = new JSDOM("<!doctype html><html><body></body></html>");
-    fake.attachDocument(dom.window.document);
-    const container = dom.window.document.createElement("div");
-    dom.window.document.body.appendChild(container);
-    const root = createRoot(container);
+    const browser = installReactTestBrowser();
+    const { fake, root, container } = browser;
 
     try {
       const { lazyWithRetry, loadWithRetry } = await import(
@@ -499,12 +484,10 @@ describe("lazyWithRetry", () => {
         loadWithRetry(async () => Promise.reject(error)),
       ).rejects.toBe(error);
       expect(container.textContent).toBe("unrelated success");
-      expect(storage.has(STORAGE_KEY)).toBe(true);
+      expect(fake.storage.has(STORAGE_KEY)).toBe(true);
       expect(fake.reloadCount()).toBe(0);
     } finally {
-      await act(async () => root.unmount());
-      dom.window.close();
-      fake.restore();
+      await cleanupReactTestBrowser(browser);
     }
   });
 });
