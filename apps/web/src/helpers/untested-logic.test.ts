@@ -104,6 +104,7 @@ describe("course and semester helper behavior", () => {
   test.each([
     ["AES112MA", "11510", true],
     ["AES110MA", "11510", false],
+    ["AES112PA", "11510", true],
     ["not-a-class-code", "11510", "not-a-class-code"],
   ])("validates class code %s", (value, semester, expected) => {
     expect(checkValidClassCode(value, semester)).toBe(expected);
@@ -112,6 +113,7 @@ describe("course and semester helper behavior", () => {
   test.each([
     ["資工系112MA", "11510", "zh", "資工系4年級碩士班清班"],
     ["資工系112MA", "11510", "en", "資工系 Y4 MasterQing"],
+    ["AES112PA", "11510", "en", "AES Y4 SpecialQing"],
     ["電資院學士班112BA", "11510", "zh", "電資院學士班4年級國際學程"],
   ])("formats class code %s", (value, semester, lang, expected) => {
     expect(getFormattedClassCode(value, semester, lang)).toBe(expected);
@@ -140,7 +142,3 @@ describe("timetable visibility persistence", () => {
     ).toEqual([{ raw_id: "other" }]);
   });
 });
-
-test.todo(
-  "checkValidClassCode should handle supported P degree codes consistently with getFormattedClassCode",
-);

@@ -1,7 +1,9 @@
 export const getRangeOfDays = (start: Date, end: Date) => {
   const days = [];
-  for (let i = start.getTime(); i <= end.getTime(); i += 86400000) {
-    days.push(new Date(i));
+  const date = new Date(start);
+  while (date <= end) {
+    days.push(new Date(date));
+    date.setDate(date.getDate() + 1);
   }
   return days;
 };
