@@ -258,6 +258,10 @@
       "opens_today": "今天開始",
       "opens_in": "{days} 天後開始",
       "date_format": "M月d日",
+      "date_format_short": "M/d",
+      "date_format_bar": "M/d",
+      "date_weekday_template": "{date}（{weekday}）",
+      "date_weekday_prefix": "週",
       "no_data": "目前沒有選課日期",
       "phases": {
         "round-1": "第一次選課",
@@ -276,6 +280,10 @@
         "add-drop": "加退選",
         "inter-school": "校際選課",
         "withdrawal": "停修"
+      },
+      "audience": {
+        "new-students": "新生、轉學生",
+        "inter-school": "校際選課學生"
       }
     },
     "refine": {

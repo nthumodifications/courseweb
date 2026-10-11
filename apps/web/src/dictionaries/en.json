@@ -258,6 +258,10 @@
       "opens_today": "Opens today",
       "opens_in": "Opens in {days} days",
       "date_format": "MMM d",
+      "date_format_short": "M/d",
+      "date_format_bar": "MMM d",
+      "date_weekday_template": "{date} ({weekday})",
+      "date_weekday_prefix": "Week ",
       "no_data": "No selection dates available",
       "phases": {
         "round-1": "1st selection round",
@@ -276,6 +280,10 @@
         "add-drop": "Add/drop",
         "inter-school": "Inter-school",
         "withdrawal": "Withdrawal"
+      },
+      "audience": {
+        "new-students": "New and transfer students",
+        "inter-school": "Inter-school students"
       }
     },
     "refine": {

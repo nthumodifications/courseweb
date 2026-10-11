@@ -20,29 +20,34 @@ import {
 } from "@/lib/course-selection-colors";
 import { toPrettySemester } from "@/helpers/semester";
 
+export type CourseSelectionDateFormats = {
+  date_format_short: string;
+  date_format_bar: string;
+  date_weekday_template: string;
+  date_weekday_prefix: string;
+};
+
 const formatPeriodDate = (
   date: string,
   language: "en" | "zh",
-  withWeekday: boolean,
+  dateFormat: string,
 ) =>
-  formatInTimeZone(
-    fromTaipeiDateKey(date),
-    TAIPEI_TIME_ZONE,
-    withWeekday ? (language === "zh" ? "M月d日（EEE）" : "MMM d (EEE)") : "M/d",
-    { locale: getLocale(language) },
-  );
+  formatInTimeZone(fromTaipeiDateKey(date), TAIPEI_TIME_ZONE, dateFormat, {
+    locale: getLocale(language),
+  });
 
 export const formatCourseSelectionDateRange = (
   period: CourseSelectionPeriod,
   language: "en" | "zh",
+  formats: CourseSelectionDateFormats,
   withWeekday = true,
 ) => {
   const start = withWeekday
-    ? formatCourseSelectionBarDate(period.startDate, language)
-    : formatPeriodDate(period.startDate, language, false);
+    ? formatCourseSelectionBarDate(period.startDate, language, formats)
+    : formatPeriodDate(period.startDate, language, formats.date_format_short);
   const end = withWeekday
-    ? formatCourseSelectionBarDate(period.endDate, language)
-    : formatPeriodDate(period.endDate, language, false);
+    ? formatCourseSelectionBarDate(period.endDate, language, formats)
+    : formatPeriodDate(period.endDate, language, formats.date_format_short);
   if (start === end) return start;
   return language === "zh" ? `${start}– ${end}` : `${start} – ${end}`;
 };
@@ -50,16 +55,18 @@ export const formatCourseSelectionDateRange = (
 export const formatCourseSelectionCompactDate = (
   date: string,
   language: "en" | "zh",
-) => formatPeriodDate(date, language, false);
+  formats: CourseSelectionDateFormats,
+) => formatPeriodDate(date, language, formats.date_format_short);
 
 export const formatCourseSelectionBarDate = (
   date: string,
   language: "en" | "zh",
+  formats: CourseSelectionDateFormats,
 ) => {
   const dateLabel = formatInTimeZone(
     fromTaipeiDateKey(date),
     TAIPEI_TIME_ZONE,
-    language === "zh" ? "M/d" : "MMM d",
+    formats.date_format_bar,
     { locale: getLocale(language) },
   );
   const weekday = formatInTimeZone(
@@ -67,10 +74,10 @@ export const formatCourseSelectionBarDate = (
     TAIPEI_TIME_ZONE,
     "EEE",
     { locale: getLocale(language) },
-  ).replace(/^週/, "");
-  return language === "zh"
-    ? `${dateLabel}（${weekday}）`
-    : `${dateLabel} (${weekday})`;
+  ).replace(new RegExp(`^${formats.date_weekday_prefix}`), "");
+  return formats.date_weekday_template
+    .replace("{date}", dateLabel)
+    .replace("{weekday}", weekday);
 };
 
 export const getCourseSelectionScheduleTitle = (
@@ -184,7 +191,11 @@ export const CourseSelectionScheduleRows = ({
                 {dict.course.selection_period.phases[period.phase]}
               </span>
               <span className="col-start-1 row-start-2 whitespace-nowrap text-right font-bold sm:col-start-2 sm:row-start-1">
-                {formatCourseSelectionDateRange(period, language)}
+                {formatCourseSelectionDateRange(
+                  period,
+                  language,
+                  dict.course.selection_period,
+                )}
               </span>
               <span className="col-start-2 row-start-2 whitespace-nowrap text-right text-sm text-muted-foreground sm:col-span-2 sm:col-start-1">
                 {statusLabel}

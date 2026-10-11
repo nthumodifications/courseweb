@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import type { CourseSelectionPeriod } from "@/lib/course-selection-periods";
+import en from "@/dictionaries/en.json";
+import zh from "@/dictionaries/zh.json";
 import {
   formatCourseSelectionBarDate,
   formatCourseSelectionDateRange,
@@ -18,28 +20,42 @@ const period: CourseSelectionPeriod = {
 
 describe("course selection date formatting", () => {
   test("uses the compact Chinese range used by the bar", () => {
-    expect(formatCourseSelectionDateRange(period, "zh")).toBe(
-      "6/15（一）– 6/17（三）",
-    );
+    expect(
+      formatCourseSelectionDateRange(period, "zh", zh.course.selection_period),
+    ).toBe("6/15（一）– 6/17（三）");
   });
 
   test("uses the compact English range used by the bar", () => {
-    expect(formatCourseSelectionDateRange(period, "en")).toBe(
-      "Jun 15 (Mon) – Jun 17 (Wed)",
-    );
+    expect(
+      formatCourseSelectionDateRange(period, "en", en.course.selection_period),
+    ).toBe("Jun 15 (Mon) – Jun 17 (Wed)");
   });
 
   test("shows one compact date for a same-day phase", () => {
     const sameDay = { ...period, endDate: period.startDate };
 
-    expect(formatCourseSelectionDateRange(sameDay, "zh")).toBe("6/15（一）");
-    expect(formatCourseSelectionDateRange(sameDay, "en")).toBe("Jun 15 (Mon)");
+    expect(
+      formatCourseSelectionDateRange(sameDay, "zh", zh.course.selection_period),
+    ).toBe("6/15（一）");
+    expect(
+      formatCourseSelectionDateRange(sameDay, "en", en.course.selection_period),
+    ).toBe("Jun 15 (Mon)");
   });
 
   test("formats the bar date labels directly", () => {
-    expect(formatCourseSelectionBarDate("2026-06-15", "zh")).toBe("6/15（一）");
-    expect(formatCourseSelectionBarDate("2026-06-15", "en")).toBe(
-      "Jun 15 (Mon)",
-    );
+    expect(
+      formatCourseSelectionBarDate(
+        "2026-06-15",
+        "zh",
+        zh.course.selection_period,
+      ),
+    ).toBe("6/15（一）");
+    expect(
+      formatCourseSelectionBarDate(
+        "2026-06-15",
+        "en",
+        en.course.selection_period,
+      ),
+    ).toBe("Jun 15 (Mon)");
   });
 });

@@ -36,6 +36,7 @@ const getBarAnswer = (
   const date = formatCourseSelectionBarDate(
     status === "in-progress" ? period.endDate : period.startDate,
     language,
+    dict.course.selection_period,
   );
 
   if (status === "in-progress") {

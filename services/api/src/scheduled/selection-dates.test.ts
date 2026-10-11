@@ -28,6 +28,28 @@ const target = (semester: string): SelectionSourceTarget => ({
   url: SELECTION_SOURCE_URLS[semester as keyof typeof SELECTION_SOURCE_URLS],
 });
 
+const runSelectionSync = (
+  db: FakeD1,
+  fetcher: typeof fetch,
+  targets: SelectionSourceTarget[] = [target("11510")],
+) => {
+  globalThis.fetch = fetcher;
+  return syncSelectionDates(
+    { DB: db } as never,
+    new Date("2026-10-10T00:00:00Z"),
+    targets,
+  );
+};
+
+const expectFailedWithoutWrite = async (db: FakeD1, fetcher: typeof fetch) => {
+  const previous = db.rows.get("course_selection_schedule:11510");
+  const result = await runSelectionSync(db, fetcher);
+
+  expect(result).toEqual({ saved: [], skipped: [], failed: ["11510"] });
+  expect(db.runCount).toBe(0);
+  expect(db.rows.get("course_selection_schedule:11510")).toBe(previous);
+};
+
 const singlePhaseHtml = (label: string, dateText: string) => `
   <h2>115學年度第1學期選課日程表</h2>
   <table>
@@ -301,12 +323,9 @@ describe("scheduled sync", () => {
         },
       }),
     );
-    globalThis.fetch = mock(async () => new Response(html)) as typeof fetch;
-
-    const result = await syncSelectionDates(
-      { DB: db } as never,
-      new Date("2026-10-10T00:00:00Z"),
-      [target("11510")],
+    const result = await runSelectionSync(
+      db,
+      mock(async () => new Response(html)) as typeof fetch,
     );
 
     expect(result).toEqual({ saved: [], skipped: ["11510"], failed: [] });
@@ -326,19 +345,12 @@ describe("scheduled sync", () => {
       },
     });
     db.rows.set("course_selection_schedule:11510", previous);
-    globalThis.fetch = mock(
-      async () => new Response("<p>unreadable source</p>"),
-    ) as typeof fetch;
-
-    const result = await syncSelectionDates(
-      { DB: db } as never,
-      new Date("2026-10-10T00:00:00Z"),
-      [target("11510")],
+    await expectFailedWithoutWrite(
+      db,
+      mock(
+        async () => new Response("<p>unreadable source</p>"),
+      ) as typeof fetch,
     );
-
-    expect(result).toEqual({ saved: [], skipped: [], failed: ["11510"] });
-    expect(db.runCount).toBe(0);
-    expect(db.rows.get("course_selection_schedule:11510")).toBe(previous);
   });
 
   test("keeps prior data and cache age when the new page is incomplete", async () => {
@@ -358,23 +370,16 @@ describe("scheduled sync", () => {
       /<tr>\s*<td>停修申請<\/td>[\s\S]*?<\/tr>/,
       "",
     );
-    globalThis.fetch = mock(async (input: RequestInfo | URL) =>
-      String(input).includes("403-1208")
-        ? new Response(
-            '<a href="/p/404-1208-306079.php?Lang=zh-tw">115上重要選課日期</a>',
-          )
-        : new Response(missingWithdrawal),
-    ) as unknown as typeof fetch;
-
-    const result = await syncSelectionDates(
-      { DB: db } as never,
-      new Date("2026-10-10T00:00:00Z"),
-      [target("11510")],
+    await expectFailedWithoutWrite(
+      db,
+      mock(async (input: RequestInfo | URL) =>
+        String(input).includes("403-1208")
+          ? new Response(
+              '<a href="/p/404-1208-306079.php?Lang=zh-tw">115上重要選課日期</a>',
+            )
+          : new Response(missingWithdrawal),
+      ) as unknown as typeof fetch,
     );
-
-    expect(result).toEqual({ saved: [], skipped: [], failed: ["11510"] });
-    expect(db.runCount).toBe(0);
-    expect(db.rows.get("course_selection_schedule:11510")).toBe(previous);
   });
 
   test("replaces the schedule when an optional phase is removed", async () => {
