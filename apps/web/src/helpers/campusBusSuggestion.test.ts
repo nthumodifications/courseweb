@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { fromZonedTime } from "date-fns-tz";
 import type { CompleteBusData, NandaBusDepartureDetails } from "@/libs/bus";
 import {
+  findCampusTransfers,
   findNextCampusBus,
   hasNoClassToday,
   getVenueCampus,
@@ -48,6 +49,8 @@ const bus = (
 const busData = (
   towardSouthCampus: NandaBusDepartureDetails[] = [],
   towardMainCampus: NandaBusDepartureDetails[] = [],
+  weekendTowardSouthCampus: NandaBusDepartureDetails[] = [],
+  weekendTowardMainCampus: NandaBusDepartureDetails[] = [],
 ): CompleteBusData => ({
   main: {
     toward_TSMC_building_info: {
@@ -82,16 +85,28 @@ const busData = (
       toward_south_campus: towardSouthCampus,
       toward_main_campus: towardMainCampus,
     },
-    weekend: { toward_south_campus: [], toward_main_campus: [] },
+    weekend: {
+      toward_south_campus: weekendTowardSouthCampus,
+      toward_main_campus: weekendTowardMainCampus,
+    },
   },
 });
 
-const classAt = (venue: string, start = "2026-10-08T09:00"): CampusClass => ({
-  id: "class-1",
-  title: "Next class",
-  start: taipeiDate(start),
-  venue,
-});
+const classAt = (
+  venue: string,
+  start = "2026-10-08T09:00",
+  end?: string,
+  id = "class-1",
+): CampusClass => {
+  const startDate = taipeiDate(start);
+  return {
+    id,
+    title: id,
+    start: startDate,
+    end: end ? taipeiDate(end) : new Date(startDate.getTime() + 50 * 60 * 1000),
+    venue,
+  };
+};
 
 const fallbackBusData = (): CompleteBusData => {
   const base = busData();
@@ -195,6 +210,152 @@ describe("campus bus suggestions", () => {
 
     expect(result).toBeNull();
   });
+
+  test.each([
+    {
+      name: "same campus",
+      classes: [
+        classAt("GEN II綜二101", "2026-10-08T08:00", "2026-10-08T09:00"),
+        classAt(
+          "GEN III綜三101",
+          "2026-10-08T09:30",
+          "2026-10-08T10:30",
+          "class-2",
+        ),
+      ],
+      data: busData([bus("09:00", "route1")]),
+      now: "2026-10-08T08:00",
+      expected: [],
+    },
+    {
+      name: "unknown venue",
+      classes: [
+        classAt("Online", "2026-10-08T08:00", "2026-10-08T09:00"),
+        classAt(
+          "Nanda南大N404",
+          "2026-10-08T09:30",
+          "2026-10-08T10:30",
+          "class-2",
+        ),
+      ],
+      data: busData([bus("09:00", "route1")]),
+      now: "2026-10-08T08:00",
+      expected: [],
+    },
+    {
+      name: "back-to-back periods",
+      classes: [
+        classAt("GEN II綜二101", "2026-10-08T08:00", "2026-10-08T09:00"),
+        classAt(
+          "Nanda南大N404",
+          "2026-10-08T09:00",
+          "2026-10-08T10:00",
+          "class-2",
+        ),
+      ],
+      data: busData([bus("09:00", "route1")]),
+      now: "2026-10-08T08:00",
+      expected: [{ status: "too_short" }],
+    },
+    {
+      name: "last bus already gone",
+      classes: [
+        classAt("GEN II綜二101", "2026-10-08T08:00", "2026-10-08T09:00"),
+        classAt(
+          "Nanda南大N404",
+          "2026-10-08T11:00",
+          "2026-10-08T12:00",
+          "class-2",
+        ),
+      ],
+      data: busData([bus("09:30", "route1")]),
+      now: "2026-10-08T10:00",
+      expected: [{ status: "no_bus" }],
+    },
+    {
+      name: "weekend schedule",
+      classes: [
+        classAt("GEN II綜二101", "2026-10-10T07:00", "2026-10-10T08:00"),
+        classAt(
+          "Nanda南大N404",
+          "2026-10-10T09:30",
+          "2026-10-10T10:30",
+          "class-2",
+        ),
+      ],
+      data: busData([bus("08:10", "route1")], [], [bus("08:20", "route2")]),
+      now: "2026-10-10T08:00",
+      expected: [
+        {
+          status: "scheduled",
+          line: "route2",
+          departureTime: "08:20",
+          arrivalTime: "08:40",
+        },
+      ],
+    },
+    {
+      name: "two transfers in three classes",
+      classes: [
+        classAt("GEN II綜二101", "2026-10-08T08:00", "2026-10-08T09:00"),
+        classAt(
+          "Nanda南大N404",
+          "2026-10-08T09:30",
+          "2026-10-08T10:30",
+          "class-2",
+        ),
+        classAt(
+          "GEN III綜三101",
+          "2026-10-08T11:00",
+          "2026-10-08T12:00",
+          "class-3",
+        ),
+      ],
+      data: busData(
+        [bus("09:00", "route1"), bus("09:05", "route2")],
+        [bus("10:35", "route1"), bus("10:40", "route2")],
+      ),
+      now: "2026-10-08T08:00",
+      expected: [
+        {
+          status: "scheduled",
+          fromCampus: "main",
+          toCampus: "nanda",
+          departureTime: "09:05",
+          arrivalTime: "09:25",
+        },
+        {
+          status: "scheduled",
+          fromCampus: "nanda",
+          toCampus: "main",
+          departureTime: "10:40",
+          arrivalTime: "11:00",
+        },
+      ],
+    },
+    {
+      name: "class already over",
+      classes: [
+        classAt("GEN II綜二101", "2026-10-08T08:00", "2026-10-08T09:00"),
+        classAt(
+          "Nanda南大N404",
+          "2026-10-08T09:30",
+          "2026-10-08T10:30",
+          "class-2",
+        ),
+      ],
+      data: busData([bus("09:00", "route1")]),
+      now: "2026-10-08T11:00",
+      expected: [],
+    },
+  ])(
+    "finds a campus transfer for $name",
+    ({ classes, data, now, expected }) => {
+      expect(findCampusTransfers(classes, data, taipeiDate(now))).toMatchObject(
+        expected,
+      );
+    },
+  );
 
   test("uses the existing venue definitions for campus classification", () => {
     expect(getVenueCampus("Nanda南大N404")).toBe("nanda");
