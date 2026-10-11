@@ -61,19 +61,26 @@ const CourseDialogShellContext = createContext<Pick<
   "openDialogPath" | "resolveDialogPath"
 > | null>(null);
 
-const CourseDetailContainerDynamic = lazyWithRetry(
-  () => import("@/components/CourseDetails/CourseDetailsContainer"),
-);
-const InstructorPageDynamic = lazyWithRetry(() =>
-  import("@/app/[lang]/(mods-pages)/courses/instructor/[name]/page").then(
-    (module) => ({ default: module.InstructorPageContent }),
-  ),
-);
-const ModulePageDynamic = lazyWithRetry(() =>
-  import("@/app/[lang]/(mods-pages)/courses/module/[moduleKey]/page").then(
-    (module) => ({ default: module.ModulePageContent }),
-  ),
-);
+export const courseDialogLoaders = {
+  course: () => import("@/components/CourseDetails/CourseDetailsContainer"),
+  instructor: () =>
+    import("@/app/[lang]/(mods-pages)/courses/instructor/[name]/page").then(
+      (module) => ({ default: module.InstructorPageContent }),
+    ),
+  module: () =>
+    import("@/app/[lang]/(mods-pages)/courses/module/[moduleKey]/page").then(
+      (module) => ({ default: module.ModulePageContent }),
+    ),
+} as const;
+
+const CourseDetailContainerDynamic = lazyWithRetry(courseDialogLoaders.course);
+const InstructorPageDynamic = lazyWithRetry(courseDialogLoaders.instructor);
+const ModulePageDynamic = lazyWithRetry(courseDialogLoaders.module);
+
+export type CourseDialogLoaderName = keyof typeof courseDialogLoaders;
+
+export const preloadCourseDialog = (name: CourseDialogLoaderName) =>
+  courseDialogLoaders[name]();
 
 const viewTitle = (
   view: CourseDialogView,

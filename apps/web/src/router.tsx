@@ -16,6 +16,16 @@ const AuthCallbackPage = lazyWithRetry(
 );
 
 // Main pages
+export const routeLoaders = {
+  courses: () => import("@/app/[lang]/(mods-pages)/courses/page"),
+  courseDetail: () =>
+    import("@/app/[lang]/(mods-pages)/courses/[courseId]/page"),
+  module: () =>
+    import("@/app/[lang]/(mods-pages)/courses/module/[moduleKey]/page"),
+  instructor: () =>
+    import("@/app/[lang]/(mods-pages)/courses/instructor/[name]/page"),
+} as const;
+
 const TodayPage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/today/page"),
 );
@@ -25,18 +35,10 @@ const TimetablePage = lazyWithRetry(
 const TimetableViewPage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/timetable/view/page"),
 );
-const CoursesPage = lazyWithRetry(
-  () => import("@/app/[lang]/(mods-pages)/courses/page"),
-);
-const CourseDetailPage = lazyWithRetry(
-  () => import("@/app/[lang]/(mods-pages)/courses/[courseId]/page"),
-);
-const ModulePage = lazyWithRetry(
-  () => import("@/app/[lang]/(mods-pages)/courses/module/[moduleKey]/page"),
-);
-const InstructorPage = lazyWithRetry(
-  () => import("@/app/[lang]/(mods-pages)/courses/instructor/[name]/page"),
-);
+const CoursesPage = lazyWithRetry(routeLoaders.courses);
+const CourseDetailPage = lazyWithRetry(routeLoaders.courseDetail);
+const ModulePage = lazyWithRetry(routeLoaders.module);
+const InstructorPage = lazyWithRetry(routeLoaders.instructor);
 const ModulesSearchPage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/courses/modules/page"),
 );
@@ -644,5 +646,9 @@ export const appRoutes = [
 
 export const createAppRouter = (options?: { window?: Window }) =>
   createBrowserRouter(appRoutes, options);
+
+export type RouteLoaderName = keyof typeof routeLoaders;
+
+export const preloadRoute = (name: RouteLoaderName) => routeLoaders[name]();
 
 export const router = createAppRouter();

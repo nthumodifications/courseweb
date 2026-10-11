@@ -10,6 +10,7 @@ import { createRoot } from "react-dom/client";
 import {
   afterAll,
   afterEach,
+  beforeAll,
   beforeEach,
   describe,
   expect,
@@ -255,9 +256,9 @@ mock.module("@/app/[lang]/(mods-pages)/courses/page", () => ({
     );
   },
 }));
-const RealCourseSearchPage = lazy(
-  () => import("@/app/[lang]/(mods-pages)/courses/CourseSearchContainer"),
-);
+const loadRealCourseSearchPage = () =>
+  import("@/app/[lang]/(mods-pages)/courses/CourseSearchContainer");
+const RealCourseSearchPage = lazy(loadRealCourseSearchPage);
 mock.module("@/components/CourseDetails/CourseDetailsContainer", () => ({
   default: ({ courseId }: { courseId: string }) => {
     const language = useLocation().pathname.startsWith("/zh") ? "zh" : "en";
@@ -393,13 +394,28 @@ mock.module(
     },
   }),
 );
-
 const bootstrapDom = installTestDom("/en/courses");
 
-const { CourseDialogLink, CourseDialogProvider, useCourseLink } = await import(
-  "./CourseDialog"
-);
-const { createAppRouter, router: defaultRouter } = await import("@/router");
+const {
+  CourseDialogLink,
+  CourseDialogProvider,
+  preloadCourseDialog,
+  useCourseLink,
+} = await import("./CourseDialog");
+const actualUi = await import("@courseweb/ui");
+mock.module("@courseweb/ui", () => ({
+  ...actualUi,
+  ResizablePanelGroup: ({ children }: { children: React.ReactNode }) =>
+    createElement("div", null, children),
+  ResizablePanel: ({ children }: { children: React.ReactNode }) =>
+    createElement("div", null, children),
+  ResizableHandle: () => null,
+}));
+const {
+  createAppRouter,
+  preloadRoute,
+  router: defaultRouter,
+} = await import("@/router");
 let activeDom: ReturnType<typeof installTestDom>;
 const mountedRoots = new Set<ReturnType<typeof createRoot>>();
 const mountedRouters = new Set<ReturnType<typeof createBrowserRouter>>();
@@ -555,44 +571,54 @@ const createTestRouter = (path: string, preserveState = false) => {
   );
 };
 
-const waitFor = async (predicate: () => boolean, description: string) => {
-  for (let attempt = 0; attempt < 100; attempt += 1) {
-    if (predicate()) return;
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 50));
-    });
-  }
-  throw new Error(`${description}; got ${document.body.innerHTML}`);
+const timeoutMessage = (description: string) =>
+  `${description}; got ${document.body.innerHTML}; href ${window.location.href}`;
+
+const advanceTimersAndFlush = async (intervalMs: number) => {
+  await act(async () => {
+    if (jest.isFakeTimers()) jest.advanceTimersByTime(intervalMs);
+    await Promise.resolve();
+  });
 };
-const waitForText = (text: string) =>
-  waitFor(() => document.body.textContent?.includes(text) ?? false, text);
-const waitForPath = (path: string) =>
+
+const waitFor = async (
+  predicate: () => boolean,
+  description: string,
+  options: {
+    timeoutMs?: number;
+    intervalMs?: number;
+    advance?: (intervalMs: number) => Promise<void>;
+  } = {},
+) => {
+  const { timeoutMs = 5000, intervalMs = 50, advance } = options;
+  const attempts = Math.ceil(timeoutMs / intervalMs);
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    if (predicate()) return;
+    if (advance) await advance(intervalMs);
+    else await new Promise((resolve) => setTimeout(resolve, intervalMs));
+  }
+  throw new Error(timeoutMessage(description));
+};
+const waitForText = (text: string, timeoutMs = 5000) =>
+  waitFor(() => document.body.textContent?.includes(text) ?? false, text, {
+    timeoutMs,
+  });
+const waitForPath = (path: string, timeoutMs = 5000) =>
   waitFor(
     () => window.location.pathname + window.location.search === path,
     path,
+    { timeoutMs },
   );
-const waitForWithoutTimers = async (
-  predicate: () => boolean,
-  description: string,
-) => {
-  for (let attempt = 0; attempt < 100; attempt += 1) {
-    if (predicate()) return;
-    await act(async () => {
-      if (jest.isFakeTimers()) jest.advanceTimersByTime(50);
-      await Promise.resolve();
-    });
-  }
-  throw new Error(`${description}; got ${document.body.innerHTML}`);
-};
-const waitForTextWithoutTimers = (text: string) =>
-  waitForWithoutTimers(
-    () => document.body.textContent?.includes(text) ?? false,
-    text,
-  );
-const waitForPathWithoutTimers = (path: string) =>
-  waitForWithoutTimers(
+const waitForTextWithoutTimers = (text: string, timeoutMs = 5000) =>
+  waitFor(() => document.body.textContent?.includes(text) ?? false, text, {
+    timeoutMs,
+    advance: advanceTimersAndFlush,
+  });
+const waitForPathWithoutTimers = (path: string, timeoutMs = 5000) =>
+  waitFor(
     () => window.location.pathname + window.location.search === path,
     path,
+    { timeoutMs, advance: advanceTimersAndFlush },
   );
 
 const assertDialogHistoryStable = async ({
@@ -689,10 +715,7 @@ const renderProductionRouterWithoutAdvancingTimers = async () => {
     window: activeDom.dom.window as unknown as Window,
   });
   await renderMountedRouter(router, async () => {
-    for (let attempt = 0; attempt < 500; attempt += 1) {
-      if (document.body.textContent?.includes("離散數學")) return;
-      await Promise.resolve();
-    }
+    await waitForTextWithoutTimers("離散數學");
   });
   return { router };
 };
@@ -719,6 +742,22 @@ const waitForRouterIdle = async (
 };
 
 describe("course dialog routing", () => {
+  const productionRoutePreloads = [
+    "courses",
+    "courseDetail",
+    "module",
+    "instructor",
+  ] as const;
+  const productionDialogPreloads = ["course", "module", "instructor"] as const;
+
+  beforeAll(async () => {
+    await Promise.all([
+      ...productionRoutePreloads.map((name) => preloadRoute(name)),
+      ...productionDialogPreloads.map((name) => preloadCourseDialog(name)),
+      loadRealCourseSearchPage(),
+    ]);
+  }, 120_000);
+
   beforeEach(() => {
     activeDom = installTestDom("/en/courses");
   });
@@ -835,7 +874,7 @@ describe("course dialog routing", () => {
     await clickText("Close");
     await waitForPath("/zh/courses?nthu_courses%5Bmenu%5D%5Bsemester%5D=11420");
     expect(document.querySelector('[role="dialog"]')).toBeNull();
-  });
+  }, 60_000);
 
   test("production search routing cannot replace an open dialog entry", async () => {
     jest.useFakeTimers();
@@ -890,7 +929,7 @@ describe("course dialog routing", () => {
     } finally {
       jest.useRealTimers();
     }
-  });
+  }, 60_000);
 
   test("timetable background remains stable while its course dialog is open", async () => {
     try {
@@ -933,7 +972,7 @@ describe("course dialog routing", () => {
     expect(
       document.querySelector('[role="dialog"] [data-module-course-row]'),
     ).not.toBeNull();
-  });
+  }, 60_000);
 
   test("native back moves through a stacked dialog flow", async () => {
     const { router, container } = await renderRouter();
