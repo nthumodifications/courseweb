@@ -48,6 +48,8 @@ export interface LlmEnv {
   SUPABASE_URL?: string;
   AI?: unknown;
   AI_PROVIDER_ORDER?: string;
+  SELECTION_LLM_PROVIDER?: ProviderName;
+  SELECTION_LLM_MODEL?: string;
   GEMINI_CHAT_MODELS?: string;
   GEMINI_SUMMARY_MODELS?: string;
   GEMINI_BULK_MODELS?: string;
@@ -671,6 +673,10 @@ export interface GenerateJsonOptions {
   schema: JsonSchema;
   userGeminiKey?: string;
   purpose?: "chat" | "summary" | "bulk";
+  provider?: ProviderName;
+  model?: string;
+  timeoutMs?: number;
+  signal?: AbortSignal;
   /** The PDF is the only source; skip providers that cannot read it. */
   pdfRequired?: boolean;
 }
@@ -845,6 +851,7 @@ async function generateOpenAICompatibleJson(
         : {}),
       temperature: 0.1,
     }),
+    signal: options.signal,
   });
   if (!response.ok) {
     throw new Error(
@@ -908,14 +915,54 @@ async function runJsonProvider(
   }
 }
 
+async function runJsonProviderWithTimeout(
+  attempt: ProviderAttempt,
+  options: GenerateJsonOptions,
+  pdf: LoadedPdf | undefined,
+): Promise<unknown> {
+  if (!options.timeoutMs || options.timeoutMs <= 0) {
+    return runJsonProvider(attempt, options, pdf);
+  }
+  const controller = new AbortController();
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  const providerOptions = options.signal
+    ? options
+    : { ...options, signal: controller.signal };
+  try {
+    return await Promise.race([
+      runJsonProvider(attempt, providerOptions, pdf),
+      new Promise<never>((_, reject) => {
+        timeout = setTimeout(() => {
+          controller.abort();
+          reject(
+            new Error(`AI request timed out after ${options.timeoutMs}ms`),
+          );
+        }, options.timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timeout) clearTimeout(timeout);
+    controller.abort();
+  }
+}
+
 export async function generateJSON<T = unknown>(
   options: GenerateJsonOptions,
 ): Promise<GenerateJsonResult<T>> {
-  const attempts = providerAttempts(
+  const availableAttempts = providerAttempts(
     options.env,
     options.purpose ?? "summary",
     options.userGeminiKey,
   );
+  let attempts = availableAttempts;
+  if (options.provider) {
+    const selected = availableAttempts.find(
+      (attempt) => attempt.provider === options.provider,
+    );
+    attempts = selected
+      ? [{ ...selected, model: options.model ?? selected.model }]
+      : [];
+  }
   if (attempts.length === 0) {
     throw new LLMProviderError("workers-ai", "none", {
       code: "unavailable",
@@ -939,7 +986,7 @@ export async function generateJSON<T = unknown>(
     if (!attempt.userSuppliedKey && isDead(attempt.provider, attempt.model))
       continue;
     try {
-      const data = await runJsonProvider(attempt, options, pdf);
+      const data = await runJsonProviderWithTimeout(attempt, options, pdf);
       if (!validateAgainstSchema(data, options.schema)) {
         throw new LLMProviderError(
           attempt.provider,

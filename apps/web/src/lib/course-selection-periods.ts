@@ -35,6 +35,15 @@ export type CourseSelectionState = {
   next: CourseSelectionPeriod | null;
 };
 
+export const getCourseSelectionCalendarRange = (nowDateKey: string) => {
+  const calendarYear = Number(nowDateKey.slice(0, 4));
+
+  return {
+    startDateKey: `${calendarYear}-05-01`,
+    endDateKey: `${calendarYear + 1}-03-01`,
+  };
+};
+
 export const parseCourseSelectionPeriod = (
   event: AcademicCalendarEvent,
 ): CourseSelectionPeriod | null => event.courseSelectionPeriod ?? null;

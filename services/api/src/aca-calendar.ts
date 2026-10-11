@@ -3,11 +3,16 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { env } from "hono/adapter";
 import { HTTPException } from "hono/http-exception";
+import type { D1Database } from "@cloudflare/workers-types";
 import {
   parseCourseSelectionPeriod,
   parseCourseSelectionPeriods,
   type AcademicCalendarEvent,
 } from "./course-selection-periods";
+import {
+  readStoredSelectionSchedules,
+  selectionSchedulesToEvents,
+} from "./scheduled/selection-dates";
 import { fetchUpstream, UpstreamHttpError } from "./utils/upstream";
 
 export type CalendarApiResponse = {
@@ -115,49 +120,20 @@ const app = new Hono()
       const windowStart = start.toISOString().slice(0, 10);
       const windowEnd = end.toISOString().slice(0, 10);
       const CALENDAR_API_URL = `https://www.googleapis.com/calendar/v3/calendars/nthu.acad%40gmail.com/events?key=${CALENDAR_API_KEY}&timeMin=${upstreamStart.toISOString().slice(0, 10)}T00:00:00Z&timeMax=${windowEnd}T00:00:00Z`;
+      let calendarDatas: CalendarApiResponse[];
       try {
         const res = await fetchUpstream(CALENDAR_API_URL, {
           signal: AbortSignal.timeout(8_000),
         });
-        const calendarDatas = parseCalendarPayload(await res.json());
-        if (!calendarDatas) {
+        const parsedCalendarDatas = parseCalendarPayload(await res.json());
+        if (!parsedCalendarDatas) {
           console.error("Google Calendar response had an invalid items array");
           throw new HTTPException(502, {
             message:
               "Academic calendar upstream returned an unexpected payload",
           });
         }
-        return c.json(
-          calendarDatas
-            .filter((item) => {
-              const event = {
-                id: item.id,
-                summary: item.summary,
-                date: item.start.date,
-              } satisfies AcademicCalendarEvent;
-              const selectionPeriod = parseCourseSelectionPeriods([event])[0];
-              const eventStart = selectionPeriod?.startDate ?? item.start.date;
-              const eventEnd =
-                selectionPeriod?.endDate ??
-                (() => {
-                  const end = new Date(`${item.end.date}T00:00:00Z`);
-                  end.setUTCDate(end.getUTCDate() - 1);
-                  return end.toISOString().slice(0, 10);
-                })();
-              return eventStart <= windowEnd && eventEnd >= windowStart;
-            })
-            .map((item) => {
-              const event = {
-                summary: item.summary,
-                date: item.start.date,
-                id: item.id,
-              } satisfies AcademicCalendarEvent;
-              return {
-                ...event,
-                courseSelectionPeriod: parseCourseSelectionPeriod(event),
-              };
-            }),
-        );
+        calendarDatas = parsedCalendarDatas;
       } catch (error) {
         if (error instanceof HTTPException) throw error;
         if (error instanceof UpstreamHttpError) {
@@ -179,6 +155,61 @@ const app = new Hono()
           message: "Academic calendar upstream is unavailable",
         });
       }
+
+      const filteredCalendarDatas = calendarDatas.filter((item) => {
+        const event = {
+          id: item.id,
+          summary: item.summary,
+          date: item.start.date,
+        } satisfies AcademicCalendarEvent;
+        const selectionPeriod = parseCourseSelectionPeriods([event])[0];
+        const eventStart = selectionPeriod?.startDate ?? item.start.date;
+        const eventEnd =
+          selectionPeriod?.endDate ??
+          (() => {
+            const itemEnd = new Date(`${item.end.date}T00:00:00Z`);
+            itemEnd.setUTCDate(itemEnd.getUTCDate() - 1);
+            return itemEnd.toISOString().slice(0, 10);
+          })();
+        return eventStart <= windowEnd && eventEnd >= windowStart;
+      });
+
+      const storedSchedules = await readStoredSelectionSchedules(
+        (c.env as { DB?: D1Database } | undefined)?.DB,
+      );
+      const storedPhases = new Set(
+        storedSchedules.flatMap((schedule) =>
+          schedule.periods.map(
+            (period) => `${schedule.semester}:${period.phase}`,
+          ),
+        ),
+      );
+      const googleEvents = filteredCalendarDatas
+        .map((item) => {
+          const event = {
+            summary: item.summary,
+            date: item.start.date,
+            id: item.id,
+          } satisfies AcademicCalendarEvent;
+          return {
+            ...event,
+            courseSelectionPeriod: parseCourseSelectionPeriod(event),
+          };
+        })
+        .filter(
+          (event) =>
+            !event.courseSelectionPeriod ||
+            !storedPhases.has(
+              `${event.courseSelectionPeriod.semester}:${event.courseSelectionPeriod.phase}`,
+            ),
+        );
+      const scrapedEvents = selectionSchedulesToEvents(
+        storedSchedules,
+        windowStart,
+        windowEnd,
+      );
+
+      return c.json([...googleEvents, ...scrapedEvents]);
     },
   );
 

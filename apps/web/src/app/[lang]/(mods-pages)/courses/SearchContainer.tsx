@@ -30,6 +30,7 @@ import SemesterSelector from "./SemesterSelector";
 import useCustomMenu from "@/app/[lang]/(mods-pages)/courses/useCustomMenu";
 import { lastSemester } from "@courseweb/shared";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
+import { useSettings } from "@/hooks/contexts/settings";
 import { MinimalCourse } from "@/types/courses";
 import { courseEvents } from "@/lib/trackingEvents";
 import SearchDegradationBanner from "@/components/Search/SearchDegradationBanner";
@@ -37,7 +38,6 @@ import type { ResilientSearchClient } from "@/lib/search-client";
 import { useCourseTextHits } from "@/hooks/useCourseTextHits";
 import type { CourseSyllabusView } from "@/config/supabase";
 import AiSearchBox from "./AiSearchBox";
-import CourseSelectionStatus from "@/components/CourseSelection/CourseSelectionStatus";
 import { SearchResultCount } from "@/components/Search/SearchResultCount";
 
 type SearchClient = ResilientSearchClient;
@@ -163,6 +163,7 @@ const SearchContainer = memo(
     sessionStorageCache: InfiniteHitsCache;
   }) => {
     const dict = useDictionary();
+    const { language } = useSettings();
     const { nbHits, processingTimeMS } = useStats();
     const { status } = useInstantSearch();
     const { query } = useSearchBox();
@@ -207,10 +208,6 @@ const SearchContainer = memo(
               <div className="w-full shrink-0 sm:w-auto">
                 <SemesterSelector />
               </div>
-              <CourseSelectionStatus
-                semester={semester}
-                className="w-full sm:flex-1"
-              />
               <Separator
                 orientation="vertical"
                 className="hidden h-full sm:block"

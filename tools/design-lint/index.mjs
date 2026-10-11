@@ -7,7 +7,7 @@ const root = path.resolve(fileURLToPath(new URL("../..", import.meta.url)));
 const baselinePath = path.join(root, "tools", "design-lint", "baseline.json");
 const RULES = {
   "hardcoded-color": {
-    description: "hardcoded gray/slate/zinc/neutral color utility",
+    description: "hardcoded gray/slate/zinc/neutral utility or non-token color",
     pattern:
       /(?:^|[\s"'`])(?:[\w-]+:)*(?:text|bg|border)-(?:gray|slate|zinc|neutral)-[\w/.[\]%-]+/g,
   },
@@ -75,6 +75,55 @@ const ALLOWED_FINDINGS = [
     reason: "weather icon data palette",
   },
   {
+    ruleName: "hardcoded-color",
+    file: "apps/web/src/lib/course-selection-colors.ts",
+    line: 9,
+    value: "#2563EB",
+    reason: "course-selection phase data colour",
+  },
+  {
+    ruleName: "hardcoded-color",
+    file: "apps/web/src/lib/course-selection-colors.ts",
+    line: 10,
+    value: "#EA580C",
+    reason: "course-selection phase data colour",
+  },
+  {
+    ruleName: "hardcoded-color",
+    file: "apps/web/src/lib/course-selection-colors.ts",
+    line: 11,
+    value: "#D97706",
+    reason: "course-selection phase data colour",
+  },
+  {
+    ruleName: "hardcoded-color",
+    file: "apps/web/src/lib/course-selection-colors.ts",
+    line: 12,
+    value: "#0D9488",
+    reason: "course-selection phase data colour",
+  },
+  {
+    ruleName: "hardcoded-color",
+    file: "apps/web/src/lib/course-selection-colors.ts",
+    line: 13,
+    value: "#16A34A",
+    reason: "course-selection phase data colour",
+  },
+  {
+    ruleName: "hardcoded-color",
+    file: "apps/web/src/lib/course-selection-colors.ts",
+    line: 14,
+    value: "#0891B2",
+    reason: "course-selection phase data colour",
+  },
+  {
+    ruleName: "hardcoded-color",
+    file: "apps/web/src/lib/course-selection-colors.ts",
+    line: 15,
+    value: "#6D28D9",
+    reason: "course-selection phase data colour",
+  },
+  {
     ruleName: "dark-color",
     file: "apps/web/src/app/[lang]/admin/announcements/page.tsx",
     line: 266,
@@ -129,6 +178,9 @@ const sourceRoots = [
   path.join(root, "apps", "web", "src"),
   path.join(root, "packages", "ui", "src"),
 ];
+
+const DATA_COLOR_FILE = "apps/web/src/lib/course-selection-colors.ts";
+const DATA_COLOR_PATTERN = /#[0-9A-Fa-f]{6}/g;
 
 const normalize = (filePath) =>
   path.relative(root, filePath).split(path.sep).join("/");
@@ -353,6 +405,16 @@ function matchesFor(ruleName, filePath, source) {
     return readingColumnMatches(filePath, source);
   }
   if (ruleName === "spacing-vocab") return spacingVocabMatches(source);
+
+  if (
+    ruleName === "hardcoded-color" &&
+    normalize(filePath) === DATA_COLOR_FILE
+  ) {
+    return [...source.matchAll(DATA_COLOR_PATTERN)].map((match) => ({
+      line: lineNumber(source, match.index ?? 0),
+      value: match[0],
+    }));
+  }
 
   const pattern = RULES[ruleName].pattern;
   return [...source.matchAll(new RegExp(pattern.source, pattern.flags))].map(

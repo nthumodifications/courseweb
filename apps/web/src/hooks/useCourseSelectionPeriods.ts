@@ -9,6 +9,7 @@ import {
 import useTime from "@/hooks/useTime";
 import {
   getCourseSelectionState,
+  getCourseSelectionCalendarRange,
   parseCourseSelectionPeriods,
   type AcademicCalendarEvent,
   type CourseSelectionPeriod,
@@ -30,9 +31,8 @@ const useCourseSelectionPeriods = (
   const { showAcademicCalendar } = useSettings();
   const now = useTime(60_000);
   const nowDateKey = getTaipeiDateKey(now);
-  const calendarYear = Number(nowDateKey.slice(0, 4));
-  const rangeStart = `${calendarYear - 1}-08-01`;
-  const rangeEnd = `${calendarYear + 1}-08-01`;
+  const { startDateKey: rangeStart, endDateKey: rangeEnd } =
+    getCourseSelectionCalendarRange(nowDateKey);
   const query = getTaipeiAcademicCalendarQuery(rangeStart, rangeEnd);
 
   const {

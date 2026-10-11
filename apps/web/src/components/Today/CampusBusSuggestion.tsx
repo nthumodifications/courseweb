@@ -11,6 +11,7 @@ import { getAllBusData } from "@/libs/bus";
 import useTime from "@/hooks/useTime";
 import type { UpcomingEvent } from "@/hooks/useUpcomingEvents";
 import {
+  findCampusTransfers,
   findNextCampusBus,
   hasNoClassToday,
   type CampusClass,
@@ -31,6 +32,7 @@ const CampusBusSuggestion: FC<CampusBusSuggestionProps> = ({ events }) => {
           id: event.id,
           title: event.title,
           start: event.start,
+          end: event.end,
           venue: event.location,
         })),
     [events],
@@ -50,37 +52,91 @@ const CampusBusSuggestion: FC<CampusBusSuggestionProps> = ({ events }) => {
       data && !holidayToday ? findNextCampusBus(classes, data, now) : null,
     [classes, data, holidayToday, now],
   );
+  const transfers = useMemo(
+    () =>
+      data && !holidayToday ? findCampusTransfers(classes, data, now) : [],
+    [classes, data, holidayToday, now],
+  );
 
-  if (isLoading || error || !suggestion) return null;
+  if (isLoading || error || (!suggestion && transfers.length === 0))
+    return null;
 
-  const Icon = suggestion.line === "route1" ? Route1LineIcon : Route2LineIcon;
-  const destination =
-    suggestion.campus === "nanda" ? dict.bus.nanda : dict.bus.main_campus;
-  const busProps: Omit<BusListingItemProps, "refTime"> = {
-    tab: suggestion.direction === "down" ? "nanda" : "north_gate",
-    startTime: suggestion.departureTime,
-    Icon,
-    line: suggestion.line,
-    direction: suggestion.direction,
-    title:
-      suggestion.line === "route1"
-        ? dict.bus.route1_line
-        : dict.bus.route2_line,
-    destination: `${dict.bus.to}${destination}`,
-    notes: [
-      dict.bus.next_class.replace("{name}", suggestion.class.title),
-      dict.bus.next_class_venue.replace(
-        "{venue}",
-        suggestion.class.venue ?? destination,
-      ),
-    ],
-    arrival: dict.bus.leave_by.replace("{time}", suggestion.departureTime),
-    exactArrival: true,
-  };
+  const busProps = suggestion
+    ? (() => {
+        const Icon =
+          suggestion.line === "route1" ? Route1LineIcon : Route2LineIcon;
+        const destination =
+          suggestion.campus === "nanda" ? dict.bus.nanda : dict.bus.main_campus;
+        return {
+          tab: suggestion.direction === "down" ? "nanda" : "north_gate",
+          startTime: suggestion.departureTime,
+          Icon,
+          line: suggestion.line,
+          direction: suggestion.direction,
+          title:
+            suggestion.line === "route1"
+              ? dict.bus.route1_line
+              : dict.bus.route2_line,
+          destination: `${dict.bus.to}${destination}`,
+          notes: [
+            dict.bus.next_class.replace("{name}", suggestion.class.title),
+            dict.bus.next_class_venue.replace(
+              "{venue}",
+              suggestion.class.venue ?? destination,
+            ),
+          ],
+          arrival: dict.bus.leave_by.replace(
+            "{time}",
+            suggestion.departureTime,
+          ),
+          exactArrival: true,
+        } satisfies Omit<BusListingItemProps, "refTime">;
+      })()
+    : null;
 
   return (
     <div className="flex flex-col px-2 divide-y divide-border">
-      <BusListingItem {...busProps} refTime={now} />
+      {suggestion && busProps && <BusListingItem {...busProps} refTime={now} />}
+      {transfers.length > 0 && (
+        <div
+          className="flex flex-col gap-1 py-2 text-sm font-medium text-muted-foreground"
+          role="status"
+        >
+          {transfers.map((transfer) => {
+            const from =
+              transfer.fromCampus === "nanda"
+                ? dict.bus.nanda
+                : dict.bus.main_campus;
+            const to =
+              transfer.toCampus === "nanda"
+                ? dict.bus.nanda
+                : dict.bus.main_campus;
+            const message =
+              transfer.status === "scheduled"
+                ? dict.bus.campus_transfer
+                    .replace("{from}", from)
+                    .replace("{to}", to)
+                    .replace(
+                      "{line}",
+                      transfer.line === "route1"
+                        ? dict.bus.route1_line
+                        : dict.bus.route2_line,
+                    )
+                    .replace("{departure}", transfer.departureTime ?? "")
+                    .replace("{arrival}", transfer.arrivalTime ?? "")
+                : dict.bus[
+                    transfer.status === "too_short"
+                      ? "campus_transfer_too_short"
+                      : "campus_transfer_no_bus"
+                  ]
+                    .replace("{from}", from)
+                    .replace("{to}", to);
+            return (
+              <div key={`${transfer.from.id}-${transfer.to.id}`}>{message}</div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };
