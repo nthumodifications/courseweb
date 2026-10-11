@@ -165,7 +165,7 @@ const WaitlistPage = lazyWithRetry(() => import("@/app/[lang]/waitlist/page"));
 // Not found
 const NotFoundPage = lazyWithRetry(() => import("@/app/[lang]/not-found"));
 
-export const router = createBrowserRouter([
+export const appRoutes = [
   {
     element: <AppProviders />,
     children: [
@@ -639,4 +639,8 @@ export const router = createBrowserRouter([
       },
     ],
   },
-]);
+];
+
+export const createAppRouter = () => createBrowserRouter(appRoutes);
+
+export const router = createAppRouter();

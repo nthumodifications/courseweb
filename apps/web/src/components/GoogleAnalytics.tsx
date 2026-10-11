@@ -1,14 +1,14 @@
 import * as gtag from "@/lib/gtag";
+import { isDialogClose, pageViewPath } from "@/lib/pageViewTracking";
 import { useEffect, useRef } from "react";
-import { useLocation, useSearchParams } from "react-router-dom";
+import { useLocation, type Location } from "react-router-dom";
 import { useSettings } from "@/hooks/contexts/settings";
 
 const GoogleAnalytics = () => {
   const location = useLocation();
-  const pathname = location.pathname;
-  const [searchParams] = useSearchParams();
   const { analytics } = useSettings();
   const scriptLoaded = useRef(false);
+  const previousLocation = useRef<Location | null>(null);
 
   // Dynamically load GA script (JSX <script> tags don't execute in SPAs)
   useEffect(() => {
@@ -33,9 +33,12 @@ const GoogleAnalytics = () => {
   }, [analytics]);
 
   useEffect(() => {
-    const url = `${pathname}?${searchParams}`;
-    gtag.pageview(url);
-  }, [pathname, searchParams]);
+    if (previousLocation.current === location) return;
+    const previous = previousLocation.current;
+    previousLocation.current = location;
+    if (isDialogClose(previous, location)) return;
+    gtag.pageview(pageViewPath(location));
+  }, [location]);
 
   return null;
 };

@@ -14,7 +14,7 @@ export const normaliseInstructorName = (value: string) =>
   decode(value).normalize("NFKC").replace(/\s+/gu, " ").trim();
 
 export const encodeInstructorRouteParam = (value: string) =>
-  encodeURIComponent(encodeURIComponent(value));
+  encodeURIComponent(value);
 
 export const decodeInstructorRouteParam = (value: string | undefined) => {
   if (!value) return "";

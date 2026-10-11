@@ -15,6 +15,7 @@ import { lastSemester } from "@courseweb/shared";
 import CourseSidePanel from "./CourseSidePanel";
 import { createResilientSearchClient } from "@/lib/search-client";
 import useDictionary from "@/dictionaries/useDictionary";
+import { createCourseSearchRouter } from "@/components/Courses/courseSearchRouting";
 
 const searchClient = createResilientSearchClient();
 const sessionStorageCache = createInfiniteHitsSessionStorageCache();
@@ -25,6 +26,7 @@ const CourseSearchContainer = () => {
   const { language } = useSettings();
   const dict = useDictionary();
   const department = searchParams.get("department");
+  const routing = useMemo(() => ({ router: createCourseSearchRouter() }), []);
 
   const initialUiState = useMemo(
     () => ({
@@ -102,7 +104,7 @@ const CourseSearchContainer = () => {
         searchClient={searchClient}
         indexName="nthu_courses"
         initialUiState={initialUiState}
-        routing={true}
+        routing={routing}
         future={{
           preserveSharedStateOnUnmount: true,
         }}

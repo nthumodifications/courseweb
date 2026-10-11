@@ -1,5 +1,7 @@
 import { Helmet } from "react-helmet-async";
-import { useLocation, useMatches } from "react-router-dom";
+import { matchRoutes } from "react-router-dom";
+import { router } from "@/router";
+import { usePageLocation } from "@/hooks/usePageLocation";
 
 interface RouteHandle {
   title?: string;
@@ -86,10 +88,11 @@ const shouldNoindexPath = (pathname: string): boolean => {
 };
 
 const TitleUpdater = () => {
-  const matches = useMatches();
-  const location = useLocation();
+  const location = usePageLocation();
+  const matches = matchRoutes(router.routes, location) ?? [];
 
-  const handle = matches.at(-1)?.handle as RouteHandle | undefined;
+  const handle = (matches.at(-1)?.route as { handle?: RouteHandle } | undefined)
+    ?.handle;
   const pathLang = getLangFromPath(location.pathname);
   const isZh = pathLang === "zh";
 

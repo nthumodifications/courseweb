@@ -1,8 +1,8 @@
 import { ChevronRight } from "lucide-react";
-import { Link } from "react-router-dom";
 import useDictionary from "@/dictionaries/useDictionary";
 import { toPrettySemester } from "@/helpers/semester";
 import type { ModuleOffering } from "@/lib/modules";
+import { CourseDialogLink } from "@/components/Courses/CourseDialog";
 
 type Dictionary = ReturnType<typeof useDictionary>;
 
@@ -53,7 +53,7 @@ export const CourseOfferingRow = ({
       : `${dict.course.module.capacity} ${offering.capacity} / ${offering.enrolled}`;
 
   return (
-    <Link
+    <CourseDialogLink
       to={offeringLink(lang, offering.raw_id)}
       className="group flex min-w-0 items-start gap-4 py-3 outline-none hover:bg-muted/40 focus-visible:bg-muted/40"
       aria-label={`${dict.course.module.view_offering} ${toPrettySemester(offering.semester)} ${sectionLabel(dict, offering.class)}`}
@@ -79,6 +79,6 @@ export const CourseOfferingRow = ({
         )}
       </span>
       <ChevronRight className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-    </Link>
+    </CourseDialogLink>
   );
 };

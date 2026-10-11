@@ -7,7 +7,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { Link } from "react-router-dom";
 import {
   buildPrerequisiteGraph,
   type ParsedPrerequisites,
@@ -18,6 +17,7 @@ import {
 } from "@courseweb/shared";
 import type useDictionary from "@/dictionaries/useDictionary";
 import { createModuleKey } from "@/lib/modules";
+import { CourseDialogLink } from "@/components/Courses/CourseDialog";
 
 type DetailsDictionary = ReturnType<typeof useDictionary>["course"]["details"];
 
@@ -271,14 +271,14 @@ const PrerequisiteGraph = ({
           : undefined;
     if (href && !anchor) {
       return (
-        <Link
+        <CourseDialogLink
           key={key}
           ref={registerNode(key)}
           to={href}
           className={`${className} cursor-pointer hover:bg-nthu-100 dark:hover:bg-nthu-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2`}
         >
           {content}
-        </Link>
+        </CourseDialogLink>
       );
     }
     return (

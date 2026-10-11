@@ -1,12 +1,10 @@
-import { useState } from "react";
-import { ArrowRight, ChevronLeft } from "lucide-react";
-import { Helmet } from "react-helmet-async";
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import { useMemo, useState } from "react";
+import { ArrowRight } from "lucide-react";
+import { useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   Button,
   ErrorState,
-  Fade,
   Separator,
   Select,
   SelectContent,
@@ -19,6 +17,11 @@ import PrerequisiteBlock from "@/components/CourseDetails/PrerequisiteBlock";
 import { usePrerequisiteGraphData } from "@/components/CourseDetails/usePrerequisiteGraphData";
 import { ModuleTermAvailability } from "@/components/Courses/ModuleTermAvailability";
 import { CourseOfferingRow } from "@/components/Courses/CourseOfferingRow";
+import {
+  CoursePageErrorPage,
+  CoursePageContent,
+  CoursePageState,
+} from "@/components/Courses/CoursePageFrame";
 import { ModuleLoading } from "@/components/Courses/ModuleLoading";
 import {
   ModuleBrief,
@@ -185,34 +188,55 @@ const OfferingList = ({
   );
 };
 
-const BackToCourses = ({ lang, dict }: { lang: string; dict: Dictionary }) => (
-  <div className="flex flex-wrap gap-2">
-    <Button variant="ghost" asChild size="sm" className="min-h-11 w-fit">
-      <Link to={`/${lang}/courses`}>
-        <ChevronLeft className="mr-2 h-4 w-4" />
-        {dict.common.back}
-      </Link>
-    </Button>
-    <Button variant="ghost" asChild size="sm" className="min-h-11 w-fit">
-      <Link to={`/${lang}/courses/modules`}>
-        {dict.course.module.search_other_modules}
-      </Link>
-    </Button>
-  </div>
+const ModuleEmptyState = ({
+  lang,
+  dict,
+  inDialog,
+  pageTitle,
+  errorTitle,
+}: {
+  lang: "en" | "zh";
+  dict: Dictionary;
+  inDialog: boolean;
+  pageTitle: string;
+  errorTitle: string;
+}) => (
+  <CoursePageState
+    lang={lang}
+    dict={dict}
+    inDialog={inDialog}
+    title={pageTitle}
+  >
+    <ErrorState title={errorTitle} />
+  </CoursePageState>
 );
 
-const ModulePage = () => {
-  const { lang: rawLang, moduleKey: rawModuleKey } = useParams<{
-    lang: string;
-    moduleKey: string;
-  }>();
-  const lang = rawLang === "en" ? "en" : "zh";
+export const ModulePageContent = ({
+  lang,
+  moduleKey: rawModuleKey,
+  inDialog = false,
+  dialogSearch,
+  onDialogSearchChange,
+}: {
+  lang: "en" | "zh";
+  moduleKey: string;
+  inDialog?: boolean;
+  dialogSearch?: string;
+  onDialogSearchChange?: (search: URLSearchParams) => void;
+}) => {
   const moduleKey = decodeModuleKey(rawModuleKey);
   const parsedModuleKey = parseModuleKey(moduleKey);
   const dict = useDictionary();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [pageSearchParams, setPageSearchParams] = useSearchParams();
   const [selectedInstructor, setSelectedInstructor] = useState<string | null>(
     null,
+  );
+  const searchParams = useMemo(
+    () =>
+      dialogSearch === undefined
+        ? pageSearchParams
+        : new URLSearchParams(dialogSearch),
+    [dialogSearch, pageSearchParams],
   );
   const requestedTitle = searchParams.get("title");
   const {
@@ -234,89 +258,70 @@ const ModulePage = () => {
     offering.prerequisites?.trim(),
   );
   const prerequisiteOffering = prerequisiteOfferings?.at(-1);
-  const prerequisiteTexts = prerequisiteOfferings?.map(
-    (offering) => offering.prerequisites?.trim(),
+  const prerequisiteTexts = prerequisiteOfferings?.map((offering) =>
+    offering.prerequisites?.trim(),
   );
   const prerequisitesDiffer =
     prerequisiteTexts && new Set(prerequisiteTexts).size > 1;
-  const {
-    parsedPrerequisite,
-    prerequisiteRows,
-    prerequisiteGraph,
-  } = usePrerequisiteGraphData(prerequisiteOffering);
+  const { parsedPrerequisite, prerequisiteRows, prerequisiteGraph } =
+    usePrerequisiteGraphData(prerequisiteOffering);
 
   const genericTitle = `${dict.course.module.title} | NTHUMods`;
-  const pageShellClass = "flex min-w-0 flex-col gap-4 px-4 md:px-6";
-  const back = <BackToCourses lang={lang} dict={dict} />;
+  const moduleErrorTitle = error
+    ? dict.common.load_error
+    : dict.course.module.no_offerings;
+  const contentClass = "flex min-w-0 flex-col gap-4 pb-6";
+  const renderState = (children: React.ReactNode) => (
+    <CoursePageState
+      lang={lang}
+      dict={dict}
+      inDialog={inDialog}
+      title={genericTitle}
+    >
+      {children}
+    </CoursePageState>
+  );
 
   if (!moduleKey || !parsedModuleKey) {
     return (
-      <>
-        <Helmet>
-          <title>{genericTitle}</title>
-        </Helmet>
-        <div className={`${pageShellClass} w-full max-w-7xl`}>
-          {back}
-          <ErrorState title={dict.course.module.invalid_key} />
-        </div>
-      </>
+      <ModuleEmptyState
+        lang={lang}
+        dict={dict}
+        inDialog={inDialog}
+        pageTitle={genericTitle}
+        errorTitle={dict.course.module.invalid_key}
+      />
     );
   }
 
   if (isLoading) {
-    return (
-      <>
-        <Helmet>
-          <title>{genericTitle}</title>
-        </Helmet>
-        <div className={`${pageShellClass} w-full max-w-7xl`}>
-          {back}
-          <ModuleLoading />
-        </div>
-      </>
-    );
+    return renderState(<ModuleLoading />);
   }
 
   if (error || !module) {
     return (
-      <>
-        <Helmet>
-          <title>{genericTitle}</title>
-        </Helmet>
-        <div className={`${pageShellClass} w-full max-w-7xl`}>
-          {back}
-          <ErrorState
-            title={
-              error ? dict.common.load_error : dict.course.module.no_offerings
-            }
-            action={
-              error ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => void refetch()}
-                >
-                  {dict.common.try_again}
-                </Button>
-              ) : undefined
-            }
-          />
-        </div>
-      </>
+      <CoursePageErrorPage
+        lang={lang}
+        dict={dict}
+        inDialog={inDialog}
+        pageTitle={genericTitle}
+        error={Boolean(error)}
+        title={moduleErrorTitle}
+        retryLabel={dict.common.try_again}
+        onRetry={() => void refetch()}
+      />
     );
   }
 
   if (!selectedVariant) {
     return (
-      <>
-        <Helmet>
-          <title>{genericTitle}</title>
-        </Helmet>
-        <div className={`${pageShellClass} w-full max-w-7xl`}>
-          {back}
-          <ErrorState title={dict.course.module.no_offerings} />
-        </div>
-      </>
+      <ModuleEmptyState
+        lang={lang}
+        dict={dict}
+        inDialog={inDialog}
+        pageTitle={genericTitle}
+        errorTitle={dict.course.module.no_offerings}
+      />
     );
   }
 
@@ -326,17 +331,15 @@ const ModulePage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>{`${pageName} ${module.department} ${module.course} | NTHUMods`}</title>
-        <meta
-          name="description"
-          content={`${pageName} (${latestOffering.name_zh}) ${dict.course.module.history}`}
-        />
-      </Helmet>
-      <div className={`${pageShellClass} w-full max-w-7xl`}>
-        {back}
-        <Fade>
-          <div className="flex min-w-0 flex-col gap-4 pb-6">
+      <CoursePageState
+        lang={lang}
+        dict={dict}
+        inDialog={inDialog}
+        title={`${pageName} ${module.department} ${module.course} | NTHUMods`}
+        description={`${pageName} (${latestOffering.name_zh}) ${dict.course.module.history}`}
+      >
+        <CoursePageContent inDialog={inDialog}>
+          <div className={contentClass}>
             {/* Mirrors the course detail header line for line. */}
             <header className="flex min-w-0 flex-col gap-2">
               <div className="font-medium text-base">
@@ -374,7 +377,11 @@ const ModulePage = () => {
                 const next = new URLSearchParams(searchParams);
                 next.set("title", title);
                 setSelectedInstructor(null);
-                setSearchParams(next, { replace: true });
+                if (inDialog && onDialogSearchChange) {
+                  onDialogSearchChange(next);
+                } else {
+                  setPageSearchParams(next, { replace: true });
+                }
               }}
             />
 
@@ -432,9 +439,22 @@ const ModulePage = () => {
               </div>
             </div>
           </div>
-        </Fade>
-      </div>
+        </CoursePageContent>
+      </CoursePageState>
     </>
+  );
+};
+
+const ModulePage = () => {
+  const { lang: rawLang, moduleKey: rawModuleKey } = useParams<{
+    lang: string;
+    moduleKey: string;
+  }>();
+  return (
+    <ModulePageContent
+      lang={rawLang === "en" ? "en" : "zh"}
+      moduleKey={rawModuleKey ?? ""}
+    />
   );
 };
 

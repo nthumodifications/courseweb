@@ -4,6 +4,11 @@ import { describe, expect, test } from "bun:test";
 import CourseGradeStatistics, {
   type CourseGradeStatisticsCopy,
 } from "./CourseGradeStatistics";
+import CourseOverallGradeSummary, {
+  hasCourseOverallGradeSummary,
+  type CourseOverallGradeSummaryCopy,
+} from "./CourseOverallGradeSummary";
+import { CourseDetailSection } from "./courseDetailSections";
 import {
   courseCodeFromRawId,
   courseStatisticsKey,
@@ -175,6 +180,55 @@ const copy: CourseGradeStatisticsCopy = {
   percentScale: "Percentage",
   contributed: "Data contributed by students through the school system.",
 };
+
+const overallCopy: CourseOverallGradeSummaryCopy = {
+  title: "Overall grade summary",
+  average: "Average",
+  enrollmentSummary: "{count} enrollments across {semesters} semesters",
+  trendUp: "Up {difference} since {semester}",
+  trendDown: "Down {difference} since {semester}",
+  trendFlat: "No change since {semester}",
+  gpaScale: "GPA / 4.3",
+  percentScale: "Percentage",
+  source: "Based on student-contributed historical grade statistics.",
+};
+
+test.each([
+  {
+    name: "with valid statistics",
+    statistics: [statistic()],
+    expectedSection: true,
+  },
+  {
+    name: "without statistics",
+    statistics: [] as CourseStatistic[],
+    expectedSection: false,
+  },
+] as const)(
+  "uses the shared section rhythm for the summary $name",
+  ({ statistics, expectedSection }) => {
+    const markup = renderToStaticMarkup(
+      hasCourseOverallGradeSummary(statistics) ? (
+        <CourseDetailSection id="overall-grade-summary">
+          <CourseOverallGradeSummary
+            statistics={statistics}
+            copy={overallCopy}
+          />
+        </CourseDetailSection>
+      ) : null,
+    );
+
+    expect(
+      markup.includes('data-course-detail-section="overall-grade-summary"'),
+    ).toBe(expectedSection);
+    expect(markup.includes('class="flex flex-col gap-2"')).toBe(
+      expectedSection,
+    );
+    expect(markup.includes('class="flex flex-col gap-1"')).toBe(
+      expectedSection,
+    );
+  },
+);
 
 test.each([
   { name: "empty data", statistics: [] as CourseStatistic[], error: undefined },

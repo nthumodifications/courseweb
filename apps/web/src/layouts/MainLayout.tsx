@@ -1,4 +1,4 @@
-import { Outlet, useParams } from "react-router-dom";
+import { useLocation, useParams, useRoutes } from "react-router-dom";
 import { Suspense, useEffect, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import ModsError from "@/app/[lang]/(mods-pages)/error";
@@ -20,6 +20,17 @@ import AnnouncementBar from "@/components/Alerts/AnnouncementBar";
 import CourseSelectionBar from "@/components/Alerts/CourseSelectionBar";
 import useDictionary from "@/dictionaries/useDictionary";
 import { lazyWithRetry } from "@/lib/chunk-recovery";
+import { router } from "@/router";
+
+const getMainRouteChildren = () => {
+  const langRoute = router.routes[0]?.children?.find(
+    (route) => route.path === "/:lang",
+  );
+  const mainRoute = langRoute?.children?.find((route) =>
+    route.children?.some((child) => child.path === "today"),
+  );
+  return mainRoute?.children ?? [];
+};
 
 const WhatsNewDialogDynamic = lazyWithRetry(
   () => import("@/components/Changelog/WhatsNewDialog"),
@@ -51,9 +62,19 @@ const ChatContainerWhenOpen = () => {
 
 const MainLayout = () => {
   const { lang } = useParams<{ lang: string }>();
+  const location = useLocation();
   const dict = useDictionary();
   const [cookies] = useCookies(["sidebar:state"]);
   const defaultOpen = (cookies["sidebar:state"] ?? "true") === "true";
+  const dialogState =
+    location.state && typeof location.state === "object"
+      ? (location.state as { dialog?: { background?: unknown } }).dialog
+      : undefined;
+  const backgroundLocation =
+    dialogState?.background && typeof dialogState.background === "object"
+      ? dialogState.background
+      : location;
+  const page = useRoutes(getMainRouteChildren(), backgroundLocation);
 
   return (
     <ChatProvider>
@@ -82,7 +103,7 @@ const MainLayout = () => {
                         </div>
                       }
                     >
-                      <Outlet />
+                      {page}
                     </Suspense>
                   </ErrorBoundary>
                 </div>

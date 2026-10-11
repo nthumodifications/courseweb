@@ -1,5 +1,5 @@
-import { Link } from "react-router-dom";
 import { cn } from "@courseweb/ui";
+import { CourseDialogLink } from "@/components/Courses/CourseDialog";
 import {
   encodeInstructorRouteParam,
   isInstructorPageName,
@@ -20,11 +20,11 @@ export const InstructorLink = ({
   if (!isInstructorPageName(name)) return content;
 
   return (
-    <Link
+    <CourseDialogLink
       to={`/${lang}/courses/instructor/${encodeInstructorRouteParam(name)}`}
       className={cn(className, "underline-offset-4 hover:underline")}
     >
       {children}
-    </Link>
+    </CourseDialogLink>
   );
 };
