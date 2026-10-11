@@ -37,9 +37,107 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG: ChangelogRelease[] = [
   {
+    version: "2026.10.2",
+    date: "2026-10-10",
+    highlight: true,
+    title: {
+      zh: "課程、課表與儀表板更新",
+      en: "Courses, timetable & dashboard updates",
+    },
+    items: [
+      {
+        type: "feature",
+        title: {
+          zh: "分享與查看課程成績統計",
+          en: "Share and view course grade statistics",
+        },
+        description: {
+          zh: "依照引導分享課程平均與標準差資料；課程詳細頁現在也會顯示歷年成績統計與整體成績摘要。",
+          en: "Share course average and standard-deviation data with a guided walkthrough, then see historical statistics and an overall grade summary on course details.",
+        },
+        action: { href: "/courses", key: "search" },
+      },
+      {
+        type: "feature",
+        title: { zh: "訂閱課表到你的日曆", en: "Subscribe to your timetable" },
+        description: {
+          zh: "在課表中用 Google、Apple 或 Outlook 訂閱，或直接複製訂閱連結。",
+          en: "Subscribe with Google Calendar, Apple Calendar, or Outlook, or copy the subscription link from your timetable.",
+        },
+        action: { href: "/timetable", key: "timetable" },
+      },
+      {
+        type: "improvement",
+        title: {
+          zh: "下一堂課的公車建議",
+          en: "Bus suggestions for your next class",
+        },
+        description: {
+          zh: "今日頁面會建議下一堂課前該搭哪班校園公車；跨校區移動時也會提醒是否來得及。",
+          en: "Today can suggest the campus bus to catch for your next class and warn when a cross-campus transfer is too short.",
+        },
+      },
+      {
+        type: "feature",
+        title: { zh: "教師頁面與連結", en: "Instructor pages and links" },
+        description: {
+          zh: "從課程中的教師連結開啟教師頁面，查看該教師跨學期授課的課程。",
+          en: "Open an instructor's page from course links to browse their courses across semesters.",
+        },
+        action: { href: "/courses", key: "search" },
+      },
+      {
+        type: "feature",
+        title: { zh: "選課階段提醒", en: "Course-selection phase reminders" },
+        description: {
+          zh: "用顏色與日期查看各選課階段，頂端提醒也會顯示目前或下一個階段。",
+          en: "See course-selection phases with colours and dates, plus a top-bar reminder for the current or next phase.",
+        },
+        action: { href: "/courses", key: "search" },
+      },
+      {
+        type: "feature",
+        title: { zh: "更多儀表板小工具", en: "More dashboard widgets" },
+        description: {
+          zh: "可在儀表板加入目前營業中的店家、即將到來的活動與成績，也能查看圖書館、洗衣房、體育場館和 YouBike。",
+          en: "Add shops open now, upcoming events, and grades to your dashboard, along with library, laundry, sports venue, and YouBike widgets.",
+        },
+      },
+      {
+        type: "improvement",
+        title: {
+          zh: "更完整的問題回報診斷資料",
+          en: "Richer diagnostics for issue reports",
+        },
+        description: {
+          zh: "回報問題時可選擇附上更完整的匿名診斷資料，協助我們排查問題。",
+          en: "Choose whether to attach richer anonymous diagnostics when reporting an issue to help with troubleshooting.",
+        },
+      },
+      {
+        type: "improvement",
+        title: { zh: "更快、更好用", en: "Faster and more accessible" },
+        description: {
+          zh: "首次載入更快，更多控制項也能使用螢幕閱讀器。",
+          en: "First load is faster, and more controls now have accessible names.",
+        },
+      },
+      {
+        type: "fix",
+        title: {
+          zh: "介面文字跟隨語言",
+          en: "Interface text follows your language",
+        },
+        description: {
+          zh: "更多介面文字會跟隨你選擇的語言顯示。",
+          en: "More interface text now follows the language you choose.",
+        },
+      },
+    ],
+  },
+  {
     version: "2026.10.1",
     date: "2026-10-07",
-    highlight: true,
     title: {
       zh: "公車、YouBike、課程與課表更新",
       en: "Buses, YouBike, courses & timetable",
