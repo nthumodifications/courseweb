@@ -4,6 +4,7 @@ import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import type { Bindings } from "./index";
 import { venueRateLimitMiddleware } from "./utils/rate-limit";
+import { fetchUpstream } from "./utils/upstream";
 
 const PEO_OCCUPANCY_API =
   "https://peo178.et.nthu.edu.tw/api/verify/count/report";
@@ -49,12 +50,9 @@ const app = new Hono<{ Bindings: Bindings }>()
   })
   .get("/occupancy", async (c) => {
     try {
-      const res = await fetch(PEO_OCCUPANCY_API, {
+      const res = await fetchUpstream(PEO_OCCUPANCY_API, {
         signal: AbortSignal.timeout(PEO_OCCUPANCY_TIMEOUT_MS),
       });
-      if (!res.ok) {
-        return c.json({ error: "Failed to fetch occupancy data" }, 502);
-      }
       const parsed = parsePeoOccupancyPayload(await res.json());
       if (!parsed) {
         return c.json({ error: "Upstream API error" }, 502);

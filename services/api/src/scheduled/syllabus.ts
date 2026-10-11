@@ -11,6 +11,7 @@ import {
   describeAlgoliaError,
   isAlgoliaUnusableError,
 } from "../config/algolia";
+import { fetchUpstream } from "../utils/upstream";
 
 // Utility function for retry with exponential backoff
 const retryWithBackoff = async <T>(
@@ -127,13 +128,11 @@ export const scrapeArchivedCourses = async (env: Env, semester: string) => {
   // Fetch landing page with retry
   const landingPageRes = await retryWithBackoff(
     async () => {
-      const response = await fetch(
+      const response = await fetchUpstream(
         "https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/6/6.2/6.2.9/JH629001.php",
         { cf: { cacheTtl: 0 } },
+        { allowHtml: true },
       );
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
       return response
         .arrayBuffer()
         .then((arrayBuffer) => decodeSchoolText(arrayBuffer));
@@ -154,12 +153,9 @@ export const scrapeArchivedCourses = async (env: Env, semester: string) => {
   // Fetch OCR results with retry
   const ocrResults = await retryWithBackoff(
     async () => {
-      const response = await fetch(
+      const response = await fetchUpstream(
         `https://ocr.nthumods.com/?url=https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/mod/auth_img/auth_img.php?ACIXSTORE=${acixStore}&d=3`,
       );
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
       const text = await response.text();
       if (text.length !== 3) {
         throw new Error(`OCR results are not valid: ${text}`);
@@ -254,22 +250,22 @@ export const scrapeArchivedCourses = async (env: Env, semester: string) => {
   const fetchCourses = async (department: Department, yearSemester: string) => {
     return await retryWithBackoff(
       async () => {
-        const response = await fetch(baseUrl, {
-          body: new URLSearchParams({
-            "cache-control": "max-age=0",
-            ACIXSTORE: `${acixStore}`,
-            YS: `${yearSemester.slice(0, 3)}|${yearSemester.slice(3, 5)}`,
-            cond: "a",
-            cou_code: `${department.code}`,
-            auth_num: `${ocrResults}`,
-          }),
-          method: "POST",
-          cf: { cacheTtl: 0 },
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
+        const response = await fetchUpstream(
+          baseUrl,
+          {
+            body: new URLSearchParams({
+              "cache-control": "max-age=0",
+              ACIXSTORE: `${acixStore}`,
+              YS: `${yearSemester.slice(0, 3)}|${yearSemester.slice(3, 5)}`,
+              cond: "a",
+              cou_code: `${department.code}`,
+              auth_num: `${ocrResults}`,
+            }),
+            method: "POST",
+            cf: { cacheTtl: 0 },
+          },
+          { allowHtml: true },
+        );
 
         return response;
       },
@@ -581,10 +577,7 @@ const downloadPDF = async (env: Env, url: string, c_key: string) => {
   try {
     const file = await retryWithBackoff(
       async () => {
-        const response = await fetch(url, { cf: { cacheTtl: 0 } });
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
+        const response = await fetchUpstream(url, { cf: { cacheTtl: 0 } });
         const arrayBuffer = await response.arrayBuffer();
         return Buffer.from(arrayBuffer);
       },
@@ -713,10 +706,11 @@ export const scrapeSyllabus = async (
   const fetchSyllabusHTML = async (c_key: string) => {
     return await retryWithBackoff(
       async () => {
-        const response = await fetch(baseURL + encodeURIComponent(c_key));
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
+        const response = await fetchUpstream(
+          baseURL + encodeURIComponent(c_key),
+          undefined,
+          { allowHtml: true },
+        );
         const arrayBuffer = await response.arrayBuffer();
         return decodeSchoolText(arrayBuffer);
       },
