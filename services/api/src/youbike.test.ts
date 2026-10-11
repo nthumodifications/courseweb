@@ -47,44 +47,27 @@ afterEach(() => {
 
 describe("YouBike upstream parser", () => {
   test("preserves the normal station response shape and duplicate rows", () => {
-    expect(parseYouBikePayload([station(), station()])).toEqual([
-      {
-        id: "500401001",
-        nameZh: "清華大學",
-        nameEn: "NTHU",
-        districtZh: "東區",
-        districtEn: "East Dist",
-        addressZh: "清大路",
-        addressEn: "NTHU Road",
-        totalCapacity: 20,
-        availableBikes: 8,
-        regularBikes: 6,
-        eBikes: 2,
-        emptyDocks: 12,
-        lat: 24.795,
-        lng: 120.993,
-        status: 1,
-        updatedAt: "2026-10-10T00:00:00+08:00",
-      },
-      {
-        id: "500401001",
-        nameZh: "清華大學",
-        nameEn: "NTHU",
-        districtZh: "東區",
-        districtEn: "East Dist",
-        addressZh: "清大路",
-        addressEn: "NTHU Road",
-        totalCapacity: 20,
-        availableBikes: 8,
-        regularBikes: 6,
-        eBikes: 2,
-        emptyDocks: 12,
-        lat: 24.795,
-        lng: 120.993,
-        status: 1,
-        updatedAt: "2026-10-10T00:00:00+08:00",
-      },
-    ]);
+    const parsedStation = {
+      id: "500401001",
+      nameZh: "清華大學",
+      nameEn: "NTHU",
+      districtZh: "東區",
+      districtEn: "East Dist",
+      addressZh: "清大路",
+      addressEn: "NTHU Road",
+      totalCapacity: 20,
+      availableBikes: 8,
+      regularBikes: 6,
+      eBikes: 2,
+      emptyDocks: 12,
+      lat: 24.795,
+      lng: 120.993,
+      status: 1,
+      updatedAt: "2026-10-10T00:00:00+08:00",
+    };
+    expect(parseYouBikePayload([station(), station()])).toEqual(
+      Array.from({ length: 2 }, () => parsedStation),
+    );
   });
 
   test("preserves empty and unusual station values accepted by HEAD", () => {

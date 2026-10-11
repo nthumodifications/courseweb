@@ -1,10 +1,11 @@
 import { describe, it, expect, spyOn, mock } from "bun:test";
 import { semesterInfo as canonicalSemesterInfo } from "../../../packages/shared/src/constants/semester";
+import { createSupabaseServerMock } from "./test-helpers/module-mocks";
 
 const queriedCourseIds: string[][] = [];
 
-mock.module("./config/supabase_server", () => ({
-  default: () => ({
+mock.module("./config/supabase_server", () =>
+  createSupabaseServerMock(() => ({
     from: () => ({
       select: () => ({
         in: mock(async (_column: string, ids: string[]) => {
@@ -24,11 +25,8 @@ mock.module("./config/supabase_server", () => ({
         }),
       }),
     }),
-  }),
-  supabaseWithEnv: () => {
-    throw new Error("supabaseWithEnv is not used in timetable ICS tests");
-  },
-}));
+  })),
+);
 
 const { default: timetableIcsApp } = await import("./timetable-ics");
 import {

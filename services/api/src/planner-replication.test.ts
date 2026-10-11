@@ -1,18 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
 import { createAuthTestEnvironment } from "./test-auth";
+import { createPrismaClientMock } from "./test-helpers/module-mocks";
 
 const findMany = mock(async () => []);
 
-mock.module("./prisma/client", () => ({
-  default: {
-    fetch: async () => ({
-      folder: { findMany },
-      item: { findMany },
-      plannerData: { findMany },
-      semester: { findMany },
-    }),
-  },
-}));
+mock.module("./prisma/client", () =>
+  createPrismaClientMock(async () => ({
+    folder: { findMany },
+    item: { findMany },
+    plannerData: { findMany },
+    semester: { findMany },
+  })),
+);
 
 const { default: planner } = await import("./planner-replication");
 

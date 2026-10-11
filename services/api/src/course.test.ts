@@ -1,4 +1,5 @@
 import { describe, expect, it, mock } from "bun:test";
+import { createSupabaseServerMock } from "./test-helpers/module-mocks";
 
 const rowsById = new Map<string, { raw_id: string }>();
 const inQuery = mock(async (_column: string, ids: string[]) => ({
@@ -13,16 +14,13 @@ const eqQuery = mock(async (_column: string, id: string) => ({
   error: null,
 }));
 
-mock.module("./config/supabase_server", () => ({
-  default: () => ({
+mock.module("./config/supabase_server", () =>
+  createSupabaseServerMock(() => ({
     from: () => ({
       select: () => ({ in: inQuery, eq: eqQuery }),
     }),
-  }),
-  supabaseWithEnv: () => {
-    throw new Error("supabaseWithEnv is not used in course tests");
-  },
-}));
+  })),
+);
 
 const { default: course } = await import("./course");
 
