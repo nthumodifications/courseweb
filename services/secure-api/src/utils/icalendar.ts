@@ -1,10 +1,11 @@
-import ical from "ical-generator";
+import ical, { ICalCalendarMethod } from "ical-generator";
 import { getFirebaseAdmin } from "../config/firebase_admin";
 import { getPrismaClient } from "./apiKeyValidation";
 
 const CALENDAR_TIME_ZONE = "Asia/Taipei";
 const TAIPEI_OFFSET_MS = 8 * 60 * 60 * 1000;
 const CALENDAR_DAY_MS = 24 * 60 * 60 * 1000;
+const CALENDAR_REFRESH_SECONDS = 5 * 60;
 
 type ICalDateAdapter = {
   isValid: true;
@@ -91,6 +92,13 @@ const allDayRepeatingRule = (event: any) => {
     .join("\r\n");
 };
 
+const stableFeedTimestamp = (now: Date) =>
+  new Date(
+    Math.floor(now.getTime() / (CALENDAR_REFRESH_SECONDS * 1000)) *
+      CALENDAR_REFRESH_SECONDS *
+      1000,
+  );
+
 /**
  * Create an iCalendar file for a user's calendar
  *
@@ -126,12 +134,16 @@ export async function createICalendar(
     const calendar = ical({
       name: `${user.name}'s Calendar`,
       prodId: { company: "NTHUMods", product: "Calendar" },
+      scale: "gregorian",
+      method: ICalCalendarMethod.PUBLISH,
       timezone: "UTC",
+      ttl: CALENDAR_REFRESH_SECONDS,
     });
 
     // Connect to Firebase Firestore for calendar events
     // Set up date range for querying events - looking 6 months ahead
     const currentDate = now;
+    const feedTimestamp = stableFeedTimestamp(currentDate);
     const sixMonthsFromNow = new Date(
       currentDate.getTime() + 180 * 24 * 60 * 60 * 1000,
     );
@@ -184,7 +196,7 @@ export async function createICalendar(
           // Create the event with the appropriate details based on includeFullDetails
           calendar.createEvent({
             id: event.id,
-            stamp: currentDate,
+            stamp: feedTimestamp,
             start: event.allDay
               ? (toTaipeiICalDate(eventStart) as any)
               : eventStart,

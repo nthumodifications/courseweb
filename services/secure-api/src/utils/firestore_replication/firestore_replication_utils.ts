@@ -51,10 +51,11 @@ export function getContentByIds<RxDocType>(
   getQuery: GetQuery<RxDocType>,
 ): Promise<QueryDocumentSnapshot<RxDocType>[]> {
   const batches = [];
+  const remainingIds = [...ids];
 
-  while (ids.length) {
+  while (remainingIds.length) {
     // firestore limits batches to 10
-    const batch = ids.splice(0, 10);
+    const batch = remainingIds.splice(0, 10);
 
     // add the batch request to to a queue
     batches.push(getQuery(batch));

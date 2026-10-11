@@ -14,7 +14,7 @@ export function useItemListJsonLd({
       "@type": "Course",
       position: index + 1,
       name: course.name_zh,
-      url: `https://nthumods.com/zh/courses/${course.raw_id}`,
+      url: `https://nthumods.com/zh/courses/${encodeURIComponent(course.raw_id)}`,
     })),
   };
 }

@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { ChevronDown, ExternalLink, WashingMachine, Wind } from "lucide-react";
 import { Button, cn, ErrorState, Skeleton } from "@courseweb/ui";
 import { Helmet } from "react-helmet-async";
+import { serializeJsonLd } from "@/lib/seo";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useSettings } from "@/hooks/contexts/settings";
 import useTime from "@/hooks/useTime";
@@ -435,7 +436,7 @@ const LaundryPage = () => {
       <>
         <Helmet>
           <script type="application/ld+json">
-            {JSON.stringify(pageJsonLd)}
+            {serializeJsonLd(pageJsonLd)}
           </script>
         </Helmet>
         <div className="flex flex-col px-4">
@@ -454,7 +455,9 @@ const LaundryPage = () => {
   return (
     <>
       <Helmet>
-        <script type="application/ld+json">{JSON.stringify(pageJsonLd)}</script>
+        <script type="application/ld+json">
+          {serializeJsonLd(pageJsonLd)}
+        </script>
       </Helmet>
       <div className="flex flex-col px-4">
         <div className="flex flex-col gap-2 border-b border-border py-2">

@@ -65,7 +65,7 @@ const classLetters: { [key: string]: any } = {
 
 export const checkValidClassCode = (class_code: string, semester: string) => {
   // Parse the input string
-  const match = /(^[^\d]+)(\d+)([BMD])([A-D]?)/.exec(class_code.toUpperCase());
+  const match = /(^[^\d]+)(\d+)([BMDP])([A-D]?)/.exec(class_code.toUpperCase());
   if (!match) {
     return class_code;
   }

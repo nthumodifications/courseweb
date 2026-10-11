@@ -9,15 +9,71 @@ function testEnv(fetch: AssetFetcher) {
 }
 
 function shellResponse() {
-  return new Response("<!doctype html><html>app</html>", {
-    headers: { "Content-Type": "text/html; charset=utf-8" },
-  });
+  return new Response(
+    `<!doctype html>
+<html lang="zh">
+  <head>
+    <title>Shell title</title>
+    <meta name="description" content="Shell description" />
+    <meta name="robots" content="index, follow" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Shell title" />
+    <meta property="og:description" content="Shell description" />
+    <meta property="og:url" content="https://nthumods.com/" />
+    <meta name="twitter:title" content="Shell title" />
+    <meta name="twitter:description" content="Shell description" />
+    <link rel="canonical" href="https://nthumods.com/" />
+    <link rel="alternate" hreflang="zh" href="https://nthumods.com/zh" />
+    <link rel="alternate" hreflang="en" href="https://nthumods.com/en" />
+    <link rel="alternate" hreflang="x-default" href="https://nthumods.com/" />
+  </head>
+  <body><div id="root"></div></body>
+</html>`,
+    { headers: { "Content-Type": "text/html; charset=utf-8" } },
+  );
 }
 
 function requestUrl(input: string | Request | URL): string {
   if (typeof input === "string") return input;
   if (input instanceof Request) return input.url;
   return input.toString();
+}
+
+function loadHeadWorker() {
+  const source = Bun.spawnSync([
+    "git",
+    "show",
+    "HEAD:apps/web/worker.ts",
+  ]).stdout.toString();
+  const javascript = new Bun.Transpiler({ loader: "ts" })
+    .transformSync(source)
+    .replace("export default", "return");
+  return new Function(javascript)() as typeof worker;
+}
+
+async function responseSnapshot(response: Response) {
+  return {
+    status: response.status,
+    statusText: response.statusText,
+    headers: [...response.headers.entries()],
+    body: await response.text(),
+  };
+}
+
+function htmlAttribute(html: string, tag: string, attribute: string) {
+  const match = new RegExp(
+    `<${tag}\\b[^>]*\\b${attribute}=(['"])(.*?)\\1`,
+    "i",
+  ).exec(html);
+  return match?.[2];
+}
+
+function jsonLdBlocks(html: string): unknown[] {
+  return [
+    ...html.matchAll(
+      /<script type="application\/ld\+json">([\s\S]*?)<\/script>/gi,
+    ),
+  ].map((match) => JSON.parse(match[1]));
 }
 
 function installWorkerRuntime(fetchImpl: typeof fetch) {
@@ -28,13 +84,126 @@ function installWorkerRuntime(fetchImpl: typeof fetch) {
     ]),
   );
 
+  class FakeElement {
+    private readonly attributes = new Map<string, string>();
+    private innerContent: string | undefined;
+    private appendedContent = "";
+
+    constructor(
+      readonly tagName: string,
+      attributeText: string,
+      private readonly hasClosingTag = false,
+    ) {
+      for (const match of attributeText.matchAll(
+        /([^\s=/>]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+)))?/g,
+      )) {
+        this.attributes.set(
+          match[1].toLowerCase(),
+          match[2] ?? match[3] ?? match[4] ?? "",
+        );
+      }
+    }
+
+    getAttribute(name: string) {
+      return this.attributes.get(name.toLowerCase()) ?? null;
+    }
+
+    setAttribute(name: string, value: string) {
+      this.attributes.set(name.toLowerCase(), value);
+    }
+
+    setInnerContent(value: string) {
+      this.innerContent = value
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
+    append(value: string) {
+      this.appendedContent += value;
+    }
+
+    renderOpening() {
+      const attributes = [...this.attributes]
+        .map(
+          ([name, value]) =>
+            ` ${name}="${value
+              .replace(/&/g, "&amp;")
+              .replace(/</g, "&lt;")
+              .replace(/>/g, "&gt;")
+              .replace(/"/g, "&quot;")}"`,
+        )
+        .join("");
+      return `<${this.tagName}${attributes}>`;
+    }
+
+    renderInner(original: string) {
+      return `${this.renderOpening()}${this.innerContent ?? original}${this.appendedContent}`;
+    }
+  }
+
   class FakeHTMLRewriter {
-    on() {
+    private readonly handlers = new Map<
+      string,
+      { element?: (element: FakeElement) => void }
+    >();
+
+    on(
+      selector: string,
+      handler: { element?: (element: FakeElement) => void },
+    ) {
+      this.handlers.set(selector, handler);
       return this;
     }
 
-    transform(response: Response) {
-      return response;
+    private matches(element: FakeElement, selector: string) {
+      const match = /^(\w+)(?:\[([^=]+)=["']([^"']+)["']\])?$/.exec(selector);
+      if (!match || match[1] !== element.tagName) return false;
+      return !match[2] || element.getAttribute(match[2]) === match[3];
+    }
+
+    private apply(element: FakeElement) {
+      for (const [selector, handler] of this.handlers) {
+        if (this.matches(element, selector)) handler.element?.(element);
+      }
+    }
+
+    async transform(response: Response) {
+      let html = await response.text();
+      html = html.replace(
+        /<head\b([^>]*)>([\s\S]*?)<\/head>/i,
+        (_whole, attributes: string, inner: string) => {
+          const element = new FakeElement("head", attributes, true);
+          this.apply(element);
+          return `${element.renderOpening()}${inner}${element.appendedContent}</head>`;
+        },
+      );
+      html = html.replace(/<html\b([^>]*)>/i, (_whole, attributes: string) => {
+        const element = new FakeElement("html", attributes);
+        this.apply(element);
+        return element.renderOpening();
+      });
+      html = html.replace(
+        /<title\b([^>]*)>([\s\S]*?)<\/title>/i,
+        (_whole, attributes: string, inner: string) => {
+          const element = new FakeElement("title", attributes, true);
+          this.apply(element);
+          return `${element.renderInner(inner)}</title>`;
+        },
+      );
+      html = html.replace(
+        /<(meta|link)\b([^>]*)>/gi,
+        (whole, tagName: string, attributes: string) => {
+          const element = new FakeElement(tagName.toLowerCase(), attributes);
+          this.apply(element);
+          return element.renderOpening() || whole;
+        },
+      );
+      return new Response(html, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers,
+      });
     }
   }
 
@@ -320,6 +489,298 @@ describe("Worker asset and shell caching", () => {
         "application/xml",
       );
       expect(await sitemapResponse.text()).toContain("<urlset");
+    } finally {
+      restore();
+    }
+  });
+
+  test.each([
+    "/",
+    "/zh",
+    "/en",
+    "/zh/today",
+    "/zh/courses/11420PE%20%20206097",
+    "/index.html",
+    "/sw.js",
+    "/manifest.webmanifest",
+    "/assets/app-abc123.js",
+    "/assets/missing.js",
+    "/favicon.ico",
+    "/robots.txt",
+    "/sitemap.xml",
+    "/sitemap-1.xml",
+    "/sitemap-index.xml",
+  ] as const)(
+    "keeps normal-browser response parity with HEAD for %s",
+    async (path) => {
+      const headWorker = loadHeadWorker();
+      const restore = installWorkerRuntime(
+        async () => new Response(null, { status: 500 }),
+      );
+      const assetFetcher: AssetFetcher = async (request) => {
+        const pathname = new URL(request.url).pathname;
+        if (pathname === "/") return shellResponse();
+        if (pathname === "/assets/missing.js") {
+          return new Response("<!doctype html>", {
+            headers: { "Content-Type": "text/html; charset=utf-8" },
+          });
+        }
+        if (pathname === "/assets/app-abc123.js") {
+          return new Response("export default 1", {
+            headers: { "Content-Type": "text/javascript", ETag: '"asset"' },
+          });
+        }
+        if (pathname === "/sw.js") {
+          return new Response("self.addEventListener('fetch', () => {})", {
+            headers: { "Content-Type": "text/javascript" },
+          });
+        }
+        return new Response(`asset:${pathname}`, {
+          headers: { "Content-Type": "text/plain", ETag: '"asset"' },
+        });
+      };
+
+      try {
+        const request = (handler: typeof worker) =>
+          handler.fetch(
+            new Request(`https://example.test${path}`, {
+              headers: { "User-Agent": "Mozilla/5.0" },
+            }),
+            testEnv(assetFetcher),
+          );
+        const [headResponse, newResponse] = await Promise.all([
+          request(headWorker),
+          request(worker),
+        ]);
+
+        expect(await responseSnapshot(newResponse)).toEqual(
+          await responseSnapshot(headResponse),
+        );
+      } finally {
+        restore();
+      }
+    },
+  );
+
+  const routerRouteSuffixes = [
+    "",
+    "today",
+    "timetable",
+    "timetable/view",
+    "courses",
+    "courses/modules",
+    "courses/module/CS%20%2F%20101",
+    "courses/instructor/%E6%9E%97%E6%95%99%E6%8E%88",
+    "courses/CS%20101%20%26%201",
+    "bus",
+    "bus/main",
+    "bus/main/line-1",
+    "bus/city/route123",
+    "calendar",
+    "settings",
+    "venues",
+    "venues/engineering",
+    "sports-venues",
+    "laundry",
+    "youbike",
+    "library",
+    "map",
+    "chat",
+    "shops",
+    "apps",
+    "student/grades",
+    "student/id",
+    "student/parcel",
+    "student/planner",
+    "issues",
+    "contribute",
+    "team",
+    "recruit",
+    "privacy-policy",
+    "changelog",
+    "proxy-login",
+    "next-steps",
+    "offline",
+    "design-system",
+    "timetable/share/share-123",
+    "timetable/community",
+    "timetable/group/group-123",
+    "admin",
+    "admin/users",
+    "admin/users/user-123",
+    "admin/announcements",
+    "admin/recruitment",
+    "admin/clients",
+    "admin/audit",
+    "waitlist",
+    "unknown-route",
+  ] as const;
+
+  test.each(
+    routerRouteSuffixes.flatMap((suffix) =>
+      ["zh", "en"].map((lang) => [`/${lang}/${suffix}`, lang] as const),
+    ),
+  )(
+    "keeps bot status equal to HEAD and never adds noindex for %s",
+    async (path) => {
+      const headWorker = loadHeadWorker();
+      const restore = installWorkerRuntime(async (input) => {
+        if (requestUrl(input).startsWith("https://api.nthumods.com/course/")) {
+          return new Response(
+            JSON.stringify({
+              raw_id: "CS 101 & 1",
+              semester: "11510",
+              name_zh: "課程",
+              name_en: "Course",
+              department: "CS",
+              teacher_zh: ["Teacher"],
+              teacher_en: ["Teacher"],
+            }),
+            { headers: { "Content-Type": "application/json" } },
+          );
+        }
+        return new Response(null, { status: 500 });
+      });
+      const env = testEnv(async () => shellResponse());
+
+      try {
+        const request = (handler: typeof worker) =>
+          handler.fetch(
+            new Request(`https://example.test${path}`, {
+              headers: { "User-Agent": "Googlebot" },
+            }),
+            env,
+          );
+        const [headResponse, newResponse] = await Promise.all([
+          request(headWorker),
+          request(worker),
+        ]);
+
+        expect(newResponse.status).toBe(headResponse.status);
+        expect(await newResponse.text()).not.toContain("noindex");
+      } finally {
+        restore();
+      }
+    },
+  );
+
+  test.each([
+    ["404", async () => new Response(null, { status: 404 })],
+    ["500", async () => new Response(null, { status: 500 })],
+    [
+      "timeout",
+      async () => {
+        throw new Error("timeout");
+      },
+    ],
+  ] as const)(
+    "falls back to the 200 shell when course lookup fails (%s)",
+    async (_label, fetchImpl) => {
+      const restore = installWorkerRuntime(fetchImpl);
+      try {
+        const response = await worker.fetch(
+          new Request("https://example.test/en/courses/CS%20101", {
+            headers: { "User-Agent": "Googlebot" },
+          }),
+          testEnv(async () => shellResponse()),
+        );
+        const html = await response.text();
+
+        expect(response.status).toBe(200);
+        expect(response.headers.get("X-Robots-Tag")).toBeNull();
+        expect(html).not.toContain("noindex");
+      } finally {
+        restore();
+      }
+    },
+  );
+
+  test.each([
+    ["/zh/today", "zh-TW", "https://nthumods.com/zh/today"],
+    ["/en/today", "en", "https://nthumods.com/en/today"],
+    ["/zh/apps", "zh-TW", "https://nthumods.com/zh/apps"],
+    ["/en/apps", "en", "https://nthumods.com/en/apps"],
+    [
+      "/zh/courses/instructor/%E6%9E%97%E6%95%99%E6%8E%88",
+      "zh-TW",
+      "https://nthumods.com/zh/courses/instructor/%E6%9E%97%E6%95%99%E6%8E%88",
+    ],
+    [
+      "/en/courses/module/CS%20%2F%20101",
+      "en",
+      "https://nthumods.com/en/courses/module/CS%20%2F%20101",
+    ],
+  ] as const)(
+    "keeps bot language and canonical links correct for %s",
+    async (path, lang, canonical) => {
+      const restore = installWorkerRuntime(
+        async () => new Response(null, { status: 500 }),
+      );
+      try {
+        const html = await (
+          await worker.fetch(
+            new Request(`https://example.test${path}`, {
+              headers: { "User-Agent": "Googlebot" },
+            }),
+            testEnv(async () => shellResponse()),
+          )
+        ).text();
+
+        expect(htmlAttribute(html, "html", "lang")).toBe(lang);
+        expect(html).toContain(`rel="canonical" href="${canonical}"`);
+        const zhUrl = canonical.replace(/\/(?:zh|en)(?=\/|$)/, "/zh");
+        const enUrl = canonical.replace(/\/(?:zh|en)(?=\/|$)/, "/en");
+        expect(html).toContain(`hreflang="zh-TW" href="${zhUrl}"`);
+        expect(html).toContain(`hreflang="en" href="${enUrl}"`);
+        expect(html).toContain(`hreflang="x-default" href="${zhUrl}"`);
+      } finally {
+        restore();
+      }
+    },
+  );
+
+  test("escapes course metadata and JSON-LD without double escaping", async () => {
+    const restore = installWorkerRuntime(async (input) => {
+      if (requestUrl(input).startsWith("https://api.nthumods.com/course/")) {
+        return new Response(
+          JSON.stringify({
+            raw_id: "CS 101 & 1",
+            semester: "11510",
+            name_zh: "「A&B」<課程> </script>",
+            name_en: 'A "quoted" & advanced <course>',
+            department: "CS&AI",
+            teacher_zh: ["Teacher"],
+            teacher_en: ["Teacher"],
+          }),
+          { headers: { "Content-Type": "application/json" } },
+        );
+      }
+      return new Response(null, { status: 500 });
+    });
+
+    try {
+      const response = await worker.fetch(
+        new Request(
+          "https://example.test/en/courses/CS%20101%20%26%201?utm_source=preview",
+          { headers: { "User-Agent": "Twitterbot" } },
+        ),
+        testEnv(async () => shellResponse()),
+      );
+      const html = await response.text();
+      const canonical = "https://nthumods.com/en/courses/CS%20101%20%26%201";
+      const blocks = jsonLdBlocks(html);
+
+      expect(response.status).toBe(200);
+      expect(html).toContain(`href="${canonical}"`);
+      expect(html).toContain("\\u003c/script\\u003e");
+      expect(html).not.toContain("</script><script>");
+      expect(blocks).toHaveLength(1);
+      expect((blocks[0] as Record<string, unknown>[])[0]).toMatchObject({
+        "@type": "Course",
+        name: 'A "quoted" & advanced <course>',
+        url: canonical,
+      });
+      expect(html).toContain("&lt;course&gt;");
     } finally {
       restore();
     }
