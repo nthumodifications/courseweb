@@ -62,8 +62,6 @@ let calendarEvents = [
   ),
 ];
 
-const actualDictionary = await import("@/dictionaries/useDictionary");
-
 mock.module("@/config/api", () => ({
   default: {
     acacalendar: {

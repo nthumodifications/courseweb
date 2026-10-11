@@ -47,7 +47,6 @@ mock.module("@/config/api", () => ({
 }));
 mock.module("@/config/auth", () => ({ default: {} }));
 mock.module("@/lib/gtag", () => ({ event: () => {} }));
-const actualDictionary = await import("@/dictionaries/useDictionary");
 mock.module("@/hooks/contexts/settings", () => ({
   useSettings: () => ({ language: "en" }),
 }));

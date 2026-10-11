@@ -35,7 +35,6 @@ Object.assign(globalThis, {
 const actualUi = await import("@courseweb/ui");
 const actualOidcContext = await import("react-oidc-context");
 const actualRxdbHooks = await import("rxdb-hooks");
-const actualDictionary = await import("@/dictionaries/useDictionary");
 moduleDom.window.close();
 restoreGlobals();
 let activeDom: JSDOM | undefined;

@@ -52,8 +52,6 @@ const knownIssuesGet = mock(async () =>
   ]),
 );
 const issuePost = mock(async () => Response.json({ applied: [] }));
-const actualDictionary = await import("@/dictionaries/useDictionary");
-
 mock.module("@/config/api", () => ({
   default: {
     issue: {
