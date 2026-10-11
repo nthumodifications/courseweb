@@ -8,23 +8,24 @@ import {
 } from "@courseweb/ui";
 import NTHUModsLogo from "@/components/Branding/NTHUModsLogo";
 
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
 import CurrentSemesterLabel from "./Today/CurrentSemesterLabel";
 import { Language } from "@/types/settings";
 import SponsorshipBanner from "./Sponsorship/SponsorshipBanner";
 import useDictionary from "@/dictionaries/useDictionary";
+import { lazyWithRetry } from "@/lib/chunk-recovery";
 
-const HelpDynamic = lazy(() => import("@/components/Help/Help"));
+const HelpDynamic = lazyWithRetry(() => import("@/components/Help/Help"));
 
-const GenericIssueFormDynamic = lazy(
+const GenericIssueFormDynamic = lazyWithRetry(
   () => import("@/components/Forms/GenericIssueFormDialog"),
 );
 
-const MinifiedUpcomingEventsDynamic = lazy(
+const MinifiedUpcomingEventsDynamic = lazyWithRetry(
   () => import("@/components/Calendar/MinifiedUpcomingEvents"),
 );
 
-const PWAInstallPromptDynamic = lazy(
+const PWAInstallPromptDynamic = lazyWithRetry(
   () => import("@/components/PWA/PWAInstallPrompt"),
 );
 

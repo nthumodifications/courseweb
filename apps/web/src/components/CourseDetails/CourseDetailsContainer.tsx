@@ -35,13 +35,14 @@ import CourseTagList from "@/components/Courses/CourseTagsList";
 import { MinimalCourse } from "@/types/courses";
 import { getScoreType, getFormattedClassCode } from "@/helpers/courses";
 import { CourseDefinition } from "@/config/supabase";
-import { Fragment, lazy, Suspense, useState } from "react";
+import { Fragment, Suspense, useState } from "react";
 import { Language } from "@/types/settings";
 import { sanitizeCourseHtml } from "@/lib/sanitizeHtml";
 import ShareCourseButton from "./ShareCourseButton";
 import client from "@/config/api";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useQuery } from "@tanstack/react-query";
+import { lazyWithRetry } from "@/lib/chunk-recovery";
 import CourseDetailsSkeleton from "./CourseDetailsSkeleton";
 import { useCourseLink } from "@/components/Courses/CourseDialog";
 import { ModuleTermAvailability } from "@/components/Courses/ModuleTermAvailability";
@@ -67,10 +68,10 @@ import {
   type PttReview,
 } from "@/lib/ptt";
 
-const PDFViewerDynamic = lazy(
+const PDFViewerDynamic = lazyWithRetry(
   () => import("@/components/CourseDetails/PDFViewer"),
 );
-const SelectCourseButtonDynamic = lazy(
+const SelectCourseButtonDynamic = lazyWithRetry(
   () => import("@/components/Courses/SelectCourseButton"),
 );
 

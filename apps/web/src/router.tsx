@@ -1,5 +1,5 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
-import { lazy } from "react";
+import { lazyWithRetry } from "@/lib/chunk-recovery";
 import RootRedirect from "@/layouts/RootRedirect";
 import LangLayout from "@/layouts/LangLayout";
 import MainLayout from "@/layouts/MainLayout";
@@ -11,137 +11,159 @@ import en from "@/dictionaries/en.json";
 import zh from "@/dictionaries/zh.json";
 
 // Auth callback (outside lang layout)
-const AuthCallbackPage = lazy(() => import("@/app/auth/callback/page"));
+const AuthCallbackPage = lazyWithRetry(
+  () => import("@/app/auth/callback/page"),
+);
 
 // Main pages
-const TodayPage = lazy(() => import("@/app/[lang]/(mods-pages)/today/page"));
-const TimetablePage = lazy(
+const TodayPage = lazyWithRetry(
+  () => import("@/app/[lang]/(mods-pages)/today/page"),
+);
+const TimetablePage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/timetable/page"),
 );
-const TimetableViewPage = lazy(
+const TimetableViewPage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/timetable/view/page"),
 );
-const CoursesPage = lazy(
+const CoursesPage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/courses/page"),
 );
-const CourseDetailPage = lazy(
+const CourseDetailPage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/courses/[courseId]/page"),
 );
-const ModulePage = lazy(
+const ModulePage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/courses/module/[moduleKey]/page"),
 );
-const InstructorPage = lazy(
+const InstructorPage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/courses/instructor/[name]/page"),
 );
-const ModulesSearchPage = lazy(
+const ModulesSearchPage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/courses/modules/page"),
 );
-const BusPage = lazy(() => import("@/app/[lang]/(mods-pages)/bus/page"));
-const SportsVenuesPage = lazy(
+const BusPage = lazyWithRetry(
+  () => import("@/app/[lang]/(mods-pages)/bus/page"),
+);
+const SportsVenuesPage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/sports-venues/page"),
 );
-const LaundryPage = lazy(
+const LaundryPage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/laundry/page"),
 );
-const YouBikePage = lazy(
+const YouBikePage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/youbike/page"),
 );
-const LibraryPage = lazy(
+const LibraryPage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/library/page"),
 );
-const BusRoutePage = lazy(
+const BusRoutePage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/bus/[route]/page"),
 );
-const BusLinePage = lazy(
+const BusLinePage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/bus/[route]/[line]/page"),
 );
-const CalendarPage = lazy(
+const CalendarPage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/calendar/page"),
 );
-const SettingsPage = lazy(
+const SettingsPage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/settings/page"),
 );
-const VenuesPage = lazy(
+const VenuesPage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/(venues)/venues/page"),
 );
-const CampusMapPage = lazy(() => import("@/app/[lang]/(mods-pages)/map/page"));
-const ChatPage = lazy(() => import("@/app/[lang]/(mods-pages)/chat/page"));
-const ShopsPage = lazy(() => import("@/app/[lang]/(mods-pages)/shops/page"));
-const AppsPage = lazy(() => import("@/app/[lang]/(mods-pages)/apps/page"));
-const GradesPage = lazy(
+const CampusMapPage = lazyWithRetry(
+  () => import("@/app/[lang]/(mods-pages)/map/page"),
+);
+const ChatPage = lazyWithRetry(
+  () => import("@/app/[lang]/(mods-pages)/chat/page"),
+);
+const ShopsPage = lazyWithRetry(
+  () => import("@/app/[lang]/(mods-pages)/shops/page"),
+);
+const AppsPage = lazyWithRetry(
+  () => import("@/app/[lang]/(mods-pages)/apps/page"),
+);
+const GradesPage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/student/grades/page"),
 );
-const StudentIdPage = lazy(
+const StudentIdPage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/student/id/page"),
 );
-const ParcelPage = lazy(
+const ParcelPage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/student/parcel/page"),
 );
-const PlannerPage = lazy(
+const PlannerPage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/student/planner/page"),
 );
-const PlannerLayout = lazy(
+const PlannerLayout = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/student/planner/layout"),
 );
-const IssuesPage = lazy(
+const IssuesPage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/(side-pages)/issues/page"),
 );
-const ContributePage = lazy(
+const ContributePage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/(side-pages)/contribute/page"),
 );
-const TeamPage = lazy(
+const TeamPage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/(side-pages)/team/page"),
 );
-const RecruitmentPage = lazy(
+const RecruitmentPage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/(side-pages)/recruit/page"),
 );
-const PrivacyPage = lazy(
+const PrivacyPage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/(side-pages)/privacy-policy/page"),
 );
-const ChangelogPage = lazy(
+const ChangelogPage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/(side-pages)/changelog/page"),
 );
-const ProxyLoginPage = lazy(
+const ProxyLoginPage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/(side-pages)/proxy-login/page"),
 );
-const NextStepsPage = lazy(
+const NextStepsPage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/(side-pages)/next-steps/page"),
 );
-const OfflinePage = lazy(
+const OfflinePage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/offline/page"),
 );
-const DesignSystemPage = lazy(() => import("@/pages/DesignSystem"));
-const TimetableShareViewPage = lazy(
+const DesignSystemPage = lazyWithRetry(() => import("@/pages/DesignSystem"));
+const TimetableShareViewPage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/timetable/share/[shareId]/page"),
 );
-const CommunityPage = lazy(
+const CommunityPage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/community/page"),
 );
-const GroupViewPage = lazy(
+const GroupViewPage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/group/[code]/page"),
 );
 
 // Admin center (own layout, staff only)
-const AdminLayout = lazy(() => import("@/app/[lang]/admin/layout"));
-const AdminOverviewPage = lazy(() => import("@/app/[lang]/admin/page"));
-const AdminUsersPage = lazy(() => import("@/app/[lang]/admin/users/page"));
-const AdminUserDetailPage = lazy(
+const AdminLayout = lazyWithRetry(() => import("@/app/[lang]/admin/layout"));
+const AdminOverviewPage = lazyWithRetry(
+  () => import("@/app/[lang]/admin/page"),
+);
+const AdminUsersPage = lazyWithRetry(
+  () => import("@/app/[lang]/admin/users/page"),
+);
+const AdminUserDetailPage = lazyWithRetry(
   () => import("@/app/[lang]/admin/users/[userId]/page"),
 );
-const AdminAnnouncementsPage = lazy(
+const AdminAnnouncementsPage = lazyWithRetry(
   () => import("@/app/[lang]/admin/announcements/page"),
 );
-const AdminClientsPage = lazy(() => import("@/app/[lang]/admin/clients/page"));
-const AdminAuditPage = lazy(() => import("@/app/[lang]/admin/audit/page"));
-const AdminRecruitmentPage = lazy(
+const AdminClientsPage = lazyWithRetry(
+  () => import("@/app/[lang]/admin/clients/page"),
+);
+const AdminAuditPage = lazyWithRetry(
+  () => import("@/app/[lang]/admin/audit/page"),
+);
+const AdminRecruitmentPage = lazyWithRetry(
   () => import("@/app/[lang]/admin/recruitment/page"),
 );
 
 // Separate layout page
-const WaitlistPage = lazy(() => import("@/app/[lang]/waitlist/page"));
+const WaitlistPage = lazyWithRetry(() => import("@/app/[lang]/waitlist/page"));
 
 // Not found
-const NotFoundPage = lazy(() => import("@/app/[lang]/not-found"));
+const NotFoundPage = lazyWithRetry(() => import("@/app/[lang]/not-found"));
 
 export const router = createBrowserRouter([
   {

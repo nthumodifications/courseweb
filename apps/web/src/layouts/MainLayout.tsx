@@ -1,5 +1,5 @@
 import { Outlet, useParams } from "react-router-dom";
-import { lazy, Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import ModsError from "@/app/[lang]/(mods-pages)/error";
 import { SidebarProvider, SidebarInset } from "@courseweb/ui";
@@ -18,12 +18,13 @@ import CommandPalette from "@/components/CommandPalette/CommandPalette";
 import CustomCSSInjector from "@/components/CustomCSS/CustomCSSInjector";
 import AnnouncementBar from "@/components/Alerts/AnnouncementBar";
 import useDictionary from "@/dictionaries/useDictionary";
+import { lazyWithRetry } from "@/lib/chunk-recovery";
 
-const WhatsNewDialogDynamic = lazy(
+const WhatsNewDialogDynamic = lazyWithRetry(
   () => import("@/components/Changelog/WhatsNewDialog"),
 );
 
-const ChatContainerDynamic = lazy(() =>
+const ChatContainerDynamic = lazyWithRetry(() =>
   import("@/components/Chat/ChatContainer").then((module) => ({
     default: module.ChatContainer,
   })),

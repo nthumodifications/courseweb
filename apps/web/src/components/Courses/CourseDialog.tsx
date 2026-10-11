@@ -7,7 +7,6 @@ import {
   useEffect,
   useRef,
   useMemo,
-  lazy,
   Suspense,
   PropsWithChildren,
 } from "react";
@@ -24,6 +23,7 @@ import { ExternalLink } from "lucide-react";
 import { Language } from "@/types/settings";
 import { useSettings } from "@/hooks/contexts/settings";
 import useDictionary from "@/dictionaries/useDictionary";
+import { lazyWithRetry } from "@/lib/chunk-recovery";
 
 interface CourseDialogContextValue {
   openCourse: (courseId: string) => void;
@@ -33,7 +33,7 @@ const CourseDialogContext = createContext<CourseDialogContextValue | null>(
   null,
 );
 
-const CourseDetailContainerDynamic = lazy(
+const CourseDetailContainerDynamic = lazyWithRetry(
   () => import("@/components/CourseDetails/CourseDetailsContainer"),
 );
 

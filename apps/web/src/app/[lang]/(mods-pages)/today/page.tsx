@@ -1,4 +1,5 @@
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
+import { lazyWithRetry } from "@/lib/chunk-recovery";
 import TodaySchedule from "@/components/Today/TodaySchedule";
 import { useLocalStorage } from "usehooks-ts";
 import UpcomingEventList from "@/components/Calendar/UpcomingEventList";
@@ -6,10 +7,12 @@ import { NextUpLine } from "@/components/Widgets/CountdownWidget";
 import useDictionary from "@/dictionaries/useDictionary";
 import useUpcomingEvents from "@/hooks/useUpcomingEvents";
 
-const CalendarPageDynamic = lazy(
+const CalendarPageDynamic = lazyWithRetry(
   () => import("@/components/Calendar/CalendarPage"),
 );
-const WidgetGridDynamic = lazy(() => import("@/components/Widgets/WidgetGrid"));
+const WidgetGridDynamic = lazyWithRetry(
+  () => import("@/components/Widgets/WidgetGrid"),
+);
 
 const MobileCalendarUpcoming = () => {
   const dict = useDictionary();

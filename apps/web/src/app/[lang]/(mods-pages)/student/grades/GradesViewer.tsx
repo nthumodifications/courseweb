@@ -33,17 +33,18 @@ import {
 
 import { GradeObject } from "@/types/grades";
 import { toPrettySemester } from "@/helpers/semester";
-import { lazy, Suspense, useState } from "react";
+import { Suspense, useState } from "react";
 import { useMediaQuery } from "usehooks-ts";
 import { ExternalLink } from "lucide-react";
+import { lazyWithRetry } from "@/lib/chunk-recovery";
 
-const GPAChart = lazy(() =>
+const GPAChart = lazyWithRetry(() =>
   import("./GPAChart").then((m) => ({ default: m.GPAChart })),
 );
-const ClassRankChart = lazy(() =>
+const ClassRankChart = lazyWithRetry(() =>
   import("./ClassRankChart").then((m) => ({ default: m.ClassRankChart })),
 );
-const DeptRankChart = lazy(() =>
+const DeptRankChart = lazyWithRetry(() =>
   import("./DeptRankChart").then((m) => ({ default: m.DeptRankChart })),
 );
 
