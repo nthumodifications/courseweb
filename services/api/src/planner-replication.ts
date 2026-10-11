@@ -57,6 +57,34 @@ const replicationBatchSizeSchema = z.coerce
   .max(MAX_REPLICATION_BATCH_SIZE)
   .optional();
 
+const replicationPullQuerySchema = (idField: ModelIdField): z.ZodTypeAny =>
+  z.object({
+    [idField]: replicationIdSchema,
+    serverTimestamp: replicationTimestampSchema,
+    batchSize: replicationBatchSizeSchema,
+  });
+
+const replicationPushSchema = (idField: ModelIdField): z.ZodTypeAny =>
+  z
+    .array(
+      z.object({
+        newDocumentState: z
+          .object({
+            [idField]: z.string(),
+            _deleted: z.boolean(),
+          })
+          .passthrough(),
+        assumedMasterState: z
+          .object({
+            [idField]: z.string(),
+            _deleted: z.boolean(),
+          })
+          .passthrough()
+          .optional(),
+      }),
+    )
+    .max(MAX_REPLICATION_PUSH_ROWS);
+
 type Checkpoint<T extends ModelIdField> = T extends "id"
   ? IdCheckpoint
   : UuidCheckpoint;
@@ -94,6 +122,85 @@ interface PushHandlers<M extends Model> {
   ) => Promise<void>;
   transformItemToDocument: (item: M) => RxDocument<M>;
 }
+
+const findItemsWithCursor = async <M extends Model>(
+  userId: string,
+  idField: ModelIdField,
+  id: string | undefined,
+  lastPulledTimestamp: Date | null,
+  batchSize: number,
+  findMany: (args: any) => Promise<M[]>,
+) => {
+  if (lastPulledTimestamp) {
+    return findMany({
+      where: {
+        userId,
+        OR: [
+          {
+            serverTimestamp: {
+              gt: lastPulledTimestamp,
+            },
+          },
+          {
+            AND: [
+              { serverTimestamp: lastPulledTimestamp },
+              { [idField]: { gt: id || "" } },
+            ],
+          },
+        ],
+      },
+      orderBy: [{ serverTimestamp: "asc" }, { [idField]: "asc" }],
+      take: batchSize,
+    });
+  }
+
+  return findMany({
+    where: { userId },
+    orderBy: [{ serverTimestamp: "asc" }, { [idField]: "asc" }],
+    take: batchSize,
+  });
+};
+
+const transformItemToDocument = <M extends Model>(item: M): RxDocument<M> => {
+  const { userId, serverTimestamp, deleted, ...rest } = item;
+  return { ...rest, _deleted: deleted || false } as RxDocument<M>;
+};
+
+const withDeleted = <T extends object>(data: T, deleted: boolean) => ({
+  ...data,
+  _deleted: deleted || false,
+});
+
+const processItemsWithUpsert = async <T extends object>(
+  userId: string,
+  items: Array<{ id: string; isDeleted: boolean; data: T }>,
+  transaction: (operations: unknown[]) => Promise<unknown>,
+  upsert: (
+    item: { id: string; isDeleted: boolean; data: T },
+    data: { update: T & BaseModel; create: T & BaseModel },
+  ) => unknown,
+  transformData: (data: T) => T = (data) => data,
+) => {
+  const operations = items.map((item) => {
+    const data = transformData({ ...item.data });
+    return upsert(item, {
+      update: {
+        ...data,
+        userId,
+        serverTimestamp: new Date(),
+        deleted: item.isDeleted,
+      },
+      create: {
+        ...data,
+        userId,
+        serverTimestamp: new Date(),
+        deleted: item.isDeleted,
+      },
+    });
+  });
+
+  return transaction(operations);
+};
 
 /**
  * Generic function to handle pull operations using callbacks
@@ -239,14 +346,7 @@ const app = new Hono<{ Bindings: Bindings }>()
   .use(auth(["planner"]))
   .get(
     "/folders/pull",
-    zValidator(
-      "query",
-      z.object({
-        id: replicationIdSchema,
-        serverTimestamp: replicationTimestampSchema,
-        batchSize: replicationBatchSizeSchema,
-      }),
-    ),
+    zValidator("query", replicationPullQuerySchema("id")),
     async (c) => {
       try {
         const params = c.req.valid("query");
@@ -258,39 +358,16 @@ const app = new Hono<{ Bindings: Bindings }>()
           "id"
         >(user.sub, "id", params, {
           async findItems(userId, idField, id, lastPulledTimestamp, batchSize) {
-            if (lastPulledTimestamp) {
-              return prisma.folder.findMany({
-                where: {
-                  userId,
-                  OR: [
-                    {
-                      serverTimestamp: {
-                        gt: lastPulledTimestamp,
-                      },
-                    },
-                    {
-                      AND: [
-                        { serverTimestamp: lastPulledTimestamp },
-                        { id: { gt: id || "" } },
-                      ],
-                    },
-                  ],
-                },
-                orderBy: [{ serverTimestamp: "asc" }, { id: "asc" }],
-                take: batchSize,
-              });
-            } else {
-              return prisma.folder.findMany({
-                where: { userId },
-                orderBy: [{ serverTimestamp: "asc" }, { id: "asc" }],
-                take: batchSize,
-              });
-            }
+            return findItemsWithCursor(
+              userId,
+              idField,
+              id,
+              lastPulledTimestamp,
+              batchSize,
+              (args) => prisma.folder.findMany(args),
+            );
           },
-          transformItemToDocument(item) {
-            const { userId, serverTimestamp, deleted, ...rest } = item;
-            return { ...rest, _deleted: deleted || false };
-          },
+          transformItemToDocument,
         });
 
         return c.json(result);
@@ -304,28 +381,7 @@ const app = new Hono<{ Bindings: Bindings }>()
   )
   .post(
     "/folders/push",
-    zValidator(
-      "json",
-      z
-        .array(
-          z.object({
-            newDocumentState: z
-              .object({
-                id: z.string(),
-                _deleted: z.boolean(),
-              })
-              .passthrough(),
-            assumedMasterState: z
-              .object({
-                id: z.string(),
-                _deleted: z.boolean(),
-              })
-              .passthrough()
-              .optional(),
-          }),
-        )
-        .max(MAX_REPLICATION_PUSH_ROWS),
-    ),
+    zValidator("json", replicationPushSchema("id")),
     async (c) => {
       try {
         const rows = c.req.valid("json");
@@ -348,30 +404,18 @@ const app = new Hono<{ Bindings: Bindings }>()
               });
             },
             async processItems(userId, idField, items) {
-              const operations = items.map((item) => {
-                return prisma.folder.upsert({
-                  where: { userId_id: { userId, id: item.id } },
-                  update: {
-                    ...item.data,
-                    userId,
-                    serverTimestamp: new Date(),
-                    deleted: item.isDeleted,
-                  },
-                  create: {
-                    deleted: item.isDeleted,
-                    userId,
-                    serverTimestamp: new Date(),
-                    ...item.data,
-                  },
-                });
-              });
-
-              await prisma.$transaction(operations);
+              await processItemsWithUpsert(
+                userId,
+                items,
+                (operations) => prisma.$transaction(operations as any[]),
+                (item, data) =>
+                  prisma.folder.upsert({
+                    where: { userId_id: { userId, id: item.id } },
+                    ...data,
+                  }),
+              );
             },
-            transformItemToDocument(item) {
-              const { userId, serverTimestamp, deleted, ...rest } = item;
-              return { ...rest, _deleted: deleted || false };
-            },
+            transformItemToDocument,
           },
         );
 
@@ -386,14 +430,7 @@ const app = new Hono<{ Bindings: Bindings }>()
   )
   .get(
     "/items/pull",
-    zValidator(
-      "query",
-      z.object({
-        uuid: replicationIdSchema,
-        serverTimestamp: replicationTimestampSchema,
-        batchSize: replicationBatchSizeSchema,
-      }),
-    ),
+    zValidator("query", replicationPullQuerySchema("uuid")),
     async (c) => {
       try {
         const params = c.req.valid("query");
@@ -411,34 +448,14 @@ const app = new Hono<{ Bindings: Bindings }>()
             lastPulledTimestamp,
             batchSize,
           ) {
-            if (lastPulledTimestamp) {
-              return prisma.item.findMany({
-                where: {
-                  userId,
-                  OR: [
-                    {
-                      serverTimestamp: {
-                        gt: lastPulledTimestamp,
-                      },
-                    },
-                    {
-                      AND: [
-                        { serverTimestamp: lastPulledTimestamp },
-                        { uuid: { gt: uuid || "" } },
-                      ],
-                    },
-                  ],
-                },
-                orderBy: [{ serverTimestamp: "asc" }, { uuid: "asc" }],
-                take: batchSize,
-              });
-            } else {
-              return prisma.item.findMany({
-                where: { userId },
-                orderBy: [{ serverTimestamp: "asc" }, { uuid: "asc" }],
-                take: batchSize,
-              });
-            }
+            return findItemsWithCursor(
+              userId,
+              idField,
+              uuid,
+              lastPulledTimestamp,
+              batchSize,
+              (args) => prisma.item.findMany(args),
+            );
           },
           transformItemToDocument(item) {
             const { userId, serverTimestamp, deleted, ...rest } = item;
@@ -454,7 +471,9 @@ const app = new Hono<{ Bindings: Bindings }>()
                 : null;
             }
 
-            return { ...transformedData, _deleted: deleted || false };
+            return withDeleted(transformedData, deleted) as RxDocument<
+              typeof item
+            >;
           },
         });
 
@@ -469,28 +488,7 @@ const app = new Hono<{ Bindings: Bindings }>()
   )
   .post(
     "/items/push",
-    zValidator(
-      "json",
-      z
-        .array(
-          z.object({
-            newDocumentState: z
-              .object({
-                uuid: z.string(),
-                _deleted: z.boolean(),
-              })
-              .passthrough(),
-            assumedMasterState: z
-              .object({
-                uuid: z.string(),
-                _deleted: z.boolean(),
-              })
-              .passthrough()
-              .optional(),
-          }),
-        )
-        .max(MAX_REPLICATION_PUSH_ROWS),
-    ),
+    zValidator("json", replicationPushSchema("uuid")),
     async (c) => {
       try {
         const rows = c.req.valid("json");
@@ -513,37 +511,28 @@ const app = new Hono<{ Bindings: Bindings }>()
               });
             },
             async processItems(userId, idField, items) {
-              const operations = items.map((item) => {
-                const data = { ...item.data };
-
-                // Serialize dependson if it exists
-                if (
-                  "dependson" in data &&
-                  data.dependson !== null &&
-                  (Array.isArray(data.dependson) ||
-                    typeof data.dependson === "object")
-                ) {
-                  data.dependson = JSON.stringify(data.dependson);
-                }
-
-                return prisma.item.upsert({
-                  where: { uuid: item.id, userId },
-                  update: {
+              await processItemsWithUpsert(
+                userId,
+                items,
+                (operations) => prisma.$transaction(operations as any[]),
+                (item, data) =>
+                  prisma.item.upsert({
+                    where: { uuid: item.id, userId },
                     ...data,
-                    userId,
-                    serverTimestamp: new Date(),
-                    deleted: item.isDeleted,
-                  },
-                  create: {
-                    ...data,
-                    userId,
-                    serverTimestamp: new Date(),
-                    deleted: item.isDeleted,
-                  },
-                });
-              });
-
-              await prisma.$transaction(operations);
+                  }),
+                (data) => {
+                  // Serialize dependson if it exists
+                  if (
+                    "dependson" in data &&
+                    data.dependson !== null &&
+                    (Array.isArray(data.dependson) ||
+                      typeof data.dependson === "object")
+                  ) {
+                    data.dependson = JSON.stringify(data.dependson);
+                  }
+                  return data;
+                },
+              );
             },
             transformItemToDocument(item) {
               const { userId, serverTimestamp, deleted, ...rest } = item;
@@ -559,7 +548,9 @@ const app = new Hono<{ Bindings: Bindings }>()
                   : null;
               }
 
-              return { ...transformedData, _deleted: deleted || false };
+              return withDeleted(transformedData, deleted) as RxDocument<
+                typeof item
+              >;
             },
           },
         );
@@ -575,14 +566,7 @@ const app = new Hono<{ Bindings: Bindings }>()
   )
   .get(
     "/plannerdata/pull",
-    zValidator(
-      "query",
-      z.object({
-        id: replicationIdSchema,
-        serverTimestamp: replicationTimestampSchema,
-        batchSize: replicationBatchSizeSchema,
-      }),
-    ),
+    zValidator("query", replicationPullQuerySchema("id")),
     async (c) => {
       try {
         const params = c.req.valid("query");
@@ -594,34 +578,14 @@ const app = new Hono<{ Bindings: Bindings }>()
           "id"
         >(user.sub, "id", params, {
           async findItems(userId, idField, id, lastPulledTimestamp, batchSize) {
-            if (lastPulledTimestamp) {
-              return prisma.plannerData.findMany({
-                where: {
-                  userId,
-                  OR: [
-                    {
-                      serverTimestamp: {
-                        gt: lastPulledTimestamp,
-                      },
-                    },
-                    {
-                      AND: [
-                        { serverTimestamp: lastPulledTimestamp },
-                        { id: { gt: id || "" } },
-                      ],
-                    },
-                  ],
-                },
-                orderBy: [{ serverTimestamp: "asc" }, { id: "asc" }],
-                take: batchSize,
-              });
-            } else {
-              return prisma.plannerData.findMany({
-                where: { userId },
-                orderBy: [{ serverTimestamp: "asc" }, { id: "asc" }],
-                take: batchSize,
-              });
-            }
+            return findItemsWithCursor(
+              userId,
+              idField,
+              id,
+              lastPulledTimestamp,
+              batchSize,
+              (args) => prisma.plannerData.findMany(args),
+            );
           },
           transformItemToDocument(item) {
             const { userId, serverTimestamp, deleted, ...rest } = item;
@@ -638,7 +602,9 @@ const app = new Hono<{ Bindings: Bindings }>()
                   : [];
             }
 
-            return { ...transformedData, _deleted: deleted || false };
+            return withDeleted(transformedData, deleted) as RxDocument<
+              typeof item
+            >;
           },
         });
 
@@ -653,28 +619,7 @@ const app = new Hono<{ Bindings: Bindings }>()
   )
   .post(
     "/plannerdata/push",
-    zValidator(
-      "json",
-      z
-        .array(
-          z.object({
-            newDocumentState: z
-              .object({
-                id: z.string(),
-                _deleted: z.boolean(),
-              })
-              .passthrough(),
-            assumedMasterState: z
-              .object({
-                id: z.string(),
-                _deleted: z.boolean(),
-              })
-              .passthrough()
-              .optional(),
-          }),
-        )
-        .max(MAX_REPLICATION_PUSH_ROWS),
-    ),
+    zValidator("json", replicationPushSchema("id")),
     async (c) => {
       try {
         const rows = c.req.valid("json");
@@ -702,39 +647,30 @@ const app = new Hono<{ Bindings: Bindings }>()
               });
             },
             async processItems(userId, idField, items) {
-              const operations = items.map((item) => {
-                const data = { ...item.data };
-
-                // Serialize includedSemesters if it exists
-                if (
-                  "includedSemesters" in data &&
-                  Array.isArray(data.includedSemesters)
-                ) {
-                  data.includedSemesters = JSON.stringify(
-                    data.includedSemesters,
-                  );
-                } else {
-                  data.includedSemesters = JSON.stringify([]);
-                }
-
-                return prisma.plannerData.upsert({
-                  where: { userId_id: { userId, id: item.id } },
-                  update: {
+              await processItemsWithUpsert(
+                userId,
+                items,
+                (operations) => prisma.$transaction(operations as any[]),
+                (item, data) =>
+                  prisma.plannerData.upsert({
+                    where: { userId_id: { userId, id: item.id } },
                     ...data,
-                    userId,
-                    serverTimestamp: new Date(),
-                    deleted: item.isDeleted,
-                  },
-                  create: {
-                    ...data,
-                    userId,
-                    serverTimestamp: new Date(),
-                    deleted: item.isDeleted,
-                  },
-                });
-              });
-
-              await prisma.$transaction(operations);
+                  }),
+                (data) => {
+                  // Serialize includedSemesters if it exists
+                  if (
+                    "includedSemesters" in data &&
+                    Array.isArray(data.includedSemesters)
+                  ) {
+                    data.includedSemesters = JSON.stringify(
+                      data.includedSemesters,
+                    );
+                  } else {
+                    data.includedSemesters = JSON.stringify([]);
+                  }
+                  return data;
+                },
+              );
             },
             transformItemToDocument(item) {
               const { userId, serverTimestamp, deleted, ...rest } = item;
@@ -754,7 +690,9 @@ const app = new Hono<{ Bindings: Bindings }>()
                 transformedData.includedSemesters = [];
               }
 
-              return { ...transformedData, _deleted: deleted || false };
+              return withDeleted(transformedData, deleted) as RxDocument<
+                typeof item
+              >;
             },
           },
         );
@@ -778,14 +716,7 @@ const app = new Hono<{ Bindings: Bindings }>()
   )
   .get(
     "/semesters/pull",
-    zValidator(
-      "query",
-      z.object({
-        id: replicationIdSchema,
-        serverTimestamp: replicationTimestampSchema,
-        batchSize: replicationBatchSizeSchema,
-      }),
-    ),
+    zValidator("query", replicationPullQuerySchema("id")),
     async (c) => {
       try {
         const params = c.req.valid("query");
@@ -797,39 +728,16 @@ const app = new Hono<{ Bindings: Bindings }>()
           "id"
         >(user.sub, "id", params, {
           async findItems(userId, idField, id, lastPulledTimestamp, batchSize) {
-            if (lastPulledTimestamp) {
-              return prisma.semester.findMany({
-                where: {
-                  userId,
-                  OR: [
-                    {
-                      serverTimestamp: {
-                        gt: lastPulledTimestamp,
-                      },
-                    },
-                    {
-                      AND: [
-                        { serverTimestamp: lastPulledTimestamp },
-                        { id: { gt: id || "" } },
-                      ],
-                    },
-                  ],
-                },
-                orderBy: [{ serverTimestamp: "asc" }, { id: "asc" }],
-                take: batchSize,
-              });
-            } else {
-              return prisma.semester.findMany({
-                where: { userId },
-                orderBy: [{ serverTimestamp: "asc" }, { id: "asc" }],
-                take: batchSize,
-              });
-            }
+            return findItemsWithCursor(
+              userId,
+              idField,
+              id,
+              lastPulledTimestamp,
+              batchSize,
+              (args) => prisma.semester.findMany(args),
+            );
           },
-          transformItemToDocument(item) {
-            const { userId, serverTimestamp, deleted, ...rest } = item;
-            return { ...rest, _deleted: deleted || false };
-          },
+          transformItemToDocument,
         });
 
         return c.json(result);
@@ -843,28 +751,7 @@ const app = new Hono<{ Bindings: Bindings }>()
   )
   .post(
     "/semesters/push",
-    zValidator(
-      "json",
-      z
-        .array(
-          z.object({
-            newDocumentState: z
-              .object({
-                id: z.string(),
-                _deleted: z.boolean(),
-              })
-              .passthrough(),
-            assumedMasterState: z
-              .object({
-                id: z.string(),
-                _deleted: z.boolean(),
-              })
-              .passthrough()
-              .optional(),
-          }),
-        )
-        .max(MAX_REPLICATION_PUSH_ROWS),
-    ),
+    zValidator("json", replicationPushSchema("id")),
     async (c) => {
       try {
         const rows = c.req.valid("json");
@@ -892,30 +779,18 @@ const app = new Hono<{ Bindings: Bindings }>()
               });
             },
             async processItems(userId, idField, items) {
-              const operations = items.map((item) => {
-                return prisma.semester.upsert({
-                  where: { userId_id: { userId, id: item.id } },
-                  update: {
-                    ...item.data,
-                    userId,
-                    serverTimestamp: new Date(),
-                    deleted: item.isDeleted,
-                  },
-                  create: {
-                    ...item.data,
-                    userId,
-                    serverTimestamp: new Date(),
-                    deleted: item.isDeleted,
-                  },
-                });
-              });
-
-              await prisma.$transaction(operations);
+              await processItemsWithUpsert(
+                userId,
+                items,
+                (operations) => prisma.$transaction(operations as any[]),
+                (item, data) =>
+                  prisma.semester.upsert({
+                    where: { userId_id: { userId, id: item.id } },
+                    ...data,
+                  }),
+              );
             },
-            transformItemToDocument(item) {
-              const { userId, serverTimestamp, deleted, ...rest } = item;
-              return { ...rest, _deleted: deleted || false };
-            },
+            transformItemToDocument,
           },
         );
 

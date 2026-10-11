@@ -138,6 +138,27 @@ const BusPage = () => {
       weektype === "weekend" ? busData.main.weekend : busData.main.weekday;
     const currentNandaData =
       weektype === "weekend" ? busData.nanda.weekend : busData.nanda.weekday;
+    const addBus = (
+      tab: string,
+      Icon: BusListingItemProps["Icon"],
+      startTime: string,
+      line: string,
+      direction: string,
+      title: string,
+      arrival: string,
+      options?: Pick<BusListingItemProps, "destination" | "notes">,
+    ) => {
+      returnData.push({
+        tab,
+        Icon,
+        startTime,
+        line,
+        direction,
+        title,
+        ...options,
+        arrival,
+      });
+    };
 
     if (tab === "north_gate") {
       // Handle main campus buses (red/green lines)
@@ -155,28 +176,28 @@ const BusPage = () => {
             notes.push(dict.bus.departing_from_gen2);
           if (bus.line === "red") {
             if (returnData.some((bus) => bus.line === "red")) continue;
-            returnData.push({
-              tab: "north_gate",
-              Icon: RedLineIcon,
-              startTime: bus.time,
-              line: "red",
-              direction: "up",
-              title: dict.bus.red_line,
-              notes,
-              arrival: bus.time,
-            });
+            addBus(
+              "north_gate",
+              RedLineIcon,
+              bus.time,
+              "red",
+              "up",
+              dict.bus.red_line,
+              bus.time,
+              { notes },
+            );
           } else if (bus.line === "green") {
             if (returnData.some((bus) => bus.line === "green")) continue;
-            returnData.push({
-              tab: "north_gate",
-              Icon: GreenLineIcon,
-              startTime: bus.time,
-              line: "green",
-              direction: "up",
-              title: dict.bus.green_line,
-              notes,
-              arrival: bus.time,
-            });
+            addBus(
+              "north_gate",
+              GreenLineIcon,
+              bus.time,
+              "green",
+              "up",
+              dict.bus.green_line,
+              bus.time,
+              { notes },
+            );
           }
         }
       }
@@ -194,17 +215,16 @@ const BusPage = () => {
         if (bus.description == "週五停駛" && time.getDay() === 5) continue;
         const notes = [];
         if (bus.description.includes("83號")) notes.push(dict.bus.line_83);
-        returnData.push({
-          tab: "north_gate",
-          Icon: Route1LineIcon,
-          startTime: bus.time,
-          line: "route1",
-          direction: "up",
-          title: dict.bus.route1_line,
-          destination: formatNandaDestination(dict.bus),
-          notes,
-          arrival: bus.time,
-        });
+        addBus(
+          "north_gate",
+          Route1LineIcon,
+          bus.time,
+          "route1",
+          "up",
+          dict.bus.route1_line,
+          bus.time,
+          { destination: formatNandaDestination(dict.bus), notes },
+        );
       }
 
       // Handle Route2 buses separately
@@ -220,17 +240,16 @@ const BusPage = () => {
         if (bus.description == "週五停駛" && time.getDay() === 5) continue;
         const notes = [];
         if (bus.description.includes("83號")) notes.push(dict.bus.line_83);
-        returnData.push({
-          tab: "north_gate",
-          Icon: Route2LineIcon,
-          startTime: bus.time,
-          line: "route2",
-          direction: "up",
-          title: dict.bus.route2_line,
-          destination: formatNandaDestination(dict.bus),
-          notes,
-          arrival: bus.time,
-        });
+        addBus(
+          "north_gate",
+          Route2LineIcon,
+          bus.time,
+          "route2",
+          "up",
+          dict.bus.route2_line,
+          bus.time,
+          { destination: formatNandaDestination(dict.bus), notes },
+        );
       }
     } else if (tab === "tsmc") {
       // SCHOOL BUS DOWNHILL FROM TSMC
@@ -244,28 +263,28 @@ const BusPage = () => {
             notes.push(dict.bus.departing_from_gen2);
           if (bus.line === "red") {
             if (returnData.some((bus) => bus.line === "red")) continue;
-            returnData.push({
-              tab: "tsmc",
-              Icon: RedLineIcon,
-              startTime: bus.time,
-              line: "red",
-              direction: "down",
-              title: dict.bus.red_line,
-              notes,
-              arrival: bus.time,
-            });
+            addBus(
+              "tsmc",
+              RedLineIcon,
+              bus.time,
+              "red",
+              "down",
+              dict.bus.red_line,
+              bus.time,
+              { notes },
+            );
           } else if (bus.line === "green") {
             if (returnData.some((bus) => bus.line === "green")) continue;
-            returnData.push({
-              tab: "tsmc",
-              Icon: GreenLineIcon,
-              startTime: bus.time,
-              line: "green",
-              direction: "down",
-              title: dict.bus.green_line,
-              notes,
-              arrival: bus.time,
-            });
+            addBus(
+              "tsmc",
+              GreenLineIcon,
+              bus.time,
+              "green",
+              "down",
+              dict.bus.green_line,
+              bus.time,
+              { notes },
+            );
           }
         }
 
@@ -280,20 +299,19 @@ const BusPage = () => {
           if (bus.description == "週五停駛" && time.getDay() === 5) continue;
           const notes = [];
           if (bus.description.includes("83號")) notes.push(dict.bus.line_83);
-          returnData.push({
-            tab: "tsmc",
-            Icon: Route1LineIcon,
-            startTime: bus.time,
-            line: "route1",
-            direction: "up",
-            title: dict.bus.route1_line,
-            destination: formatNandaDestination(dict.bus),
-            notes,
-            arrival: format(
+          addBus(
+            "tsmc",
+            Route1LineIcon,
+            bus.time,
+            "route1",
+            "up",
+            dict.bus.route1_line,
+            format(
               addMinutes(getTimeOnDate(time, bus.time).getTime(), 7),
               "H:mm",
             ),
-          });
+            { destination: formatNandaDestination(dict.bus), notes },
+          );
         }
       }
 
@@ -315,17 +333,16 @@ const BusPage = () => {
         if (bus.description == "週五停駛" && time.getDay() === 5) continue;
         const notes = [];
         if (bus.description.includes("83號")) notes.push(dict.bus.line_83);
-        returnData.push({
-          tab: "nanda",
-          Icon: Route1LineIcon,
-          startTime: bus.time,
-          line: "route1",
-          direction: "down",
-          title: dict.bus.route1_line,
-          destination: dict.bus.to_main_campus,
-          notes,
-          arrival: bus.time,
-        });
+        addBus(
+          "nanda",
+          Route1LineIcon,
+          bus.time,
+          "route1",
+          "down",
+          dict.bus.route1_line,
+          bus.time,
+          { destination: dict.bus.to_main_campus, notes },
+        );
       }
 
       // Handle Route 2 downhill buses
@@ -338,17 +355,16 @@ const BusPage = () => {
         if (bus.description == "週五停駛" && time.getDay() === 5) continue;
         const notes = [];
         if (bus.description.includes("83號")) notes.push(dict.bus.line_83);
-        returnData.push({
-          tab: "nanda",
-          Icon: Route2LineIcon,
-          startTime: bus.time,
-          line: "route2",
-          direction: "down",
-          title: dict.bus.route2_line,
-          destination: dict.bus.to_main_campus,
-          notes,
-          arrival: bus.time,
-        });
+        addBus(
+          "nanda",
+          Route2LineIcon,
+          bus.time,
+          "route2",
+          "down",
+          dict.bus.route2_line,
+          bus.time,
+          { destination: dict.bus.to_main_campus, notes },
+        );
       }
     }
 

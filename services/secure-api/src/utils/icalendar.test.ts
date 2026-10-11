@@ -40,6 +40,30 @@ const documentFor = (data: Record<string, unknown>) => ({
   data: () => data,
 });
 
+const weeklyDocument = (
+  id: string,
+  title: string,
+  start: string,
+  end: string,
+  actualEnd: string,
+  value: string,
+) =>
+  documentFor({
+    id,
+    title,
+    start,
+    end,
+    actualEnd,
+    allDay: false,
+    repeat: {
+      type: "weekly",
+      interval: 1,
+      mode: "date",
+      value: new Date(value).getTime(),
+    },
+    excludedDates: [],
+  });
+
 const parseIcalUtc = (value: string) =>
   new Date(
     `${value.slice(0, 4)}-${value.slice(4, 6)}-${value.slice(6, 8)}T${value.slice(9, 11)}:${value.slice(11, 13)}:${value.slice(13, 15)}Z`,
@@ -774,51 +798,30 @@ describe("iCalendar Utility", () => {
   test("expands weekly UTC rules on the correct Taipei weekday around 08:00", async () => {
     const firebase = trackedFirebase(
       [
-        documentFor({
-          id: "monday-0700",
-          title: "Monday 07:00",
-          start: "2026-09-06T23:00:00.000Z",
-          end: "2026-09-07T00:00:00.000Z",
-          actualEnd: "2026-09-28T00:00:00.000Z",
-          allDay: false,
-          repeat: {
-            type: "weekly",
-            interval: 1,
-            mode: "date",
-            value: new Date("2026-09-28T07:00:00+08:00").getTime(),
-          },
-          excludedDates: [],
-        }),
-        documentFor({
-          id: "monday-0800",
-          title: "Monday 08:00",
-          start: "2026-09-07T00:00:00.000Z",
-          end: "2026-09-07T01:00:00.000Z",
-          actualEnd: "2026-09-28T01:00:00.000Z",
-          allDay: false,
-          repeat: {
-            type: "weekly",
-            interval: 1,
-            mode: "date",
-            value: new Date("2026-09-28T08:00:00+08:00").getTime(),
-          },
-          excludedDates: [],
-        }),
-        documentFor({
-          id: "monday-0030",
-          title: "Monday 00:30",
-          start: "2026-09-06T16:30:00.000Z",
-          end: "2026-09-06T17:30:00.000Z",
-          actualEnd: "2026-09-27T17:30:00.000Z",
-          allDay: false,
-          repeat: {
-            type: "weekly",
-            interval: 1,
-            mode: "date",
-            value: new Date("2026-09-28T00:30:00+08:00").getTime(),
-          },
-          excludedDates: [],
-        }),
+        weeklyDocument(
+          "monday-0700",
+          "Monday 07:00",
+          "2026-09-06T23:00:00.000Z",
+          "2026-09-07T00:00:00.000Z",
+          "2026-09-28T00:00:00.000Z",
+          "2026-09-28T07:00:00+08:00",
+        ),
+        weeklyDocument(
+          "monday-0800",
+          "Monday 08:00",
+          "2026-09-07T00:00:00.000Z",
+          "2026-09-07T01:00:00.000Z",
+          "2026-09-28T01:00:00.000Z",
+          "2026-09-28T08:00:00+08:00",
+        ),
+        weeklyDocument(
+          "monday-0030",
+          "Monday 00:30",
+          "2026-09-06T16:30:00.000Z",
+          "2026-09-06T17:30:00.000Z",
+          "2026-09-27T17:30:00.000Z",
+          "2026-09-28T00:30:00+08:00",
+        ),
       ],
       [],
     );
@@ -838,65 +841,69 @@ describe("iCalendar Utility", () => {
       events.find((event) => event[0].includes(`SUMMARY:${summary}`))?.[0] ??
       "";
 
-    assertWeeklyUtcSeries({
-      eventText: eventFor("Monday 07:00"),
-      expectedDtstart: "20260906T230000Z",
-      expectedUntil: "20260928T155959Z",
-      expectedUtcByDay: "SU",
-      expectedUtcOccurrences: [
-        "20260906T230000Z",
-        "20260913T230000Z",
-        "20260920T230000Z",
-        "20260927T230000Z",
-      ],
-      expectedTaipeiOccurrences: [
-        "Monday 07:00",
-        "Monday 07:00",
-        "Monday 07:00",
-        "Monday 07:00",
-      ],
-      expectedNextUtcOccurrence: "20261004T230000Z",
-    });
-
-    assertWeeklyUtcSeries({
-      eventText: eventFor("Monday 08:00"),
-      expectedDtstart: "20260907T000000Z",
-      expectedUntil: "20260928T155959Z",
-      expectedUtcByDay: "MO",
-      expectedUtcOccurrences: [
-        "20260907T000000Z",
-        "20260914T000000Z",
-        "20260921T000000Z",
-        "20260928T000000Z",
-      ],
-      expectedTaipeiOccurrences: [
-        "Monday 08:00",
-        "Monday 08:00",
-        "Monday 08:00",
-        "Monday 08:00",
-      ],
-      expectedNextUtcOccurrence: "20261005T000000Z",
-    });
-
-    assertWeeklyUtcSeries({
-      eventText: eventFor("Monday 00:30"),
-      expectedDtstart: "20260906T163000Z",
-      expectedUntil: "20260928T155959Z",
-      expectedUtcByDay: "SU",
-      expectedUtcOccurrences: [
-        "20260906T163000Z",
-        "20260913T163000Z",
-        "20260920T163000Z",
-        "20260927T163000Z",
-      ],
-      expectedTaipeiOccurrences: [
-        "Monday 00:30",
-        "Monday 00:30",
-        "Monday 00:30",
-        "Monday 00:30",
-      ],
-      expectedNextUtcOccurrence: "20261004T163000Z",
-    });
+    const weeklyAssertions: Array<Parameters<typeof assertWeeklyUtcSeries>[0]> =
+      [
+        {
+          eventText: eventFor("Monday 07:00"),
+          expectedDtstart: "20260906T230000Z",
+          expectedUntil: "20260928T155959Z",
+          expectedUtcByDay: "SU",
+          expectedUtcOccurrences: [
+            "20260906T230000Z",
+            "20260913T230000Z",
+            "20260920T230000Z",
+            "20260927T230000Z",
+          ],
+          expectedTaipeiOccurrences: [
+            "Monday 07:00",
+            "Monday 07:00",
+            "Monday 07:00",
+            "Monday 07:00",
+          ],
+          expectedNextUtcOccurrence: "20261004T230000Z",
+        },
+        {
+          eventText: eventFor("Monday 08:00"),
+          expectedDtstart: "20260907T000000Z",
+          expectedUntil: "20260928T155959Z",
+          expectedUtcByDay: "MO",
+          expectedUtcOccurrences: [
+            "20260907T000000Z",
+            "20260914T000000Z",
+            "20260921T000000Z",
+            "20260928T000000Z",
+          ],
+          expectedTaipeiOccurrences: [
+            "Monday 08:00",
+            "Monday 08:00",
+            "Monday 08:00",
+            "Monday 08:00",
+          ],
+          expectedNextUtcOccurrence: "20261005T000000Z",
+        },
+        {
+          eventText: eventFor("Monday 00:30"),
+          expectedDtstart: "20260906T163000Z",
+          expectedUntil: "20260928T155959Z",
+          expectedUtcByDay: "SU",
+          expectedUtcOccurrences: [
+            "20260906T163000Z",
+            "20260913T163000Z",
+            "20260920T163000Z",
+            "20260927T163000Z",
+          ],
+          expectedTaipeiOccurrences: [
+            "Monday 00:30",
+            "Monday 00:30",
+            "Monday 00:30",
+            "Monday 00:30",
+          ],
+          expectedNextUtcOccurrence: "20261004T163000Z",
+        },
+      ];
+    for (const weeklyAssertion of weeklyAssertions) {
+      assertWeeklyUtcSeries(weeklyAssertion);
+    }
   });
 
   test("writes an early Taipei weekly EXDATE as its UTC occurrence instant", async () => {

@@ -12,6 +12,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterAll, afterEach, describe, expect, mock, test } from "bun:test";
 import { captureGlobalState } from "@/test-utils/global-state";
 import {
+  nextStorageValue,
+  persistStorageValue,
+  subscribeToStorageEvents,
+} from "@/test-utils/storage-events";
+import {
   getSyncedStorageBackupKey,
   getSyncedStorageKey,
   mergeCourseStorage,
@@ -138,29 +143,14 @@ const useTestLocalStorage = <T,>(
   const [value, setValue] = useState(read);
   const update = useCallback(
     (next: T | ((previous: T) => T)) => {
-      const nextValue =
-        typeof next === "function"
-          ? (next as (previous: T) => T)(read())
-          : next;
-      window.localStorage.setItem(key, JSON.stringify(nextValue));
+      const nextValue = nextStorageValue(next, read);
+      persistStorageValue(key, nextValue);
       window.dispatchEvent(new window.StorageEvent("local-storage", { key }));
       setValue(nextValue);
     },
     [key],
   );
-  useEffect(() => {
-    const handleStorage = (event: StorageEvent) => {
-      if (event.key && event.key !== key) return;
-      setValue(read());
-    };
-    window.addEventListener("storage", handleStorage);
-    window.addEventListener("local-storage", handleStorage);
-    setValue(read());
-    return () => {
-      window.removeEventListener("storage", handleStorage);
-      window.removeEventListener("local-storage", handleStorage);
-    };
-  }, [key]);
+  useEffect(() => subscribeToStorageEvents(key, read, setValue), [key]);
   return [value, update];
 };
 
