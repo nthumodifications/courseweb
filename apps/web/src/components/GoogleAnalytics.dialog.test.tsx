@@ -1,6 +1,6 @@
 import { act, createElement, Fragment } from "react";
 import { createRoot } from "react-dom/client";
-import { afterAll, afterEach, describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, test } from "bun:test";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import GoogleAnalytics from "./GoogleAnalytics";
 import { useGTMPageTracking } from "@/hooks/useGTMPageTracking";
@@ -8,13 +8,9 @@ import { installTestDom } from "@/testDom";
 
 const views: string[] = [];
 
-const testDom = installTestDom("/en/courses");
-window.dataLayer = [];
-(globalThis.window as typeof window & { gtag?: unknown }).gtag = (
-  _command: string,
-  _trackingId: string,
-  options: { page_path: string },
-) => views.push(options.page_path);
+let active: ReturnType<typeof installTestDom> | undefined;
+let activeRouter: ReturnType<typeof createMemoryRouter> | undefined;
+let activeRoot: ReturnType<typeof createRoot> | undefined;
 
 const renderRouter = () => {
   const GtmTracker = () => {
@@ -36,6 +32,8 @@ const renderRouter = () => {
     { initialEntries: ["/en/courses"] },
   );
   const root = createRoot(document.createElement("div"));
+  activeRouter = router;
+  activeRoot = root;
   act(() => {
     root.render(createElement(RouterProvider, { router }));
   });
@@ -54,19 +52,28 @@ const dialogState = {
 };
 
 describe("Google Analytics dialog page views", () => {
-  afterAll(() => {
-    testDom.restore();
-    testDom.dom.window.close();
-  });
-
   afterEach(() => {
+    act(() => activeRoot?.unmount());
+    activeRouter?.dispose();
+    activeRoot = undefined;
+    activeRouter = undefined;
     views.length = 0;
     window.dataLayer = [];
     document.body.innerHTML = "";
+    document.head.innerHTML = "";
+    active?.restore();
+    active = undefined;
   });
 
   test("tracks each dialog step once and not the close", async () => {
-    const { router, root } = renderRouter();
+    active = installTestDom("/en/courses");
+    window.dataLayer = [];
+    (globalThis.window as typeof window & { gtag?: unknown }).gtag = (
+      _command: string,
+      _trackingId: string,
+      options: { page_path: string },
+    ) => views.push(options.page_path);
+    const { router } = renderRouter();
     await act(async () => {});
     await act(async () =>
       router.navigate("/en/courses/11410-CS%201010%201", {
@@ -96,6 +103,5 @@ describe("Google Analytics dialog page views", () => {
         ?.filter((entry) => entry.event === "pageview")
         .map((entry) => entry["page.path"]),
     ).toEqual(views);
-    root.unmount();
   });
 });

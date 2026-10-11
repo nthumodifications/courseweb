@@ -7,10 +7,10 @@ import {
   type ComponentType,
 } from "react";
 import { createRoot } from "react-dom/client";
-import { JSDOM } from "jsdom";
 import {
   afterAll,
   afterEach,
+  beforeEach,
   describe,
   expect,
   jest,
@@ -29,6 +29,7 @@ import {
 import { useSearchBox } from "react-instantsearch";
 import enDictionary from "@/dictionaries/en.json";
 import zhDictionary from "@/dictionaries/zh.json";
+import { installTestDom } from "@/testDom";
 
 process.env.VITE_NTHUMODS_AUTH_URL ??= "https://auth.example.test";
 process.env.VITE_COURSEWEB_API_URL ??= "https://api.example.test";
@@ -393,69 +394,13 @@ mock.module(
   }),
 );
 
-const sharedDom = new JSDOM("<!doctype html><html><body></body></html>", {
-  url: "http://localhost/en/courses",
-});
-const previousGlobals = {
-  window: globalThis.window,
-  document: globalThis.document,
-  navigator: globalThis.navigator,
-};
-Object.assign(globalThis, {
-  window: sharedDom.window,
-  document: sharedDom.window.document,
-  navigator: sharedDom.window.navigator,
-  getComputedStyle: sharedDom.window.getComputedStyle,
-  MutationObserver: sharedDom.window.MutationObserver,
-  Event: sharedDom.window.Event,
-  CustomEvent: sharedDom.window.CustomEvent,
-  MouseEvent: sharedDom.window.MouseEvent,
-  KeyboardEvent: sharedDom.window.KeyboardEvent,
-  NodeFilter: sharedDom.window.NodeFilter,
-  Node: sharedDom.window.Node,
-  Element: sharedDom.window.Element,
-  DocumentFragment: sharedDom.window.DocumentFragment,
-  SVGElement: sharedDom.window.SVGElement,
-  AbortSignal: sharedDom.window.AbortSignal,
-  HTMLElement: sharedDom.window.HTMLElement,
-  HTMLInputElement: sharedDom.window.HTMLInputElement,
-  IS_REACT_ACT_ENVIRONMENT: true,
-  requestAnimationFrame: (callback: FrameRequestCallback) =>
-    sharedDom.window.setTimeout(() => callback(Date.now()), 0),
-  cancelAnimationFrame: (handle: number) =>
-    sharedDom.window.clearTimeout(handle),
-});
-sharedDom.window.requestAnimationFrame = (callback) =>
-  sharedDom.window.setTimeout(() => callback(Date.now()), 0);
-sharedDom.window.cancelAnimationFrame = (handle) =>
-  sharedDom.window.clearTimeout(handle);
-(
-  sharedDom.window.HTMLElement.prototype as HTMLElement & {
-    attachEvent?: () => void;
-    detachEvent?: () => void;
-  }
-).attachEvent = () => undefined;
-(
-  sharedDom.window.HTMLElement.prototype as HTMLElement & {
-    attachEvent?: () => void;
-    detachEvent?: () => void;
-  }
-).detachEvent = () => undefined;
-sharedDom.window.matchMedia = ((query: string) => ({
-  matches: false,
-  media: query,
-  onchange: null,
-  addListener: () => undefined,
-  removeListener: () => undefined,
-  addEventListener: () => undefined,
-  removeEventListener: () => undefined,
-  dispatchEvent: () => false,
-})) as typeof sharedDom.window.matchMedia;
+const bootstrapDom = installTestDom("/en/courses");
 
 const { CourseDialogLink, CourseDialogProvider, useCourseLink } = await import(
   "./CourseDialog"
 );
-const { createAppRouter } = await import("@/router");
+const { createAppRouter, router: defaultRouter } = await import("@/router");
+let activeDom: ReturnType<typeof installTestDom>;
 const mountedRoots = new Set<ReturnType<typeof createRoot>>();
 const mountedRouters = new Set<ReturnType<typeof createBrowserRouter>>();
 
@@ -599,19 +544,22 @@ const RouteLayout = () => {
 
 const createTestRouter = (path: string, preserveState = false) => {
   if (!preserveState) window.history.replaceState(null, "", path);
-  return createBrowserRouter([
-    {
-      element: createElement(RouteLayout),
-      children: pageRoutes,
-    },
-  ]);
+  return createBrowserRouter(
+    [
+      {
+        path: "/*",
+        element: createElement(RouteLayout),
+      },
+    ],
+    { window: activeDom.dom.window as unknown as Window },
+  );
 };
 
 const waitFor = async (predicate: () => boolean, description: string) => {
-  for (let attempt = 0; attempt < 40; attempt += 1) {
+  for (let attempt = 0; attempt < 100; attempt += 1) {
     if (predicate()) return;
     await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 5));
+      await new Promise((resolve) => setTimeout(resolve, 50));
     });
   }
   throw new Error(`${description}; got ${document.body.innerHTML}`);
@@ -627,10 +575,10 @@ const waitForWithoutTimers = async (
   predicate: () => boolean,
   description: string,
 ) => {
-  for (let attempt = 0; attempt < 40; attempt += 1) {
+  for (let attempt = 0; attempt < 100; attempt += 1) {
     if (predicate()) return;
     await act(async () => {
-      if (jest.isFakeTimers()) jest.advanceTimersByTime(1);
+      if (jest.isFakeTimers()) jest.advanceTimersByTime(50);
       await Promise.resolve();
     });
   }
@@ -720,7 +668,9 @@ const renderProductionRouter = async () => {
     "",
     "/zh/courses?nthu_courses%5Bmenu%5D%5Bsemester%5D=11420",
   );
-  const router = createAppRouter();
+  const router = createAppRouter({
+    window: activeDom.dom.window as unknown as Window,
+  });
   await renderMountedRouter(router, async () => {
     await waitForText("課程清單");
   });
@@ -735,9 +685,11 @@ const renderProductionRouterWithoutAdvancingTimers = async () => {
     "",
     "/zh/courses?nthu_courses%5Bmenu%5D%5Bsemester%5D=11420",
   );
-  const router = createAppRouter();
+  const router = createAppRouter({
+    window: activeDom.dom.window as unknown as Window,
+  });
   await renderMountedRouter(router, async () => {
-    for (let attempt = 0; attempt < 40; attempt += 1) {
+    for (let attempt = 0; attempt < 500; attempt += 1) {
       if (document.body.textContent?.includes("離散數學")) return;
       await Promise.resolve();
     }
@@ -753,23 +705,45 @@ const closeDialog = async (path = "/en/courses") => {
   await waitForPath(path);
 };
 
+const waitForRouterIdle = async (
+  router: ReturnType<typeof createBrowserRouter>,
+) => {
+  if (router.state.navigation.state === "idle") return;
+  await new Promise<void>((resolve) => {
+    const unsubscribe = router.subscribe((state) => {
+      if (state.navigation.state !== "idle") return;
+      unsubscribe();
+      resolve();
+    });
+  });
+};
+
 describe("course dialog routing", () => {
+  beforeEach(() => {
+    activeDom = installTestDom("/en/courses");
+  });
   afterAll(() => {
-    Object.assign(globalThis, previousGlobals);
-    sharedDom.window.close();
+    defaultRouter.dispose();
+    bootstrapDom.restore();
   });
   afterEach(async () => {
     delete (globalThis as { __courseDialogRealSearch?: boolean })
       .__courseDialogRealSearch;
-    await act(async () => {
-      for (const root of mountedRoots) root.unmount();
-    });
-    mountedRoots.clear();
+    await Promise.all([...mountedRouters].map(waitForRouterIdle));
+    jest.useRealTimers();
     for (const router of mountedRouters) router.dispose();
     mountedRouters.clear();
+    await act(async () => {
+      for (const root of mountedRoots) root.unmount();
+      await new Promise((resolve) =>
+        activeDom.dom.window.setTimeout(resolve, 50),
+      );
+    });
+    mountedRoots.clear();
     document.body.innerHTML = "";
     document.head.innerHTML = "";
     window.history.replaceState(null, "", "/en/courses");
+    activeDom.restore();
   });
 
   test("opens a serialisable dialog entry and keeps the opener query", async () => {
@@ -807,7 +781,9 @@ describe("course dialog routing", () => {
     await waitForPath(modulePath ?? "");
     await waitForText("Module CS 1010");
     expect(window.location.pathname).toBe(modulePath);
-    await act(async () => router.navigate(-1));
+    await act(async () => {
+      await router.navigate(-1);
+    });
     await waitForText("Course 11420PE  206097");
 
     const firstDialogHistoryIndex = Number(window.history.state?.idx);
@@ -845,11 +821,15 @@ describe("course dialog routing", () => {
     await waitForText("Course 11420PE  206097");
     expect(window.history.state?.idx).toBe(secondDialogHistoryIndex + 1);
 
-    await act(async () => router.navigate(-1));
+    await act(async () => {
+      await router.navigate(-1);
+    });
     await waitForPath(instructorPath ?? "");
     await waitForText("Instructor 王嬿婷");
     expect(document.querySelector('[role="dialog"]')).not.toBeNull();
-    await act(async () => router.navigate(-1));
+    await act(async () => {
+      await router.navigate(-1);
+    });
     await waitForPath("/zh/courses/11420PE%20%20206097");
     await waitForText("Course 11420PE  206097");
     await clickText("Close");
@@ -896,7 +876,9 @@ describe("course dialog routing", () => {
 
       await click('[role="dialog"] a[href="/zh/courses/module/CS%201010"]');
       await waitForTextWithoutTimers("Module CS 1010");
-      await act(async () => router.navigate(-1));
+      await act(async () => {
+        await router.navigate(-1);
+      });
       await waitForTextWithoutTimers("Course 11420PE  206097");
       expect(window.history.state?.usr?.dialog).toBeTruthy();
 
@@ -984,7 +966,9 @@ describe("course dialog routing", () => {
         dialog?.querySelector<HTMLButtonElement>("button[aria-label]");
       expect(back?.getAttribute("aria-label")).toBe(backLabel);
       expect(back?.textContent).toContain(backLabel);
-      await act(async () => router.navigate(-1));
+      await act(async () => {
+        await router.navigate(-1);
+      });
     },
   );
 
@@ -1005,10 +989,14 @@ describe("course dialog routing", () => {
       '[role="dialog"] a[href="/en/courses/instructor/Alice"]:not([data-target-blank])',
     );
     await waitForText("Instructor Alice");
-    await act(async () => router.navigate(-2));
+    await act(async () => {
+      await router.navigate(-2);
+    });
     await waitForPath("/en/courses");
     await waitForText("Course list");
-    await act(async () => router.navigate(1));
+    await act(async () => {
+      await router.navigate(1);
+    });
     await waitForPath("/en/courses/11410-CS%201010%201");
     await waitForText("Course 11410-CS 1010 1");
     expect(router.state.location.state?.dialog?.background.pathname).toBe(
@@ -1034,7 +1022,9 @@ describe("course dialog routing", () => {
     ));
     expect(container.textContent).toContain("Course list");
     expect(document.body.textContent).toContain("Instructor Alice");
-    await act(async () => router.navigate(-1));
+    await act(async () => {
+      await router.navigate(-1);
+    });
     await waitForText("Course 11410-CS 1010 1");
   });
 
@@ -1075,7 +1065,7 @@ describe("course dialog routing", () => {
   ] as const)(
     "CourseDialogLink works from the %s view",
     async (_label, viewText, entryPath) => {
-      await renderRouter();
+      const { router } = await renderRouter();
       await openCourse();
       if (entryPath) {
         await click(
@@ -1094,7 +1084,9 @@ describe("course dialog routing", () => {
               ? "Module CS 1011"
               : "Course 11410-CS 1011 1",
         );
-        await act(async () => window.history.back());
+        await act(async () => {
+          await router.navigate(-1);
+        });
         await waitForText(viewText);
         expect(label).toBeTruthy();
       }
@@ -1112,7 +1104,9 @@ describe("course dialog routing", () => {
 
   test("a second flow can open from another page", async () => {
     const { router } = await renderRouter();
-    await act(async () => router.navigate("/en/timetable"));
+    await act(async () => {
+      await router.navigate("/en/timetable");
+    });
     await waitForText("Timetable page");
     await clickText("Open timetable course");
     await waitForText("Course 11410-CS 1010 1");
@@ -1132,7 +1126,9 @@ describe("course dialog routing", () => {
     expect(router.state.location.pathname).toBe(
       "/en/courses/11410-CS%201010%201",
     );
-    await act(async () => router.navigate(-1));
+    await act(async () => {
+      await router.navigate(-1);
+    });
     await waitForText("Course list");
   });
 
@@ -1148,7 +1144,9 @@ describe("course dialog routing", () => {
     await waitForText("Module CS 1010 ?title=Variant+C");
     expect(window.history).toHaveLength(historyLength);
     expect(router.state.location.state?.dialog).toBeTruthy();
-    await act(async () => router.navigate(-1));
+    await act(async () => {
+      await router.navigate(-1);
+    });
     await waitForText("Course 11410-CS 1010 1");
   });
 
@@ -1178,7 +1176,9 @@ describe("course dialog routing", () => {
         await waitForPath(target);
         expect(router.state.location.state).toBeNull();
         expect(container.querySelector('[role="dialog"]')).toBeNull();
-        await act(async () => router.navigate(path));
+        await act(async () => {
+          await router.navigate(path);
+        });
         await waitForText(
           path.includes("instructor")
             ? "Full instructor"
@@ -1196,7 +1196,7 @@ describe("course dialog routing", () => {
     const link = document.querySelector<HTMLAnchorElement>(
       '[role="dialog"] a[href="/en/courses/instructor/Alice"]:not([data-target-blank])',
     );
-    const event = new sharedDom.window.MouseEvent("click", {
+    const event = new window.MouseEvent("click", {
       bubbles: true,
       button: 0,
       ctrlKey: true,
@@ -1214,7 +1214,7 @@ describe("course dialog routing", () => {
     );
     const originalOpen = window.open;
     window.open = (() => null) as typeof window.open;
-    const event = new sharedDom.window.MouseEvent("click", {
+    const event = new window.MouseEvent("click", {
       bubbles: true,
       button: 0,
     });

@@ -15,27 +15,24 @@ type BrowserDialogState = {
   };
 };
 
-const dialogBackground = (): DialogBackground | undefined => {
-  if (typeof window === "undefined") return undefined;
-  const state = window.history.state as BrowserDialogState | null;
+const dialogBackground = (
+  browserWindow: Window,
+): DialogBackground | undefined => {
+  const state = browserWindow.history.state as BrowserDialogState | null;
   const background = state?.usr?.dialog?.background;
   return background && typeof background === "object" ? background : undefined;
 };
 
-const hasDialogState = () => {
-  const background = dialogBackground();
+const hasDialogState = (browserWindow: Window) => {
+  const background = dialogBackground(browserWindow);
   return typeof background?.pathname === "string";
 };
 
-const getLocation = () => {
-  if (typeof window === "undefined") {
-    throw new TypeError("Course search routing requires a browser window");
-  }
+const getLocation = (browserWindow: Window) => {
+  const background = dialogBackground(browserWindow);
+  if (typeof background?.pathname !== "string") return browserWindow.location;
 
-  const background = dialogBackground();
-  if (typeof background?.pathname !== "string") return window.location;
-
-  const location = new URL(window.location.href);
+  const location = new URL(browserWindow.location.href);
   location.pathname = background.pathname;
   location.search =
     typeof background.search === "string" ? background.search : "";
@@ -48,19 +45,19 @@ const getLocation = () => {
  * dialog is on top of it. The search page remains mounted as the background
  * route, but its delayed native history writer must not create a third entry.
  */
-export const createCourseSearchRouter = () => {
+export const createCourseSearchRouter = (browserWindow = window) => {
   const router = historyRouter<UiState>({
-    getLocation,
+    getLocation: () => getLocation(browserWindow),
     push: (url) => {
-      if (hasDialogState()) return;
-      window.history.pushState(null, "", url);
+      if (hasDialogState(browserWindow)) return;
+      browserWindow.history.pushState(null, "", url);
     },
     cleanUrlOnDispose: false,
   });
 
   const write = router.write.bind(router);
   router.write = (routeState) => {
-    if (hasDialogState()) return;
+    if (hasDialogState(browserWindow)) return;
     write(routeState);
   };
 

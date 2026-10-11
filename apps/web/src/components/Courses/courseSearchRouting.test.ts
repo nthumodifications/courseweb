@@ -4,9 +4,12 @@ import { createCourseSearchRouter } from "./courseSearchRouting";
 
 describe("course search history routing", () => {
   let active: ReturnType<typeof installTestDom> | undefined;
+  let router: ReturnType<typeof createCourseSearchRouter> | undefined;
 
   afterEach(() => {
     jest.useRealTimers();
+    router?.dispose();
+    router = undefined;
     active?.restore();
     active = undefined;
   });
@@ -32,7 +35,7 @@ describe("course search history routing", () => {
       );
       jest.useFakeTimers();
 
-      const router = createCourseSearchRouter();
+      router = createCourseSearchRouter(active.dom.window);
       const historyLength = window.history.length;
       router.write({
         nthu_courses: { menu: { semester: "11420" } },

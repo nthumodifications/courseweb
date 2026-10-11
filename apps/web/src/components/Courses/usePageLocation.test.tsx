@@ -1,6 +1,6 @@
 import { act, createElement, useEffect } from "react";
 import { createRoot } from "react-dom/client";
-import { afterAll, afterEach, describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, test } from "bun:test";
 import {
   createMemoryRouter,
   RouterProvider,
@@ -9,7 +9,9 @@ import {
 import { usePageLocation } from "@/hooks/usePageLocation";
 import { installTestDom } from "@/testDom";
 
-const testDom = installTestDom("/en/courses");
+let active: ReturnType<typeof installTestDom> | undefined;
+let activeRouter: ReturnType<typeof createMemoryRouter> | undefined;
+let activeRoot: ReturnType<typeof createRoot> | undefined;
 
 const MetadataProbe = () => {
   const location = usePageLocation();
@@ -51,6 +53,8 @@ const renderRouter = () => {
   const container = document.createElement("div");
   document.body.appendChild(container);
   const root = createRoot(container);
+  activeRouter = router;
+  activeRoot = root;
   act(() => {
     root.render(createElement(RouterProvider, { router }));
   });
@@ -68,19 +72,20 @@ const metadataSnapshot = () => ({
 });
 
 describe("page location metadata source", () => {
-  afterAll(() => {
-    testDom.restore();
-    testDom.dom.window.close();
-  });
-
   afterEach(() => {
+    act(() => activeRoot?.unmount());
+    activeRouter?.dispose();
+    activeRoot = undefined;
+    activeRouter = undefined;
     document.body.innerHTML = "";
     document.head.innerHTML = "";
-    window.history.replaceState(null, "", "/en/courses");
+    active?.restore();
+    active = undefined;
   });
 
   test("keeps global metadata on the background while a dialog is open", async () => {
-    const { router, root } = renderRouter();
+    active = installTestDom("/en/courses");
+    const { router } = renderRouter();
     await act(async () => {});
     const before = metadataSnapshot();
 
@@ -105,6 +110,5 @@ describe("page location metadata source", () => {
 
     await act(async () => router.navigate("/en/courses"));
     expect(metadataSnapshot()).toEqual(before);
-    root.unmount();
   });
 });

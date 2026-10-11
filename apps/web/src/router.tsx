@@ -197,6 +197,7 @@ export const appRoutes = [
             element: <Navigate to="today" replace />,
           },
           {
+            path: "*",
             element: <MainLayout />,
             children: [
               {
@@ -641,6 +642,7 @@ export const appRoutes = [
   },
 ];
 
-export const createAppRouter = () => createBrowserRouter(appRoutes);
+export const createAppRouter = (options?: { window?: Window }) =>
+  createBrowserRouter(appRoutes, options);
 
 export const router = createAppRouter();
