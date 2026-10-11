@@ -30,7 +30,7 @@ describe("credential storage", () => {
     });
 
     expect(await freshPageOidcStore.get(oidcKey)).toBe(oidcValue);
-    expect(sessionStorage.length).toBe(0);
+    expect(sessionStorage).toHaveLength(0);
 
     dom.window.close();
   });
@@ -46,7 +46,7 @@ describe("credential storage", () => {
     });
     localStorage.setItem("ai_settings", aiSettings);
 
-    expect(sessionStorage.length).toBe(0);
+    expect(sessionStorage).toHaveLength(0);
     expect(localStorage.getItem("ai_settings")).toBe(aiSettings);
 
     dom.window.close();

@@ -11,7 +11,6 @@ import {
   facetValues,
   LOCAL_FACETS,
   prepareSearchRecord,
-  searchableFieldValues,
   searchableText,
   type SearchProjectionRecord,
   type UnknownRecord,

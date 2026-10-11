@@ -52,7 +52,7 @@ export const decodeTimetableShareQuery = (
     const semester = key.slice("semester_".length);
     if (!semester) return;
     const ids = value.split(",").filter(Boolean).map(decodeLegacyCourseId);
-    if (ids.some((id) => id === null)) return;
+    if (ids.includes(null)) return;
     courseCodes[semester] = ids as string[];
     lastSerializedSemester = semester;
   });

@@ -59,6 +59,11 @@ function selectedCampusBus(
           ? dict.bus.route1_line
           : dict.bus.route2_line;
   const isNanda = pin.line === "route1" || pin.line === "route2";
+  let destination: string | undefined;
+  if (isNanda) {
+    destination =
+      pin.direction === "up" ? dict.bus.to_nanda : dict.bus.to_main_campus;
+  }
   return {
     tab: isNanda ? "nanda" : pin.direction === "up" ? "north_gate" : "tsmc",
     startTime: next?.time ?? "0:00",
@@ -73,11 +78,7 @@ function selectedCampusBus(
     line: pin.line,
     direction: pin.direction,
     title: lineTitle,
-    destination: isNanda
-      ? pin.direction === "up"
-        ? dict.bus.to_nanda
-        : dict.bus.to_main_campus
-      : undefined,
+    destination,
     notes: next?.description ? [next.description] : [],
     arrival: next?.time ?? dict.bus.service_over,
     pin,

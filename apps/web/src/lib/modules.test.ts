@@ -1,22 +1,4 @@
-import { afterAll, describe, expect, mock, test } from "bun:test";
-import {
-  aggregateModuleOfferings,
-  aggregateModuleHistoryRows,
-  aggregateModuleSearchRows,
-  createModuleKey,
-  getInstructorOfferings,
-  getModuleHistoryVariant,
-  getModuleInstructorSummaries,
-  getModuleScores,
-  getModuleVariant,
-  normalizeCourseTitle,
-  parseModuleKey,
-  rankModuleSearchResults,
-  serializePostgresArrayElement,
-} from "./modules";
-
-const actualSupabase = await import("@/config/supabase");
-
+import { describe, expect, mock, test } from "bun:test";
 type SupabaseCall = {
   table: string;
   filter?: { column: string; operator: string; value: string };
@@ -67,9 +49,21 @@ const fakeSupabase = {
 
 mock.module("@/config/supabase", () => ({ default: fakeSupabase }));
 
-afterAll(() => {
-  mock.module("@/config/supabase", () => actualSupabase);
-});
+const {
+  aggregateModuleOfferings,
+  aggregateModuleHistoryRows,
+  aggregateModuleSearchRows,
+  createModuleKey,
+  getInstructorOfferings,
+  getModuleHistoryVariant,
+  getModuleInstructorSummaries,
+  getModuleScores,
+  getModuleVariant,
+  normalizeCourseTitle,
+  parseModuleKey,
+  rankModuleSearchResults,
+  serializePostgresArrayElement,
+} = await import("./modules");
 
 type ModuleOfferingRow = Parameters<typeof aggregateModuleOfferings>[0][number];
 type ModuleSearchRow = Parameters<typeof aggregateModuleSearchRows>[0][number];

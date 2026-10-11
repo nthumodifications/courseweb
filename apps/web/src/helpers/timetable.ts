@@ -422,9 +422,11 @@ export const createTimetableFromCourses = (
 export const colorMapFromCourses = (courseIds: string[], colors?: string[]) => {
   const colorMap: { [id: string]: string } = {};
   const safeColors = colors ?? timetableColors[Object.keys(timetableColors)[0]];
-  [...new Set(courseIds)].sort().forEach((id, index) => {
-    colorMap[id] = safeColors[index % safeColors.length];
-  });
+  [...new Set(courseIds)]
+    .sort((a, b) => a.localeCompare(b))
+    .forEach((id, index) => {
+      colorMap[id] = safeColors[index % safeColors.length];
+    });
   return colorMap;
 };
 
