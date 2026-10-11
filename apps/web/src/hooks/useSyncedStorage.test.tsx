@@ -110,6 +110,17 @@ const cleanupSyncedStorage = async ({
   queryClient.clear();
 };
 
+const readLocalValue = <T,>(key: string, fallback: () => T): T => {
+  if (typeof window === "undefined") return fallback();
+  const raw = window.localStorage.getItem(key);
+  if (!raw) return fallback();
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    return fallback();
+  }
+};
+
 mock.module("react-oidc-context", () => ({
   useAuth: () => ({ isAuthenticated: true, user }),
 }));
@@ -123,16 +134,7 @@ const useTestLocalStorage = <T,>(
 ): [T, (next: T | ((previous: T) => T)) => void] => {
   const initialValueRef = useRef(initialValue);
   initialValueRef.current = initialValue;
-  const read = () => {
-    if (typeof window === "undefined") return initialValueRef.current;
-    const raw = window.localStorage.getItem(key);
-    if (!raw) return initialValueRef.current;
-    try {
-      return JSON.parse(raw) as T;
-    } catch {
-      return initialValueRef.current;
-    }
-  };
+  const read = () => readLocalValue(key, () => initialValueRef.current);
   const [value, setValue] = useState(read);
   const update = useCallback(
     (next: T | ((previous: T) => T)) => {

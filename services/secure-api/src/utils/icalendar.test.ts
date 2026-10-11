@@ -122,6 +122,28 @@ const assertWeeklyUtcSeries = ({
 const mockClient = mockPrismaClient() as any;
 const mockFirebase = mockFirebaseAdmin();
 
+const mockContext = {
+  env: { FIREBASE_SERVICE_ACCOUNT: "mock-service-account" },
+};
+
+const createTestCalendar = (includeFullDetails: boolean) =>
+  createICalendar(
+    "test-user-id",
+    includeFullDetails,
+    mockContext,
+    mockClient,
+    mockFirebase,
+  );
+
+const createTestEvent = async (includeFullDetails = true) => {
+  const calendar = await createTestCalendar(includeFullDetails);
+  const events = Array.from(
+    calendar.matchAll(/BEGIN:VEVENT[\s\S]*?END:VEVENT/g),
+  );
+  expect(events).toHaveLength(1);
+  return events[0]![0];
+};
+
 describe("iCalendar Utility", () => {
   beforeAll(() => {
     // Set our mock client before all tests
@@ -139,17 +161,7 @@ describe("iCalendar Utility", () => {
   });
 
   test("should create a valid iCalendar with events", async () => {
-    const mockContext = {
-      env: { FIREBASE_SERVICE_ACCOUNT: "mock-service-account" },
-    };
-
-    const calendar = await createICalendar(
-      "test-user-id",
-      true,
-      mockContext,
-      mockClient,
-      mockFirebase,
-    );
+    const calendar = await createTestCalendar(true);
 
     // Check for iCalendar format structure
     expect(calendar).toBeTruthy();
@@ -161,17 +173,7 @@ describe("iCalendar Utility", () => {
   });
 
   test("should create a minimal iCalendar without detailed information when includeFullDetails is false", async () => {
-    const mockContext = {
-      env: { FIREBASE_SERVICE_ACCOUNT: "mock-service-account" },
-    };
-
-    const calendar = await createICalendar(
-      "test-user-id",
-      false,
-      mockContext,
-      mockClient,
-      mockFirebase,
-    );
+    const calendar = await createTestCalendar(false);
 
     // Basic structure should be present
     expect(calendar).toBeTruthy();
@@ -206,9 +208,6 @@ describe("iCalendar Utility", () => {
   });
 
   test("should throw an error when user is not found", async () => {
-    const mockContext = {
-      env: { FIREBASE_SERVICE_ACCOUNT: "mock-service-account" },
-    };
     // Override the mock to return null for this test
     mockUserFindUnique.mockImplementationOnce(() =>
       Promise.resolve(null as any),
@@ -239,10 +238,6 @@ describe("iCalendar Utility", () => {
     }
   });
   test("should handle empty event list correctly", async () => {
-    const mockContext = {
-      env: { FIREBASE_SERVICE_ACCOUNT: "mock-service-account" },
-    };
-
     // Override the mock to return empty docs for this test
     mockFirebaseGet.mockImplementationOnce(() =>
       Promise.resolve({
@@ -251,13 +246,7 @@ describe("iCalendar Utility", () => {
       }),
     );
 
-    const calendar = await createICalendar(
-      "test-user-id",
-      true,
-      mockContext,
-      mockClient,
-      mockFirebase,
-    );
+    const calendar = await createTestCalendar(true);
 
     // Should still create a valid iCalendar structure even with no events
     expect(calendar).toBeTruthy();
@@ -273,10 +262,6 @@ describe("iCalendar Utility", () => {
 
   // Tests for specific event types
   test("should correctly convert regular time-specific events to iCalendar format", async () => {
-    const mockContext = {
-      env: { FIREBASE_SERVICE_ACCOUNT: "mock-service-account" },
-    };
-
     // Mock to return only the regular time-to-time event
     mockFirebaseGet.mockImplementationOnce(() =>
       Promise.resolve({
@@ -303,20 +288,7 @@ describe("iCalendar Utility", () => {
       }),
     );
 
-    const calendar = await createICalendar(
-      "test-user-id",
-      true,
-      mockContext,
-      mockClient,
-      mockFirebase,
-    );
-
-    // Extract the event from the calendar
-    const eventRegex = /BEGIN:VEVENT[\s\S]*?END:VEVENT/g;
-    const events = Array.from(calendar.matchAll(eventRegex));
-    expect(events.length).toBe(1);
-
-    const eventText = events[0][0];
+    const eventText = await createTestEvent();
 
     // Check specific properties for a regular event
     expect(eventText).toContain("SUMMARY:Lecture: Introduction to React");
@@ -333,10 +305,6 @@ describe("iCalendar Utility", () => {
   });
 
   test("should correctly convert all-day single-day events to iCalendar format", async () => {
-    const mockContext = {
-      env: { FIREBASE_SERVICE_ACCOUNT: "mock-service-account" },
-    };
-
     // Mock to return only the all-day single-day event
     mockFirebaseGet.mockImplementationOnce(() =>
       Promise.resolve({
@@ -363,20 +331,7 @@ describe("iCalendar Utility", () => {
       }),
     );
 
-    const calendar = await createICalendar(
-      "test-user-id",
-      true,
-      mockContext,
-      mockClient,
-      mockFirebase,
-    );
-
-    // Extract the event from the calendar
-    const eventRegex = /BEGIN:VEVENT[\s\S]*?END:VEVENT/g;
-    const events = Array.from(calendar.matchAll(eventRegex));
-    expect(events.length).toBe(1);
-
-    const eventText = events[0][0];
+    const eventText = await createTestEvent();
 
     // Check specific properties for an all-day single-day event
     expect(eventText).toContain("SUMMARY:Project Submission Deadline");
@@ -391,10 +346,6 @@ describe("iCalendar Utility", () => {
   });
 
   test("should correctly convert all-day multi-day events to iCalendar format", async () => {
-    const mockContext = {
-      env: { FIREBASE_SERVICE_ACCOUNT: "mock-service-account" },
-    };
-
     // Mock to return only the all-day multi-day event
     mockFirebaseGet.mockImplementationOnce(() =>
       Promise.resolve({
@@ -421,20 +372,7 @@ describe("iCalendar Utility", () => {
       }),
     );
 
-    const calendar = await createICalendar(
-      "test-user-id",
-      true,
-      mockContext,
-      mockClient,
-      mockFirebase,
-    );
-
-    // Extract the event from the calendar
-    const eventRegex = /BEGIN:VEVENT[\s\S]*?END:VEVENT/g;
-    const events = Array.from(calendar.matchAll(eventRegex));
-    expect(events.length).toBe(1);
-
-    const eventText = events[0][0];
+    const eventText = await createTestEvent();
 
     // Check specific properties for an all-day multi-day event
     expect(eventText).toContain("SUMMARY:Reading Week");
@@ -447,10 +385,6 @@ describe("iCalendar Utility", () => {
   });
 
   test("should correctly convert weekly recurring events to iCalendar format", async () => {
-    const mockContext = {
-      env: { FIREBASE_SERVICE_ACCOUNT: "mock-service-account" },
-    };
-
     // Mock to return only the weekly recurring event
     mockFirebaseGet.mockImplementationOnce(() =>
       Promise.resolve({
@@ -484,20 +418,7 @@ describe("iCalendar Utility", () => {
       }),
     );
 
-    const calendar = await createICalendar(
-      "test-user-id",
-      true,
-      mockContext,
-      mockClient,
-      mockFirebase,
-    );
-
-    // Extract the event from the calendar
-    const eventRegex = /BEGIN:VEVENT[\s\S]*?END:VEVENT/g;
-    const events = Array.from(calendar.matchAll(eventRegex));
-    expect(events.length).toBe(1);
-
-    const eventText = events[0][0];
+    const eventText = await createTestEvent();
 
     // Check specific properties for a weekly recurring event
     expect(eventText).toContain("SUMMARY:Web Development Lab");
@@ -514,10 +435,6 @@ describe("iCalendar Utility", () => {
   });
 
   test("should correctly convert daily recurring events to iCalendar format", async () => {
-    const mockContext = {
-      env: { FIREBASE_SERVICE_ACCOUNT: "mock-service-account" },
-    };
-
     // Mock to return only the daily recurring event
     mockFirebaseGet.mockImplementationOnce(() =>
       Promise.resolve({
@@ -552,20 +469,7 @@ describe("iCalendar Utility", () => {
       }),
     );
 
-    const calendar = await createICalendar(
-      "test-user-id",
-      true,
-      mockContext,
-      mockClient,
-      mockFirebase,
-    );
-
-    // Extract the event from the calendar
-    const eventRegex = /BEGIN:VEVENT[\s\S]*?END:VEVENT/g;
-    const events = Array.from(calendar.matchAll(eventRegex));
-    expect(events.length).toBe(1);
-
-    const eventText = events[0][0];
+    const eventText = await createTestEvent();
 
     // Check specific properties for a daily recurring event
     expect(eventText).toContain("SUMMARY:Morning Check-in");
@@ -579,10 +483,6 @@ describe("iCalendar Utility", () => {
   });
 
   test("should correctly convert monthly recurring events to iCalendar format", async () => {
-    const mockContext = {
-      env: { FIREBASE_SERVICE_ACCOUNT: "mock-service-account" },
-    };
-
     // Mock to return only the monthly recurring event
     mockFirebaseGet.mockImplementationOnce(() =>
       Promise.resolve({
@@ -614,20 +514,7 @@ describe("iCalendar Utility", () => {
       }),
     );
 
-    const calendar = await createICalendar(
-      "test-user-id",
-      true,
-      mockContext,
-      mockClient,
-      mockFirebase,
-    );
-
-    // Extract the event from the calendar
-    const eventRegex = /BEGIN:VEVENT[\s\S]*?END:VEVENT/g;
-    const events = Array.from(calendar.matchAll(eventRegex));
-    expect(events.length).toBe(1);
-
-    const eventText = events[0][0];
+    const eventText = await createTestEvent();
 
     // Check specific properties for a monthly recurring event
     expect(eventText).toContain("SUMMARY:Department Meeting");
@@ -641,10 +528,6 @@ describe("iCalendar Utility", () => {
   });
 
   test("should correctly convert yearly recurring events to iCalendar format", async () => {
-    const mockContext = {
-      env: { FIREBASE_SERVICE_ACCOUNT: "mock-service-account" },
-    };
-
     // Mock to return only the yearly recurring event
     mockFirebaseGet.mockImplementationOnce(() =>
       Promise.resolve({
@@ -678,20 +561,7 @@ describe("iCalendar Utility", () => {
       }),
     );
 
-    const calendar = await createICalendar(
-      "test-user-id",
-      true,
-      mockContext,
-      mockClient,
-      mockFirebase,
-    );
-
-    // Extract the event from the calendar
-    const eventRegex = /BEGIN:VEVENT[\s\S]*?END:VEVENT/g;
-    const events = Array.from(calendar.matchAll(eventRegex));
-    expect(events.length).toBe(1);
-
-    const eventText = events[0][0];
+    const eventText = await createTestEvent();
 
     // Check specific properties for a yearly recurring event
     expect(eventText).toContain("SUMMARY:Department Anniversary");

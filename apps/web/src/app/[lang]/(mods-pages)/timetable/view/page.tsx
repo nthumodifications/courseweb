@@ -66,7 +66,7 @@ const ViewTimetablePage = () => {
 
       const data = await res.json();
       if (!data) throw new Error("No data");
-      return data;
+      return data as MinimalCourse[];
     },
     enabled: Boolean(courseCodes?.[semester]),
   });

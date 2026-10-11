@@ -35,6 +35,15 @@ const accountCourseRecords = () => {
 
 const emptySyncedRecord = (deviceId: string) => syncedRecord({}, -1, deviceId);
 
+const expectMergedClear = (
+  reconciliation: ReturnType<typeof reconcileSyncedData>,
+  persistLocal: boolean,
+) => {
+  expect(reconciliation.data.value).toEqual({});
+  expect(reconciliation.persistLocal).toBe(persistLocal);
+  expect(reconciliation.upload).toEqual({ merge: false });
+};
+
 describe("synced storage reconciliation", () => {
   test("takes remote data over an uninitialized local snapshot", () => {
     const reconciliation = reconcileSyncedData({
@@ -58,9 +67,7 @@ describe("synced storage reconciliation", () => {
       deviceId: "device-a",
     });
 
-    expect(reconciliation.data.value).toEqual({});
-    expect(reconciliation.persistLocal).toBe(false);
-    expect(reconciliation.upload).toEqual({ merge: false });
+    expectMergedClear(reconciliation, false);
   });
 
   test("honors a newer remote clear instead of merging it with local data", () => {
@@ -87,9 +94,7 @@ describe("synced storage reconciliation", () => {
       deviceId: "device-a",
     });
 
-    expect(reconciliation.data.value).toEqual({});
-    expect(reconciliation.persistLocal).toBe(false);
-    expect(reconciliation.upload).toEqual({ merge: false });
+    expectMergedClear(reconciliation, false);
   });
 
   test("keeps and uploads non-empty local data when remote is uninitialized", () => {

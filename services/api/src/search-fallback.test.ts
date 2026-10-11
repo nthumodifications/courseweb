@@ -65,6 +65,15 @@ const requestFallback = (parameter: "hitsPerPage" | "limit") =>
     },
   );
 
+const requestBooleanFilter = (filters: string) =>
+  fallbackSearch.fetch(
+    new Request(`http://localhost/?q=calculus&filters=${filters}`),
+    {
+      SUPABASE_URL: "https://supabase.example",
+      SUPABASE_SERVICE_ROLE_KEY: "test",
+    },
+  );
+
 describe("search fallback zero-hit pagination", () => {
   test.each(["hitsPerPage", "limit"] as const)(
     "accepts %s=0 while still returning facets",
@@ -115,35 +124,17 @@ describe("search fallback syllabus text", () => {
 });
 
 describe("search fallback boolean filters", () => {
-  test("keeps either branch of an OR filter", async () => {
-    const response = await fallbackSearch.fetch(
-      new Request(
-        "http://localhost/?q=calculus&filters=department%3ACS%20OR%20department%3AMATH",
-      ),
-      {
-        SUPABASE_URL: "https://supabase.example",
-        SUPABASE_SERVICE_ROLE_KEY: "test",
-      },
-    );
-    const payload = (await response.json()) as {
-      data: { hits: Array<Record<string, unknown>>; nbHits: number };
-    };
-
-    expect(response.status).toBe(200);
-    expect(payload.data.nbHits).toBe(1);
-    expect(payload.data.hits[0]?.raw_id).toBe(course.raw_id);
-  });
-
-  test("keeps OR separators case-insensitive across whitespace", async () => {
-    const response = await fallbackSearch.fetch(
-      new Request(
-        "http://localhost/?q=calculus&filters=department%3ACS%09or%0Adepartment%3AMATH",
-      ),
-      {
-        SUPABASE_URL: "https://supabase.example",
-        SUPABASE_SERVICE_ROLE_KEY: "test",
-      },
-    );
+  test.each([
+    [
+      "keeps either branch of an OR filter",
+      "department%3ACS%20OR%20department%3AMATH",
+    ],
+    [
+      "keeps OR separators case-insensitive across whitespace",
+      "department%3ACS%09or%0Adepartment%3AMATH",
+    ],
+  ])("%s", async (_name, filters) => {
+    const response = await requestBooleanFilter(filters);
     const payload = (await response.json()) as {
       data: { hits: Array<Record<string, unknown>>; nbHits: number };
     };

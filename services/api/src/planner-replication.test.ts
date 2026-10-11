@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
+import { createAuthTestEnvironment } from "./test-auth";
 
 const findMany = mock(async () => []);
 
@@ -15,28 +16,16 @@ mock.module("./prisma/client", () => ({
 
 const { default: planner } = await import("./planner-replication");
 
-const originalFetch = globalThis.fetch;
-const originalEnv = { ...process.env };
 const requestEnv = { DB: {} };
+const authEnvironment = createAuthTestEnvironment(
+  () =>
+    mock(async () =>
+      Response.json({ active: true, username: "user-1", scope: "planner" }),
+    ) as unknown as typeof fetch,
+);
 
-beforeEach(() => {
-  Object.assign(process.env, {
-    NTHUMODS_AUTH_INTROSPECTION_URL: "https://auth.example.com/introspect",
-    NTHUMODS_AUTH_CLIENT_ID: "client",
-    NTHUMODS_AUTH_CLIENT_SECRET: "secret",
-  });
-  globalThis.fetch = mock(async () =>
-    Response.json({ active: true, username: "user-1", scope: "planner" }),
-  ) as unknown as typeof fetch;
-});
-
-afterEach(() => {
-  globalThis.fetch = originalFetch;
-  for (const key of Object.keys(process.env)) {
-    if (!(key in originalEnv)) delete process.env[key];
-  }
-  Object.assign(process.env, originalEnv);
-});
+beforeEach(authEnvironment.setup);
+afterEach(authEnvironment.restore);
 
 const authHeaders = { Authorization: "Bearer planner-token" };
 
