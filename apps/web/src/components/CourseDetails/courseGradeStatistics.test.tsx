@@ -8,6 +8,7 @@ import {
   courseCodeFromRawId,
   courseStatisticsKey,
   formatCourseStatistics,
+  summarizeCourseStatistics,
   type CourseStatistic,
 } from "./courseGradeStatisticsLogic";
 
@@ -107,6 +108,60 @@ test.each([
       }),
     ),
   ).toEqual(expected);
+});
+
+test("summarizes each scale with enrollment-weighted averages and trends", () => {
+  const summaries = summarizeCourseStatistics([
+    statistic({ semester: "11410", enrollment: 10, average: 3 }),
+    statistic({ semester: "11510", enrollment: 30, average: 4 }),
+    statistic({
+      semester: "11510",
+      scale: "percent",
+      enrollment: 20,
+      average: 80,
+    }),
+  ]);
+
+  expect(summaries).toEqual([
+    {
+      scale: "gpa",
+      average: 3.75,
+      enrollment: 40,
+      semesterCount: 2,
+      trend: {
+        difference: 1,
+        fromSemester: "11410",
+        toSemester: "11510",
+      },
+    },
+    {
+      scale: "percent",
+      average: 80,
+      enrollment: 20,
+      semesterCount: 1,
+      trend: null,
+    },
+  ]);
+});
+
+test("does not create a trend for a single semester", () => {
+  const [summary] = summarizeCourseStatistics([
+    statistic({ semester: "11510", enrollment: 10, average: 3 }),
+    statistic({ semester: "11510", enrollment: 30, average: 4 }),
+  ]);
+
+  expect(summary).toMatchObject({
+    average: 3.75,
+    enrollment: 40,
+    semesterCount: 1,
+    trend: null,
+  });
+});
+
+test("keeps missing standard deviation values displayable", () => {
+  const [formatted] = formatCourseStatistics([statistic({ stdDev: null })]);
+
+  expect(formatted?.stdDevLabel).toBeNull();
 });
 
 const copy: CourseGradeStatisticsCopy = {

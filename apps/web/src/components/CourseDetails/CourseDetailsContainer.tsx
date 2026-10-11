@@ -56,6 +56,7 @@ import { usePrerequisiteGraphData } from "./usePrerequisiteGraphData";
 import CourseGradeStatistics, {
   type CourseGradeStatisticsResponse,
 } from "./CourseGradeStatistics";
+import CourseOverallGradeSummary from "./CourseOverallGradeSummary";
 import {
   courseCodeFromRawId,
   courseStatisticsKey,
@@ -602,6 +603,22 @@ const CourseDetailContainer = ({
             </div>
           </div>
           <Separator />
+          <CourseOverallGradeSummary
+            statistics={contributedGradeStatistics?.statistics}
+            error={contributedGradeStatisticsError}
+            copy={{
+              title: dict.course.details.overall_grade_summary,
+              average: dict.course.details.average,
+              enrollmentSummary:
+                dict.course.details.overall_grade_summary_enrollment,
+              trendUp: dict.course.details.overall_grade_summary_trend_up,
+              trendDown: dict.course.details.overall_grade_summary_trend_down,
+              trendFlat: dict.course.details.overall_grade_summary_trend_flat,
+              gpaScale: dict.course.details.past_grade_statistics_gpa,
+              percentScale: dict.course.details.past_grade_statistics_percent,
+              source: dict.course.details.overall_grade_summary_source,
+            }}
+          />
           <div
             className={"flex min-w-0 flex-col-reverse gap-4 lg:flex-row w-full"}
           >
