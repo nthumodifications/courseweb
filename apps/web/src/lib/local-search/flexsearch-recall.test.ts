@@ -165,7 +165,7 @@ class SharedFlexSearchWorker implements SearchWorker {
   terminate() {}
 }
 
-test("the local engine ranks relevance then raw_id descending", async () => {
+test("the local engine ranks relevance then raw_id ascending", async () => {
   const fetchDump = async (input: RequestInfo | URL) => {
     const url = String(input);
     if (url.endsWith("/search/chunk/manifest")) {
@@ -213,7 +213,7 @@ test("the local engine ranks relevance then raw_id descending", async () => {
     .map((id) => records[Number(id)].objectID);
 
   // FlexSearch supplies recall candidates; the live fallback contract sorts
-  // those candidates by whole-field relevance and then raw_id descending.
+  // those candidates by whole-field relevance and then raw_id ascending.
   expect(new Set(firstIds)).toEqual(new Set(flexRankedIds));
   expect(second.hits.map((hit) => hit.objectID)).toEqual(firstIds);
   expect(first.nbHits).toBe(18);
