@@ -355,35 +355,44 @@ export const createTimetableFromCourses = (
         timeString
           .replace(/\s/g, "")
           .match(/.{1,2}/g)
-          ?.map((day) => ({ day: day[0], time: day[1] }))
+          ?.map((pair) => ({ day: pair[0]!, time: pair[1]! }))
           .filter(
             ({ day, time }) =>
               timetableDayCodes.includes(day) &&
               scheduleTimeSlots.some((period) => period.time === time),
           ) ?? [];
       const groupedTimeslots: { day: string; time: string }[][] = [];
-      // Group consecutive periods on the same day. This mutates
-      // groupedTimeslots, so it is a loop rather than a reduce whose return
-      // value would be discarded.
-      for (const current of timeslots) {
-        const previousGroup = groupedTimeslots.at(-1);
-        const previous = previousGroup?.at(-1);
-        const previousIndex = previous
-          ? scheduleTimeSlots.findIndex(
-              (period) => period.time === previous.time,
-            )
-          : -1;
-        const currentIndex = scheduleTimeSlots.findIndex(
-          (period) => period.time === current.time,
-        );
-        if (
-          previousGroup &&
-          previous?.day === current.day &&
-          previousIndex + 1 === currentIndex
-        ) {
-          previousGroup.push(current);
-        } else {
-          groupedTimeslots.push([current]);
+      const timeslotsByDay = new Map<string, string[]>();
+      for (const { day, time } of timeslots) {
+        const dayTimes = timeslotsByDay.get(day) ?? [];
+        dayTimes.push(time);
+        timeslotsByDay.set(day, dayTimes);
+      }
+      for (const [day, dayTimes] of timeslotsByDay) {
+        const periodIndexes = [
+          ...new Set(
+            dayTimes
+              .map((time) =>
+                scheduleTimeSlots.findIndex((period) => period.time === time),
+              )
+              .filter((periodIndex) => periodIndex >= 0),
+          ),
+        ].sort((left, right) => left - right);
+        let group: string[] = [];
+        for (const periodIndex of periodIndexes) {
+          if (group.length > 0) {
+            const previousIndex = scheduleTimeSlots.findIndex(
+              (period) => period.time === group.at(-1),
+            );
+            if (periodIndex !== previousIndex + 1) {
+              groupedTimeslots.push(group.map((time) => ({ day, time })));
+              group = [];
+            }
+          }
+          group.push(scheduleTimeSlots[periodIndex]!.time);
+        }
+        if (group.length > 0) {
+          groupedTimeslots.push(group.map((time) => ({ day, time })));
         }
       }
 
@@ -413,7 +422,7 @@ export const createTimetableFromCourses = (
 export const colorMapFromCourses = (courseIds: string[], colors?: string[]) => {
   const colorMap: { [id: string]: string } = {};
   const safeColors = colors ?? timetableColors[Object.keys(timetableColors)[0]];
-  courseIds.forEach((id, index) => {
+  [...new Set(courseIds)].sort().forEach((id, index) => {
     colorMap[id] = safeColors[index % safeColors.length];
   });
   return colorMap;

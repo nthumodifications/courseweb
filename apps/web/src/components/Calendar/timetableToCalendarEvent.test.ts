@@ -230,4 +230,31 @@ describe("timetable calendar event dates", () => {
     }).not.toThrow();
     expect(events).toEqual([]);
   });
+
+  test("skips a course whose semester metadata is unavailable", () => {
+    const unknownSemester: CourseTimeslotData = {
+      course: { ...course, semester: "99999" },
+      venue: "Room",
+      dayOfWeek: 0,
+      startTime: 0,
+      endTime: 1,
+      color: "#000000",
+      textColor: "#ffffff",
+    };
+
+    expect(timetableToCalendarEvent([unknownSemester], "en")).toEqual([]);
+  });
+
+  test("preserves HEAD output for a valid timetable event", () => {
+    const [event] = timetableToCalendarEvent(
+      createTimetableFromCourses([course]),
+      "en",
+    );
+
+    expect(event?.title).toBe(course.name_en);
+    expect(event?.location).toBe(course.venues[0]);
+    expect(event?.start).toEqual(taipeiDate("2026-02-26T15:30"));
+    expect(event?.end).toEqual(taipeiDate("2026-02-26T17:20"));
+    expect(event?.repeat?.value).toBe(taipeiDate("2026-06-14T00:00").getTime());
+  });
 });

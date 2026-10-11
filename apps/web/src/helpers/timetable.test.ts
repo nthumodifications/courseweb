@@ -351,6 +351,31 @@ describe("course timetable slot parsing", () => {
       ]),
     ).toEqual([]);
   });
+
+  test("assigns the same colors when courses arrive in a different order", () => {
+    expect(
+      colorMapFromCourses(["course-b", "course-a"], ["#one", "#two"]),
+    ).toEqual({
+      "course-a": "#one",
+      "course-b": "#two",
+    });
+  });
+
+  test("groups irregularly ordered consecutive periods", () => {
+    const timetable = createTimetableFromCourses([courseWithTimes(["M1M3M2"])]);
+
+    expect(timetableCoordinates(timetable)).toEqual([
+      { dayOfWeek: 0, startTime: 0, endTime: 2 },
+    ]);
+  });
+
+  test("preserves HEAD output for an ordered timetable", () => {
+    expect(
+      timetableCoordinates(
+        createTimetableFromCourses([courseWithTimes(["M1M2"])]),
+      ),
+    ).toEqual([{ dayOfWeek: 0, startTime: 0, endTime: 1 }]);
+  });
 });
 
 describe("hidden timetable courses", () => {

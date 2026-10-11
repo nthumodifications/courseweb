@@ -21,6 +21,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import client from "@/config/api";
 import useDictionary from "@/dictionaries/useDictionary";
+import { decodeTimetableShareQuery } from "@/helpers/timetableShare";
 
 const ViewTimetablePage = () => {
   const navigate = useNavigate();
@@ -30,10 +31,14 @@ const ViewTimetablePage = () => {
   const { currentColors, setCourses, setColorMap, setCustomItems } =
     useUserTimetable();
   const dict = useDictionary();
-  const [semester, setSemester] = useState<string>(lastSemester.id);
-  const colorMap = JSON.parse(
-    decodeURIComponent(searchParams.get("colorMap") ?? "{}"),
+  const decodedShare = useMemo(
+    () => decodeTimetableShareQuery(searchParams),
+    [searchParams],
   );
+  const [semester, setSemester] = useState<string>(
+    decodedShare?.initialSemester ?? lastSemester.id,
+  );
+  const colorMap = decodedShare?.colorMap ?? {};
   const sharedCustomItems = useMemo<CustomTimetableStorageInput>(() => {
     const value = searchParams.get("customItems");
     if (!value) return {};
@@ -45,20 +50,7 @@ const ViewTimetablePage = () => {
     }
   }, [searchParams]);
 
-  const courseCodes = useMemo(() => {
-    if (searchParams.toString().length > 0) {
-      //get all entries with the key 'semester_{semesterId}'
-      const courseCodes: { [sem: string]: string[] } = {};
-      searchParams.forEach((value, key) => {
-        if (key.startsWith("semester_")) {
-          courseCodes[key.replace("semester_", "")] = value
-            .split(",")
-            .map(decodeURI);
-        }
-      });
-      return courseCodes;
-    }
-  }, [searchParams]);
+  const courseCodes = decodedShare?.courseCodes;
 
   if (!courseCodes) {
     navigate(-1);
@@ -66,16 +58,17 @@ const ViewTimetablePage = () => {
   }
 
   const { data: courses = [] } = useQuery({
-    queryKey: ["courses", courseCodes![semester]],
+    queryKey: ["courses", courseCodes?.[semester]],
     queryFn: async () => {
       const res = await client.course.$get({
-        query: { courses: courseCodes![semester] },
+        query: { courses: courseCodes?.[semester] ?? [] },
       });
 
       const data = await res.json();
       if (!data) throw new Error("No data");
       return data;
     },
+    enabled: Boolean(courseCodes?.[semester]),
   });
   const timetableData = createTimetableFromCoursesAndCustomItems(
     courses as MinimalCourse[],

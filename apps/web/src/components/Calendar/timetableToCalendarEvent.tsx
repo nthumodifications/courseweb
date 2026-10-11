@@ -26,7 +26,8 @@ export const timetableToCalendarEvent = (
       const endSlot = scheduleTimeSlots[t.endTime];
       if (!startSlot || !endSlot) return null;
 
-      const semester = semesterInfo.find((s) => s.id == t.course.semester)!;
+      const semester = semesterInfo.find((s) => s.id == t.course.semester);
+      if (!semester) return null;
       const startTime = parseSlotTime(startSlot.start);
       const endTime = parseSlotTime(endSlot.end);
       const classDate = addDays(semester.begins, t.dayOfWeek);
