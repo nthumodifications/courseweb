@@ -25,6 +25,7 @@ import { useQuery } from "@tanstack/react-query";
 import client from "@/config/api";
 import { SettingItem } from "./SettingItem";
 import { Check, ChevronDown } from "lucide-react";
+import { AI_SETTINGS_STORAGE_KEY } from "@/lib/credentialStorage";
 
 const CURRENT_ROC_YEAR = new Date().getFullYear() - 1911;
 const ENTRANCE_YEARS = Array.from({ length: 8 }, (_, index) =>
@@ -88,7 +89,7 @@ export function AIPreferencesPanel() {
   useEffect(() => {
     try {
       const prefs = localStorage.getItem("ai_user_preferences");
-      const aiSettings = localStorage.getItem("ai_settings");
+      const aiSettings = localStorage.getItem(AI_SETTINGS_STORAGE_KEY);
 
       if (prefs) {
         const parsed = JSON.parse(prefs);
@@ -121,7 +122,7 @@ export function AIPreferencesPanel() {
     );
 
     localStorage.setItem(
-      "ai_settings",
+      AI_SETTINGS_STORAGE_KEY,
       JSON.stringify({
         useCustomKey: settings.useCustomKey,
         apiKey: settings.useCustomKey ? settings.apiKey : undefined,

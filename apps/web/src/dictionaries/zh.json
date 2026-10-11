@@ -1,4 +1,41 @@
 {
+  "a11y": {
+    "close": "關閉",
+    "clear": "清除",
+    "search": "搜尋",
+    "refresh": "重新整理",
+    "previous": "上一個",
+    "next": "下一個",
+    "remove": "移除",
+    "delete": "刪除",
+    "copy": "複製",
+    "open": "開啟",
+    "add_to_timetable": "將課程加入課表",
+    "view_course_details": "檢視課程詳細資料",
+    "view_semester_details": "檢視學期詳細資料",
+    "expand": "展開",
+    "collapse": "收合",
+    "settings": "設定",
+    "favorite": "加入我的最愛",
+    "unfavorite": "從我的最愛移除",
+    "send": "傳送",
+    "cancel": "取消",
+    "toggle": "切換",
+    "calendar": "行事曆",
+    "color_picker": "選擇顏色",
+    "course_search": "課程搜尋",
+    "course_filters": "課程篩選",
+    "map_legend": "地圖圖例",
+    "map_search": "地圖搜尋",
+    "help": "說明",
+    "login": "登入",
+    "install_app": "安裝應用程式",
+    "date_contribution": "貢獻課程日期",
+    "apps": "應用程式",
+    "grades": "成績",
+    "timetable_course": "課程選項",
+    "course_picker": "課程選擇器"
+  },
   "today": {
     "schedule_title": "今日課程",
     "noclass": "今天沒有課",
@@ -37,9 +74,18 @@
       "semester_ended": "學期已結束",
       "days_left": "距離學期結束還有",
       "no_data": "無法取得學期資訊"
+    },
+    "current_semester": {
+      "in_semester": "{year}-{semester} 學期, 第{week}週",
+      "holiday": "假期"
     }
   },
   "timetable": {
+    "seo": {
+      "application_name": "NTHUMods 課表系統",
+      "page_title": "課表管理 | NTHUMods",
+      "page_description": "智慧排課系統，輕鬆管理清華大學課程時間表"
+    },
     "actions": {
       "download": "下載",
       "share": "分享/同步",
@@ -58,6 +104,7 @@
     },
     "credits": "總學分",
     "course": "課",
+    "semester_suffix": "學期",
     "display_settings": "顯示設定",
     "priority": "志願序",
     "conflict": "時間衝堂",
@@ -77,6 +124,7 @@
     "lock_order": "鎖定課程順序",
     "reset_default": "恢復預設值",
     "no_courses": "尚未新增課程",
+    "no_courses_added": "尚未加入課程",
     "course_data_loading": "正在載入已儲存的課程⋯",
     "course_data_error": "無法載入已儲存的課程資訊，但課程仍會保留。",
     "unresolved_courses": "有 {count} 門課程無法載入，仍會保留在課表中。",
@@ -152,6 +200,13 @@
       "found": "找到",
       "search_placeholder": "尋找你要的課程..."
     },
+    "seo": {
+      "title": "清華大學{department}課程列表 | NTHUMods",
+      "description": "瀏覽清華大學{department}所有課程，搜尋選課資訊。",
+      "home": "首頁",
+      "course_breadcrumb": "課程",
+      "page_description": "瀏覽清華大學{department}所有課程"
+    },
     "search": {
       "limited_mode": "搜尋目前處於有限模式，部分篩選和排序功能可能無法使用。",
       "dismiss_limited_mode": "關閉有限搜尋模式提示",
@@ -197,6 +252,12 @@
       "bar_link": "選課時程",
       "bar_link_compact": "選課時程",
       "view_schedule": "查看完整時程",
+      "current": "目前",
+      "next": "下一階段",
+      "open_now": "在公告日期內",
+      "opens_today": "今天開始",
+      "opens_in": "{days} 天後開始",
+      "date_format": "M月d日",
       "no_data": "目前沒有選課日期",
       "phases": {
         "round-1": "第一次選課",
@@ -362,6 +423,40 @@
         "unavailable": "AI 摘要服務暫時無法使用。",
         "workload": "負擔",
         "difficulty": "難度"
+      },
+      "structured_comment": {
+        "separator": "：",
+        "attendance": "有點名",
+        "past_materials": "有考古",
+        "extra_selection": "加簽",
+        "prerequisite": "建議先修課程",
+        "method": "上課方式",
+        "grading": "給分",
+        "exam_type": "考試作業型態",
+        "instructor_personality": "老師的喜好、個性",
+        "additional": "補充",
+        "yes_no_placeholder": "是/否，補充~",
+        "prerequisite_placeholder": "建議先修課程",
+        "method_placeholder": "上課方式",
+        "grading_placeholder": "給分",
+        "exam_type_placeholder": "考試作業型態",
+        "instructor_personality_placeholder": "老師的喜好、個性",
+        "additional_placeholder": "補充",
+        "yes": "有",
+        "no": "沒有"
+      },
+      "seo": {
+        "course_description": "清大 {department} {course} 課程",
+        "provider_alternate_name": "國立清華大學",
+        "instructor_separator": "、",
+        "home": "首頁",
+        "course_breadcrumb": "課程",
+        "page_description": "清大 {semester} {course} 課程資訊",
+        "title": "{course} {instructors} - {semester} 清大{department}課程 | NTHUMods",
+        "description": "清大 {semester} {course}（{courseEn}）課程資訊，{instructors} 授課。查看課程大綱、歷年評分記錄與學生心得。",
+        "open_graph_description": "清大 {course}（{courseEn}），{instructors} 授課，{semester} 學期。查看課程大綱與歷年資訊。",
+        "twitter_description": "清大 {course}，{instructors} 授課，{semester} 學期。",
+        "open_graph_title": "{course} - {department} | NTHUMods"
       },
       "prerequisite_original": "查看原始文字",
       "prerequisite_applies_to": "適用對象：",
@@ -647,6 +742,10 @@
     "north_gate": "北校門口",
     "tsmc": "台積館",
     "nanda": "南大校區",
+    "to_tsmc": "往台積館",
+    "to_north_gate": "往北校門口",
+    "to_nanda": "往南大校區",
+    "to_main_campus": "往校本部",
     "main_campus": "校本部",
     "leave_by": "請於 {time} 前出發",
     "next_class": "下堂課：{name}",
@@ -666,6 +765,15 @@
     "weekdays": "平日",
     "weekends": "假日",
     "to": "往",
+    "departing_from_gen2": "綜二發車",
+    "line_83": "83號",
+    "campus_bus": "校園公車",
+    "nanda_shuttle": "南大校區區間車",
+    "fallback_route": "校車",
+    "page_title": "校車時刻表 | NTHUMods",
+    "page_description": "查看清華大學校車即時時刻表，包含校園巴士、南大區間車等路線資訊",
+    "route_page_title": "{route} - 校車時刻表 | NTHUMods",
+    "route_page_description": "查看清華大學{route}即時時刻表、路線圖與站點資訊",
     "schedule": "發車時刻表",
     "load_error": "無法載入校車資料，請稍後再試。",
     "invalid_line": "無效路線",
@@ -941,7 +1049,8 @@
             "title": "快速連結"
           },
           "notepad": {
-            "title": "便條紙"
+            "title": "便條紙",
+            "placeholder": "寫下你的筆記..."
           },
           "countdown": {
             "title": "學期倒數"
@@ -1234,11 +1343,15 @@
       "copy_image_unsupported_description": "你的瀏覽器不支援複製到剪貼簿。",
       "download_error": "下載失敗",
       "download_error_description": "行事曆檔案下載失敗，請重試或聯絡支援。",
-      "close": "關閉"
+      "close": "關閉",
+      "image_filename_prefix": "課表"
     },
     "ShareSyncTimetableDialog": {
       "title": "分享/同步你的課表",
       "description": "把你的課表分享給朋友，或是同步到其他裝置上吧！",
+      "short_link_error_title": "短連結錯誤",
+      "short_link_error_description": "無法產生短連結，請稍後再試。",
+      "link_label": "連結",
       "category:qr": "QR 碼",
       "category:links": "連結",
       "links": {
@@ -1252,6 +1365,61 @@
         "calendar_name": "NTHUMods 課表",
         "subscription_hint": "訂閱會自動更新，但各行事曆 App 會依自己的排程重新整理。"
       }
+    },
+    "ShareTimetableDialog": {
+      "live": "即時同步",
+      "snapshot": "快照",
+      "public": "公開",
+      "show_qr": "顯示 QR 碼",
+      "hide_qr": "隱藏 QR 碼",
+      "delete": "刪除",
+      "note_placeholder": "例如：「不需點名」",
+      "save": "儲存",
+      "error": "錯誤",
+      "group_created": "群組已建立——請分享下方連結",
+      "open_group": "開啟群組",
+      "create_another": "再建立一個",
+      "group_name": "群組名稱",
+      "group_name_placeholder": "例如：資工好友 113-2",
+      "semester": "學期",
+      "nickname": "你的暱稱",
+      "nickname_placeholder": "顯示名稱",
+      "group_timetable_hint": "系統會自動連結 {semester} 的課表。",
+      "create_group": "建立群組",
+      "share_link_created": "分享連結已建立！",
+      "share_id": "分享 ID：{id}",
+      "share_link_deleted": "分享連結已刪除",
+      "share_timetable": "分享課表",
+      "sign_in_to_share": "登入後即可分享課表。",
+      "no_semesters_selected": "尚未選擇學期",
+      "courses_count": "{count} 門課",
+      "semesters_count": "{count} 個學期",
+      "selected_semester_summary": "{semester} · {count} 門課",
+      "selected_semesters_summary": "{semesterCount} 個學期 · {courseCount} 門課",
+      "create_link": "建立連結",
+      "my_links": "我的連結",
+      "groups": "群組",
+      "name_optional": "名稱（選填）",
+      "timetable_placeholder": "{semester} 課表",
+      "semesters": "學期",
+      "live_sync": "即時同步",
+      "live_sync_description": "查看者永遠會看到你最新的課程",
+      "public_gallery": "公開展示",
+      "public_gallery_description": "會出現在社群課表瀏覽器中",
+      "anonymous": "匿名",
+      "anonymous_description": "對查看者隱藏你的身分",
+      "course_notes": "課程備註",
+      "course_notes_description": "新增所有查看你課表的人都能看見的備註。",
+      "grades_context": "成績與難度（選填）",
+      "grades_context_description": "幫助學弟妹了解這個學期。選填。",
+      "grade_placeholder": "成績（A+、A⋯）",
+      "difficulty_placeholder": "難度 1–5",
+      "attendance_placeholder": "點名方式",
+      "generating": "產生中⋯",
+      "generate_share_link": "產生分享連結",
+      "select_semester_hint": "至少選擇一個學期",
+      "add_courses_hint": "請先新增課程",
+      "no_links": "尚無分享連結。請在「建立連結」分頁建立。"
     },
     "DateContributeForm": {
       "title": "貢獻行事曆",
@@ -1327,6 +1495,14 @@
     "dashboard": {
       "title": "個人化儀表板",
       "description": "查看你的課程、作業與考試。"
+    },
+    "demo": {
+      "date_today": "5 月 7 日 星期三",
+      "date_tomorrow": "5 月 8 日",
+      "course_programming": "程式設計",
+      "course_linear_algebra": "線性代數",
+      "course_data_structures": "資料結構",
+      "course_computer_networks": "電腦網路"
     },
     "bus": {
       "title": "校車路線",
@@ -1602,7 +1778,12 @@
     "coming_soon": "即將推出",
     "share": "分享",
     "testing": "測試中",
-    "redirecting": "正在重新導向…"
+    "redirecting": "正在重新導向…",
+    "drag_to_reorder": "拖曳以重新排序",
+    "remove_widget": "移除小工具",
+    "not_found_title": "找不到頁面 | NTHUMods",
+    "not_found_description": "您要尋找的頁面不存在或已被移除。",
+    "not_found_heading": "找不到頁面"
   },
   "auth": {
     "timeout_title": "驗證逾時",
@@ -1640,6 +1821,10 @@
     "privacy_policy": "隱私權政策",
     "proxy_login": "代理登入",
     "design_system": "設計系統",
+    "github": "開啟 GitHub 儲存庫",
+    "email": "寄信給 NTHUMods",
+    "instagram": "開啟 Instagram 個人檔案",
+    "facebook": "開啟 Facebook 粉絲專頁",
     "copyright": "版權所有。",
     "disclaimer": "NTHUMods 與國立清華大學沒有隸屬關係。不過我的畢業仰賴他們，所以不用擔心。"
   },
@@ -2273,7 +2458,7 @@
   },
   "next_steps": {
     "title": "終止 NTHUMods 代理登入校務系統服務",
-    "salutation": "",
+    "salutation": "NTHUMods 社群您好：",
     "sections": [
       {
         "title": "發生了什麼",
@@ -2357,7 +2542,7 @@
         "items": []
       }
     ],
-    "translation_note": ""
+    "translation_note": "本文由中文版翻譯而成，如有任何差異，請以中文版為準。"
   },
   "proxy_login": {
     "title": "NTHUMods 代理登入說明",
@@ -2425,7 +2610,7 @@
         },
         {
           "title": "基本密碼處理流程",
-          "description": ""
+          "description": "密碼處理流程遵循標準的安全做法。"
         }
       ],
       "separator": "：",
@@ -2465,6 +2650,9 @@
     "or_our": "或我們的",
     "github_repository": "GitHub 儲存庫",
     "github_link": "這裡",
+    "personal_link": "開啟個人網站",
+    "github_profile": "開啟 GitHub 個人檔案",
+    "linkedin_profile": "開啟 LinkedIn 個人檔案",
     "recruitment_intro": "想一起讓 NTHUMods 變得更好嗎？",
     "recruitment_link": "查看目前招募職缺",
     "core_team": "核心團隊",

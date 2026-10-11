@@ -29,23 +29,52 @@ const Footer = () => {
             <a
               target="_blank"
               href="https://github.com/nthumodifications/courseweb"
+              aria-label={dict.footer.github}
             >
-              <Github size="20" className="text-muted-foreground" />
+              <Github
+                size="20"
+                className="text-muted-foreground"
+                aria-hidden="true"
+              />
             </a>
           </Button>
           <Button className="h-8 w-8" variant="ghost" size="icon" asChild>
-            <a target="_blank" href="mailto:nthumods@gmail.com">
-              <Mail size="20" className="text-muted-foreground" />
+            <a
+              target="_blank"
+              href="mailto:nthumods@gmail.com"
+              aria-label={dict.footer.email}
+            >
+              <Mail
+                size="20"
+                className="text-muted-foreground"
+                aria-hidden="true"
+              />
             </a>
           </Button>
           <Button className="h-8 w-8" variant="ghost" size="icon" asChild>
-            <a target="_blank" href="https://www.instagram.com/nthumods">
-              <Instagram size="20" className="text-muted-foreground" />
+            <a
+              target="_blank"
+              href="https://www.instagram.com/nthumods"
+              aria-label={dict.footer.instagram}
+            >
+              <Instagram
+                size="20"
+                className="text-muted-foreground"
+                aria-hidden="true"
+              />
             </a>
           </Button>
           <Button className="h-8 w-8" variant="ghost" size="icon" asChild>
-            <a target="_blank" href="https://facebook.com/nthumods">
-              <Facebook size="20" className="text-muted-foreground" />
+            <a
+              target="_blank"
+              href="https://facebook.com/nthumods"
+              aria-label={dict.footer.facebook}
+            >
+              <Facebook
+                size="20"
+                className="text-muted-foreground"
+                aria-hidden="true"
+              />
             </a>
           </Button>
         </div>

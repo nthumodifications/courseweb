@@ -35,13 +35,14 @@ import CourseTagList from "@/components/Courses/CourseTagsList";
 import { MinimalCourse } from "@/types/courses";
 import { getScoreType, getFormattedClassCode } from "@/helpers/courses";
 import { CourseDefinition } from "@/config/supabase";
-import { Fragment, lazy, Suspense, useState } from "react";
+import { Fragment, Suspense, useState } from "react";
 import { Language } from "@/types/settings";
 import { sanitizeCourseHtml } from "@/lib/sanitizeHtml";
 import ShareCourseButton from "./ShareCourseButton";
 import client from "@/config/api";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useQuery } from "@tanstack/react-query";
+import { lazyWithRetry } from "@/lib/chunk-recovery";
 import CourseDetailsSkeleton from "./CourseDetailsSkeleton";
 import { useCourseLink } from "@/components/Courses/CourseDialog";
 import { ModuleTermAvailability } from "@/components/Courses/ModuleTermAvailability";
@@ -68,10 +69,10 @@ import {
   type PttReview,
 } from "@/lib/ptt";
 
-const PDFViewerDynamic = lazy(
+const PDFViewerDynamic = lazyWithRetry(
   () => import("@/components/CourseDetails/PDFViewer"),
 );
-const SelectCourseButtonDynamic = lazy(
+const SelectCourseButtonDynamic = lazyWithRetry(
   () => import("@/components/Courses/SelectCourseButton"),
 );
 
@@ -97,6 +98,13 @@ const getPttDateLabel = (date: string | null) => {
   const parsed = new Date(date);
   return Number.isNaN(parsed.getTime()) ? date : format(parsed, "yyyy-MM-dd");
 };
+
+export const buildCourseProviderJsonLd = (providerAlternateName: string) => ({
+  "@type": "EducationalOrganization",
+  name: "National Tsing Hua University",
+  alternateName: providerAlternateName,
+  url: "https://www.nthu.edu.tw",
+});
 
 const PttReviewCollapsible = ({
   dict,
@@ -314,6 +322,23 @@ const CourseDetailContainer = ({
       ? getModuleHistoryVariant(moduleHistory, course.name_zh)
       : undefined;
   const syllabus = cleanSyllabusFields(course?.course_syllabus);
+  const seoCourseName =
+    lang === "en"
+      ? course?.name_en || course?.name_zh || ""
+      : course?.name_zh || "";
+  const seoAlternateName = lang === "en" ? course?.name_zh : course?.name_en;
+  const seoInstructors =
+    (lang === "en" ? course?.teacher_en : course?.teacher_zh)?.join(
+      dict.course.details.seo.instructor_separator,
+    ) ?? "";
+  const seoSemester = course ? toPrettySemester(course.semester) : "";
+  const fillSeo = (template: string) =>
+    template
+      .replace("{department}", course?.department ?? "")
+      .replace("{course}", seoCourseName)
+      .replace("{courseEn}", course?.name_en ?? "")
+      .replace("{instructors}", seoInstructors)
+      .replace("{semester}", seoSemester);
 
   // Dynamic SEO metadata for course detail pages (full-page view only)
   const courseJsonLd =
@@ -321,17 +346,14 @@ const CourseDetailContainer = ({
       ? {
           "@context": "https://schema.org",
           "@type": "Course",
-          name: course.name_zh,
-          alternateName: course.name_en,
+          name: seoCourseName,
+          alternateName: seoAlternateName,
           description:
             syllabus.brief ??
-            `清大 ${course.department} ${course.name_zh} 課程`,
-          provider: {
-            "@type": "EducationalOrganization",
-            name: "National Tsing Hua University",
-            alternateName: "國立清華大學",
-            url: "https://www.nthu.edu.tw",
-          },
+            fillSeo(dict.course.details.seo.course_description),
+          provider: buildCourseProviderJsonLd(
+            dict.course.details.seo.provider_alternate_name,
+          ),
           instructor: (course.teacher_zh ?? []).map((t) => ({
             "@type": "Person",
             name: t,
@@ -352,8 +374,14 @@ const CourseDetailContainer = ({
   const breadcrumbData =
     !modal && course
       ? [
-          { name: "首頁", url: `https://nthumods.com/${lang}` },
-          { name: "課程", url: `https://nthumods.com/${lang}/courses` },
+          {
+            name: dict.course.details.seo.home,
+            url: `https://nthumods.com/${lang}`,
+          },
+          {
+            name: dict.course.details.seo.course_breadcrumb,
+            url: `https://nthumods.com/${lang}/courses`,
+          },
           {
             name: course.department,
             url: `https://nthumods.com/${lang}/courses?department=${encodeURIComponent(course.department)}`,
@@ -383,8 +411,8 @@ const CourseDetailContainer = ({
       ? {
           "@context": "https://schema.org",
           "@type": "WebPage",
-          name: `${course.name_zh} | NTHUMods`,
-          description: `清大 ${toPrettySemester(course.semester)} ${course.name_zh} 課程資訊`,
+          name: `${seoCourseName} | NTHUMods`,
+          description: fillSeo(dict.course.details.seo.page_description),
           url: `https://nthumods.com/${lang}/courses/${course.raw_id}`,
           inLanguage: lang === "en" ? "en-US" : "zh-TW",
           isPartOf: { "@type": "WebSite", url: "https://nthumods.com" },
@@ -454,10 +482,10 @@ const CourseDetailContainer = ({
     <Fade>
       {!modal && course && (
         <Helmet>
-          <title>{`${course.name_zh} ${course.teacher_zh?.join("、")} - ${toPrettySemester(course.semester)} 清大${course.department}課程 | NTHUMods`}</title>
+          <title>{fillSeo(dict.course.details.seo.title)}</title>
           <meta
             name="description"
-            content={`清大 ${toPrettySemester(course.semester)} ${course.name_zh}（${course.name_en}）課程資訊，${course.teacher_zh?.join("、")} 授課。查看課程大綱、歷年評分記錄與學生心得。`}
+            content={fillSeo(dict.course.details.seo.description)}
           />
           <link
             rel="canonical"
@@ -480,11 +508,11 @@ const CourseDetailContainer = ({
           />
           <meta
             property="og:title"
-            content={`${course.name_zh} - ${course.department} | NTHUMods`}
+            content={fillSeo(dict.course.details.seo.open_graph_title)}
           />
           <meta
             property="og:description"
-            content={`清大 ${course.name_zh}（${course.name_en}），${course.teacher_zh?.join("、")} 授課，${toPrettySemester(course.semester)} 學期。查看課程大綱與歷年資訊。`}
+            content={fillSeo(dict.course.details.seo.open_graph_description)}
           />
           <meta
             property="og:url"
@@ -493,11 +521,11 @@ const CourseDetailContainer = ({
           <meta name="twitter:card" content="summary" />
           <meta
             name="twitter:title"
-            content={`${course.name_zh} - ${course.department} | NTHUMods`}
+            content={fillSeo(dict.course.details.seo.open_graph_title)}
           />
           <meta
             name="twitter:description"
-            content={`清大 ${course.name_zh}，${course.teacher_zh?.join("、")} 授課，${toPrettySemester(course.semester)} 學期。`}
+            content={fillSeo(dict.course.details.seo.twitter_description)}
           />
           {courseJsonLd && (
             <script type="application/ld+json">
@@ -975,6 +1003,7 @@ const CourseDetailContainer = ({
                           <Button
                             variant="ghost"
                             size="icon"
+                            aria-label={dict.a11y.view_course_details}
                             onClick={() => openCourse(m.raw_id)}
                           >
                             <ArrowRight size={16} />

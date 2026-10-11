@@ -96,6 +96,7 @@ const ExpandableClassFilter = ({
       <PopoverTrigger asChild>
         <button
           type="button"
+          aria-expanded={isOpen}
           className={cn(
             "flex items-center border rounded-md px-3 py-2 min-h-11 cursor-text w-full text-left",
             isOpen ? "ring-2 ring-primary" : "hover:border-primary/50",
@@ -135,6 +136,9 @@ const ExpandableClassFilter = ({
               <Input
                 value={searchValue}
                 onChange={(e) => handleSearch(e.target.value)}
+                aria-label={
+                  placeholder ?? dict.planner.coursePicker.searchForCourses
+                }
                 onClick={(e) => e.stopPropagation()}
                 className="border-none p-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0"
                 placeholder={

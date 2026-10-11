@@ -32,7 +32,6 @@ export const SEARCHABLE_FIELDS = [
   "teacher_zh",
   "name_en",
   "teacher_en",
-  "venues",
 ] as const;
 
 export type SearchProjectionRecord = UnknownRecord & {

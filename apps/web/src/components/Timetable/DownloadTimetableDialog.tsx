@@ -72,7 +72,7 @@ const DownloadTimetableComponent = () => {
             hour12: false,
           })
           .replaceAll(":", "");
-        const filename = `課表_${dateStr}_${timeStr}.png`;
+        const filename = `${dict.dialogs.DownloadTimetableDialog.image_filename_prefix}_${dateStr}_${timeStr}.png`;
 
         const link = document.createElement("a");
         link.download = filename;

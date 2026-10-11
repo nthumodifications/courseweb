@@ -72,4 +72,36 @@ describe("event schema v2 migration", () => {
     expect(migrated.courseId).toBe("course-1");
     expect(migrated.excludedDates).toEqual(["2026-09-11T01:00:00.000Z"]);
   });
+
+  it("repairs malformed legacy dates and scalar fields with safe defaults", () => {
+    expect(
+      migrateEventToV2({
+        id: 42,
+        title: null,
+        allDay: "yes",
+        start: "not-a-date",
+        end: null,
+        repeat: "daily",
+        color: "",
+        tag: 0,
+        actualEnd: "not-a-date",
+        excludedDates: [null, "also-not-a-date"],
+        parentId: 99,
+        courseId: 123,
+      }),
+    ).toMatchObject({
+      id: "migrated-event",
+      title: "Event",
+      allDay: false,
+      start: "1970-01-01T00:00:00.000Z",
+      end: "1970-01-01T00:00:00.000Z",
+      repeat: null,
+      color: "#3b82f6",
+      tag: "Event",
+      actualEnd: "1970-01-01T00:00:00.000Z",
+      excludedDates: [],
+      parentId: "",
+      courseId: null,
+    });
+  });
 });

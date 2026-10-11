@@ -3,10 +3,11 @@ import ReactMarkdown from "react-markdown";
 import { Skeleton } from "@courseweb/ui";
 import { Link, useParams } from "react-router-dom";
 import remarkGfm from "remark-gfm";
+import { lazyWithRetry } from "@/lib/chunk-recovery";
 
 // Lazy load heavy components
-const CourseListRenderer = React.lazy(() => import("./CourseListRenderer"));
-const TimetableRenderer = React.lazy(() => import("./TimetableRenderer"));
+const CourseListRenderer = lazyWithRetry(() => import("./CourseListRenderer"));
+const TimetableRenderer = lazyWithRetry(() => import("./TimetableRenderer"));
 
 interface RichMessageContentProps {
   content: string;

@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import { Textarea, Input, Checkbox, Label } from "@courseweb/ui";
+import useDictionary from "@/dictionaries/useDictionary";
 const StructuredComment = ({
   onValueChange,
 }: {
   onValueChange: (value: string) => void;
 }) => {
+  const dict = useDictionary();
+  const labels = dict.course.details.structured_comment;
   const [attendance, setAttendance] = useState<boolean>(false);
   const [hasPastYearMaterials, setHasPastYearMaterials] =
     useState<boolean>(false);
@@ -19,23 +22,23 @@ const StructuredComment = ({
   const [extraComments, setExtraComments] = useState<string>("");
 
   const handleValueChange = () => {
-    const value = `# 有點名：
-  ${attendance ? "有" : "沒有"}\n
-  # 有考古：
-  ${hasPastYearMaterials ? "有" : "沒有"}\n
-  # 加簽：
+    const value = `# ${labels.attendance}${labels.separator}
+  ${attendance ? labels.yes : labels.no}\n
+  # ${labels.past_materials}${labels.separator}
+  ${hasPastYearMaterials ? labels.yes : labels.no}\n
+  # ${labels.extra_selection}${labels.separator}
   ${extraSelection}\n
-  # 建議先修課程：
+  # ${labels.prerequisite}${labels.separator}
   ${suggestedPrerequisite}\n
-  # 上課方式：
+  # ${labels.method}${labels.separator}
   ${courseMethod}\n
-  # 給分：
+  # ${labels.grading}${labels.separator}
   ${scoring}\n
-  # 考試作業型態：
+  # ${labels.exam_type}${labels.separator}
   ${examType}\n
-  # 老師的喜好、個性：
+  # ${labels.instructor_personality}${labels.separator}
   ${instructorPersonality}\n
-  # 補充：
+  # ${labels.additional}${labels.separator}
   ${extraComments}\n
   `;
     onValueChange(value);
@@ -53,13 +56,15 @@ const StructuredComment = ({
     examType,
     instructorPersonality,
     extraComments,
+    labels,
   ]);
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-row gap-2 items-center">
-        <Label>有點名</Label>
+        <Label>{labels.attendance}</Label>
         <Checkbox
+          aria-label={labels.attendance}
           checked={attendance}
           onCheckedChange={(v) =>
             typeof v == "string"
@@ -69,8 +74,9 @@ const StructuredComment = ({
         />
       </div>
       <div className="flex flex-row gap-2 items-center">
-        <Label>有考古</Label>
+        <Label>{labels.past_materials}</Label>
         <Checkbox
+          aria-label={labels.past_materials}
           checked={hasPastYearMaterials}
           onCheckedChange={(v) =>
             typeof v == "string"
@@ -80,57 +86,57 @@ const StructuredComment = ({
         />
       </div>
       <div className="flex flex-col gap-2">
-        <Label>加簽</Label>
+        <Label>{labels.extra_selection}</Label>
         <Input
-          placeholder="是/否，補充~"
+          placeholder={labels.yes_no_placeholder}
           value={extraSelection}
           onChange={(e) => setExtraSelection(e.target.value)}
         />
       </div>
       <div className="flex flex-col gap-2">
-        <Label>建議先修課程</Label>
+        <Label>{labels.prerequisite}</Label>
         <Input
-          placeholder="建議先修課程"
+          placeholder={labels.prerequisite_placeholder}
           value={suggestedPrerequisite}
           onChange={(e) => setSuggestedPrerequisite(e.target.value)}
         />
       </div>
       <div className="flex flex-col gap-2">
-        <Label>上課方式</Label>
+        <Label>{labels.method}</Label>
         <Textarea
-          placeholder="上課方式"
+          placeholder={labels.method_placeholder}
           value={courseMethod}
           onChange={(e) => setCourseMethod(e.target.value)}
         />
       </div>
       <div className="flex flex-col gap-2">
-        <Label>給分</Label>
+        <Label>{labels.grading}</Label>
         <Textarea
-          placeholder="給分"
+          placeholder={labels.grading_placeholder}
           value={scoring}
           onChange={(e) => setScoring(e.target.value)}
         />
       </div>
       <div className="flex flex-col gap-2">
-        <Label>考試作業型態</Label>
+        <Label>{labels.exam_type}</Label>
         <Textarea
-          placeholder="考試作業型態"
+          placeholder={labels.exam_type_placeholder}
           value={examType}
           onChange={(e) => setExamType(e.target.value)}
         />
       </div>
       <div className="flex flex-col gap-2">
-        <Label>老師的喜好、個性</Label>
+        <Label>{labels.instructor_personality}</Label>
         <Textarea
-          placeholder="老師的喜好、個性"
+          placeholder={labels.instructor_personality_placeholder}
           value={instructorPersonality}
           onChange={(e) => setInstructorPersonality(e.target.value)}
         />
       </div>
       <div className="flex flex-col gap-2">
-        <Label>補充</Label>
+        <Label>{labels.additional}</Label>
         <Textarea
-          placeholder="補充"
+          placeholder={labels.additional_placeholder}
           value={extraComments}
           onChange={(e) => setExtraComments(e.target.value)}
         />

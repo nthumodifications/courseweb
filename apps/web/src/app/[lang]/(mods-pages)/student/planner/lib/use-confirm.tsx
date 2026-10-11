@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import useDictionary from "@/dictionaries/useDictionary";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,6 +25,7 @@ interface ConfirmState {
 }
 
 export function useConfirm() {
+  const dict = useDictionary();
   const [state, setState] = useState<ConfirmState | null>(null);
 
   const confirm = useCallback((options: ConfirmOptions) => {
@@ -57,7 +59,7 @@ export function useConfirm() {
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel onClick={() => settle(false)}>
-            {state?.options.cancelLabel ?? "取消"}
+            {state?.options.cancelLabel ?? dict.planner.common.cancel}
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={() => settle(true)}
@@ -67,7 +69,7 @@ export function useConfirm() {
                 : undefined
             }
           >
-            {state?.options.confirmLabel ?? "確認"}
+            {state?.options.confirmLabel ?? dict.planner.common.confirm}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

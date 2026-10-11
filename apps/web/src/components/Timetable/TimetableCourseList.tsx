@@ -13,7 +13,7 @@ import { useSettings } from "@/hooks/contexts/settings";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { useNavigate } from "react-router-dom";
 import useDictionary from "@/dictionaries/useDictionary";
-import { lazy, Suspense, useMemo } from "react";
+import { Suspense, useMemo } from "react";
 import useSyncedStorage from "@/hooks/useSyncedStorage";
 import { hasConflictingTimeslots, hasSameCourse } from "@/helpers/courses";
 import { MinimalCourse } from "@/types/courses";
@@ -65,8 +65,9 @@ import { isCourseHidden } from "@/helpers/timetableVisibility";
 import { UnresolvedCoursesNotice } from "./UnresolvedCoursesNotice";
 import CourseListItem from "@/components/Courses/CourseListItem";
 import type { CourseDefinition } from "@/config/supabase";
+import { lazyWithRetry } from "@/lib/chunk-recovery";
 
-const DownloadTimetableDialogLazy = lazy(
+const DownloadTimetableDialogLazy = lazyWithRetry(
   () => import("./DownloadTimetableDialog"),
 );
 export const DownloadTimetableDialogDynamic = ({
@@ -75,21 +76,30 @@ export const DownloadTimetableDialogDynamic = ({
 }: {
   icsfileLink: string;
   children?: React.ReactNode;
-}) => (
-  <Suspense
-    fallback={
-      <Button variant="ghost" size="icon" className="h-8 w-8" disabled>
-        <Loader2 className="w-4 h-4 animate-spin" />
-      </Button>
-    }
-  >
-    <DownloadTimetableDialogLazy icsfileLink={icsfileLink}>
-      {children}
-    </DownloadTimetableDialogLazy>
-  </Suspense>
-);
+}) => {
+  const dict = useDictionary();
+  return (
+    <Suspense
+      fallback={
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          aria-label={dict.common.loading}
+          disabled
+        >
+          <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+        </Button>
+      }
+    >
+      <DownloadTimetableDialogLazy icsfileLink={icsfileLink}>
+        {children}
+      </DownloadTimetableDialogLazy>
+    </Suspense>
+  );
+};
 
-const ShareSyncTimetableDialogLazy = lazy(
+const ShareSyncTimetableDialogLazy = lazyWithRetry(
   () => import("./ShareSyncTimetableDialog"),
 );
 export const ShareSyncTimetableDialogDynamic = ({
@@ -113,7 +123,7 @@ export const ShareSyncTimetableDialogDynamic = ({
   </Suspense>
 );
 
-const CourseSearchContainerLazy = lazy(
+const CourseSearchContainerLazy = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/courses/CourseSearchContainer"),
 );
 export const CourseSearchContainerDynamic = () => (
@@ -122,7 +132,9 @@ export const CourseSearchContainerDynamic = () => (
   </Suspense>
 );
 
-const ShareTimetableDialogLazy = lazy(() => import("./ShareTimetableDialog"));
+const ShareTimetableDialogLazy = lazyWithRetry(
+  () => import("./ShareTimetableDialog"),
+);
 export const ShareTimetableDialogDynamic = ({
   children,
   initialTab,
@@ -309,6 +321,7 @@ const TimetableCourseListItem = ({
                     className="rounded-l-none"
                     variant="outline"
                     size="icon"
+                    aria-label={dict.a11y.delete}
                     onClick={() => deleteCourse(course.raw_id)}
                   >
                     <Trash className="w-4 h-4" />

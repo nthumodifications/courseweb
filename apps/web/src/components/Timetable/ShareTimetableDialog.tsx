@@ -55,6 +55,7 @@ import { semesterInfo } from "@courseweb/shared";
 import client from "@/config/api";
 import { CourseDefinition } from "@/config/supabase";
 import { useNavigate, useParams } from "react-router-dom";
+import useDictionary from "@/dictionaries/useDictionary";
 
 function useLang() {
   const { lang } = useParams<{ lang: string }>();
@@ -72,6 +73,8 @@ function ShareListItem({
   share: SharedTimetable;
   onDelete: () => void;
 }>) {
+  const dict = useDictionary();
+  const labels = dict.dialogs.ShareTimetableDialog;
   const [expanded, setExpanded] = useState(false);
   const [showQr, setShowQr] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -98,16 +101,16 @@ function ShareListItem({
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             {share.isLive ? (
               <span className="flex items-center gap-0.5">
-                <RefreshCw className="h-2.5 w-2.5" /> Live
+                <RefreshCw className="h-2.5 w-2.5" /> {labels.live}
               </span>
             ) : (
               <span className="flex items-center gap-0.5">
-                <Lock className="h-2.5 w-2.5" /> Snapshot
+                <Lock className="h-2.5 w-2.5" /> {labels.snapshot}
               </span>
             )}
             {share.visibility === "public" && (
               <span className="flex items-center gap-0.5">
-                <Globe className="h-2.5 w-2.5" /> Public
+                <Globe className="h-2.5 w-2.5" /> {labels.public}
               </span>
             )}
           </div>
@@ -116,6 +119,7 @@ function ShareListItem({
           size="icon"
           variant="ghost"
           className="h-7 w-7 shrink-0"
+          aria-label={dict.a11y.copy}
           onClick={copy}
         >
           {copied ? (
@@ -128,6 +132,8 @@ function ShareListItem({
           size="icon"
           variant="ghost"
           className="h-7 w-7 shrink-0"
+          aria-label={expanded ? dict.a11y.collapse : dict.a11y.expand}
+          aria-expanded={expanded}
           onClick={() => setExpanded((v) => !v)}
         >
           <ChevronDown
@@ -147,7 +153,7 @@ function ShareListItem({
               onClick={() => setShowQr((v) => !v)}
             >
               <QrCode className="h-3 w-3 mr-1" />
-              {showQr ? "Hide QR" : "Show QR"}
+              {showQr ? labels.hide_qr : labels.show_qr}
             </Button>
             <Button
               size="sm"
@@ -155,7 +161,7 @@ function ShareListItem({
               className="h-7 text-xs px-2"
               onClick={onDelete}
             >
-              <Trash2 className="h-3 w-3 mr-1" /> Delete
+              <Trash2 className="h-3 w-3 mr-1" /> {labels.delete}
             </Button>
           </div>
           {showQr && (
@@ -181,6 +187,8 @@ function NoteEditor({
   courseName: string;
   onSave: (note: string) => void;
 }>) {
+  const dict = useDictionary();
+  const labels = dict.dialogs.ShareTimetableDialog;
   const [value, setValue] = useState(courseNote);
   return (
     <div className="flex flex-col gap-1">
@@ -189,7 +197,7 @@ function NoteEditor({
         <Input
           value={value}
           onChange={(e) => setValue(e.target.value)}
-          placeholder='e.g. "No attendance required"'
+          placeholder={labels.note_placeholder}
           maxLength={200}
           className="text-sm h-8"
         />
@@ -199,7 +207,7 @@ function NoteEditor({
           className="h-8 shrink-0"
           onClick={() => onSave(value)}
         >
-          Save
+          {labels.save}
         </Button>
       </div>
     </div>
@@ -212,6 +220,8 @@ function GroupsTab({
 }: {
   readonly semester: string;
 }) {
+  const dict = useDictionary();
+  const labels = dict.dialogs.ShareTimetableDialog;
   const [groupName, setGroupName] = useState("");
   const [groupSemester, setGroupSemester] = useState(activeSemester);
   const [creatorLabel, setCreatorLabel] = useState("");
@@ -253,7 +263,11 @@ function GroupsTab({
       setCreated({ inviteCode: group.inviteCode, name: group.name });
     },
     onError: (e: Error) =>
-      toast({ title: "Error", description: e.message, variant: "destructive" }),
+      toast({
+        title: labels.error,
+        description: e.message,
+        variant: "destructive",
+      }),
   });
 
   const inviteUrl = created
@@ -277,7 +291,7 @@ function GroupsTab({
         <div className="text-center py-2">
           <p className="font-semibold">{created.name}</p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Group created — share the link below
+            {labels.group_created}
           </p>
         </div>
         <div className="flex gap-2">
@@ -286,7 +300,12 @@ function GroupsTab({
             readOnly
             className="font-mono text-xs flex-1"
           />
-          <Button size="icon" variant="outline" onClick={copyInvite}>
+          <Button
+            size="icon"
+            variant="outline"
+            aria-label={dict.a11y.copy}
+            onClick={copyInvite}
+          >
             {copiedInvite ? (
               <Check className="h-4 w-4" />
             ) : (
@@ -300,7 +319,7 @@ function GroupsTab({
             navigate(`/${lang}/timetable/group/${created.inviteCode}`)
           }
         >
-          Open group <ChevronRight className="h-4 w-4 ml-1" />
+          {labels.open_group} <ChevronRight className="h-4 w-4 ml-1" />
         </Button>
         <Button
           variant="ghost"
@@ -311,7 +330,7 @@ function GroupsTab({
             setCreatorLabel("");
           }}
         >
-          Create another
+          {labels.create_another}
         </Button>
       </div>
     );
@@ -320,10 +339,10 @@ function GroupsTab({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-2">
-        <Label htmlFor="group-name">Group name</Label>
+        <Label htmlFor="group-name">{labels.group_name}</Label>
         <Input
           id="group-name"
-          placeholder="e.g. CS Friends 113-2"
+          placeholder={labels.group_name_placeholder}
           value={groupName}
           onChange={(e) => setGroupName(e.target.value)}
           maxLength={80}
@@ -332,7 +351,7 @@ function GroupsTab({
 
       <div className="grid grid-cols-2 gap-3">
         <div className="flex flex-col gap-2">
-          <Label>Semester</Label>
+          <Label>{labels.semester}</Label>
           <Select value={groupSemester} onValueChange={setGroupSemester}>
             <SelectTrigger className="text-sm">
               <SelectValue />
@@ -347,10 +366,10 @@ function GroupsTab({
           </Select>
         </div>
         <div className="flex flex-col gap-2">
-          <Label htmlFor="creator-label">Your nickname</Label>
+          <Label htmlFor="creator-label">{labels.nickname}</Label>
           <Input
             id="creator-label"
-            placeholder="How you appear"
+            placeholder={labels.nickname_placeholder}
             value={creatorLabel}
             onChange={(e) => setCreatorLabel(e.target.value)}
             maxLength={60}
@@ -359,8 +378,10 @@ function GroupsTab({
       </div>
 
       <p className="text-xs text-muted-foreground -mt-1">
-        Your timetable for {toPrettySemester(groupSemester)} will be linked
-        automatically.
+        {labels.group_timetable_hint.replace(
+          "{semester}",
+          toPrettySemester(groupSemester),
+        )}
       </p>
 
       <Button
@@ -373,7 +394,7 @@ function GroupsTab({
         ) : (
           <Users className="h-4 w-4 mr-2" />
         )}
-        Create Group
+        {labels.create_group}
       </Button>
     </div>
   );
@@ -387,6 +408,7 @@ const ShareTimetableDialog = ({
   children: React.ReactNode;
   initialTab?: ShareTab;
 }) => {
+  const labels = useDictionary().dialogs.ShareTimetableDialog;
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<ShareTab>(initialTab);
   const [visibility, setVisibility] = useState<Visibility>("link_only");
@@ -473,19 +495,23 @@ const ShareTimetableDialog = ({
       queryClient.invalidateQueries({ queryKey: ["own-shares"] });
       setTab("manage");
       toast({
-        title: "Share link created!",
-        description: `Share ID: ${share.id}`,
+        title: labels.share_link_created,
+        description: labels.share_id.replace("{id}", share.id),
       });
     },
     onError: (e: Error) =>
-      toast({ title: "Error", description: e.message, variant: "destructive" }),
+      toast({
+        title: labels.error,
+        description: e.message,
+        variant: "destructive",
+      }),
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteShare,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["own-shares"] });
-      toast({ title: "Share link deleted" });
+      toast({ title: labels.share_link_deleted });
     },
   });
 
@@ -495,10 +521,8 @@ const ShareTimetableDialog = ({
         <DialogTrigger asChild>{children}</DialogTrigger>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Share Timetable</DialogTitle>
-            <DialogDescription>
-              Sign in to share your timetable.
-            </DialogDescription>
+            <DialogTitle>{labels.share_timetable}</DialogTitle>
+            <DialogDescription>{labels.sign_in_to_share}</DialogDescription>
           </DialogHeader>
         </DialogContent>
       </Dialog>
@@ -511,14 +535,27 @@ const ShareTimetableDialog = ({
       <DialogContent className="max-w-lg flex flex-col max-h-[90dvh] overflow-hidden">
         <DialogHeader className="shrink-0">
           <DialogTitle className="flex items-center gap-2">
-            <Share2 className="h-5 w-5" /> Share Timetable
+            <Share2 className="h-5 w-5" /> {labels.share_timetable}
           </DialogTitle>
           <DialogDescription>
             {selectedSemesters.length === 0
-              ? "No semesters selected"
+              ? labels.no_semesters_selected
               : selectedSemesters.length === 1
-                ? `${toPrettySemester(selectedSemesters[0])} · ${allSelectedCourseIds.length} courses`
-                : `${selectedSemesters.length} semesters · ${allSelectedCourseIds.length} courses`}
+                ? labels.selected_semester_summary
+                    .replace(
+                      "{semester}",
+                      toPrettySemester(selectedSemesters[0]),
+                    )
+                    .replace("{count}", String(allSelectedCourseIds.length))
+                : labels.selected_semesters_summary
+                    .replace(
+                      "{semesterCount}",
+                      String(selectedSemesters.length),
+                    )
+                    .replace(
+                      "{courseCount}",
+                      String(allSelectedCourseIds.length),
+                    )}
           </DialogDescription>
         </DialogHeader>
 
@@ -529,10 +566,10 @@ const ShareTimetableDialog = ({
         >
           <TabsList className="w-full shrink-0">
             <TabsTrigger value="create" className="flex-1">
-              Create Link
+              {labels.create_link}
             </TabsTrigger>
             <TabsTrigger value="manage" className="flex-1">
-              My Links
+              {labels.my_links}
               {ownShares.length > 0 && (
                 <Badge variant="secondary" className="ml-1 h-4 text-xs px-1">
                   {ownShares.length}
@@ -541,7 +578,7 @@ const ShareTimetableDialog = ({
             </TabsTrigger>
             <TabsTrigger value="groups" className="flex-1">
               <Users className="h-3.5 w-3.5 mr-1" />
-              Groups
+              {labels.groups}
             </TabsTrigger>
           </TabsList>
 
@@ -550,10 +587,13 @@ const ShareTimetableDialog = ({
             <ScrollArea className="h-full max-h-[55vh] pr-1">
               <div className="flex flex-col gap-4 py-3">
                 <div className="flex flex-col gap-2">
-                  <Label htmlFor="share-name">Name (optional)</Label>
+                  <Label htmlFor="share-name">{labels.name_optional}</Label>
                   <Input
                     id="share-name"
-                    placeholder={`${toPrettySemester(semester)} Timetable`}
+                    placeholder={labels.timetable_placeholder.replace(
+                      "{semester}",
+                      toPrettySemester(semester),
+                    )}
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                     maxLength={100}
@@ -562,7 +602,7 @@ const ShareTimetableDialog = ({
 
                 {allSemestersWithItems.length > 0 && (
                   <div className="flex flex-col gap-2">
-                    <Label>Semesters</Label>
+                    <Label>{labels.semesters}</Label>
                     <div className="flex flex-wrap gap-1.5">
                       {allSemestersWithItems.map((sem) => (
                         <button
@@ -586,21 +626,26 @@ const ShareTimetableDialog = ({
                 <div className="flex flex-col gap-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <Label>Live sync</Label>
+                      <Label>{labels.live_sync}</Label>
                       <p className="text-xs text-muted-foreground">
-                        Viewers always see your latest courses
-                      </p>
-                    </div>
-                    <Switch checked={isLive} onCheckedChange={setIsLive} />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Public gallery</Label>
-                      <p className="text-xs text-muted-foreground">
-                        Appears in community timetable browser
+                        {labels.live_sync_description}
                       </p>
                     </div>
                     <Switch
+                      aria-label={labels.live_sync}
+                      checked={isLive}
+                      onCheckedChange={setIsLive}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>{labels.public_gallery}</Label>
+                      <p className="text-xs text-muted-foreground">
+                        {labels.public_gallery_description}
+                      </p>
+                    </div>
+                    <Switch
+                      aria-label={labels.public_gallery}
                       checked={visibility === "public"}
                       onCheckedChange={(v) =>
                         setVisibility(v ? "public" : "link_only")
@@ -609,12 +654,13 @@ const ShareTimetableDialog = ({
                   </div>
                   <div className="flex items-center justify-between">
                     <div>
-                      <Label>Anonymous</Label>
+                      <Label>{labels.anonymous}</Label>
                       <p className="text-xs text-muted-foreground">
-                        Hide your identity from viewers
+                        {labels.anonymous_description}
                       </p>
                     </div>
                     <Switch
+                      aria-label={labels.anonymous}
                       checked={isAnonymous}
                       onCheckedChange={setIsAnonymous}
                     />
@@ -629,7 +675,7 @@ const ShareTimetableDialog = ({
                       variant="ghost"
                       className="w-full justify-between h-8 px-2"
                     >
-                      <span className="text-sm">Course notes</span>
+                      <span className="text-sm">{labels.course_notes}</span>
                       {notesOpen ? (
                         <ChevronDown className="h-4 w-4" />
                       ) : (
@@ -639,7 +685,7 @@ const ShareTimetableDialog = ({
                   </CollapsibleTrigger>
                   <CollapsibleContent className="flex flex-col gap-3 mt-2">
                     <p className="text-xs text-muted-foreground">
-                      Add notes visible to anyone viewing your timetable.
+                      {labels.course_notes_description}
                     </p>
                     {semesterCourses.map((c) => (
                       <NoteEditor
@@ -665,9 +711,7 @@ const ShareTimetableDialog = ({
                         variant="ghost"
                         className="w-full justify-between h-8 px-2"
                       >
-                        <span className="text-sm">
-                          Grade & difficulty context
-                        </span>
+                        <span className="text-sm">{labels.grades_context}</span>
                         {gradeMode ? (
                           <ChevronDown className="h-4 w-4" />
                         ) : (
@@ -677,7 +721,7 @@ const ShareTimetableDialog = ({
                     </CollapsibleTrigger>
                     <CollapsibleContent className="flex flex-col gap-3 mt-2">
                       <p className="text-xs text-muted-foreground">
-                        Help juniors understand this semester. Optional.
+                        {labels.grades_context_description}
                       </p>
                       {semesterCourses.map((c) => (
                         <div key={c.raw_id} className="flex flex-col gap-1">
@@ -686,7 +730,7 @@ const ShareTimetableDialog = ({
                           </span>
                           <div className="flex gap-2">
                             <Input
-                              placeholder="Grade (A+, A, ...)"
+                              placeholder={labels.grade_placeholder}
                               maxLength={3}
                               className="h-7 text-sm w-24"
                               value={gradeContext[c.raw_id]?.grade ?? ""}
@@ -701,7 +745,7 @@ const ShareTimetableDialog = ({
                               }
                             />
                             <Input
-                              placeholder="Difficulty 1-5"
+                              placeholder={labels.difficulty_placeholder}
                               type="number"
                               min={1}
                               max={5}
@@ -718,7 +762,7 @@ const ShareTimetableDialog = ({
                               }
                             />
                             <Input
-                              placeholder="Attendance"
+                              placeholder={labels.attendance_placeholder}
                               className="h-7 text-sm flex-1"
                               value={gradeContext[c.raw_id]?.attendance ?? ""}
                               onChange={(e) =>
@@ -751,24 +795,25 @@ const ShareTimetableDialog = ({
                   {createMutation.isPending ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />{" "}
-                      Generating...
+                      {labels.generating}
                     </>
                   ) : (
                     <>
-                      <Link className="h-4 w-4 mr-2" /> Generate Share Link
+                      <Link className="h-4 w-4 mr-2" />{" "}
+                      {labels.generate_share_link}
                     </>
                   )}
                 </Button>
                 {selectedSemesters.length === 0 && (
                   <p className="text-xs text-center text-muted-foreground">
-                    Select at least one semester
+                    {labels.select_semester_hint}
                   </p>
                 )}
                 {selectedSemesters.length > 0 &&
                   allSelectedCourseIds.length === 0 &&
                   allSelectedCustomItems.length === 0 && (
                     <p className="text-xs text-center text-muted-foreground">
-                      Add courses first
+                      {labels.add_courses_hint}
                     </p>
                   )}
               </div>
@@ -785,7 +830,7 @@ const ShareTimetableDialog = ({
                   </div>
                 ) : ownShares.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground text-sm">
-                    No share links yet. Create one in the "Create Link" tab.
+                    {labels.no_links}
                   </div>
                 ) : (
                   ownShares.map((share) => (

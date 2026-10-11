@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { fetchUpstream } from "./utils/upstream";
 
 const DINING_API_URL = "https://api.nthusa.tw/dining/";
 const DINING_REQUEST_TIMEOUT_MS = 8_000;
@@ -7,15 +8,16 @@ const DINING_CACHE_CONTROL =
 
 const app = new Hono().get("/", async (c) => {
   try {
-    const upstreamResponse = await fetch(DINING_API_URL, {
+    const upstreamResponse = await fetchUpstream(DINING_API_URL, {
       headers: { Accept: "application/json" },
       signal: AbortSignal.timeout(DINING_REQUEST_TIMEOUT_MS),
     });
 
-    if (!upstreamResponse.ok) {
-      console.error(
-        `Dining API returned ${upstreamResponse.status} ${upstreamResponse.statusText}`,
-      );
+    const body = await upstreamResponse.clone().text();
+    try {
+      JSON.parse(body);
+    } catch {
+      console.error("Dining API returned an unparseable body");
       return c.json({ error: "Dining service is unavailable" }, 502);
     }
 

@@ -1,16 +1,24 @@
 import { describe, expect, test } from "bun:test";
 import {
   classifyCustomTimetableSlot,
+  addTimetableFractions,
   canSortTimetableCourses,
   createTimetableFromCourses,
+  createTimetableFromCoursesAndCustomItems,
+  createTimetableFromCustomItems,
+  formatTimetableClock,
+  getCustomSlotTimeRange,
   getTimetableCourseListStatus,
   getTimetableDataTimeRange,
   getUnresolvedCourseIds,
   getTimetableExtendedHoursGeometry,
   getTimetableOffGridBounds,
   getTimetableTimeRangePosition,
+  getTimetableSlotTimes,
   migrateLegacySemesterCourses,
   reorderStoredCourseIdsByCredits,
+  timeToMinutes,
+  colorMapFromCourses,
   timetableGridEnd,
   timetableGridStart,
 } from "./timetable";
@@ -59,6 +67,19 @@ const activity = (start: string, end: string) =>
   ({ customSlot: slot(start, end) }) as CourseTimeslotData;
 
 describe("custom timetable slot start-time classification", () => {
+  test("converts clock values and exposes schedule slot boundaries", () => {
+    expect(timeToMinutes("09:05")).toBe(545);
+    expect(formatTimetableClock(545)).toBe("09:05");
+    expect(getCustomSlotTimeRange(slot("09:05", "10:20"))).toEqual({
+      start: 545,
+      end: 620,
+    });
+    expect(getTimetableSlotTimes({ startTime: 0, endTime: 1 })).toEqual({
+      start: scheduleTimeSlots[0],
+      end: scheduleTimeSlots[1],
+    });
+  });
+
   test("starts during school hours and stays in the grid", () => {
     expect(classifyCustomTimetableSlot(slot("09:00", "10:00"))).toBe("grid");
   });
@@ -263,6 +284,97 @@ describe("course timetable slot parsing", () => {
         textColor: "#ffffff",
       }),
     ).toEqual({ start: 8 * 60, end: 22 * 60 + 20 });
+  });
+
+  test("assigns separate columns to overlapping course slots", () => {
+    const [first, second] = createTimetableFromCourses([
+      courseWithTimes(["M1M2"]),
+      {
+        ...courseWithTimes(["M2M3"]),
+        raw_id: "11510-CS 1010 2",
+      },
+    ]);
+    const result = addTimetableFractions([first!, second!]);
+
+    expect(
+      result.map(({ fraction, fractionIndex, timeSlots }) => ({
+        fraction,
+        fractionIndex,
+        timeSlots,
+      })),
+    ).toEqual([
+      { fraction: 2, fractionIndex: 1, timeSlots: ["0:0", "0:1"] },
+      { fraction: 2, fractionIndex: 2, timeSlots: ["0:1", "0:2"] },
+    ]);
+  });
+
+  test("maps freeform and legacy custom items into timetable slots", () => {
+    const freeform = {
+      id: "seminar",
+      title: "Seminar",
+      color: "#123456",
+      slots: [slot("09:05", "10:20")],
+    };
+    const legacy = {
+      id: "legacy",
+      title: "Legacy",
+      color: "#654321",
+      schedule: ["M1M2"],
+    };
+
+    const result = createTimetableFromCoursesAndCustomItems(
+      [],
+      [freeform, legacy],
+    );
+
+    expect(result).toHaveLength(2);
+    expect(
+      result.map(({ customItem, customSlot }) => ({
+        id: customItem?.id,
+        customSlot,
+      })),
+    ).toEqual([
+      { id: "seminar", customSlot: slot("09:05", "10:20") },
+      { id: "legacy", customSlot: slot("08:00", "09:50") },
+    ]);
+  });
+
+  test("cycles explicit timetable colors and keeps duplicate ids deterministic", () => {
+    expect(colorMapFromCourses(["a", "b", "c"], ["#one", "#two"])).toEqual({
+      a: "#one",
+      b: "#two",
+      c: "#one",
+    });
+    expect(
+      createTimetableFromCustomItems([
+        { id: "bad", title: "Bad", color: "#000", slots: [] },
+      ]),
+    ).toEqual([]);
+  });
+
+  test("assigns the same colors when courses arrive in a different order", () => {
+    expect(
+      colorMapFromCourses(["course-b", "course-a"], ["#one", "#two"]),
+    ).toEqual({
+      "course-a": "#one",
+      "course-b": "#two",
+    });
+  });
+
+  test("groups irregularly ordered consecutive periods", () => {
+    const timetable = createTimetableFromCourses([courseWithTimes(["M1M3M2"])]);
+
+    expect(timetableCoordinates(timetable)).toEqual([
+      { dayOfWeek: 0, startTime: 0, endTime: 2 },
+    ]);
+  });
+
+  test("preserves HEAD output for an ordered timetable", () => {
+    expect(
+      timetableCoordinates(
+        createTimetableFromCourses([courseWithTimes(["M1M2"])]),
+      ),
+    ).toEqual([{ dayOfWeek: 0, startTime: 0, endTime: 1 }]);
   });
 });
 

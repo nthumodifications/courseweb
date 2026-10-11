@@ -27,12 +27,11 @@ const BusRouteDetailsPage = () => {
   const dict = useDictionary();
   const navigate = useNavigate();
 
-  const routeNames: Record<string, { zh: string; en: string }> = {
-    main: { zh: "校園公車", en: "Main Campus Bus" },
-    nanda: { zh: "南大校區區間車", en: "Nanda Campus Shuttle" },
+  const routeNames: Record<string, string> = {
+    main: dict.bus.campus_bus,
+    nanda: dict.bus.nanda_shuttle,
   };
-  const routeInfo = routeNames[route] ?? { zh: "校車", en: "Campus Bus" };
-  const routeName = lang === "zh" ? routeInfo.zh : routeInfo.en;
+  const routeName = routeNames[route] ?? dict.bus.fallback_route;
 
   const busRouteJsonLd = [
     {
@@ -42,13 +41,13 @@ const BusRouteDetailsPage = () => {
         {
           "@type": "ListItem",
           position: 1,
-          name: "首頁",
+          name: dict.course.seo.home,
           item: `https://nthumods.com/${lang}`,
         },
         {
           "@type": "ListItem",
           position: 2,
-          name: "校車",
+          name: dict.navigation.bus,
           item: `https://nthumods.com/${lang}/bus`,
         },
         {
@@ -62,8 +61,11 @@ const BusRouteDetailsPage = () => {
     {
       "@context": "https://schema.org",
       "@type": "WebPage",
-      name: `${routeName} - 校車時刻表 | NTHUMods`,
-      description: `查看清華大學校車${routeName}即時時刻表、路線圖與站點資訊`,
+      name: dict.bus.route_page_title.replace("{route}", routeName),
+      description: dict.bus.route_page_description.replace(
+        "{route}",
+        routeName,
+      ),
       url: `https://nthumods.com/${lang}/bus/${route}`,
       inLanguage: lang === "en" ? "en-US" : "zh-TW",
       isPartOf: { "@type": "WebSite", url: "https://nthumods.com" },
@@ -162,13 +164,13 @@ const BusRouteDetailsPage = () => {
             },
           ]}
           up={{
-            title: dict.bus.to + dict.bus.tsmc,
+            title: dict.bus.to_tsmc,
             info: mainBusData.toward_TSMC_building_info,
             weekday: mainBusData.weekday_bus_schedule_toward_TSMC_building,
             weekend: mainBusData.weekend_bus_schedule_toward_TSMC_building,
           }}
           down={{
-            title: dict.bus.to + dict.bus.north_gate,
+            title: dict.bus.to_north_gate,
             info: mainBusData.toward_main_gate_info,
             weekday: mainBusData.weekday_bus_schedule_toward_main_gate,
             weekend: mainBusData.weekend_bus_schedule_toward_main_gate,
@@ -192,13 +194,13 @@ const BusRouteDetailsPage = () => {
             },
           ]}
           up={{
-            title: dict.bus.to + dict.bus.nanda,
+            title: dict.bus.to_nanda,
             info: nandaBusData.toward_south_campus_info,
             weekday: nandaBusData.weekday_bus_schedule_toward_south_campus,
             weekend: nandaBusData.weekend_bus_schedule_toward_south_campus,
           }}
           down={{
-            title: dict.bus.to + dict.bus.main_campus,
+            title: dict.bus.to_main_campus,
             info: nandaBusData.toward_main_campus_info,
             weekday: nandaBusData.weekday_bus_schedule_toward_main_campus,
             weekend: nandaBusData.weekend_bus_schedule_toward_main_campus,

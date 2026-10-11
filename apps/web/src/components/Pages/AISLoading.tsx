@@ -8,6 +8,7 @@ export const AISLoading = () => {
       <div className="flex flex-col space-y-4 items-center">
         {/* <div className='animate-spin rounded-full h-16 w-16 border-2 border-gray-900'></div> */}
         <svg
+          aria-hidden="true"
           className="animate-spin h-14 w-14 text-gray-900 dark:text-gray-100"
           viewBox="0 0 24 24"
         >

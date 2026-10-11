@@ -1,6 +1,34 @@
-import { describe, it, expect, spyOn } from "bun:test";
-import timetableIcsApp from "./timetable-ics";
+import { describe, it, expect, spyOn, mock } from "bun:test";
 import { semesterInfo as canonicalSemesterInfo } from "../../../packages/shared/src/constants/semester";
+import { createSupabaseServerMock } from "./test-helpers/module-mocks";
+
+const queriedCourseIds: string[][] = [];
+
+mock.module("./config/supabase_server", () =>
+  createSupabaseServerMock(() => ({
+    from: () => ({
+      select: () => ({
+        in: mock(async (_column: string, ids: string[]) => {
+          queriedCourseIds.push(ids);
+          return {
+            data: ids.map((raw_id) => ({
+              raw_id,
+              name_zh: null,
+              name_en: raw_id,
+              times: ["M1"],
+              venues: ["Room 101"],
+              teacher_zh: [],
+              teacher_en: [],
+            })),
+            error: null,
+          };
+        }),
+      }),
+    }),
+  })),
+);
+
+const { default: timetableIcsApp } = await import("./timetable-ics");
 import {
   generateTimetableIcs,
   courseToEvents,
@@ -841,6 +869,26 @@ describe("timetable ICS route", () => {
       errorSpy.mockRestore();
     }
   });
+
+  it.each([101, 250])(
+    "accepts %i course IDs and queries them in 100-ID chunks",
+    async (count) => {
+      queriedCourseIds.length = 0;
+      const courseIds = Array.from(
+        { length: count },
+        (_, index) => `course-${index}`,
+      );
+      const response = await timetableIcsApp.request(
+        `/calendar.ics?semester=11510&semester_11510=${courseIds.join(",")}`,
+      );
+
+      expect(response.status).toBe(200);
+      expect(queriedCourseIds.map((ids) => ids.length)).toEqual(
+        count === 101 ? [100, 1] : [100, 100, 50],
+      );
+      expect(extractVEvents(await response.text())).toHaveLength(count);
+    },
+  );
 });
 
 describe("generateTimetableIcs – 11510 compatibility", () => {

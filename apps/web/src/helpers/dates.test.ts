@@ -1,8 +1,12 @@
 import { describe, expect, test } from "bun:test";
 import {
   addTaipeiDays,
+  differenceInTaipeiCalendarDays,
+  endOfTaipeiDay,
+  fromTaipeiCalendarDate,
   fromTaipeiDateKey,
   formatTaipei,
+  getTaipeiDay,
   getRangeOfDays,
   getTaipeiAcademicCalendarQuery,
   getTaipeiDateKey,
@@ -10,6 +14,9 @@ import {
   getTaipeiDateRange,
   getTaipeiWeek,
   isSameTaipeiWeek,
+  isSameTaipeiMonth,
+  isTaipeiDateKey,
+  startOfTaipeiDay,
   setTaipeiWallClock,
   toAcademicCalendarBoundary,
   isTaipeiToday,
@@ -117,6 +124,44 @@ describe("Taipei academic date helpers", () => {
       "2026-10-02",
     ]);
     expect(getTaipeiDateKey(addTaipeiDays(start, 1))).toBe("2026-10-01");
+  });
+
+  test("rejects malformed, impossible, and reversed date ranges", () => {
+    expect(isTaipeiDateKey("2026-02-29")).toBe(false);
+    expect(isTaipeiDateKey("2026-09-1")).toBe(false);
+    expect(getTaipeiDateRange("2026-09-16", "2026-09-14")).toBeNull();
+    expect(getTaipeiDateRange("not-a-date")).toBeNull();
+  });
+
+  test("compares dates and months using Taipei wall-clock fields", () => {
+    const lateUtc = new Date("2026-09-10T23:30:00.000Z");
+    const nextTaipeiDay = new Date("2026-09-11T00:30:00.000Z");
+
+    expect(differenceInTaipeiCalendarDays(nextTaipeiDay, lateUtc)).toBe(0);
+    expect(
+      differenceInTaipeiCalendarDays(
+        fromTaipeiDateKey("2026-09-12"),
+        fromTaipeiDateKey("2026-09-10"),
+      ),
+    ).toBe(2);
+    expect(isSameTaipeiMonth(lateUtc, nextTaipeiDay)).toBe(true);
+    expect(getTaipeiDay(fromTaipeiDateKey("2026-09-13"))).toBe(0);
+  });
+
+  test("returns Taipei day boundaries independent of the viewer timezone", () => {
+    const instant = new Date("2026-09-10T20:25:00.000Z");
+    expect(getTaipeiDateKey(startOfTaipeiDay(instant))).toBe("2026-09-11");
+    expect(getTaipeiDateKey(endOfTaipeiDay(instant))).toBe("2026-09-11");
+    expect(endOfTaipeiDay(instant).getTime()).toBe(
+      fromTaipeiDateKey("2026-09-12").getTime() - 1,
+    );
+  });
+
+  test("interprets date-picker fields as a Taipei calendar date", () => {
+    const pickerDate = new Date(2026, 8, 14, 12);
+    expect(getTaipeiDateKey(fromTaipeiCalendarDate(pickerDate))).toBe(
+      "2026-09-14",
+    );
   });
 });
 

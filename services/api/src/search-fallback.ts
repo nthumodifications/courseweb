@@ -28,6 +28,31 @@ type FacetFilterGroup = string[];
 
 const MAX_FILTER_LENGTH = 2000;
 
+const splitFilterGroups = (source: string): string[] => {
+  const groups: string[] = [];
+  let groupStart = 0;
+  let index = 0;
+
+  while (index < source.length) {
+    if (!source[index] || !source[index]!.trim()) {
+      const separatorStart = index;
+      while (index < source.length && source[index]!.trim() === "") index++;
+      if (source.slice(index, index + 2).toUpperCase() !== "OR") continue;
+      index += 2;
+      const groupEnd = index;
+      while (index < source.length && source[index]!.trim() === "") index++;
+      if (index === groupEnd) continue;
+      groups.push(source.slice(groupStart, separatorStart));
+      groupStart = index;
+      continue;
+    }
+    index++;
+  }
+
+  groups.push(source.slice(groupStart));
+  return groups;
+};
+
 /**
  * Escape a value embedded in a PostgREST `.or(...)` expression. Backslashes
  * must be escaped first so the escapes added for the other grammar markers
@@ -116,6 +141,22 @@ const parseConditions = (value?: string): FilterCondition[] => {
     });
   }
   return conditions;
+};
+
+const parseFilterGroups = (value?: string): FilterCondition[][] => {
+  if (!value) return [];
+  const parsed = parseJsonParam(value);
+  let source = value;
+  if (Array.isArray(parsed)) {
+    source = parsed
+      .filter((item): item is string => typeof item === "string")
+      .join(" AND ");
+  } else if (typeof parsed === "string") {
+    source = parsed;
+  }
+  return splitFilterGroups(source.slice(0, MAX_FILTER_LENGTH))
+    .map(parseConditions)
+    .filter((group) => group.length > 0);
 };
 
 export const getCourseHit = (course: CourseRow): CourseHit => ({
@@ -410,10 +451,8 @@ const app = new Hono().get(
       ? (values.facetQuery ?? "")
       : (values.query ?? values.q ?? "");
     const facetGroups = parseFacetFilterGroups(values.facetFilters);
-    const conditions = [
-      ...parseConditions(values.filters),
-      ...parseConditions(values.numericFilters),
-    ];
+    const filterGroups = parseFilterGroups(values.filters);
+    const numericConditions = parseConditions(values.numericFilters);
     const { facets: requestedFacets, warnings } = getRequestedFacets(
       values.facets,
     );
@@ -431,7 +470,11 @@ const app = new Hono().get(
       const filteredCourses = courses.filter(
         (course) =>
           matchesFacetGroups(course, facetGroups) &&
-          conditions.every((condition) =>
+          (filterGroups.length === 0 ||
+            filterGroups.some((group) =>
+              group.every((condition) => matchesCondition(course, condition)),
+            )) &&
+          numericConditions.every((condition) =>
             matchesCondition(course, condition),
           ) &&
           (values.facetName ? true : matchesQuery(course, query)),

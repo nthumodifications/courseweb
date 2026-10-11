@@ -72,9 +72,11 @@ const ShareSyncTimetableDialog = ({
         .then((shortLink) => {
           if (typeof shortLink == "object" && "error" in shortLink) {
             toast({
-              title: "Short Link Error",
+              title:
+                dict.dialogs.ShareSyncTimetableDialog.short_link_error_title,
               description:
-                "Failed to generate short link. Please try again later.",
+                dict.dialogs.ShareSyncTimetableDialog
+                  .short_link_error_description,
             });
           }
           setLink(shortLink as string);
@@ -115,7 +117,7 @@ const ShareSyncTimetableDialog = ({
           <div className="flex flex-col gap-4">
             <div className="flex flex-row gap-4">
               <input
-                aria-label="Link"
+                aria-label={dict.dialogs.ShareSyncTimetableDialog.link_label}
                 type="text"
                 value={link}
                 readOnly

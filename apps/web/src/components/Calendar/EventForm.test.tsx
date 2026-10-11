@@ -1,13 +1,23 @@
-import { act, createElement } from "react";
+import { act, createElement, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { JSDOM } from "jsdom";
-import { afterEach, describe, expect, test } from "bun:test";
-import { MemoryRouter } from "react-router-dom";
+import { afterEach, describe, expect, mock, test } from "bun:test";
+import en from "../../dictionaries/en.json";
+import zh from "../../dictionaries/zh.json";
+import { MemoryRouter, Route, Routes, useNavigate } from "react-router-dom";
 import {
   restoreBootstrapDom,
   restoreBootstrapEnvironment,
 } from "./EventForm.test-setup";
-import { EventForm } from "./EventForm";
+
+let structuredLanguage: "en" | "zh" = "zh";
+mock.module("@/dictionaries/useDictionary", () => ({
+  default: () => (structuredLanguage === "en" ? en : zh),
+}));
+const { default: StructuredComment } = await import(
+  "../CourseDetails/StructuredComment"
+);
+const { EventForm } = await import("./EventForm");
 
 restoreBootstrapDom();
 
@@ -55,6 +65,19 @@ const installDom = (activeDom: JSDOM) => {
     },
     IS_REACT_ACT_ENVIRONMENT: true,
   });
+};
+
+const waitFor = async (
+  predicate: () => boolean,
+  timeoutMs = 2000,
+): Promise<void> => {
+  const deadline = Date.now() + timeoutMs;
+  while (!predicate()) {
+    if (Date.now() >= deadline) {
+      throw new Error("Timed out waiting for the condition");
+    }
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
 };
 
 const restoreGlobals = () => {
@@ -145,14 +168,11 @@ describe("calendar event repeat date", () => {
 
     await act(async () => {
       repeatDateTrigger?.click();
-    });
-    await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
+    await waitFor(() => document.querySelector('[role="grid"]') !== null);
 
-    const calendar = document.querySelector<HTMLElement>(
-      '[role="dialog"] [role="grid"]',
-    );
+    const calendar = document.querySelector<HTMLElement>('[role="grid"]');
     if (!calendar) throw new Error(document.body.innerHTML);
     expect(calendar).not.toBeNull();
     const dateButton = Array.from(
@@ -174,5 +194,112 @@ describe("calendar event repeat date", () => {
     expect((submittedEvent as { repeat: { value: number } }).repeat.value).toBe(
       new Date("2026-10-10T00:00:00+08:00").getTime(),
     );
+  });
+});
+
+const LanguageSwitch = ({
+  target,
+  onSwitch,
+}: {
+  target: "en" | "zh";
+  onSwitch: (language: "en" | "zh") => void;
+}) => {
+  const navigate = useNavigate();
+  return (
+    <button
+      type="button"
+      data-language-switch="true"
+      onClick={() => {
+        onSwitch(target);
+        navigate(`/${target}`);
+      }}
+    >
+      switch
+    </button>
+  );
+};
+
+const LocaleHarness = ({
+  initialLanguage,
+  nextLanguage,
+  onValueChange,
+}: {
+  initialLanguage: "en" | "zh";
+  nextLanguage: "en" | "zh";
+  onValueChange: (value: string) => void;
+}) => {
+  const [language, setLanguage] = useState(initialLanguage);
+  structuredLanguage = language;
+  return (
+    <>
+      <StructuredComment onValueChange={onValueChange} />
+      <LanguageSwitch target={nextLanguage} onSwitch={setLanguage} />
+    </>
+  );
+};
+
+describe("StructuredComment locale serialization", () => {
+  test("updates serialized comments in both switch directions", async () => {
+    for (const [initialLanguage, nextLanguage] of [
+      ["zh", "en"],
+      ["en", "zh"],
+    ] as const) {
+      structuredLanguage = initialLanguage;
+      dom = new JSDOM("<!doctype html><html><body></body></html>");
+      const globalObject = globalThis as Record<string, unknown>;
+      previousGlobals = Object.fromEntries(
+        globalKeys.map((key) => [key, globalObject[key]]),
+      );
+      installDom(dom);
+      const container = dom.window.document.createElement("div");
+      dom.window.document.body.appendChild(container);
+      let serialized = "";
+      root = createRoot(container);
+
+      await act(async () => {
+        root?.render(
+          <MemoryRouter initialEntries={[`/${initialLanguage}`]}>
+            <Routes>
+              <Route
+                path="/:lang"
+                element={
+                  <LocaleHarness
+                    initialLanguage={initialLanguage}
+                    nextLanguage={nextLanguage}
+                    onValueChange={(value) => (serialized = value)}
+                  />
+                }
+              />
+            </Routes>
+          </MemoryRouter>,
+        );
+      });
+
+      expect(serialized).toContain(
+        initialLanguage === "zh" ? "# 有點名：" : "# Attendance required:",
+      );
+
+      await act(async () => {
+        container
+          .querySelector<HTMLButtonElement>("[data-language-switch]")
+          ?.click();
+      });
+
+      expect(serialized).toContain(
+        nextLanguage === "zh" ? "# 有點名：" : "# Attendance required:",
+      );
+      expect(serialized).not.toContain(
+        initialLanguage === "zh" ? "# 有點名：" : "# Attendance required:",
+      );
+
+      await act(async () => {
+        root?.unmount();
+      });
+      root = undefined;
+      dom.window.close();
+      dom = undefined;
+      restoreGlobals();
+      previousGlobals = undefined;
+    }
   });
 });

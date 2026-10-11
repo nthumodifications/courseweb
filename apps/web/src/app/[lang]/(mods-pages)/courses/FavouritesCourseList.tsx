@@ -1,4 +1,4 @@
-import { GripVertical, Plus, Heart, Minus } from "lucide-react";
+import { GripVertical } from "lucide-react";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useMemo } from "react";
@@ -30,8 +30,13 @@ import type { CourseDefinition } from "@/config/supabase";
 import client from "@/config/api";
 import { getFavouriteCourseItems } from "./favouriteCourseItems";
 import type { FavouriteCourseItem } from "./favouriteCourseItems";
+import { FavouriteCourseActions } from "./FavouriteCourseActions";
 
-const FavouriteCourseActions = ({ courseId }: { courseId: string }) => {
+const FavouriteCourseActionsContainer = ({
+  courseId,
+}: {
+  courseId: string;
+}) => {
   const {
     addCourse,
     deleteCourse,
@@ -39,41 +44,25 @@ const FavouriteCourseActions = ({ courseId }: { courseId: string }) => {
     favourites,
     setFavourites,
   } = useUserTimetable();
+  const dict = useDictionary();
 
   const unfavourite = () => {
     setFavourites(favourites.filter((fav) => fav != courseId));
   };
 
   return (
-    <div className="flex flex-row">
-      <Button
-        className="rounded-r-none"
-        variant="outline"
-        size="icon"
-        onClick={() => unfavourite()}
-      >
-        <Heart className="w-4 h-4 fill-red-500 text-red-500" />
-      </Button>
-      {isCourseSelected(courseId) ? (
-        <Button
-          className="rounded-l-none"
-          variant="destructive"
-          size="icon"
-          onClick={() => deleteCourse(courseId)}
-        >
-          <Minus className="w-4 h-4" />
-        </Button>
-      ) : (
-        <Button
-          className="rounded-l-none"
-          variant="outline"
-          size="icon"
-          onClick={() => addCourse(courseId)}
-        >
-          <Plus className="w-4 h-4" />
-        </Button>
-      )}
-    </div>
+    <FavouriteCourseActions
+      courseId={courseId}
+      isSelected={isCourseSelected(courseId)}
+      labels={{
+        addToTimetable: dict.a11y.add_to_timetable,
+        remove: dict.a11y.remove,
+        unfavorite: dict.a11y.unfavorite,
+      }}
+      onAdd={addCourse}
+      onRemove={deleteCourse}
+      onUnfavorite={unfavourite}
+    />
   );
 };
 
@@ -105,7 +94,7 @@ const FavouriteCourseListItem = ({
             {...listeners}
           />
         }
-        actions={<FavouriteCourseActions courseId={courseId} />}
+        actions={<FavouriteCourseActionsContainer courseId={courseId} />}
       />
     </div>
   );

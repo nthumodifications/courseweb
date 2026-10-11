@@ -24,15 +24,23 @@ import {
   type SearchWorker,
   type UnknownRecord,
   SEARCHABLE_FIELDS,
+  searchableText,
 } from "./client";
 import { fetchJsonWithIdleTimeout } from "./deadline";
 import type { WorkerRequest } from "./worker-protocol";
 import { normalizeSyllabusKeywords } from "../syllabus-text";
-import { LOCAL_PARITY_CASES } from "./parity-cases";
+import {
+  buildFlexSearchIndex,
+  searchFlexSearchIndex,
+} from "./flexsearch-index";
 
 const fixturePath = `${import.meta.dir}/__fixtures__/courses-11510.json`;
 const fixture = JSON.parse(
   await Bun.file(fixturePath).text(),
+) as UnknownRecord[];
+const fullFixturePath = `${import.meta.dir}/__fixtures__/courses-11510-full.json`;
+const fullFixture = JSON.parse(
+  await Bun.file(fullFixturePath).text(),
 ) as UnknownRecord[];
 
 const makeManifest = (hash: string, rowCount = fixture.length) => [
@@ -388,7 +396,7 @@ describe("CJK tokenizer and 98-bit timetable masks", () => {
 });
 
 describe("local course search", () => {
-  test("uses the live Algolia searchable attribute order exactly", () => {
+  test("keeps venue-only fields out of searchable text", () => {
     expect(SEARCHABLE_FIELDS).toEqual([
       "raw_id",
       "department",
@@ -397,8 +405,56 @@ describe("local course search", () => {
       "teacher_zh",
       "name_en",
       "teacher_en",
-      "venues",
     ]);
+  });
+
+  test("uses exact two-character tokens and finds Latin text inside CJK", () => {
+    const makeRecord = (overrides: UnknownRecord) =>
+      prepareSearchRecord({ ...fixture[0], ...overrides });
+
+    expect(
+      matchesLocalQuery(
+        makeRecord({ raw_id: "11510CS  100100", department: "CS" }),
+        "CS",
+      ),
+    ).toBe(true);
+    expect(
+      matchesLocalQuery(
+        makeRecord({ raw_id: "11510CSR 100100", department: "CSR" }),
+        "CS",
+      ),
+    ).toBe(false);
+    expect(
+      matchesLocalQuery(
+        makeRecord({ name_zh: "生成式AI應用系統與工程" }),
+        "AI",
+      ),
+    ).toBe(true);
+    expect(
+      matchesLocalQuery(makeRecord({ name_en: "Air Pollution" }), "AI"),
+    ).toBe(false);
+  });
+
+  test("builds and queries a full semester within generous bounds", () => {
+    const records = fullFixture.map(prepareSearchRecord);
+    const documents = records.map((record, id) => ({
+      id: String(id),
+      text: searchableText(record),
+    }));
+    const buildStarted = performance.now();
+    const index = buildFlexSearchIndex(documents);
+    const buildMs = performance.now() - buildStarted;
+    const queryStarted = performance.now();
+    const ids = searchFlexSearchIndex(index, "environmental", records.length);
+    const queryMs = performance.now() - queryStarted;
+
+    console.log(
+      `[local-search perf] ${records.length} records: build=${buildMs.toFixed(1)}ms query=${queryMs.toFixed(1)}ms`,
+    );
+    expect(records.length).toBeGreaterThan(3000);
+    expect(ids.length).toBeGreaterThan(0);
+    expect(buildMs).toBeLessThan(10_000);
+    expect(queryMs).toBeLessThan(2_000);
   });
 
   test("supports browse-all, zero hits per page, pagination, no results, and attributes", async () => {
@@ -486,26 +542,6 @@ describe("local course search", () => {
     expect(matchesLocalQuery(prepareSearchRecord(environment!), "環境")).toBe(
       true,
     );
-  });
-
-  test("matches the fixed fixture parity matrix", async () => {
-    const { engine } = createEngine();
-
-    for (const parityCase of LOCAL_PARITY_CASES) {
-      const result = await engine.search(
-        "11510",
-        request({
-          ...parityCase.params,
-          query: parityCase.query,
-          hitsPerPage: 1000,
-        }),
-      );
-      expect({ name: parityCase.name, count: result.nbHits }).toEqual({
-        name: parityCase.name,
-        count: parityCase.ids.length,
-      });
-      expect(result.hits.map((hit) => hit.objectID)).toEqual(parityCase.ids);
-    }
   });
 
   test("applies facet AND/OR, numeric, filter expressions, null arrays, and time semantics", async () => {

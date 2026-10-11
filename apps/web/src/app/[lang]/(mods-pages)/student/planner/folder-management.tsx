@@ -209,7 +209,7 @@ export function FolderManagement({
 
     reset({
       id: newId,
-      title: fm.newFolderDefaultTitle ?? "新類別",
+      title: fm.newFolderDefaultTitle,
       parent: parentId,
       min: 0,
       max: 0,
@@ -274,15 +274,12 @@ export function FolderManagement({
       .in(folderIdsToDelete)
       .exec();
 
-    const description = (
-      fm.deleteConfirmDescription ??
-      "此操作無法復原。將刪除此類別及其 {folderCount} 個子類別，其中 {itemCount} 門課程將被移至「未分類」。"
-    )
+    const description = fm.deleteConfirmDescription
       .replace("{folderCount}", String(childFolderIds.length))
       .replace("{itemCount}", String(affectedItems.length));
 
     const ok = await confirm({
-      title: fm.deleteConfirmTitle ?? "刪除類別？",
+      title: fm.deleteConfirmTitle,
       description,
       confirmLabel: common.delete,
       cancelLabel: common.cancel,
@@ -319,18 +316,17 @@ export function FolderManagement({
       onFoldersUpdated();
 
       toast({
-        title: fm.deleteSuccessTitle ?? "類別已刪除",
+        title: fm.deleteSuccessTitle,
         description:
           affectedItems.length > 0
-            ? (fm.deleteSuccessWithItems ??
-              "類別及其子類別已被刪除，相關課程已移至「未分類」。")
-            : (fm.deleteSuccessNoItems ?? "類別及其子類別已被刪除。"),
+            ? fm.deleteSuccessWithItems
+            : fm.deleteSuccessNoItems,
       });
     } catch (error) {
       console.error("Error deleting folder:", error);
       toast({
-        title: fm.deleteFailTitle ?? "刪除失敗",
-        description: fm.deleteFailDescription ?? "無法刪除類別，請再試一次。",
+        title: fm.deleteFailTitle,
+        description: fm.deleteFailDescription,
         variant: "destructive",
       });
     }
@@ -446,16 +442,14 @@ export function FolderManagement({
       URL.revokeObjectURL(url);
 
       toast({
-        title: fm.exportSuccessTitle ?? "範本匯出成功",
-        description:
-          fm.exportSuccessDescription ??
-          "範本已下載，您可以將檔案分享給其他人。",
+        title: fm.exportSuccessTitle,
+        description: fm.exportSuccessDescription,
       });
     } catch (error) {
       console.error("Error exporting template:", error);
       toast({
-        title: fm.exportFailTitle ?? "匯出失敗",
-        description: fm.exportFailDescription ?? "無法匯出範本，請再試一次。",
+        title: fm.exportFailTitle,
+        description: fm.exportFailDescription,
         variant: "destructive",
       });
     }
@@ -491,10 +485,8 @@ export function FolderManagement({
       } catch (error) {
         console.error("Error parsing template:", error);
         toast({
-          title: fm.importFailTitle ?? "匯入失敗",
-          description:
-            fm.importParseFailDescription ??
-            "無法解析範本檔案，請確保它是有效的 JSON 格式。",
+          title: fm.importFailTitle,
+          description: fm.importParseFailDescription,
           variant: "destructive",
         });
 
@@ -553,10 +545,8 @@ export function FolderManagement({
       setImportConfirmOpen(false);
 
       toast({
-        title: fm.importSuccessTitle ?? "範本匯入成功",
-        description:
-          fm.importSuccessDescription ??
-          "資料夾結構已更新，未匹配的項目已移至「未分類」。",
+        title: fm.importSuccessTitle,
+        description: fm.importSuccessDescription,
       });
 
       // Notify parent
@@ -564,9 +554,8 @@ export function FolderManagement({
     } catch (error) {
       console.error("Error importing template:", error);
       toast({
-        title: fm.importFailTitle ?? "匯入失敗",
-        description:
-          fm.importGenericFailDescription ?? "無法匯入範本，請再試一次。",
+        title: fm.importFailTitle,
+        description: fm.importGenericFailDescription,
         variant: "destructive",
       });
     }
@@ -607,13 +596,11 @@ export function FolderManagement({
           <div className="flex-1 min-w-0">
             <div className="font-medium truncate">
               {folder.title}
-              {isUnsorted && (fm.systemSuffix ?? " (系統)")}
+              {isUnsorted && fm.systemSuffix}
             </div>
             <div className="text-xs text-muted-foreground">
               {folder.min} - {folder.max === 0 ? "∞" : folder.max}{" "}
-              {folder.metric === "credits"
-                ? (fm.creditsUnit ?? "學分")
-                : (fm.coursesUnit ?? "課程")}
+              {folder.metric === "credits" ? fm.creditsUnit : fm.coursesUnit}
             </div>
           </div>
         </div>
@@ -651,9 +638,7 @@ export function FolderManagement({
             <div className="font-medium truncate">{folder.title}</div>
             <div className="text-xs text-muted-foreground">
               {folder.min} - {folder.max === 0 ? "∞" : folder.max}{" "}
-              {folder.metric === "credits"
-                ? (fm.creditsUnit ?? "學分")
-                : (fm.coursesUnit ?? "課程")}
+              {folder.metric === "credits" ? fm.creditsUnit : fm.coursesUnit}
             </div>
           </div>
         </div>
@@ -693,9 +678,9 @@ export function FolderManagement({
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="font-medium">{fm.rootTitle ?? "根目錄"}</div>
+              <div className="font-medium">{fm.rootTitle}</div>
               <div className="text-xs text-muted-foreground">
-                {fm.rootDescription ?? "所有類別的最上層"}
+                {fm.rootDescription}
               </div>
             </div>
           </div>
@@ -727,8 +712,8 @@ export function FolderManagement({
       <ResponsiveDialog
         open={isOpen}
         onOpenChange={onClose}
-        title={fm.title ?? "類別管理"}
-        description={fm.description ?? "管理畢業要求類別和結構"}
+        title={fm.title}
+        description={fm.description}
         contentClassName="sm:max-w-4xl max-h-[85vh] flex flex-col overflow-hidden"
         footer={
           !importMode ? (
@@ -747,11 +732,11 @@ export function FolderManagement({
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <Upload className="h-4 w-4 mr-2" />
-                  {fm.importTemplate ?? "匯入範本"}
+                  {fm.importTemplate}
                 </Button>
                 <Button variant="outline" onClick={handleExportTemplate}>
                   <Download className="h-4 w-4 mr-2" />
-                  {fm.exportTemplate ?? "匯出為範本"}
+                  {fm.exportTemplate}
                 </Button>
                 <Button variant="outline" onClick={onClose}>
                   {common.close}
@@ -777,12 +762,10 @@ export function FolderManagement({
               )}
             >
               <div className="p-2 border-b border-border flex justify-between items-center">
-                <h3 className="font-medium">
-                  {fm.structureTitle ?? "類別結構"}
-                </h3>
+                <h3 className="font-medium">{fm.structureTitle}</h3>
                 <Button size="sm" onClick={handleNewFolder}>
                   <Plus className="h-4 w-4 mr-2" />
-                  {fm.addCategory ?? "新增類別"}
+                  {fm.addCategory}
                 </Button>
               </div>
 
@@ -803,7 +786,7 @@ export function FolderManagement({
                   <div className="p-2 border-b border-border flex justify-between items-center gap-1">
                     {showBackButton}
                     <h3 className="font-medium flex-1 truncate">
-                      {fm.detailsTitle ?? "類別詳情"}
+                      {fm.detailsTitle}
                     </h3>
                     <div className="flex gap-1">
                       {selectedFolder.id !== "_unsorted" && (
@@ -814,7 +797,7 @@ export function FolderManagement({
                             onClick={handleEditMode}
                           >
                             <Edit className="h-4 w-4 mr-2" />
-                            {fm.edit ?? "編輯"}
+                            {fm.edit}
                           </Button>
                           <Button
                             size="sm"
@@ -828,7 +811,7 @@ export function FolderManagement({
                       )}
                       {selectedFolder.id === "_unsorted" && (
                         <div className="text-xs text-muted-foreground">
-                          {fm.systemCategoryNotice ?? "系統類別，不可編輯"}
+                          {fm.systemCategoryNotice}
                         </div>
                       )}
                     </div>
@@ -838,43 +821,42 @@ export function FolderManagement({
                     <div className="p-4 space-y-4">
                       <div>
                         <h4 className="text-sm font-medium text-muted-foreground">
-                          {fm.nameLabel ?? "類別名稱"}
+                          {fm.nameLabel}
                         </h4>
                         <p className="mt-1">{selectedFolder.title}</p>
                       </div>
 
                       <div>
                         <h4 className="text-sm font-medium text-muted-foreground">
-                          {fm.requirementLabel ?? "要求"}
+                          {fm.requirementLabel}
                         </h4>
                         <p className="mt-1">
                           {selectedFolder.min} -{" "}
                           {selectedFolder.max === 0
-                            ? (fm.noLimit ?? "無上限")
+                            ? fm.noLimit
                             : selectedFolder.max}{" "}
                           {selectedFolder.metric === "credits"
-                            ? (fm.creditsUnit ?? "學分")
-                            : (fm.coursesUnit ?? "課程")}
+                            ? fm.creditsUnit
+                            : fm.coursesUnit}
                         </p>
                       </div>
 
                       <div>
                         <h4 className="text-sm font-medium text-muted-foreground">
-                          {fm.parentLabel ?? "父類別"}
+                          {fm.parentLabel}
                         </h4>
                         <p className="mt-1">
                           {selectedFolder.parent === "planner-1"
-                            ? (fm.noneRoot ?? "無 (根類別)")
+                            ? fm.noneRoot
                             : folders.find(
                                 (f) => f.id === selectedFolder.parent,
-                              )?.title ||
-                              (fm.none ?? "無")}
+                              )?.title || fm.none}
                         </p>
                       </div>
 
                       <div>
                         <h4 className="text-sm font-medium text-muted-foreground">
-                          {fm.orderLabel ?? "排序"}
+                          {fm.orderLabel}
                         </h4>
                         <div className="mt-1 flex items-center gap-2">
                           <p>{selectedFolder.order}</p>
@@ -883,7 +865,7 @@ export function FolderManagement({
                               size="sm"
                               variant="outline"
                               onClick={handleMoveUp}
-                              aria-label={fm.moveUp ?? "上移"}
+                              aria-label={fm.moveUp}
                             >
                               <ArrowUp className="h-4 w-4" />
                             </Button>
@@ -891,7 +873,7 @@ export function FolderManagement({
                               size="sm"
                               variant="outline"
                               onClick={handleMoveDown}
-                              aria-label={fm.moveDown ?? "下移"}
+                              aria-label={fm.moveDown}
                             >
                               <ArrowDown className="h-4 w-4" />
                             </Button>
@@ -901,12 +883,12 @@ export function FolderManagement({
 
                       <div>
                         <h4 className="text-sm font-medium text-muted-foreground">
-                          {fm.requireChildValidationLabel ?? "需要子類別驗證"}
+                          {fm.requireChildValidationLabel}
                         </h4>
                         <p className="mt-1">
                           {selectedFolder.requireChildValidation
-                            ? (fm.yes ?? "是")
-                            : (fm.no ?? "否")}
+                            ? fm.yes
+                            : fm.no}
                         </p>
                       </div>
                     </div>
@@ -917,9 +899,7 @@ export function FolderManagement({
                   <div className="p-2 border-b border-border flex justify-between items-center gap-1">
                     {showBackButton}
                     <h3 className="font-medium flex-1 truncate">
-                      {newFolder
-                        ? (fm.newCategoryTitle ?? "新增類別")
-                        : (fm.editCategoryTitle ?? "編輯類別")}
+                      {newFolder ? fm.newCategoryTitle : fm.editCategoryTitle}
                     </h3>
                     <div className="flex gap-1">
                       <Button
@@ -948,9 +928,7 @@ export function FolderManagement({
                       className="p-4 space-y-4"
                     >
                       <div className="space-y-2">
-                        <Label htmlFor="folder-title">
-                          {fm.nameLabel ?? "類別名稱"}
-                        </Label>
+                        <Label htmlFor="folder-title">{fm.nameLabel}</Label>
                         <Input
                           id="folder-title"
                           {...register("title", { required: true })}
@@ -960,9 +938,7 @@ export function FolderManagement({
 
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label htmlFor="folder-min">
-                            {fm.minLabel ?? "最低要求"}
-                          </Label>
+                          <Label htmlFor="folder-min">{fm.minLabel}</Label>
                           <Input
                             id="folder-min"
                             type="number"
@@ -972,9 +948,7 @@ export function FolderManagement({
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="folder-max">
-                            {fm.maxLabel ?? "最高要求"}
-                          </Label>
+                          <Label htmlFor="folder-max">{fm.maxLabel}</Label>
                           <div className="flex items-center gap-2">
                             <Input
                               id="folder-max"
@@ -1000,7 +974,7 @@ export function FolderManagement({
                                 )}
                               />
                               <Label htmlFor="infinite-max" className="text-sm">
-                                {fm.noLimit ?? "無上限"}
+                                {fm.noLimit}
                               </Label>
                             </div>
                           </div>
@@ -1008,9 +982,7 @@ export function FolderManagement({
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="folder-metric">
-                          {fm.metricLabel ?? "計算單位"}
-                        </Label>
+                        <Label htmlFor="folder-metric">{fm.metricLabel}</Label>
                         <Controller
                           control={control}
                           name="metric"
@@ -1024,17 +996,15 @@ export function FolderManagement({
                                 className="bg-muted/50 border-border"
                               >
                                 <SelectValue
-                                  placeholder={
-                                    fm.metricPlaceholder ?? "選擇計算單位"
-                                  }
+                                  placeholder={fm.metricPlaceholder}
                                 />
                               </SelectTrigger>
                               <SelectContent className="bg-muted/50 border-border">
                                 <SelectItem value="credits">
-                                  {fm.creditsUnit ?? "學分"}
+                                  {fm.creditsUnit}
                                 </SelectItem>
                                 <SelectItem value="courses">
-                                  {fm.coursesUnit ?? "課程數"}
+                                  {fm.coursesUnit}
                                 </SelectItem>
                               </SelectContent>
                             </Select>
@@ -1043,9 +1013,7 @@ export function FolderManagement({
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="folder-parent">
-                          {fm.parentLabel ?? "父類別"}
-                        </Label>
+                        <Label htmlFor="folder-parent">{fm.parentLabel}</Label>
                         <Controller
                           control={control}
                           name="parent"
@@ -1059,14 +1027,12 @@ export function FolderManagement({
                                 className="bg-muted/50 border-border"
                               >
                                 <SelectValue
-                                  placeholder={
-                                    fm.parentPlaceholder ?? "選擇父類別"
-                                  }
+                                  placeholder={fm.parentPlaceholder}
                                 />
                               </SelectTrigger>
                               <SelectContent className="bg-muted/50 border-border">
                                 <SelectItem value="planner-1">
-                                  {fm.noneRoot ?? "無 (根類別)"}
+                                  {fm.noneRoot}
                                 </SelectItem>
                                 {folders
                                   .filter((f) => f.id !== watch("id"))
@@ -1097,7 +1063,7 @@ export function FolderManagement({
                           )}
                         />
                         <Label htmlFor="require-child-validation">
-                          {fm.requireChildValidationLabel ?? "需要子類別驗證"}
+                          {fm.requireChildValidationLabel}
                         </Label>
                       </div>
 
@@ -1112,30 +1078,27 @@ export function FolderManagement({
                   <div className="p-2 border-b border-border flex justify-between items-center gap-1">
                     {showBackButton}
                     <h3 className="font-medium flex-1 truncate">
-                      {fm.rootTitle ?? "根目錄"}
+                      {fm.rootTitle}
                     </h3>
                     <Button size="sm" onClick={handleNewFolder}>
                       <Plus className="h-4 w-4 mr-2" />
-                      {fm.addRootCategory ?? "新增根類別"}
+                      {fm.addRootCategory}
                     </Button>
                   </div>
                   <div className="p-4 flex flex-col items-center justify-center flex-1 text-center">
-                    <h4 className="mb-2 font-medium">
-                      {fm.rootTitle ?? "根類別"}
-                    </h4>
+                    <h4 className="mb-2 font-medium">{fm.rootTitle}</h4>
                     <p className="text-muted-foreground mb-4">
-                      {fm.rootInfoDescription ??
-                        "這是最頂層類別。您可以在此添加新的根類別，根類別將直接顯示在主畫面上。"}
+                      {fm.rootInfoDescription}
                     </p>
                     <Button onClick={handleNewFolder}>
                       <Plus className="h-4 w-4 mr-2" />
-                      {fm.addRootCategory ?? "新增根類別"}
+                      {fm.addRootCategory}
                     </Button>
                   </div>
                 </div>
               ) : (
                 <div className="flex items-center justify-center h-full text-muted-foreground">
-                  <p>{fm.selectPrompt ?? "選擇一個類別以查看詳情"}</p>
+                  <p>{fm.selectPrompt}</p>
                 </div>
               )}
             </div>
@@ -1144,9 +1107,7 @@ export function FolderManagement({
           <div className="flex flex-1 gap-4 overflow-hidden">
             <div className="w-full border border-border rounded-md overflow-hidden flex flex-col">
               <div className="p-2 border-b border-border flex justify-between items-center">
-                <h3 className="font-medium">
-                  {fm.importPreviewTitle ?? "匯入預覽"}
-                </h3>
+                <h3 className="font-medium">{fm.importPreviewTitle}</h3>
                 <div className="flex gap-2">
                   <Button
                     size="sm"
@@ -1158,22 +1119,19 @@ export function FolderManagement({
                   </Button>
                   <Button size="sm" onClick={() => setImportConfirmOpen(true)}>
                     <Save className="h-4 w-4 mr-2" />
-                    {fm.confirmImport ?? "確認匯入"}
+                    {fm.confirmImport}
                   </Button>
                 </div>
               </div>
 
               <div className="p-4">
                 <Alert className="mb-4 dark:bg-amber-900/20 dark:border-amber-700 bg-amber-100/20 border-amber-300">
-                  <AlertDescription>
-                    {fm.importWarning ??
-                      "確認匯入將會覆蓋所有現有類別。請仔細檢查下方預覽的資料夾結構。"}
-                  </AlertDescription>
+                  <AlertDescription>{fm.importWarning}</AlertDescription>
                 </Alert>
 
                 <div className="mb-4">
                   <h3 className="font-medium mb-2">
-                    {fm.structurePreviewTitle ?? "資料夾結構預覽"}
+                    {fm.structurePreviewTitle}
                   </h3>
                   <div className="border border-border rounded-md p-2">
                     <ScrollArea className="h-[40vh]">
@@ -1186,9 +1144,10 @@ export function FolderManagement({
 
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <p>
-                    {(
-                      fm.totalFoldersToImport ?? "總共 {count} 個資料夾將被匯入"
-                    ).replace("{count}", String(importPreview.length))}
+                    {fm.totalFoldersToImport.replace(
+                      "{count}",
+                      String(importPreview.length),
+                    )}
                   </p>
                 </div>
               </div>
@@ -1200,12 +1159,9 @@ export function FolderManagement({
       <AlertDialog open={importConfirmOpen} onOpenChange={setImportConfirmOpen}>
         <AlertDialogContent className="">
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              {fm.confirmImportDialogTitle ?? "確認匯入範本"}
-            </AlertDialogTitle>
+            <AlertDialogTitle>{fm.confirmImportDialogTitle}</AlertDialogTitle>
             <AlertDialogDescription>
-              {fm.confirmImportDialogDescription ??
-                "此操作將刪除所有現有類別並替換為新的範本結構。此操作無法復原。"}
+              {fm.confirmImportDialogDescription}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -1214,7 +1170,7 @@ export function FolderManagement({
               className="bg-red-200 hover:bg-red-400 dark:bg-red-900 dark:hover:bg-red-800"
               onClick={handleImportConfirm}
             >
-              {fm.confirmImport ?? "確認匯入"}
+              {fm.confirmImport}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

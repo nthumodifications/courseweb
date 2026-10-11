@@ -172,6 +172,7 @@ export function ChatContainer() {
                 <Button
                   variant="ghost"
                   size="icon"
+                  aria-label={dict.a11y.close}
                   onClick={() => setIsOpen(false)}
                 >
                   <X className="w-5 h-5" />

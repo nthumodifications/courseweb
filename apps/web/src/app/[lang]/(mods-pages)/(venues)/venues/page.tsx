@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
 import { ArrowLeft, Map } from "lucide-react";
 import { Button, EmptyState, ErrorState, Fade } from "@courseweb/ui";
 import { lastSemester } from "@courseweb/shared";
@@ -9,8 +9,9 @@ import VenueList from "@/components/Venue/VenueList";
 import client from "@/config/api";
 import useDictionary from "@/dictionaries/useDictionary";
 import { MinimalCourse } from "@/types/courses";
+import { lazyWithRetry } from "@/lib/chunk-recovery";
 
-const VenueTimetableDynamic = lazy(
+const VenueTimetableDynamic = lazyWithRetry(
   () =>
     import(
       "@/app/[lang]/(mods-pages)/(venues)/venues/@content/[locationId]/VenueTimetable"

@@ -1,7 +1,15 @@
 import { currentSemester } from "@courseweb/shared";
 import { useMemo } from "react";
+import en from "@/dictionaries/en.json";
+import zh from "@/dictionaries/zh.json";
 
 const CurrentSemesterLabel = ({ language }: { language: "en" | "zh" }) => {
+  const dict = language === "en" ? en : zh;
+  let semesterYear: number | null = null;
+  if (currentSemester) {
+    semesterYear =
+      language === "en" ? currentSemester.year : currentSemester.year - 1911;
+  }
   const currentWeek = useMemo(
     () =>
       currentSemester
@@ -15,14 +23,12 @@ const CurrentSemesterLabel = ({ language }: { language: "en" | "zh" }) => {
 
   return (
     <p className="whitespace-pre-wrap text-xs text-muted-foreground">
-      {language == "en" &&
-        (currentSemester
-          ? `AC${currentSemester.year} Sem ${currentSemester.semester}, Week ${currentWeek}`
-          : `Holiday`)}
-      {language == "zh" &&
-        (currentSemester
-          ? `${currentSemester.year - 1911}-${currentSemester.semester} 學期, 第${currentWeek}週`
-          : `假期`)}
+      {currentSemester
+        ? dict.today.current_semester.in_semester
+            .replace("{year}", String(semesterYear))
+            .replace("{semester}", String(currentSemester.semester))
+            .replace("{week}", String(currentWeek))
+        : dict.today.current_semester.holiday}
     </p>
   );
 };

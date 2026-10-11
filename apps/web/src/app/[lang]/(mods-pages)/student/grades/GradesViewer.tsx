@@ -33,17 +33,18 @@ import {
 
 import { GradeObject } from "@/types/grades";
 import { toPrettySemester } from "@/helpers/semester";
-import { lazy, Suspense, useState } from "react";
+import { Suspense, useState } from "react";
 import { useMediaQuery } from "usehooks-ts";
 import { ExternalLink } from "lucide-react";
+import { lazyWithRetry } from "@/lib/chunk-recovery";
 
-const GPAChart = lazy(() =>
+const GPAChart = lazyWithRetry(() =>
   import("./GPAChart").then((m) => ({ default: m.GPAChart })),
 );
-const ClassRankChart = lazy(() =>
+const ClassRankChart = lazyWithRetry(() =>
   import("./ClassRankChart").then((m) => ({ default: m.ClassRankChart })),
 );
-const DeptRankChart = lazy(() =>
+const DeptRankChart = lazyWithRetry(() =>
   import("./DeptRankChart").then((m) => ({ default: m.DeptRankChart })),
 );
 
@@ -58,7 +59,11 @@ const SemesterGradeCard = ({
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant={"outline"} size={"icon"}>
+        <Button
+          variant={"outline"}
+          size={"icon"}
+          aria-label={dict.a11y.view_semester_details}
+        >
           <ExternalLink className="w-4 h-4" />
         </Button>
       </DialogTrigger>
@@ -162,9 +167,7 @@ const GradeCard = ({ title, data }: { title: string; data: string }) => (
     <div className="text-center text-muted-foreground text-sm font-medium leading-none">
       {title}
     </div>
-    <div className="text-center text-foreground text-xl font-bold">
-      {data}
-    </div>
+    <div className="text-center text-foreground text-xl font-bold">{data}</div>
   </div>
 );
 

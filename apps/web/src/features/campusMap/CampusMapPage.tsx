@@ -44,12 +44,22 @@ function MapMessage({
   loading?: boolean;
 }>) {
   return (
-    <div className="flex h-full min-h-[32rem] flex-col gap-2 bg-muted/30 p-4">
+    <div
+      className="flex h-full min-h-[32rem] flex-col gap-2 bg-muted/30 p-4"
+      role="status"
+      aria-live="polite"
+    >
       <div className="flex flex-col gap-2">
         {loading ? (
-          <Loader2 className="h-7 w-7 animate-spin text-primary" />
+          <Loader2
+            className="h-7 w-7 animate-spin text-primary"
+            aria-hidden="true"
+          />
         ) : (
-          <AlertCircle className="h-7 w-7 text-muted-foreground" />
+          <AlertCircle
+            className="h-7 w-7 text-muted-foreground"
+            aria-hidden="true"
+          />
         )}
         <h1 className="font-bold text-foreground">{title}</h1>
         {detail && <p className="text-sm text-muted-foreground">{detail}</p>}

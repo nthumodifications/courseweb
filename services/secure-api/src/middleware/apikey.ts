@@ -26,6 +26,7 @@ export async function verifyApiKey(c: Context, next: Next) {
     // Store the API key and user in the context
     c.set("apiKey", apiKey);
     c.set("user", apiKey.user);
+    c.header("Cache-Control", "private, no-store");
 
     await next();
   } catch (error) {

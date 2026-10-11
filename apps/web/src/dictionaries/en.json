@@ -1,4 +1,41 @@
 {
+  "a11y": {
+    "close": "Close",
+    "clear": "Clear",
+    "search": "Search",
+    "refresh": "Refresh",
+    "previous": "Previous",
+    "next": "Next",
+    "remove": "Remove",
+    "delete": "Delete",
+    "copy": "Copy",
+    "open": "Open",
+    "add_to_timetable": "Add course to timetable",
+    "view_course_details": "View course details",
+    "view_semester_details": "View semester details",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "settings": "Settings",
+    "favorite": "Add to favorites",
+    "unfavorite": "Remove from favorites",
+    "send": "Send",
+    "cancel": "Cancel",
+    "toggle": "Toggle",
+    "calendar": "Calendar",
+    "color_picker": "Choose a color",
+    "course_search": "Course search",
+    "course_filters": "Course filters",
+    "map_legend": "Map legend",
+    "map_search": "Map search",
+    "help": "Help",
+    "login": "Sign in",
+    "install_app": "Install app",
+    "date_contribution": "Contribute course dates",
+    "apps": "Apps",
+    "grades": "Grades",
+    "timetable_course": "Course options",
+    "course_picker": "Course picker"
+  },
   "today": {
     "schedule_title": "Today's Schedule",
     "noclass": "No Classes Today",
@@ -37,9 +74,18 @@
       "semester_ended": "Semester ended",
       "days_left": "days left in semester",
       "no_data": "No semester data"
+    },
+    "current_semester": {
+      "in_semester": "AC{year} Sem {semester}, Week {week}",
+      "holiday": "Holiday"
     }
   },
   "timetable": {
+    "seo": {
+      "application_name": "NTHUMods Timetable",
+      "page_title": "Timetable Management | NTHUMods",
+      "page_description": "Plan and manage your NTHU course timetable with ease."
+    },
     "actions": {
       "download": "Download",
       "share": "Share/Sync",
@@ -58,6 +104,7 @@
     },
     "credits": "credits",
     "course": "courses",
+    "semester_suffix": "semester",
     "display_settings": "Display Settings",
     "priority": "Priority",
     "conflict": "Schedule conflict",
@@ -77,6 +124,7 @@
     "lock_order": "Lock Course Order",
     "reset_default": "Reset to Default",
     "no_courses": "No Courses Added (yet)",
+    "no_courses_added": "No courses added yet",
     "course_data_loading": "Loading saved courses…",
     "course_data_error": "Saved course details could not be loaded. Your course IDs are still saved.",
     "unresolved_courses": "{count} course(s) could not be loaded; they are still saved.",
@@ -152,6 +200,13 @@
       "found": "Found",
       "search_placeholder": "Search for your course..."
     },
+    "seo": {
+      "title": "NTHU {department} course list | NTHUMods",
+      "description": "Browse all NTHU {department} courses and search course selection information.",
+      "home": "Home",
+      "course_breadcrumb": "Courses",
+      "page_description": "Browse all NTHU {department} courses"
+    },
     "search": {
       "limited_mode": "Search is running in limited mode — some filters and ranking may be unavailable.",
       "dismiss_limited_mode": "Dismiss limited search mode",
@@ -197,6 +252,12 @@
       "bar_link": "Course selection schedule",
       "bar_link_compact": "Schedule",
       "view_schedule": "View full schedule",
+      "current": "Now",
+      "next": "Next",
+      "open_now": "Within published dates",
+      "opens_today": "Opens today",
+      "opens_in": "Opens in {days} days",
+      "date_format": "MMM d",
       "no_data": "No selection dates available",
       "phases": {
         "round-1": "1st selection round",
@@ -362,6 +423,40 @@
         "unavailable": "The AI summary service is temporarily unavailable.",
         "workload": "Workload",
         "difficulty": "Difficulty"
+      },
+      "structured_comment": {
+        "separator": ":",
+        "attendance": "Attendance required",
+        "past_materials": "Past exam materials",
+        "extra_selection": "Extra enrollment",
+        "prerequisite": "Suggested prerequisites",
+        "method": "Class format",
+        "grading": "Grading",
+        "exam_type": "Exam/assignment format",
+        "instructor_personality": "Instructor preferences/personality",
+        "additional": "Additional comments",
+        "yes_no_placeholder": "Yes/No, add details...",
+        "prerequisite_placeholder": "Suggested prerequisites",
+        "method_placeholder": "Class format",
+        "grading_placeholder": "Grading",
+        "exam_type_placeholder": "Exam/assignment format",
+        "instructor_personality_placeholder": "Instructor preferences/personality",
+        "additional_placeholder": "Additional comments",
+        "yes": "Yes",
+        "no": "No"
+      },
+      "seo": {
+        "course_description": "NTHU {department} {course} course",
+        "provider_alternate_name": "國立清華大學",
+        "instructor_separator": ", ",
+        "home": "Home",
+        "course_breadcrumb": "Courses",
+        "page_description": "{semester} {course} course information at NTHU",
+        "title": "{course} {instructors} - {semester} NTHU {department} course",
+        "description": "NTHU {semester} {course} ({courseEn}) course information, taught by {instructors}. View the syllabus, historical grades, and student reviews.",
+        "open_graph_description": "NTHU {course} ({courseEn}), taught by {instructors}, {semester}. View the syllabus and historical information.",
+        "twitter_description": "NTHU {course}, taught by {instructors}, {semester}.",
+        "open_graph_title": "{course} - {department} | NTHUMods"
       },
       "prerequisite_original": "Show original text",
       "prerequisite_applies_to": "Applies to: ",
@@ -647,6 +742,10 @@
     "north_gate": "North Gate",
     "tsmc": "TSMC",
     "nanda": "Nanda Campus",
+    "to_tsmc": "To TSMC",
+    "to_north_gate": "To North Gate",
+    "to_nanda": "To Nanda",
+    "to_main_campus": "To Main Campus",
     "main_campus": "Main Campus",
     "leave_by": "Leave by {time}",
     "next_class": "Next class: {name}",
@@ -666,6 +765,15 @@
     "weekdays": "Weekdays",
     "weekends": "Weekends",
     "to": "To ",
+    "departing_from_gen2": "Dep. from GEN II",
+    "line_83": "Bus 83",
+    "campus_bus": "Main Campus Bus",
+    "nanda_shuttle": "Nanda Campus Shuttle",
+    "fallback_route": "Campus Bus",
+    "page_title": "Bus schedules | NTHUMods",
+    "page_description": "View real-time NTHU bus schedules, including campus buses and Nanda campus shuttles.",
+    "route_page_title": "{route} - Bus schedules | NTHUMods",
+    "route_page_description": "View real-time {route} bus schedules, route maps, and stop information.",
     "schedule": "Departure Schedule",
     "load_error": "Failed to load bus data. Please try again later.",
     "invalid_line": "Invalid line",
@@ -941,7 +1049,8 @@
             "title": "Quick links"
           },
           "notepad": {
-            "title": "Notepad"
+            "title": "Notepad",
+            "placeholder": "Write your notes..."
           },
           "countdown": {
             "title": "Countdown"
@@ -1234,11 +1343,15 @@
       "copy_image_unsupported_description": "Your browser does not support copying to the clipboard.",
       "download_error": "Download Failed",
       "download_error_description": "Failed to download the calendar file. Please try again or contact support.",
-      "close": "Close"
+      "close": "Close",
+      "image_filename_prefix": "timetable"
     },
     "ShareSyncTimetableDialog": {
       "title": "Share & Sync Your Timetable",
       "description": "Send this link to your friends to share your timetable or to yourself to keep your timetable synced on all devices.",
+      "short_link_error_title": "Short link error",
+      "short_link_error_description": "Failed to generate short link. Please try again later.",
+      "link_label": "Link",
       "category:qr": "QR Code",
       "category:links": "Links",
       "links": {
@@ -1252,6 +1365,61 @@
         "calendar_name": "NTHUMods Timetable",
         "subscription_hint": "Subscriptions update automatically; calendar apps refresh on their own schedule."
       }
+    },
+    "ShareTimetableDialog": {
+      "live": "Live",
+      "snapshot": "Snapshot",
+      "public": "Public",
+      "show_qr": "Show QR",
+      "hide_qr": "Hide QR",
+      "delete": "Delete",
+      "note_placeholder": "e.g. \"No attendance required\"",
+      "save": "Save",
+      "error": "Error",
+      "group_created": "Group created — share the link below",
+      "open_group": "Open group",
+      "create_another": "Create another",
+      "group_name": "Group name",
+      "group_name_placeholder": "e.g. CS Friends 113-2",
+      "semester": "Semester",
+      "nickname": "Your nickname",
+      "nickname_placeholder": "How you appear",
+      "group_timetable_hint": "Your timetable for {semester} will be linked automatically.",
+      "create_group": "Create Group",
+      "share_link_created": "Share link created!",
+      "share_id": "Share ID: {id}",
+      "share_link_deleted": "Share link deleted",
+      "share_timetable": "Share Timetable",
+      "sign_in_to_share": "Sign in to share your timetable.",
+      "no_semesters_selected": "No semesters selected",
+      "courses_count": "{count} courses",
+      "semesters_count": "{count} semesters",
+      "selected_semester_summary": "{semester} · {count} courses",
+      "selected_semesters_summary": "{semesterCount} semesters · {courseCount} courses",
+      "create_link": "Create Link",
+      "my_links": "My Links",
+      "groups": "Groups",
+      "name_optional": "Name (optional)",
+      "timetable_placeholder": "{semester} Timetable",
+      "semesters": "Semesters",
+      "live_sync": "Live sync",
+      "live_sync_description": "Viewers always see your latest courses",
+      "public_gallery": "Public gallery",
+      "public_gallery_description": "Appears in community timetable browser",
+      "anonymous": "Anonymous",
+      "anonymous_description": "Hide your identity from viewers",
+      "course_notes": "Course notes",
+      "course_notes_description": "Add notes visible to anyone viewing your timetable.",
+      "grades_context": "Grades & difficulty (optional)",
+      "grades_context_description": "Help juniors understand this semester. Optional.",
+      "grade_placeholder": "Grade (A+, A, ...)",
+      "difficulty_placeholder": "Difficulty 1-5",
+      "attendance_placeholder": "Attendance",
+      "generating": "Generating...",
+      "generate_share_link": "Generate Share Link",
+      "select_semester_hint": "Select at least one semester",
+      "add_courses_hint": "Add courses first",
+      "no_links": "No share links yet. Create one in the \"Create Link\" tab."
     },
     "DateContributeForm": {
       "title": "Contribute Dates",
@@ -1327,6 +1495,14 @@
     "dashboard": {
       "title": "Personalized Dashboard",
       "description": "View your courses, assignments, and exams."
+    },
+    "demo": {
+      "date_today": "May 7 Wed",
+      "date_tomorrow": "May 8",
+      "course_programming": "Programming",
+      "course_linear_algebra": "Linear Algebra",
+      "course_data_structures": "Data Structures",
+      "course_computer_networks": "Computer Networks"
     },
     "bus": {
       "title": "Bus Schedules",
@@ -1602,7 +1778,12 @@
     "coming_soon": "Coming Soon",
     "share": "Share",
     "testing": "Testing",
-    "redirecting": "Redirecting…"
+    "redirecting": "Redirecting…",
+    "drag_to_reorder": "Drag to reorder",
+    "remove_widget": "Remove widget",
+    "not_found_title": "Page Not Found | NTHUMods",
+    "not_found_description": "The page you are looking for does not exist or has been removed.",
+    "not_found_heading": "Page not found"
   },
   "auth": {
     "timeout_title": "Authentication timeout",
@@ -1640,6 +1821,10 @@
     "privacy_policy": "Privacy Policy",
     "proxy_login": "Proxy Login",
     "design_system": "Design System",
+    "github": "Open GitHub repository",
+    "email": "Email NTHUMods",
+    "instagram": "Open Instagram profile",
+    "facebook": "Open Facebook page",
     "copyright": "All rights reserved.",
     "disclaimer": "NTHUMods is not affiliated with National Tsing Hua University. But my graduation depends on them so don't worry."
   },
@@ -2425,7 +2610,7 @@
         },
         {
           "title": "Basic password handling process",
-          "description": ""
+          "description": "The password handling process follows standard secure practices."
         }
       ],
       "separator": ": ",
@@ -2465,6 +2650,9 @@
     "or_our": "or visit our",
     "github_repository": "GitHub repository",
     "github_link": "here",
+    "personal_link": "Open personal website",
+    "github_profile": "Open GitHub profile",
+    "linkedin_profile": "Open LinkedIn profile",
     "recruitment_intro": "Want to help NTHUMods grow?",
     "recruitment_link": "See our open roles",
     "core_team": "Core team",

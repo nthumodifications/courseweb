@@ -24,9 +24,9 @@ export const buildFlexSearchIndex = (documents: WorkerDocument[]) => {
       const terms = queryTerms(query);
       if (!terms.length) return documentIds.slice(0, limit);
 
-      // A two-character CJK query is an AND of the two characters. This
-      // matches the live index's useful abbreviation behavior while the
-      // matcher still requires both characters in the same field.
+      // A two-character CJK query searches both unigrams so a contiguous
+      // phrase is never lost to the CJK token index. The final matcher still
+      // requires the exact phrase in one field.
       if (
         terms.length === 1 &&
         [...terms[0]!].length === 2 &&
