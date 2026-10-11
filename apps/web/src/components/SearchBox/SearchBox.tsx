@@ -50,6 +50,7 @@ const SearchBox = ({ placeholder, autoFocus, ...props }: SearchBoxProps) => {
         type="submit"
         variant="ghost"
         size="icon"
+        aria-label={dict.common.search}
         title={dict.common.search}
       >
         <Search size="16" />

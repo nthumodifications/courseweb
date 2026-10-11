@@ -157,9 +157,6 @@ const TimetableSidebar = ({
       {/* Primary actions */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <Dialog>
-          <DialogTitle className="hidden">
-            {dict.course.item.add_to_semester}
-          </DialogTitle>
           <DialogTrigger asChild>
             <Button variant="outline" className="w-full">
               <Plus className="w-4 h-4 mr-2" />
@@ -167,6 +164,9 @@ const TimetableSidebar = ({
             </Button>
           </DialogTrigger>
           <DialogContent className="p-0 h-[100dvh] max-w-screen w-screen gap-0 px-2 pt-6 md:p-8">
+            <DialogTitle className="sr-only">
+              {dict.course.item.add_to_semester}
+            </DialogTitle>
             <CourseSearchContainerDynamic />
           </DialogContent>
         </Dialog>
@@ -201,7 +201,10 @@ const TimetableSidebar = ({
                     />
                   </button>
                 </PopoverTrigger>
-                <PopoverContent className="p-0 w-auto">
+                <PopoverContent
+                  className="p-0 w-auto"
+                  aria-label={dict.timetable.custom_items.color_label}
+                >
                   <Compact
                     color={item.color}
                     onChange={(color) => setCustomItemColor(item.id, color.hex)}
@@ -304,6 +307,11 @@ const TimetableSidebar = ({
           variant="ghost"
           size="icon"
           className="h-8 w-8"
+          aria-label={
+            vertical
+              ? dict.timetable.actions.horizontal_view
+              : dict.timetable.actions.vertical_view
+          }
           title={
             vertical
               ? dict.timetable.actions.horizontal_view
@@ -319,6 +327,7 @@ const TimetableSidebar = ({
             variant="ghost"
             size="icon"
             className="h-8 w-8"
+            aria-label={dict.timetable.sidebar.download_export}
             title={dict.timetable.sidebar.download_export}
           >
             <Download className="w-4 h-4" />
@@ -331,12 +340,16 @@ const TimetableSidebar = ({
               variant="ghost"
               size="icon"
               className="h-8 w-8"
+              aria-label={dict.timetable.sidebar.subscribe_calendar}
               title={dict.timetable.sidebar.subscribe_calendar}
             >
               <Calendar className="w-4 h-4" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent align="start">
+          <PopoverContent
+            align="start"
+            aria-label={dict.timetable.sidebar.subscribe_calendar}
+          >
             <div className="flex flex-col gap-4">
               <p className="text-sm font-medium">
                 {dict.timetable.sidebar.subscribe_calendar}
@@ -353,6 +366,7 @@ const TimetableSidebar = ({
             variant="ghost"
             size="icon"
             className="h-8 w-8"
+            aria-label={dict.timetable.sidebar.share_timetable}
             title={dict.timetable.sidebar.share_timetable}
           >
             <Share2 className="w-4 h-4" />
@@ -361,7 +375,12 @@ const TimetableSidebar = ({
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              aria-label={dict.timetable.sidebar.customizations}
+            >
               <EllipsisVertical className="w-4 h-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -388,6 +407,7 @@ const TimetableSidebar = ({
           type="button"
           onClick={() => navigate(`/${lang}/timetable/community`)}
           className="ml-auto flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          aria-label={dict.timetable.sidebar.community}
         >
           <Globe className="w-3 h-3" />
           {dict.timetable.sidebar.community}

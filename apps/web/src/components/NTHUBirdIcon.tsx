@@ -1,6 +1,7 @@
 const NTHUBirdIcon = (props: any) => {
   return (
     <svg
+      aria-hidden="true"
       width="36"
       height="18"
       viewBox="0 0 36 18"

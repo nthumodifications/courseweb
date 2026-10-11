@@ -1,18 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
 import { createAuthTestEnvironment } from "./test-auth";
+import { createPrismaClientMock } from "./test-helpers/module-mocks";
 
 const findMany = mock(async () => []);
 const findFirst = mock(async () => null);
 
-mock.module("./prisma/client", () => ({
-  default: {
-    fetch: async () => ({
-      sharedTimetable: { findMany, findFirst },
-      savedTimetable: { findMany },
-      timetableGroup: { findMany },
-    }),
-  },
-}));
+mock.module("./prisma/client", () =>
+  createPrismaClientMock(async () => ({
+    sharedTimetable: { findMany, findFirst },
+    savedTimetable: { findMany },
+    timetableGroup: { findMany },
+  })),
+);
 
 const { default: timetableShare } = await import("./timetable-share");
 

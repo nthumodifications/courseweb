@@ -354,6 +354,7 @@ const LibraryPage = () => {
               <Search className="absolute left-2.5 top-2 h-4 w-4 text-muted-foreground" />
               <input
                 type="text"
+                aria-label={dict.library.search_placeholder}
                 placeholder={dict.library.search_placeholder}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}

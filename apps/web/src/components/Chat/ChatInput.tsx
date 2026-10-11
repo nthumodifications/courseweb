@@ -40,11 +40,21 @@ export function ChatInput() {
         />
 
         {isLoading ? (
-          <Button variant="destructive" size="icon" onClick={cancel}>
+          <Button
+            variant="destructive"
+            size="icon"
+            aria-label={dict.a11y.cancel}
+            onClick={cancel}
+          >
             <Square className="w-4 h-4" />
           </Button>
         ) : (
-          <Button size="icon" onClick={handleSubmit} disabled={!input.trim()}>
+          <Button
+            size="icon"
+            aria-label={dict.a11y.send}
+            onClick={handleSubmit}
+            disabled={!input.trim()}
+          >
             <Send className="w-4 h-4" />
           </Button>
         )}

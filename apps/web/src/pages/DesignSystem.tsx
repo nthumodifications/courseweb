@@ -562,7 +562,10 @@ const DesignSystem = () => {
                         <Button size="sm">Small (h-9)</Button>
                         <Button size="default">Default (h-10)</Button>
                         <Button size="lg">Large (h-11)</Button>
-                        <Button size="icon">
+                        <Button
+                          size="icon"
+                          aria-label={dict.timetable.english_names_options.add}
+                        >
                           <Plus />
                         </Button>
                       </div>

@@ -2,6 +2,7 @@ import { SVGProps } from "react";
 
 export const GreenLineIcon = (props: SVGProps<SVGSVGElement>) => (
   <svg
+    aria-hidden="true"
     width="30"
     height="30"
     viewBox="0 0 30 30"

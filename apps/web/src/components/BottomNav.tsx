@@ -75,6 +75,7 @@ const BottomNav: FC = () => {
         {visibleLinks.map((link) => (
           <button
             type="button"
+            aria-label={link.title}
             className={`flex flex-col items-center gap-1 ${link.href === pathname ? "text-primary" : "text-muted-foreground"}`}
             key={link.id}
             onClick={() => navigate(link.href)}

@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, mock, test } from "bun:test";
-import app from "./aca-calendar";
+import app, { parseCalendarPayload } from "./aca-calendar";
+import { failingFetch, upstreamFailureCases } from "./test-helpers/upstream";
 
 const originalFetch = globalThis.fetch;
 const originalCalendarApiKey = process.env.CALENDAR_API_KEY;
@@ -46,6 +47,32 @@ afterEach(() => {
 });
 
 describe("academic calendar overlap filtering", () => {
+  test("preserves normal event shape and allows a closed window", () => {
+    const event = academicEvent("holiday", "校慶補假", "2026-10-12");
+    expect(parseCalendarPayload({ items: [event, event] })).toEqual([
+      event,
+      event,
+    ]);
+    expect(parseCalendarPayload({ items: [] })).toEqual([]);
+    expect(parseCalendarPayload({ items: [{ id: "missing" }] })).toBeNull();
+  });
+
+  test("normalizes a timed Google event to its calendar dates", () => {
+    const timed = {
+      id: "timed",
+      summary: "Timed event",
+      start: { dateTime: "2026-10-15T10:00:00+08:00" },
+      end: { dateTime: "2026-10-15T11:00:00+08:00" },
+    };
+    expect(parseCalendarPayload({ items: [timed] })).toEqual([
+      {
+        ...timed,
+        start: { ...timed.start, date: "2026-10-15" },
+        end: { ...timed.end, date: "2026-10-16" },
+      },
+    ]);
+  });
+
   test("returns a period that overlaps a visible day and month boundary", async () => {
     process.env.CALENDAR_API_KEY = "test-key";
     globalThis.fetch = mock(async (input: RequestInfo | URL) =>
@@ -84,4 +111,16 @@ describe("academic calendar overlap filtering", () => {
     expect(response.status).toBe(200);
     expect(requestInit?.signal).toBeInstanceOf(AbortSignal);
   });
+
+  test.each(upstreamFailureCases)(
+    "surfaces upstream %s as 502",
+    async (_label, makeResult) => {
+      process.env.CALENDAR_API_KEY = "test-key";
+      globalThis.fetch = failingFetch(makeResult);
+      const response = await app.request(
+        "/?start=2026-09-14T00:00:00.000Z&end=2026-09-21T00:00:00.000Z",
+      );
+      expect(response.status).toBe(502);
+    },
+  );
 });

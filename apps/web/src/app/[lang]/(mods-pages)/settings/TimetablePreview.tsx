@@ -95,7 +95,11 @@ const TimetablePreview = () => {
         <span className="flex-1 text-sm font-bold">
           {dict.settings.timetable.vertical_preview}
         </span>
-        <Switch checked={vertical} onCheckedChange={setVertical} />
+        <Switch
+          aria-label={dict.settings.timetable.vertical_preview}
+          checked={vertical}
+          onCheckedChange={setVertical}
+        />
       </div>
     </div>
   );

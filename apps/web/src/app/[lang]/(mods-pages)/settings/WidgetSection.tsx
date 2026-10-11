@@ -54,6 +54,7 @@ const SortableWidgetRow = ({
         <div className="text-sm font-medium">{label}</div>
       </div>
       <Switch
+        aria-label={label}
         checked={widget.enabled}
         onCheckedChange={(val) => onToggle(widget.id, val)}
       />

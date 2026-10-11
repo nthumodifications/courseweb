@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, mock } from "bun:test";
-mock.module("@tsndr/cloudflare-worker-jwt", () => ({
-  default: { sign: () => "test-jwt" },
-}));
+import { createJwtMock } from "./test-helpers/module-mocks";
+
+mock.module("@tsndr/cloudflare-worker-jwt", () => createJwtMock());
 
 const {
   filterIssueLabels,
@@ -74,6 +74,12 @@ const issueDiagnostics = {
   clientErrorNames: [],
 } as const;
 
+const signedInDiagnostics = (overrides: Record<string, unknown> = {}) => ({
+  ...issueDiagnostics,
+  signedIn: true,
+  ...overrides,
+});
+
 const githubIssue = {
   id: 42,
   number: 123,
@@ -102,6 +108,21 @@ const mockGithub = (issueResponse = githubIssue) => {
     },
   ) as unknown as typeof fetch;
   return requests;
+};
+
+const issuePayload = (overrides: Record<string, unknown> = {}) => ({
+  title: "valid title",
+  body: "valid description",
+  labels: [],
+  ...overrides,
+});
+
+const submitGithubIssue = async (payload: Record<string, unknown>) => {
+  const requests = mockGithub();
+  const response = await postIssue(payload, githubEnv);
+  const responsePayload = await response.json();
+  const githubRequest = JSON.parse(String(requests[1]?.init?.body));
+  return { response, responsePayload, githubRequest };
 };
 
 describe("issue creation abuse controls", () => {
@@ -163,20 +184,19 @@ describe("issue creation abuse controls", () => {
   });
 
   it("echoes applied optional fields and redacts only email addresses in the GitHub payload", async () => {
-    const requests = mockGithub();
-    const response = await postIssue(
-      {
-        title: "valid title",
+    const {
+      response,
+      responsePayload: payload,
+      githubRequest,
+    } = await submitGithubIssue(
+      issuePayload({
         body: "Error code 12345678; contact student@example.com",
         labels: ["generic"],
         reportType: "bug",
         reportArea: "search",
         diagnostics: issueDiagnostics,
-      },
-      githubEnv,
+      }),
     );
-    const payload = await response.json();
-    const githubRequest = JSON.parse(String(requests[1]?.init?.body));
 
     expect(response.status).toBe(200);
     expect(payload).toMatchObject({
@@ -322,45 +342,13 @@ describe("issue creation abuse controls", () => {
 
   it("uses only the diagnostics allowlist and drops unknown fields", () => {
     const diagnostics = parseIssueDiagnostics({
-      appVersion: "0.1.0",
-      buildCommit: "abc123",
-      route: "/[lang]/timetable",
-      language: "en",
-      theme: "light",
-      browser: "Chrome 130",
-      os: "Windows",
-      viewport: "standard",
-      viewportSize: "390x844",
-      online: true,
-      serviceWorker: "active",
-      serviceWorkerWaiting: false,
-      signedIn: true,
-      enabledLocalFeatureFlags: [],
-      clientErrorCount: 0,
-      clientErrorNames: [],
+      ...signedInDiagnostics(),
       error: "Failed to sync course MATH 101 with token eyJsecret",
       selectedSemester: "1132",
       timetableCourseCount: 3,
     });
 
-    expect(diagnostics).toEqual({
-      appVersion: "0.1.0",
-      buildCommit: "abc123",
-      route: "/[lang]/timetable",
-      language: "en",
-      theme: "light",
-      browser: "Chrome 130",
-      os: "Windows",
-      viewport: "standard",
-      viewportSize: "390x844",
-      online: true,
-      serviceWorker: "active",
-      serviceWorkerWaiting: false,
-      signedIn: true,
-      enabledLocalFeatureFlags: [],
-      clientErrorCount: 0,
-      clientErrorNames: [],
-    });
+    expect(diagnostics).toEqual(signedInDiagnostics());
   });
 
   it("bounds diagnostics and keeps only fixed error names", () => {
@@ -389,18 +377,15 @@ describe("issue creation abuse controls", () => {
   });
 
   it("drops an invalid diagnostics snapshot without blocking the report", async () => {
-    const requests = mockGithub();
-    const response = await postIssue(
-      {
-        title: "valid title",
-        body: "valid description",
-        labels: [],
+    const {
+      response,
+      responsePayload: payload,
+      githubRequest,
+    } = await submitGithubIssue(
+      issuePayload({
         diagnostics: { route: "full user URL?student=12345678" },
-      },
-      githubEnv,
+      }),
     );
-    const payload = await response.json();
-    const githubRequest = JSON.parse(String(requests[1]?.init?.body));
 
     expect(response.status).toBe(200);
     expect(payload).toMatchObject({ applied: [] });
@@ -408,24 +393,12 @@ describe("issue creation abuse controls", () => {
   });
 
   it("collapses diagnostics and neutralizes error injection characters", () => {
-    const diagnostics = formatDiagnosticsBlock({
-      appVersion: "0.1.0",
-      buildCommit: "abc123",
-      route: "/[lang]/timetable",
-      language: "en",
-      theme: "light",
-      browser: "Chrome 130",
-      os: "Windows",
-      viewport: "standard",
-      viewportSize: "390x844",
-      online: true,
-      serviceWorker: "active",
-      serviceWorkerWaiting: false,
-      signedIn: true,
-      enabledLocalFeatureFlags: [],
-      clientErrorCount: 1,
-      clientErrorNames: ["Other"],
-    } as never);
+    const diagnostics = formatDiagnosticsBlock(
+      signedInDiagnostics({
+        clientErrorCount: 1,
+        clientErrorNames: ["Other"],
+      }) as never,
+    );
 
     expect(diagnostics).toContain("<details>");
     expect(diagnostics).toContain("```text");
@@ -435,22 +408,7 @@ describe("issue creation abuse controls", () => {
 
   it("keeps signed-in status but excludes account and timetable state", () => {
     const diagnostics = formatDiagnosticsBlock({
-      appVersion: "0.1.0",
-      buildCommit: "abc123",
-      route: "/[lang]/timetable",
-      language: "en",
-      theme: "light",
-      browser: "Chrome 130",
-      os: "Windows",
-      viewport: "standard",
-      viewportSize: "390x844",
-      online: true,
-      serviceWorker: "active",
-      serviceWorkerWaiting: false,
-      signedIn: true,
-      enabledLocalFeatureFlags: [],
-      clientErrorCount: 0,
-      clientErrorNames: [],
+      ...signedInDiagnostics(),
       selectedSemester: "1132",
       timetableCourseCount: 3,
     } as never);

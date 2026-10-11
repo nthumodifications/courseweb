@@ -147,6 +147,7 @@ function TimetableDetailDialog({
                   <button
                     key={sem}
                     type="button"
+                    aria-pressed={activeSem === sem}
                     onClick={() => setActiveSem(sem)}
                     className={`px-2 py-0.5 rounded text-xs font-normal border transition-colors ${
                       activeSem === sem

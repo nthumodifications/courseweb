@@ -1,4 +1,5 @@
 import { describe, expect, mock, test } from "bun:test";
+import { createSupabaseServerMock } from "./test-helpers/module-mocks";
 
 const course = {
   raw_id: "11420MATH 101000",
@@ -42,15 +43,15 @@ const syllabusIn = mock(async (_column: string, rawIds: string[]) => ({
   error: null,
 }));
 
-mock.module("./config/supabase_server", () => ({
-  default: () => ({
+mock.module("./config/supabase_server", () =>
+  createSupabaseServerMock(() => ({
     rpc: supabaseRpc,
     from: (table: string) => {
       if (table !== "course_syllabus") throw new Error(`unexpected ${table}`);
       return { select: () => ({ in: syllabusIn }) };
     },
-  }),
-}));
+  })),
+);
 
 const { default: fallbackSearch } = await import("./search-fallback");
 

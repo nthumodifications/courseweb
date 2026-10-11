@@ -1,4 +1,11 @@
+import {
+  lazy as reactLazy,
+  type ComponentType,
+  type LazyExoticComponent,
+} from "react";
+
 const CHUNK_RECOVERY_SESSION_KEY = "nthumods:chunk-recovery-attempted";
+const CHUNK_RECOVERY_WINDOW_MS = 5 * 60 * 1000;
 const CHUNK_ERROR_PATTERN =
   /is not a valid JavaScript MIME type|Failed to fetch dynamically imported module|Importing a module script failed|ChunkLoadError/i;
 
@@ -18,75 +25,107 @@ function isChunkError(error: unknown): boolean {
   return CHUNK_ERROR_PATTERN.test(errorMessage(error));
 }
 
-async function unregisterServiceWorkers(): Promise<void> {
+function isOnline(): boolean {
+  try {
+    return typeof navigator === "undefined" || navigator.onLine !== false;
+  } catch {
+    return false;
+  }
+}
+
+async function updateServiceWorker(): Promise<void> {
   if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) {
     return;
   }
 
   try {
-    const registrations = await navigator.serviceWorker.getRegistrations();
-    await Promise.all(
-      registrations.map(async (registration) => {
-        try {
-          await registration.unregister();
-        } catch {
-          // Continue clearing the remaining registrations before reloading.
-        }
-      }),
-    );
+    const registration = await navigator.serviceWorker.getRegistration();
+    await registration?.update();
   } catch {
-    // A missing or unavailable service-worker API should not block recovery.
+    // A failed update check should not prevent the normal reload recovery.
   }
 }
 
-async function deleteCaches(): Promise<void> {
-  if (typeof caches === "undefined") return;
+function shouldRecover(): boolean {
+  if (recoveryAttempted) return false;
+  if (typeof window === "undefined") return false;
+  if (!isOnline()) return false;
 
   try {
-    const cacheNames = await caches.keys();
-    await Promise.all(
-      cacheNames.map(async (cacheName) => {
-        try {
-          await caches.delete(cacheName);
-        } catch {
-          // Continue deleting the remaining caches before reloading.
-        }
-      }),
+    const storedAttempt = window.sessionStorage.getItem(
+      CHUNK_RECOVERY_SESSION_KEY,
     );
+    const attemptedAt = storedAttempt ? Number(storedAttempt) : NaN;
+    const now = Date.now();
+    if (
+      Number.isFinite(attemptedAt) &&
+      attemptedAt >= 0 &&
+      (attemptedAt >= now || now - attemptedAt < CHUNK_RECOVERY_WINDOW_MS)
+    ) {
+      recoveryAttempted = true;
+      return false;
+    }
   } catch {
-    // A missing or unavailable Cache Storage API should not block recovery.
+    // Without a persistent cross-page guard, automatic reload is unsafe.
+    recoveryAttempted = true;
+    return false;
   }
+
+  recoveryAttempted = true;
+  return true;
 }
 
 export function reloadApp(): Promise<void> {
   if (reloadPromise) return reloadPromise;
 
   reloadPromise = (async () => {
-    await Promise.all([unregisterServiceWorkers(), deleteCaches()]);
-    window.location.reload();
+    await updateServiceWorker();
+    if (typeof window === "undefined" || !isOnline()) return;
+
+    try {
+      window.sessionStorage.setItem(
+        CHUNK_RECOVERY_SESSION_KEY,
+        String(Date.now()),
+      );
+    } catch {
+      // Without a persistent cross-page guard, automatic reload is unsafe.
+      return;
+    }
+
+    // If connectivity drops during reload, the SW offline navigation fallback
+    // serves the shell; the guard blocks another reload.
+    if (isOnline()) window.location.reload();
   })();
 
   return reloadPromise;
 }
 
-function shouldRecover(): boolean {
-  if (recoveryAttempted) return false;
-  recoveryAttempted = true;
+export async function recoverFromChunkError(): Promise<void> {
+  if (!shouldRecover()) return;
 
   try {
-    if (window.sessionStorage.getItem(CHUNK_RECOVERY_SESSION_KEY)) {
-      return false;
-    }
-    window.sessionStorage.setItem(CHUNK_RECOVERY_SESSION_KEY, "1");
+    await reloadApp();
   } catch {
-    // Keep the in-memory guard if sessionStorage is unavailable.
+    // Preserve the original lazy-import error for the existing error boundary.
   }
-
-  return true;
 }
 
-export function recoverFromChunkError(): Promise<void> {
-  return shouldRecover() ? reloadApp() : Promise.resolve();
+export async function loadWithRetry<T>(importer: () => Promise<T>): Promise<T> {
+  try {
+    return await importer();
+  } catch (error) {
+    if (!isChunkError(error)) throw error;
+    await recoverFromChunkError();
+    throw error;
+  }
+}
+
+export function lazyWithRetry<T extends ComponentType<any>>(
+  importer: () => Promise<{ default: T }>,
+): LazyExoticComponent<T> {
+  return reactLazy(async () => {
+    return loadWithRetry(importer);
+  }) as unknown as LazyExoticComponent<T>;
 }
 
 if (typeof window !== "undefined") {

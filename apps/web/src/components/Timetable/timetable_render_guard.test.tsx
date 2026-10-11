@@ -57,6 +57,7 @@ mock.module("@/hooks/contexts/settings", () => ({
 }));
 mock.module("@/dictionaries/useDictionary", () => ({
   default: () => ({
+    a11y: { delete: "Delete" },
     course: {
       credits: "credits",
       details: {
@@ -160,15 +161,19 @@ Object.assign(globalThis, {
   StorageEvent: moduleDom.window.StorageEvent,
 });
 
-const { UserTimetableProvider, default: useUserTimetable } =
-  await import("@/hooks/contexts/useUserTimetable");
-const { CourseDialogProvider } =
-  await import("@/components/Courses/CourseDialog");
+const { UserTimetableProvider, default: useUserTimetable } = await import(
+  "@/hooks/contexts/useUserTimetable"
+);
+const { CourseDialogProvider } = await import(
+  "@/components/Courses/CourseDialog"
+);
 const { TimetableCourseList } = await import("./TimetableCourseList");
-const { default: TimetableSlotHorizontal } =
-  await import("./TimetableSlotHorizontal");
-const { default: TimetableSlotVertical } =
-  await import("./TimetableSlotVertical");
+const { default: TimetableSlotHorizontal } = await import(
+  "./TimetableSlotHorizontal"
+);
+const { default: TimetableSlotVertical } = await import(
+  "./TimetableSlotVertical"
+);
 mock.module("@/dictionaries/useDictionary", () => actualDictionary);
 
 restoreGlobals();

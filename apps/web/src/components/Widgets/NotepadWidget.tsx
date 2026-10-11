@@ -28,6 +28,9 @@ const NotepadWidget: FC<NotepadWidgetProps> = ({
       isDragging={isDragging}
     >
       <textarea
+        aria-label={
+          dict.settings.calendar.widget_dashboard.widget_options.notepad.title
+        }
         value={notes}
         onChange={(e) => setNotes(e.target.value)}
         placeholder={

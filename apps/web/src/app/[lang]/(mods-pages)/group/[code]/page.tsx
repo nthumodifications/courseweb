@@ -330,6 +330,9 @@ const GroupViewPage = () => {
                     size="icon"
                     variant="ghost"
                     className="h-7 w-7 shrink-0"
+                    aria-label={
+                      isVisible ? dict.a11y.collapse : dict.a11y.expand
+                    }
                     onClick={(e) => {
                       e.stopPropagation();
                       toggleMember(member.userId);

@@ -18,6 +18,7 @@ import {
   toast,
   Dialog,
   DialogContent,
+  DialogTitle,
   DialogTrigger,
 } from "@courseweb/ui";
 import { format } from "date-fns";
@@ -153,6 +154,9 @@ const DateContributeForm = ({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
+        <DialogTitle className="sr-only">
+          {dict.dialogs.DateContributeForm.title}
+        </DialogTitle>
         {!auth.isAuthenticated ? (
           <div className="flex flex-col gap-4 items-center py-6">
             <CalendarPlus className="w-10 h-10 text-muted-foreground" />
@@ -320,6 +324,7 @@ const DateContributeForm = ({
                         <Button
                           variant="destructive"
                           size="icon"
+                          aria-label={dict.a11y.remove}
                           disabled={disabled}
                           onClick={() => remove(index)}
                         >

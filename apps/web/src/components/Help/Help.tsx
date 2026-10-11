@@ -14,6 +14,7 @@ import { useState, useEffect, ReactNode } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogTitle,
   DialogTrigger,
   Button,
   cn,
@@ -474,6 +475,7 @@ const Help = ({ children }: { children?: ReactNode }) => {
         )}
       </DialogTrigger>
       <DialogContent className="h-[calc(100dvh-env(safe-area-inset-bottom))] p-0 w-full lg:h-[calc(100vh-48px)] pb-[env(safe-area-inset-bottom)]">
+        <DialogTitle className="sr-only">{dict.a11y.help}</DialogTitle>
         <div className="flex flex-col items-center gap-4 px-4 py-4 max-h-[calc(100dvh-env(safe-area-inset-bottom))] overflow-y-auto">
           <div className="flex-1 grid place-items-center">
             <div className="w-[254px] h-[254px] max-h-full border border-border rounded-lg overflow-hidden">

@@ -64,6 +64,7 @@ const StructuredComment = ({
       <div className="flex flex-row gap-2 items-center">
         <Label>{labels.attendance}</Label>
         <Checkbox
+          aria-label={labels.attendance}
           checked={attendance}
           onCheckedChange={(v) =>
             typeof v == "string"
@@ -75,6 +76,7 @@ const StructuredComment = ({
       <div className="flex flex-row gap-2 items-center">
         <Label>{labels.past_materials}</Label>
         <Checkbox
+          aria-label={labels.past_materials}
           checked={hasPastYearMaterials}
           onCheckedChange={(v) =>
             typeof v == "string"

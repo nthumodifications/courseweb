@@ -228,6 +228,7 @@ const YouBikePage = () => {
         <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-3" />
         <input
           type="text"
+          aria-label={dict.youbike.search_placeholder}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder={dict.youbike.search_placeholder}

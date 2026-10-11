@@ -73,7 +73,8 @@ function ShareListItem({
   share: SharedTimetable;
   onDelete: () => void;
 }>) {
-  const labels = useDictionary().dialogs.ShareTimetableDialog;
+  const dict = useDictionary();
+  const labels = dict.dialogs.ShareTimetableDialog;
   const [expanded, setExpanded] = useState(false);
   const [showQr, setShowQr] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -118,6 +119,7 @@ function ShareListItem({
           size="icon"
           variant="ghost"
           className="h-7 w-7 shrink-0"
+          aria-label={dict.a11y.copy}
           onClick={copy}
         >
           {copied ? (
@@ -130,6 +132,8 @@ function ShareListItem({
           size="icon"
           variant="ghost"
           className="h-7 w-7 shrink-0"
+          aria-label={expanded ? dict.a11y.collapse : dict.a11y.expand}
+          aria-expanded={expanded}
           onClick={() => setExpanded((v) => !v)}
         >
           <ChevronDown
@@ -183,7 +187,8 @@ function NoteEditor({
   courseName: string;
   onSave: (note: string) => void;
 }>) {
-  const labels = useDictionary().dialogs.ShareTimetableDialog;
+  const dict = useDictionary();
+  const labels = dict.dialogs.ShareTimetableDialog;
   const [value, setValue] = useState(courseNote);
   return (
     <div className="flex flex-col gap-1">
@@ -215,7 +220,8 @@ function GroupsTab({
 }: {
   readonly semester: string;
 }) {
-  const labels = useDictionary().dialogs.ShareTimetableDialog;
+  const dict = useDictionary();
+  const labels = dict.dialogs.ShareTimetableDialog;
   const [groupName, setGroupName] = useState("");
   const [groupSemester, setGroupSemester] = useState(activeSemester);
   const [creatorLabel, setCreatorLabel] = useState("");
@@ -294,7 +300,12 @@ function GroupsTab({
             readOnly
             className="font-mono text-xs flex-1"
           />
-          <Button size="icon" variant="outline" onClick={copyInvite}>
+          <Button
+            size="icon"
+            variant="outline"
+            aria-label={dict.a11y.copy}
+            onClick={copyInvite}
+          >
             {copiedInvite ? (
               <Check className="h-4 w-4" />
             ) : (
@@ -620,7 +631,11 @@ const ShareTimetableDialog = ({
                         {labels.live_sync_description}
                       </p>
                     </div>
-                    <Switch checked={isLive} onCheckedChange={setIsLive} />
+                    <Switch
+                      aria-label={labels.live_sync}
+                      checked={isLive}
+                      onCheckedChange={setIsLive}
+                    />
                   </div>
                   <div className="flex items-center justify-between">
                     <div>
@@ -630,6 +645,7 @@ const ShareTimetableDialog = ({
                       </p>
                     </div>
                     <Switch
+                      aria-label={labels.public_gallery}
                       checked={visibility === "public"}
                       onCheckedChange={(v) =>
                         setVisibility(v ? "public" : "link_only")
@@ -644,6 +660,7 @@ const ShareTimetableDialog = ({
                       </p>
                     </div>
                     <Switch
+                      aria-label={labels.anonymous}
                       checked={isAnonymous}
                       onCheckedChange={setIsAnonymous}
                     />

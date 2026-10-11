@@ -20,6 +20,7 @@ export function QuotaExceededAlert({
         <Button
           variant="ghost"
           size="icon"
+          aria-label={dict.a11y.close}
           className="absolute right-2 top-2 h-6 w-6"
           onClick={onDismiss}
         >

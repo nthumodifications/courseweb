@@ -386,6 +386,7 @@ const TimeSelectionFilter = ({
                   <Button
                     variant="outline"
                     size="icon"
+                    aria-label={dict.a11y.clear}
                     onClick={handleClear}
                     className="h-7 w-7"
                   >

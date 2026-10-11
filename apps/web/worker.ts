@@ -11,7 +11,9 @@ declare global {
 }
 
 const STATIC_ASSET_EXTENSION_PATTERN =
-  /\.(?:js|mjs|css|map|json|woff2|woff|ttf|png|jpg|svg|webp|ico)$/i;
+  /\.(?:js|mjs|css|map|json|woff2|woff|ttf|png|jpg|svg|webp|ico|webmanifest)$/i;
+const NO_CACHE = "no-cache, must-revalidate";
+const IMMUTABLE_ASSET_CACHE = "public, max-age=31536000, immutable";
 
 function isStaticAssetPath(pathname: string): boolean {
   return (
@@ -20,12 +22,49 @@ function isStaticAssetPath(pathname: string): boolean {
   );
 }
 
+function withCacheControl(response: Response, value: string): Response {
+  const headers = new Headers(response.headers);
+  headers.set("Cache-Control", value);
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
+function cacheControlForStaticPath(pathname: string): string | undefined {
+  if (
+    pathname === "/sw.js" ||
+    pathname === "/registerSW.js" ||
+    pathname === "/manifest.webmanifest"
+  ) {
+    return NO_CACHE;
+  }
+  if (pathname.startsWith("/assets/")) return IMMUTABLE_ASSET_CACHE;
+  return undefined;
+}
+
+function isHtmlResponse(response: Response): boolean {
+  return (
+    response.headers
+      .get("content-type")
+      ?.split(";", 1)[0]
+      .trim()
+      .toLowerCase() === "text/html"
+  );
+}
+
 // The assets binding's default html_handling answers /index.html with a 307
 // to /. Fetch the shell by its canonical path so neither this worker nor the
 // PWA service worker (whose navigation fallback requests /index.html and
 // cannot answer a navigation with a redirected response) ever sees that 307.
-function fetchAppShell(env: Env, origin: string, init?: Request) {
-  return env.ASSETS.fetch(new Request(`${origin}/`, init));
+async function fetchAppShell(
+  env: Env,
+  origin: string,
+  init?: Request,
+): Promise<Response> {
+  const response = await env.ASSETS.fetch(new Request(`${origin}/`, init));
+  return withCacheControl(response, NO_CACHE);
 }
 
 function missingAssetResponse(): Response {
@@ -41,24 +80,29 @@ function missingAssetResponse(): Response {
 async function fetchStaticAsset(request: Request, env: Env): Promise<Response> {
   try {
     const response = await env.ASSETS.fetch(request);
-    const contentType = response.headers
-      .get("content-type")
-      ?.split(";", 1)[0]
-      .trim()
-      .toLowerCase();
 
     // Only a genuine miss, or the SPA fallback serving index.html in place of
     // an asset, should 404 here. Anything below 400 must pass through
     // untouched -- in particular 304, which is what every browser reload of a
     // cached asset receives after revalidating with If-None-Match.
-    if (response.status >= 400 || contentType === "text/html") {
+    if (response.status >= 400 || isHtmlResponse(response)) {
       return missingAssetResponse();
     }
 
-    return response;
+    const cacheControl = cacheControlForStaticPath(
+      new URL(request.url).pathname,
+    );
+    return cacheControl ? withCacheControl(response, cacheControl) : response;
   } catch {
     return missingAssetResponse();
   }
+}
+
+async function fetchNavigation(request: Request, env: Env): Promise<Response> {
+  const response = await env.ASSETS.fetch(request);
+  return isHtmlResponse(response)
+    ? withCacheControl(response, NO_CACHE)
+    : response;
 }
 
 const SUPABASE_URL = "https://cmzdlrqfpuktcczvsobs.supabase.co";
@@ -978,7 +1022,7 @@ export default {
     const userAgent = request.headers.get("User-Agent") ?? "";
 
     if (!isBot(userAgent)) {
-      return env.ASSETS.fetch(request);
+      return fetchNavigation(request, env);
     }
 
     // Course detail page
@@ -1016,6 +1060,6 @@ export default {
       return handleGenericBotPage(url, env);
     }
 
-    return env.ASSETS.fetch(request);
+    return fetchNavigation(request, env);
   },
 };
