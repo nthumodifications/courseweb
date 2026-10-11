@@ -1,7 +1,95 @@
 import ical from "ical-generator";
-import { addDays } from "date-fns";
 import { getFirebaseAdmin } from "../config/firebase_admin";
 import { getPrismaClient } from "./apiKeyValidation";
+
+const CALENDAR_TIME_ZONE = "Asia/Taipei";
+const TAIPEI_OFFSET_MS = 8 * 60 * 60 * 1000;
+const CALENDAR_DAY_MS = 24 * 60 * 60 * 1000;
+
+type ICalDateAdapter = {
+  isValid: true;
+  toJSDate: () => Date;
+  setZone: () => ICalDateAdapter;
+  toFormat: (format: string) => string;
+  zone: { type: string };
+};
+
+const taipeiDateParts = (date: Date) => {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: CALENDAR_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(date);
+  const values = Object.fromEntries(
+    parts
+      .filter(({ type }) => type !== "literal")
+      .map(({ type, value }) => [type, value]),
+  );
+  return values as Record<
+    "year" | "month" | "day" | "hour" | "minute" | "second",
+    string
+  >;
+};
+
+/** Give ical-generator timezone-aware wall-clock fields without server-TZ drift. */
+const toTaipeiICalDate = (date: Date): ICalDateAdapter => {
+  const parts = taipeiDateParts(date);
+  return {
+    isValid: true,
+    toJSDate: () => date,
+    setZone: () => toTaipeiICalDate(date),
+    zone: { type: "iana" },
+    toFormat: (format) => {
+      if (format === "yyyyLLdd") {
+        return `${parts.year}${parts.month}${parts.day}`;
+      }
+      if (format === "HHmmss") {
+        return `${parts.hour}${parts.minute}${parts.second}`;
+      }
+      throw new Error(`Unsupported iCalendar date format: ${format}`);
+    },
+  };
+};
+
+const taipeiDateOnly = (date: Date) =>
+  toTaipeiICalDate(date).toFormat("yyyyLLdd");
+
+/** An inclusive Taipei date-rule cutoff expressed as a UTC date-time. */
+const taipeiDateRuleUntil = (date: Date) => {
+  const parts = taipeiDateParts(date);
+  const nextTaipeiMidnight = Date.UTC(
+    Number(parts.year),
+    Number(parts.month) - 1,
+    Number(parts.day) + 1,
+  );
+  return new Date(nextTaipeiMidnight - TAIPEI_OFFSET_MS - 1000);
+};
+
+const allDayRepeatingRule = (event: any) => {
+  const repeat = event.repeat;
+  const rule = [`RRULE:FREQ=${repeat.type.toUpperCase()}`];
+  if (repeat.mode === "count") {
+    rule.push(`COUNT=${repeat.value}`);
+  } else if (repeat.value) {
+    rule.push(`UNTIL=${taipeiDateOnly(new Date(repeat.value))}`);
+  }
+  rule.push(`INTERVAL=${repeat.interval || 1}`);
+
+  const excludedDates = event.excludedDates?.length
+    ? event.excludedDates
+        .map((date: string) => taipeiDateOnly(new Date(date)))
+        .join(",")
+    : undefined;
+
+  return [rule.join(";"), excludedDates && `EXDATE;VALUE=DATE:${excludedDates}`]
+    .filter(Boolean)
+    .join("\r\n");
+};
 
 /**
  * Create an iCalendar file for a user's calendar
@@ -19,6 +107,7 @@ export async function createICalendar(
   context?: any,
   prismaOverride?: any,
   firebaseOverride?: any,
+  now = new Date(),
 ): Promise<string> {
   try {
     // Use the provided prisma client or get the default one
@@ -37,13 +126,15 @@ export async function createICalendar(
     const calendar = ical({
       name: `${user.name}'s Calendar`,
       prodId: { company: "NTHUMods", product: "Calendar" },
-      timezone: "Asia/Taipei",
+      timezone: "UTC",
     });
 
     // Connect to Firebase Firestore for calendar events
     // Set up date range for querying events - looking 6 months ahead
-    const currentDate = new Date();
-    const sixMonthsFromNow = addDays(currentDate, 180);
+    const currentDate = now;
+    const sixMonthsFromNow = new Date(
+      currentDate.getTime() + 180 * 24 * 60 * 60 * 1000,
+    );
 
     // Initialize Firebase admin with override for testing if provided
     const { adminFirestore } = firebaseOverride || getFirebaseAdmin(context);
@@ -92,28 +183,38 @@ export async function createICalendar(
 
           // Create the event with the appropriate details based on includeFullDetails
           calendar.createEvent({
-            start: eventStart,
-            end: eventEnd,
+            id: event.id,
+            stamp: currentDate,
+            start: event.allDay
+              ? (toTaipeiICalDate(eventStart) as any)
+              : eventStart,
+            end: event.allDay
+              ? (toTaipeiICalDate(
+                  new Date(eventEnd.getTime() + CALENDAR_DAY_MS),
+                ) as any)
+              : eventEnd,
             summary: event.title,
             description: includeFullDetails ? event.details : undefined,
             location: includeFullDetails ? event.location : undefined,
             allDay: !!event.allDay,
             // Handle recurring events based on the repeat property
             ...(event.repeat?.type && {
-              repeating: {
-                freq: event.repeat.type.toUpperCase(),
-                interval: event.repeat.interval || 1,
-                ...(event.repeat.mode === "count"
-                  ? { count: event.repeat.value }
-                  : {
-                      until: event.repeat.value
-                        ? new Date(event.repeat.value)
-                        : undefined,
-                    }),
-                exclude: event.excludedDates
-                  ? event.excludedDates.map((d: string) => new Date(d))
-                  : undefined,
-              },
+              repeating: event.allDay
+                ? allDayRepeatingRule(event)
+                : {
+                    freq: event.repeat.type.toUpperCase(),
+                    interval: event.repeat.interval || 1,
+                    ...(event.repeat.mode === "count"
+                      ? { count: event.repeat.value }
+                      : {
+                          until: event.repeat.value
+                            ? taipeiDateRuleUntil(new Date(event.repeat.value))
+                            : undefined,
+                        }),
+                    exclude: event.excludedDates?.length
+                      ? event.excludedDates.map((d: string) => new Date(d))
+                      : undefined,
+                  },
             }),
           });
         } catch (err) {

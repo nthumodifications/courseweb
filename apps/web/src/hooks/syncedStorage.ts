@@ -66,7 +66,7 @@ export const getSyncedStorageBackupKey = (storageKey: string) =>
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
 
-/** Merge only snapshots that contain values; timestamp ordering handles clears. */
+/** Empty snapshots are valid values; callers use timestamps to handle clears. */
 const isMergeableValue = (value: unknown): boolean => {
   if (value === null || value === undefined) return false;
   if (Array.isArray(value)) return value.length > 0;
@@ -77,6 +77,13 @@ const isMergeableValue = (value: unknown): boolean => {
   }
   return true;
 };
+
+const canMergeValues = (local: unknown, remote: unknown) =>
+  (Array.isArray(local) && Array.isArray(remote)) ||
+  (isRecord(local) &&
+    !Array.isArray(local) &&
+    isRecord(remote) &&
+    !Array.isArray(remote));
 
 const isFiniteNumber = (value: unknown): value is number =>
   typeof value === "number" && Number.isFinite(value);
@@ -318,6 +325,7 @@ export const reconcileSyncedData = <T>(options: {
     if (localIsUninitialized) return remoteResult(remote);
     if (
       mergeData &&
+      canMergeValues(local.value, remote.value) &&
       isMergeableValue(local.value) &&
       isMergeableValue(remote.value)
     ) {

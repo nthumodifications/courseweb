@@ -11,7 +11,7 @@ import { GreenLineIcon } from "@/components/BusIcons/GreenLineIcon";
 import { Route1LineIcon } from "@/components/BusIcons/Route1LineIcon";
 import { Route2LineIcon } from "@/components/BusIcons/Route2LineIcon";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { getTimeOnDate } from "@/helpers/bus";
+import { formatNandaDestination, getTimeOnDate } from "@/helpers/bus";
 import useDictionary from "@/dictionaries/useDictionary";
 import OpenCollectiveSponsorBanner from "@/components/Sponsorship/OpenCollectiveSponsorBanner";
 import {
@@ -59,6 +59,11 @@ function selectedCampusBus(
           ? dict.bus.route1_line
           : dict.bus.route2_line;
   const isNanda = pin.line === "route1" || pin.line === "route2";
+  let destination: string | undefined;
+  if (isNanda) {
+    destination =
+      pin.direction === "up" ? dict.bus.to_nanda : dict.bus.to_main_campus;
+  }
   return {
     tab: isNanda ? "nanda" : pin.direction === "up" ? "north_gate" : "tsmc",
     startTime: next?.time ?? "0:00",
@@ -73,11 +78,7 @@ function selectedCampusBus(
     line: pin.line,
     direction: pin.direction,
     title: lineTitle,
-    destination: isNanda
-      ? `${dict.bus.to}${
-          pin.direction === "up" ? dict.bus.nanda : dict.bus.main_campus
-        }`
-      : undefined,
+    destination,
     notes: next?.description ? [next.description] : [],
     arrival: next?.time ?? dict.bus.service_over,
     pin,
@@ -151,7 +152,7 @@ const BusPage = () => {
           const notes = [];
           if (bus.description) notes.push(bus.description);
           if (bus.dep_stop === "綜二 ")
-            notes.push(language == "zh" ? "綜二發車" : "Dep. from GEN II");
+            notes.push(dict.bus.departing_from_gen2);
           if (bus.line === "red") {
             if (returnData.some((bus) => bus.line === "red")) continue;
             returnData.push({
@@ -192,8 +193,7 @@ const BusPage = () => {
         if (returnData.some((bus) => bus.line === "route1")) continue;
         if (bus.description == "週五停駛" && time.getDay() === 5) continue;
         const notes = [];
-        if (bus.description.includes("83號"))
-          notes.push(language == "zh" ? "83號" : "Bus 83");
+        if (bus.description.includes("83號")) notes.push(dict.bus.line_83);
         returnData.push({
           tab: "north_gate",
           Icon: Route1LineIcon,
@@ -201,7 +201,7 @@ const BusPage = () => {
           line: "route1",
           direction: "up",
           title: dict.bus.route1_line,
-          destination: language == "zh" ? "往南大校區" : "To Nanda",
+          destination: formatNandaDestination(dict.bus),
           notes,
           arrival: bus.time,
         });
@@ -219,8 +219,7 @@ const BusPage = () => {
         if (returnData.some((bus) => bus.line === "route2")) continue;
         if (bus.description == "週五停駛" && time.getDay() === 5) continue;
         const notes = [];
-        if (bus.description.includes("83號"))
-          notes.push(language == "zh" ? "83號" : "Bus 83");
+        if (bus.description.includes("83號")) notes.push(dict.bus.line_83);
         returnData.push({
           tab: "north_gate",
           Icon: Route2LineIcon,
@@ -228,7 +227,7 @@ const BusPage = () => {
           line: "route2",
           direction: "up",
           title: dict.bus.route2_line,
-          destination: language == "zh" ? "往南大校區" : "To Nanda",
+          destination: formatNandaDestination(dict.bus),
           notes,
           arrival: bus.time,
         });
@@ -242,7 +241,7 @@ const BusPage = () => {
           const notes = [];
           if (bus.description) notes.push(bus.description);
           if (bus.dep_stop === "綜二 ")
-            notes.push(language == "zh" ? "綜二發車" : "Dep. from GEN II");
+            notes.push(dict.bus.departing_from_gen2);
           if (bus.line === "red") {
             if (returnData.some((bus) => bus.line === "red")) continue;
             returnData.push({
@@ -280,8 +279,7 @@ const BusPage = () => {
           if (returnData.some((bus) => bus.line === "route1")) continue;
           if (bus.description == "週五停駛" && time.getDay() === 5) continue;
           const notes = [];
-          if (bus.description.includes("83號"))
-            notes.push(language == "zh" ? "83號" : "Bus 83");
+          if (bus.description.includes("83號")) notes.push(dict.bus.line_83);
           returnData.push({
             tab: "tsmc",
             Icon: Route1LineIcon,
@@ -289,7 +287,7 @@ const BusPage = () => {
             line: "route1",
             direction: "up",
             title: dict.bus.route1_line,
-            destination: language == "zh" ? "往南大校區" : "To Nanda",
+            destination: formatNandaDestination(dict.bus),
             notes,
             arrival: format(
               addMinutes(getTimeOnDate(time, bus.time).getTime(), 7),
@@ -316,8 +314,7 @@ const BusPage = () => {
         if (returnData.some((bus) => bus.line === "route1")) continue;
         if (bus.description == "週五停駛" && time.getDay() === 5) continue;
         const notes = [];
-        if (bus.description.includes("83號"))
-          notes.push(language == "zh" ? "83號" : "Bus 83");
+        if (bus.description.includes("83號")) notes.push(dict.bus.line_83);
         returnData.push({
           tab: "nanda",
           Icon: Route1LineIcon,
@@ -325,7 +322,7 @@ const BusPage = () => {
           line: "route1",
           direction: "down",
           title: dict.bus.route1_line,
-          destination: language == "zh" ? "往校本部" : "To Main Campus",
+          destination: dict.bus.to_main_campus,
           notes,
           arrival: bus.time,
         });
@@ -340,8 +337,7 @@ const BusPage = () => {
         if (returnData.some((bus) => bus.line === "route2")) continue;
         if (bus.description == "週五停駛" && time.getDay() === 5) continue;
         const notes = [];
-        if (bus.description.includes("83號"))
-          notes.push(language == "zh" ? "83號" : "Bus 83");
+        if (bus.description.includes("83號")) notes.push(dict.bus.line_83);
         returnData.push({
           tab: "nanda",
           Icon: Route2LineIcon,
@@ -349,7 +345,7 @@ const BusPage = () => {
           line: "route2",
           direction: "down",
           title: dict.bus.route2_line,
-          destination: language == "zh" ? "往校本部" : "To Main Campus",
+          destination: dict.bus.to_main_campus,
           notes,
           arrival: bus.time,
         });
@@ -413,9 +409,8 @@ const BusPage = () => {
   const busPageJsonLd = {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    name: "校車時刻表 | NTHUMods",
-    description:
-      "查看清華大學校車即時時刻表，包含校園巴士、南大區間車等路線資訊",
+    name: dict.bus.page_title,
+    description: dict.bus.page_description,
     url: `https://nthumods.com/${language}/bus`,
     inLanguage: language === "en" ? "en-US" : "zh-TW",
     isPartOf: { "@type": "WebSite", url: "https://nthumods.com" },

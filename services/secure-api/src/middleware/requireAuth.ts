@@ -51,6 +51,7 @@ export const requireAuth = (requiredScopes: string[] = []) =>
       }
 
       c.set("user", user);
+      c.header("Cache-Control", "private, no-store");
 
       if (requiredScopes.length > 0) {
         const tokenScopes = token.scopes;

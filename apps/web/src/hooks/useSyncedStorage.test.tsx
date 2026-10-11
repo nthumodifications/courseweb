@@ -1,14 +1,30 @@
-import { act, createElement } from "react";
+import {
+  act,
+  createElement,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { createRoot } from "react-dom/client";
 import { JSDOM } from "jsdom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterAll, afterEach, describe, expect, mock, test } from "bun:test";
+import { captureGlobalState } from "@/test-utils/global-state";
+import {
+  nextStorageValue,
+  persistStorageValue,
+  subscribeToStorageEvents,
+} from "@/test-utils/storage-events";
 import {
   getSyncedStorageBackupKey,
   getSyncedStorageKey,
   mergeCourseStorage,
+  mergeStringArray,
   reconcileSyncedData,
 } from "./syncedStorage";
+
+process.env.VITE_NTHUMODS_AUTH_URL ??= "https://auth.example.test";
 
 const get = mock(
   async () =>
@@ -21,6 +37,17 @@ const user = {
   profile: { name: "Test User", sub: "account-a" },
 };
 const actualOidcContext = await import("react-oidc-context");
+const actualAuth = await import("@/config/auth");
+const actualUsehooksTs = await import("usehooks-ts");
+
+const restoreGlobals = captureGlobalState([
+  "window",
+  "document",
+  "navigator",
+  "StorageEvent",
+  "IS_REACT_ACT_ENVIRONMENT",
+]);
+let activeDom: JSDOM | undefined;
 
 type HookResult = readonly [unknown, unknown, boolean, boolean];
 
@@ -28,6 +55,7 @@ const setupDom = () => {
   const dom = new JSDOM("<!doctype html><html><body></body></html>", {
     url: "http://localhost/",
   });
+  activeDom = dom;
   Object.assign(globalThis, {
     window: dom.window,
     document: dom.window.document,
@@ -87,6 +115,17 @@ const cleanupSyncedStorage = async ({
   queryClient.clear();
 };
 
+const readLocalValue = <T,>(key: string, fallback: () => T): T => {
+  if (typeof window === "undefined") return fallback();
+  const raw = window.localStorage.getItem(key);
+  if (!raw) return fallback();
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    return fallback();
+  }
+};
+
 mock.module("react-oidc-context", () => ({
   useAuth: () => ({ isAuthenticated: true, user }),
 }));
@@ -94,13 +133,45 @@ mock.module("@/config/auth", () => ({
   default: { api: { kv: { ":key": { $get: get, $post: post } } } },
 }));
 
+const useTestLocalStorage = <T,>(
+  key: string,
+  initialValue: T,
+): [T, (next: T | ((previous: T) => T)) => void] => {
+  const initialValueRef = useRef(initialValue);
+  initialValueRef.current = initialValue;
+  const read = () => readLocalValue(key, () => initialValueRef.current);
+  const [value, setValue] = useState(read);
+  const update = useCallback(
+    (next: T | ((previous: T) => T)) => {
+      const nextValue = nextStorageValue(next, read);
+      persistStorageValue(key, nextValue);
+      window.dispatchEvent(new window.StorageEvent("local-storage", { key }));
+      setValue(nextValue);
+    },
+    [key],
+  );
+  useEffect(() => subscribeToStorageEvents(key, read, setValue), [key]);
+  return [value, update];
+};
+
+mock.module("usehooks-ts", () => ({
+  ...actualUsehooksTs,
+  useLocalStorage: useTestLocalStorage,
+}));
+
+const { default: useSyncedStorage } = await import("./useSyncedStorage");
+mock.module("usehooks-ts", () => actualUsehooksTs);
+
 describe("useSyncedStorage remote read states", () => {
   afterAll(() => {
     mock.module("react-oidc-context", () => actualOidcContext);
-    mock.module("@/config/auth", () => ({ default: {} }));
+    mock.module("@/config/auth", () => actualAuth);
   });
 
   afterEach(() => {
+    activeDom?.window.close();
+    activeDom = undefined;
+    restoreGlobals();
     get.mockReset();
     post.mockReset();
     get.mockImplementation(
@@ -114,7 +185,6 @@ describe("useSyncedStorage remote read states", () => {
 
   test("settles local data after a GET error without POST, then reconciles after success", async () => {
     setupDom();
-    const { default: useSyncedStorage } = await import("./useSyncedStorage");
     window.localStorage.setItem("nthumods_device_id", "device-a");
     window.localStorage.setItem(
       getSyncedStorageKey("grades", user.profile.sub),
@@ -188,7 +258,6 @@ describe("useSyncedStorage remote read states", () => {
       JSON.stringify(local),
     );
 
-    const { default: useSyncedStorage } = await import("./useSyncedStorage");
     const rendered = await renderSyncedStorage(() =>
       useSyncedStorage("courses", {}, mergeCourseStorage),
     );
@@ -214,6 +283,184 @@ describe("useSyncedStorage remote read states", () => {
     );
 
     expect(rendered.getResult()?.[0]).toEqual(expected);
+
+    await cleanupSyncedStorage(rendered);
+  });
+
+  test("uses a newer remote course clear without uploading local data back", async () => {
+    setupDom();
+    window.localStorage.setItem("nthumods_device_id", "device-a");
+    const storageKey = getSyncedStorageKey("courses", user.profile.sub);
+    window.localStorage.setItem(
+      storageKey,
+      JSON.stringify({
+        value: { "11410": ["LOCAL-COURSE"] },
+        lastModified: 100,
+        updatedAt: 100,
+        deviceId: "device-a",
+      }),
+    );
+    get.mockImplementationOnce(
+      async () =>
+        new Response(
+          JSON.stringify({
+            value: {},
+            lastModified: 200,
+            updatedAt: 200,
+            deviceId: "device-b",
+          }),
+          { status: 200 },
+        ),
+    );
+
+    const rendered = await renderSyncedStorage(() =>
+      useSyncedStorage("courses", {}, mergeCourseStorage),
+    );
+    await waitForResult(
+      rendered.getResult,
+      (result) => JSON.stringify(result?.[0]) === JSON.stringify({}),
+    );
+
+    expect(rendered.getResult()?.[0]).toEqual({});
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    });
+    expect(post).not.toHaveBeenCalled();
+
+    await cleanupSyncedStorage(rendered);
+  });
+
+  test("uses a newer remote favourites clear without uploading local data back", async () => {
+    setupDom();
+    window.localStorage.setItem("nthumods_device_id", "device-a");
+    window.localStorage.setItem(
+      getSyncedStorageKey("course_favourites", user.profile.sub),
+      JSON.stringify({
+        value: ["LOCAL-FAVOURITE"],
+        lastModified: 100,
+        updatedAt: 100,
+        deviceId: "device-a",
+      }),
+    );
+    get.mockImplementationOnce(
+      async () =>
+        new Response(
+          JSON.stringify({
+            value: [],
+            lastModified: 200,
+            updatedAt: 200,
+            deviceId: "device-b",
+          }),
+          { status: 200 },
+        ),
+    );
+
+    const rendered = await renderSyncedStorage(() =>
+      useSyncedStorage("course_favourites", [], mergeStringArray),
+    );
+    await waitForResult(
+      rendered.getResult,
+      (result) => JSON.stringify(result?.[0]) === JSON.stringify([]),
+    );
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    });
+
+    expect(rendered.getResult()?.[0]).toEqual([]);
+    expect(post).not.toHaveBeenCalled();
+
+    await cleanupSyncedStorage(rendered);
+  });
+
+  test("uploads a signed-in edit to the account record", async () => {
+    setupDom();
+    window.localStorage.setItem("nthumods_device_id", "device-a");
+    const accountStorageKey = getSyncedStorageKey("courses", user.profile.sub);
+    window.localStorage.setItem(
+      accountStorageKey,
+      JSON.stringify({
+        value: {},
+        lastModified: -1,
+        updatedAt: -1,
+        deviceId: "device-a",
+      }),
+    );
+    window.localStorage.setItem(
+      "courses",
+      JSON.stringify({
+        value: { "11410": ["LEGACY-COURSE"] },
+        lastModified: 100,
+      }),
+    );
+    window.localStorage.setItem(
+      getSyncedStorageKey("courses"),
+      JSON.stringify({
+        value: { "11410": ["ANONYMOUS-COURSE"] },
+        lastModified: 100,
+        updatedAt: 100,
+        deviceId: "device-a",
+      }),
+    );
+    get.mockImplementationOnce(
+      async () =>
+        new Response(JSON.stringify({ error: "Not found" }), { status: 404 }),
+    );
+
+    const rendered = await renderSyncedStorage(() =>
+      useSyncedStorage("courses", {}, mergeCourseStorage),
+    );
+    await waitForResult(rendered.getResult);
+
+    expect(rendered.getResult()?.[0]).toEqual({});
+    const updateData = rendered.getResult()?.[1] as (
+      value: Record<string, string[]>,
+    ) => void;
+    await act(async () => {
+      updateData({ "11410": ["ACCOUNT-COURSE"] });
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    });
+    const storedAccountData = JSON.parse(
+      window.localStorage.getItem(accountStorageKey)!,
+    );
+    expect(storedAccountData).toMatchObject({
+      value: { "11410": ["ACCOUNT-COURSE"] },
+    });
+    expect(storedAccountData.updatedAt).toBeGreaterThan(-1);
+    expect(post).toHaveBeenCalledWith(
+      expect.objectContaining({ param: { key: "courses" } }),
+      expect.anything(),
+    );
+
+    await cleanupSyncedStorage(rendered);
+  });
+
+  test("does not write on an idle load with an unchanged remote snapshot", async () => {
+    setupDom();
+    window.localStorage.setItem("nthumods_device_id", "device-a");
+    const storageKey = getSyncedStorageKey("courses", user.profile.sub);
+    const snapshot = {
+      value: { "11410": ["UNCHANGED-COURSE"] },
+      lastModified: 100,
+      updatedAt: 100,
+      deviceId: "device-a",
+    };
+    window.localStorage.setItem(storageKey, JSON.stringify(snapshot));
+    get.mockImplementationOnce(
+      async () => new Response(JSON.stringify(snapshot), { status: 200 }),
+    );
+
+    const rendered = await renderSyncedStorage(() =>
+      useSyncedStorage("courses", {}, mergeCourseStorage),
+    );
+    await waitForResult(rendered.getResult);
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    });
+
+    expect(rendered.getResult()?.[0]).toEqual({
+      "11410": ["UNCHANGED-COURSE"],
+    });
+    expect(post).toHaveBeenCalledTimes(0);
 
     await cleanupSyncedStorage(rendered);
   });

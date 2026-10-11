@@ -69,6 +69,61 @@ const loadProductionChunk = async () => {
   return records;
 };
 
+type ParityOutcome = {
+  name: string;
+  holdout: boolean;
+  sameSet: boolean;
+  sameOrder: boolean;
+  classification:
+    | "same"
+    | "order-only"
+    | "missing"
+    | "extra"
+    | "missing+extra"
+    | "count-only";
+  missing: string[];
+  extra: string[];
+};
+
+const classifyOutcome = (
+  parityCase: (typeof LOCAL_PARITY_CASES)[number],
+  local: { nbHits: number; ids: string[] },
+  remote: { nbHits: number; ids: string[] },
+): ParityOutcome => {
+  const remoteSet = new Set(remote.ids);
+  const localSet = new Set(local.ids);
+  const missing = remote.ids.filter((id) => !localSet.has(id));
+  const extra = local.ids.filter((id) => !remoteSet.has(id));
+  const sameIds =
+    local.ids.length === remote.ids.length &&
+    missing.length === 0 &&
+    extra.length === 0;
+  const sameOrder =
+    sameIds && local.ids.every((id, index) => id === remote.ids[index]);
+  const sameSet = sameIds && local.nbHits === remote.nbHits;
+  const classification =
+    missing.length && extra.length
+      ? "missing+extra"
+      : missing.length
+        ? "missing"
+        : extra.length
+          ? "extra"
+          : !sameSet
+            ? "count-only"
+            : sameOrder
+              ? "same"
+              : "order-only";
+  return {
+    name: parityCase.name,
+    holdout: parityCase.holdout === true,
+    sameSet,
+    sameOrder: sameSet && sameOrder,
+    classification,
+    missing,
+    extra,
+  };
+};
+
 const makeFetch =
   (records: UnknownRecord[]) => async (input: RequestInfo | URL) => {
     const url = String(input);
@@ -163,13 +218,10 @@ parityTest(
       fetch: makeFetch(records),
       workerFactory: () => new InlineFlexSearchWorker(),
     });
-    const outcomes: Array<{
-      name: string;
-      sameSet: boolean;
-      sameOrder: boolean;
-    }> = [];
+    const outcomes: ParityOutcome[] = [];
 
     for (let offset = 0; offset < LOCAL_PARITY_CASES.length; offset += 5) {
+      if (offset > 0) await new Promise((resolve) => setTimeout(resolve, 75));
       const batch = LOCAL_PARITY_CASES.slice(offset, offset + 5);
       const batchOutcomes = await Promise.all(
         batch.map(async (parityCase) => {
@@ -187,28 +239,40 @@ parityTest(
             remoteSearch(parityCase),
           ]);
           const localIds = local.hits.map((hit) => hit.objectID);
-          const sameSet =
-            local.nbHits === remote.nbHits &&
-            localIds.length === remote.ids.length &&
-            localIds.every((id) => remote.ids.includes(id));
-          return {
-            name: parityCase.name,
-            sameSet,
-            sameOrder:
-              sameSet && localIds.every((id, i) => id === remote.ids[i]),
-          };
+          return classifyOutcome(
+            parityCase,
+            { nbHits: local.nbHits, ids: localIds },
+            remote,
+          );
         }),
       );
       outcomes.push(...batchOutcomes);
     }
 
-    const sameSet = outcomes.filter((outcome) => outcome.sameSet).length;
-    const sameOrder = outcomes.filter((outcome) => outcome.sameOrder).length;
-    console.log(
-      `[local-search parity] production 11510: ${sameSet}/${outcomes.length} id sets, ${sameOrder}/${outcomes.length} ordered pages`,
-    );
+    for (const outcome of outcomes.filter(
+      (item) => item.classification !== "same",
+    )) {
+      console.log(
+        `[local-search parity] ${outcome.holdout ? "hold-out" : "tuned"} ${outcome.name}: ${outcome.classification} missing=${outcome.missing.length} extra=${outcome.extra.length}`,
+      );
+    }
+    for (const group of [false, true]) {
+      const groupOutcomes = outcomes.filter(
+        (outcome) => outcome.holdout === group,
+      );
+      const sameSet = groupOutcomes.filter((outcome) => outcome.sameSet).length;
+      const sameOrder = groupOutcomes.filter(
+        (outcome) => outcome.sameOrder,
+      ).length;
+      console.log(
+        `[local-search parity] production 11510 ${group ? "hold-out" : "tuned"}: ${sameSet}/${groupOutcomes.length} id sets, ${sameOrder}/${groupOutcomes.length} ordered pages`,
+      );
+    }
     expect(outcomes).toHaveLength(LOCAL_PARITY_CASES.length);
-    expect(sameSet).toBeGreaterThanOrEqual(20);
+    expect(LOCAL_PARITY_CASES).toHaveLength(60);
+    expect(
+      outcomes.filter((outcome) => outcome.sameSet).length,
+    ).toBeGreaterThanOrEqual(20);
   },
   120_000,
 );

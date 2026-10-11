@@ -3,6 +3,7 @@ import useUserTimetable from "./contexts/useUserTimetable";
 import { useAuth } from "react-oidc-context";
 import { event as gtagEvent } from "@/lib/gtag";
 import { SSEParser, ParsedSSEEvent } from "./sseParser";
+import { AI_SETTINGS_STORAGE_KEY } from "@/lib/credentialStorage";
 
 export type ChatErrorCode =
   | "quota"
@@ -119,7 +120,7 @@ function getErrorMessage(data: unknown, fallback: string) {
 
 function getStoredApiKey() {
   try {
-    const settings = localStorage.getItem("ai_settings");
+    const settings = window.localStorage.getItem(AI_SETTINGS_STORAGE_KEY);
     if (!settings) return undefined;
     const parsed = JSON.parse(settings) as {
       useCustomKey?: boolean;

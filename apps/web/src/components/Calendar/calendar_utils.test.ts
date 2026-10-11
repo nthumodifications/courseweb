@@ -232,6 +232,28 @@ describe("calendar recurrence", () => {
     );
   });
 
+  test("deleting following occurrences uses the preceding Taipei date for date rules", () => {
+    const event = makeEvent(
+      localDate(2026, 9, 10, 9),
+      localDate(2026, 9, 10, 10),
+      {
+        type: "daily",
+        interval: 1,
+        mode: "date",
+        value: localDate(2026, 9, 20).getTime(),
+      },
+    );
+
+    expect(getRepeatDefinitionBefore(event, localDate(2026, 9, 13, 9))).toEqual(
+      {
+        type: "daily",
+        interval: 1,
+        mode: "date",
+        value: localDate(2026, 9, 12).getTime(),
+      },
+    );
+  });
+
   test("edit-all keeps the series root date while applying the edited time", () => {
     const root = makeEvent(
       localDate(2026, 9, 10, 9),
@@ -294,6 +316,14 @@ describe("calendar recurrence", () => {
     expect(getActualEndDate(event)).toBe(
       localDate(2026, 3, 31, 10).toISOString(),
     );
+  });
+
+  test("uses the event end as actualEnd for a non-recurring event", () => {
+    const end = localDate(2026, 9, 10, 10);
+    const event = makeEvent(localDate(2026, 9, 10, 9), end, null);
+
+    expect(getDisplayEndDate(event)).toEqual(end);
+    expect(getActualEndDate(event)).toBe(end.toISOString());
   });
 
   test("places recurrence occurrences using Taipei wall-clock time", () => {

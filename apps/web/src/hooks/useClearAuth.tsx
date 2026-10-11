@@ -1,10 +1,9 @@
 import { useEffect } from "react";
+import { removeLegacyCredentialStorage } from "@/lib/credentialStorage";
 
 const useClearAuth = () => {
   useEffect(() => {
-    if (localStorage.getItem("headless_ais")) {
-      localStorage.removeItem("headless_ais");
-    }
+    removeLegacyCredentialStorage();
   }, []);
 };
 

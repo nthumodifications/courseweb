@@ -7,6 +7,8 @@ import OAuthCallbackRedirect from "@/layouts/OAuthCallbackRedirect";
 import ShortlinkRedirect from "@/layouts/ShortlinkRedirect";
 import AppProviders from "@/layouts/AppProviders";
 import { ROUTE_PATHS } from "@/routerPaths";
+import en from "@/dictionaries/en.json";
+import zh from "@/dictionaries/zh.json";
 
 // Auth callback (outside lang layout)
 const AuthCallbackPage = lazy(() => import("@/app/auth/callback/page"));
@@ -242,8 +244,8 @@ export const router = createBrowserRouter([
                 path: ROUTE_PATHS.instructor,
                 element: <InstructorPage />,
                 handle: {
-                  title: "Instructor",
-                  titleZh: "授課教師",
+                  title: en.course.instructor.title,
+                  titleZh: zh.course.instructor.title,
                 },
               },
               {

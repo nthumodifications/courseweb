@@ -88,18 +88,10 @@ export function SemesterManagement({
     () =>
       zodResolver(
         z.object({
-          id: z
-            .string()
-            .min(1, { message: sm.idRequired ?? "學期ID為必填欄位" }),
-          name: z
-            .string()
-            .min(1, { message: sm.nameRequired ?? "學期名稱為必填欄位" }),
-          year: z
-            .string()
-            .min(1, { message: sm.yearRequired ?? "學年為必填欄位" }),
-          term: z
-            .string()
-            .min(1, { message: sm.termRequired ?? "學期為必填欄位" }),
+          id: z.string().min(1, { message: sm.idRequired }),
+          name: z.string().min(1, { message: sm.nameRequired }),
+          year: z.string().min(1, { message: sm.yearRequired }),
+          term: z.string().min(1, { message: sm.termRequired }),
           status: z
             .enum(["completed", "in-progress", "planned"])
             .default("planned"),
@@ -166,7 +158,7 @@ export function SemesterManagement({
 
         setValue("startDate", startDate);
         setValue("endDate", endDate);
-        setSemesterLookupMessage(sm.lookupFound ?? "✓ 從學期代碼找到學期資料");
+        setSemesterLookupMessage(sm.lookupFound);
       } else {
         setSemesterLookupMessage("");
       }
@@ -293,9 +285,8 @@ export function SemesterManagement({
     if (!selectedSemester) return;
 
     const ok = await confirm({
-      title: sm.deleteConfirmTitle ?? "刪除學期？",
-      description:
-        sm.deleteConfirmDescription ?? "此操作無法復原，確定要刪除此學期嗎？",
+      title: sm.deleteConfirmTitle,
+      description: sm.deleteConfirmDescription,
       confirmLabel: common.delete,
       cancelLabel: common.cancel,
       destructive: true,
@@ -363,8 +354,8 @@ export function SemesterManagement({
       <ResponsiveDialog
         open={isOpen}
         onOpenChange={onClose}
-        title={sm.title ?? "學期管理"}
-        description={sm.description ?? "管理學期和學年"}
+        title={sm.title}
+        description={sm.description}
         contentClassName="sm:max-w-4xl max-h-[85vh] flex flex-col overflow-hidden"
         footer={
           <Button variant="outline" onClick={onClose}>
@@ -381,10 +372,10 @@ export function SemesterManagement({
             )}
           >
             <div className="p-2 border-b border-border flex justify-between items-center">
-              <h3 className="font-medium">{sm.listTitle ?? "學期列表"}</h3>
+              <h3 className="font-medium">{sm.listTitle}</h3>
               <Button size="sm" onClick={handleNewSemester}>
                 <Plus className="h-4 w-4 mr-2" />
-                {sm.addSemester ?? "新增學期"}
+                {sm.addSemester}
               </Button>
             </div>
 
@@ -413,9 +404,7 @@ export function SemesterManagement({
                         onCheckedChange={() => handleToggleActive(semester)}
                       />
                       <span className="text-xs text-muted-foreground">
-                        {semester.isActive
-                          ? (sm.active ?? "啟用")
-                          : (sm.inactive ?? "停用")}
+                        {semester.isActive ? sm.active : sm.inactive}
                       </span>
                     </div>
                   </div>
@@ -444,7 +433,7 @@ export function SemesterManagement({
                     <ArrowLeft className="h-4 w-4" />
                   </Button>
                   <h3 className="font-medium flex-1 truncate">
-                    {sm.detailsTitle ?? "學期詳情"}
+                    {sm.detailsTitle}
                   </h3>
                   <div className="flex gap-1">
                     <Button
@@ -453,7 +442,7 @@ export function SemesterManagement({
                       onClick={handleEditMode}
                     >
                       <Edit className="h-4 w-4 mr-2" />
-                      {sm.edit ?? "編輯"}
+                      {sm.edit}
                     </Button>
                     <Button
                       size="sm"
@@ -470,21 +459,21 @@ export function SemesterManagement({
                   <div className="p-4 space-y-4">
                     <div>
                       <h4 className="text-sm font-medium text-muted-foreground">
-                        {sm.nameLabel ?? "學期名稱"}
+                        {sm.nameLabel}
                       </h4>
                       <p className="mt-1">{selectedSemester.name}</p>
                     </div>
 
                     <div>
                       <h4 className="text-sm font-medium text-muted-foreground">
-                        {sm.yearLabel ?? "學年"}
+                        {sm.yearLabel}
                       </h4>
                       <p className="mt-1">{selectedSemester.year}</p>
                     </div>
 
                     <div>
                       <h4 className="text-sm font-medium text-muted-foreground">
-                        {sm.termLabel ?? "學期"}
+                        {sm.termLabel}
                       </h4>
                       <p className="mt-1">
                         {getSemesterTermLabel(selectedSemester.term)}
@@ -493,7 +482,7 @@ export function SemesterManagement({
 
                     <div>
                       <h4 className="text-sm font-medium text-muted-foreground">
-                        {sm.statusLabel ?? "狀態"}
+                        {sm.statusLabel}
                       </h4>
                       <div className="mt-1">
                         {getStatusBadge(selectedSemester.status)}
@@ -502,19 +491,17 @@ export function SemesterManagement({
 
                     <div>
                       <h4 className="text-sm font-medium text-muted-foreground">
-                        {sm.activeStatusLabel ?? "啟用狀態"}
+                        {sm.activeStatusLabel}
                       </h4>
                       <p className="mt-1">
-                        {selectedSemester.isActive
-                          ? (sm.active ?? "啟用")
-                          : (sm.inactive ?? "停用")}
+                        {selectedSemester.isActive ? sm.active : sm.inactive}
                       </p>
                     </div>
 
                     {selectedSemester.startDate && (
                       <div>
                         <h4 className="text-sm font-medium text-muted-foreground">
-                          {sm.startDateLabel ?? "開始日期"}
+                          {sm.startDateLabel}
                         </h4>
                         <p className="mt-1">
                           {new Date(
@@ -529,7 +516,7 @@ export function SemesterManagement({
                     {selectedSemester.endDate && (
                       <div>
                         <h4 className="text-sm font-medium text-muted-foreground">
-                          {sm.endDateLabel ?? "結束日期"}
+                          {sm.endDateLabel}
                         </h4>
                         <p className="mt-1">
                           {new Date(
@@ -561,9 +548,7 @@ export function SemesterManagement({
                     <ArrowLeft className="h-4 w-4" />
                   </Button>
                   <h3 className="font-medium flex-1 truncate">
-                    {newSemester
-                      ? (sm.newSemesterTitle ?? "新增學期")
-                      : (sm.editSemesterTitle ?? "編輯學期")}
+                    {newSemester ? sm.newSemesterTitle : sm.editSemesterTitle}
                   </h3>
                   <div className="flex gap-1">
                     <Button
@@ -593,9 +578,7 @@ export function SemesterManagement({
                 <ScrollArea className="flex-1 h-[45vh] md:h-auto">
                   <form className="p-4 space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="semester-id">
-                        {sm.idLabel ?? "學期代碼 (民國年份+學期，例如: 11310)"}
-                      </Label>
+                      <Label htmlFor="semester-id">{sm.idLabel}</Label>
                       <Input
                         id="semester-id"
                         className="bg-muted/50 border-border"
@@ -604,7 +587,7 @@ export function SemesterManagement({
                         value={watchId ?? ""}
                       />
                       <p className="text-xs text-muted-foreground">
-                        {sm.idHelp ?? "學期代碼會依學年與學期自動產生"}
+                        {sm.idHelp}
                       </p>
                       {semesterLookupMessage && (
                         <p className="text-green-500 text-sm flex items-center gap-1">
@@ -621,13 +604,11 @@ export function SemesterManagement({
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="semester-year">
-                          {sm.yearLabel ?? "學年 (民國年)"}
-                        </Label>
+                        <Label htmlFor="semester-year">{sm.yearLabel}</Label>
                         <Input
                           id="semester-year"
                           className="bg-muted/50 border-border"
-                          placeholder={sm.yearPlaceholder ?? "例如: 113"}
+                          placeholder={sm.yearPlaceholder}
                           {...register("year")}
                         />
                         {errors.year && (
@@ -638,9 +619,7 @@ export function SemesterManagement({
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="semester-term">
-                          {sm.termLabel ?? "學期"}
-                        </Label>
+                        <Label htmlFor="semester-term">{sm.termLabel}</Label>
                         <Select
                           defaultValue={watch("term")}
                           onValueChange={(value) => setValue("term", value)}
@@ -650,9 +629,7 @@ export function SemesterManagement({
                             className="bg-muted/50 border-border"
                           >
                             <SelectValue
-                              placeholder={
-                                sm.termSelectPlaceholder ?? "選擇學期"
-                              }
+                              placeholder={sm.termSelectPlaceholder}
                             />
                           </SelectTrigger>
                           <SelectContent className="bg-muted/50 border-border">
@@ -676,9 +653,7 @@ export function SemesterManagement({
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="semester-name">
-                        {sm.nameLabel ?? "學期名稱"}
-                      </Label>
+                      <Label htmlFor="semester-name">{sm.nameLabel}</Label>
                       <Input
                         id="semester-name"
                         className="bg-muted/50 border-border"
@@ -690,15 +665,12 @@ export function SemesterManagement({
                         </p>
                       )}
                       <p className="text-xs text-muted-foreground">
-                        {sm.nameAutoHint ??
-                          "學期名稱會自動生成，但您可以自行修改"}
+                        {sm.nameAutoHint}
                       </p>
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="semester-status">
-                        {sm.statusLabel ?? "狀態"}
-                      </Label>
+                      <Label htmlFor="semester-status">{sm.statusLabel}</Label>
                       <Select
                         defaultValue={watch("status")}
                         onValueChange={(value) =>
@@ -713,9 +685,7 @@ export function SemesterManagement({
                           className="bg-muted/50 border-border"
                         >
                           <SelectValue
-                            placeholder={
-                              sm.statusSelectPlaceholder ?? "選擇狀態"
-                            }
+                            placeholder={sm.statusSelectPlaceholder}
                           />
                         </SelectTrigger>
                         <SelectContent className="bg-muted/50 border-border">
@@ -740,7 +710,7 @@ export function SemesterManagement({
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="semester-start-date">
-                          {sm.startDateLabel ?? "開始日期"}
+                          {sm.startDateLabel}
                         </Label>
                         <Input
                           id="semester-start-date"
@@ -757,7 +727,7 @@ export function SemesterManagement({
 
                       <div className="space-y-2">
                         <Label htmlFor="semester-end-date">
-                          {sm.endDateLabel ?? "結束日期"}
+                          {sm.endDateLabel}
                         </Label>
                         <Input
                           id="semester-end-date"
@@ -782,7 +752,7 @@ export function SemesterManagement({
                         }
                       />
                       <Label htmlFor="semester-active">
-                        {sm.activeSwitchLabel ?? "啟用此學期"}
+                        {sm.activeSwitchLabel}
                       </Label>
                       {errors.isActive && (
                         <p className="text-red-500 text-sm">
@@ -795,7 +765,7 @@ export function SemesterManagement({
               </>
             ) : (
               <div className="flex items-center justify-center h-full text-muted-foreground">
-                <p>{sm.selectPrompt ?? "選擇一個學期以查看詳情"}</p>
+                <p>{sm.selectPrompt}</p>
               </div>
             )}
           </div>

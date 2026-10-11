@@ -62,7 +62,7 @@ export const normalizeLatinWord = (value: string) => {
   }
   if (word.endsWith("sses")) return word.slice(0, -2);
   if (/(?:xes|zes|ches|shes)$/.test(word)) return word.slice(0, -2);
-  if (word.endsWith("s") && !/(?:ss|us|is)$/.test(word)) {
+  if (word.endsWith("s") && !/(?:ss|us|is|ics)$/.test(word)) {
     return word.slice(0, -1);
   }
   return word;
@@ -75,8 +75,8 @@ export const queryTerms = (query: string) =>
     .split(/\s+/)
     .filter(Boolean)
     .flatMap((term) => {
-      // CJK phrases remain one query term; two-character abbreviations get
-      // their AND semantics in matchesLocalQuery and flexsearch-index.ts.
+      // CJK phrases remain one query term so the final matcher can require
+      // the same contiguous phrase as the remote fallback.
       return [...term].some(isCjkCharacter)
         ? [term]
         : tokenizeCjk(term).map(normalizeLatinWord);
@@ -100,7 +100,7 @@ export const searchableTokenGroups = (record: SearchProjectionRecord) => {
   return groups;
 };
 
-/** Latin-only token groups avoid CJK bigram work on broad English queries. */
+/** Latin-only token groups retained for callers that need raw word runs. */
 export const searchableLatinTokenGroups = (record: SearchProjectionRecord) => {
   const cached = latinTokenGroupsCache.get(record);
   if (cached) return cached;
@@ -117,19 +117,15 @@ export const matchesLocalQueryTerms = (
 ) => {
   if (!terms.length) return true;
   const fields = searchableFields(record);
+  const tokenGroups = searchableTokenGroups(record);
   return terms.every((term) => {
     if ([...term].some(isCjkCharacter)) {
-      const characters = [...term];
-      return fields.some(
-        (field) =>
-          field.includes(term) ||
-          (characters.length === 2 &&
-            characters.every((character) => field.includes(character))),
-      );
+      return fields.some((field) => field.includes(term));
     }
-    const tokenGroups = searchableLatinTokenGroups(record);
     return tokenGroups.some((tokens) =>
-      tokens.some((token) => token.startsWith(term)),
+      tokens.some((token) =>
+        term.length === 1 ? token.startsWith(term) : token === term,
+      ),
     );
   });
 };

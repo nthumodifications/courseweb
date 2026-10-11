@@ -82,7 +82,13 @@ const CourseSelectionWidget: FC<CourseSelectionWidgetProps> = ({
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-x-2 text-xs text-muted-foreground">
-                    <span>{formatDateRange(period, language)}</span>
+                    <span>
+                      {formatDateRange(
+                        period,
+                        language,
+                        dict.course.selection_period.date_format,
+                      )}
+                    </span>
                     <span className={isCurrent ? "text-primary" : undefined}>
                       {status}
                     </span>

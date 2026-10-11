@@ -5,6 +5,7 @@ import {
   getSyncedStorageBackupKey,
   getSyncedStorageKey,
 } from "./syncedStorage";
+import { clearCredentialStorage } from "@/lib/credentialStorage";
 
 export const useAccountActions = () => {
   const {
@@ -28,8 +29,10 @@ export const useAccountActions = () => {
   };
 
   const handleLogout = async () => {
+    const idTokenHint = user?.id_token;
+    clearCredentialStorage();
     await signoutRedirect({
-      id_token_hint: user?.id_token,
+      id_token_hint: idTokenHint,
       post_logout_redirect_uri: window.location.origin,
     });
     await removeUser();

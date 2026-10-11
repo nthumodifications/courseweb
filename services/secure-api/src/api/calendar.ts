@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import type { MiddlewareHandler } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { verifyApiKey, requireScope } from "../middleware/apikey";
 import { zValidator } from "@hono/zod-validator";
@@ -6,11 +7,14 @@ import { z } from "zod";
 import { createICalendar } from "../utils/icalendar";
 import { addDays } from "date-fns";
 import { getFirebaseAdmin } from "../config/firebase_admin";
-import { PrismaClient } from "@prisma/client";
-import { requireAuth } from "../middleware/requireAuth";
 import { sha256hash } from "../utils/sha256";
+import prisma from "../client";
 
-const prisma = new PrismaClient();
+const lazyRequireAuth = (scopes: string[]) =>
+  (async (c, next) => {
+    const { requireAuth } = await import("../middleware/requireAuth");
+    return requireAuth(scopes)(c, next);
+  }) as MiddlewareHandler;
 
 const generateCalendarShareToken = () =>
   "cal_" +
@@ -25,7 +29,7 @@ const publicCalendarUrl = (c: any, userId: string, token: string) => {
 };
 
 const app = new Hono()
-  .get("/share-tokens", requireAuth(["calendar"]), async (c) => {
+  .get("/share-tokens", lazyRequireAuth(["calendar"]), async (c) => {
     const tokens = await prisma.calendarShareToken.findMany({
       where: {
         userId: c.var.user.userId,
@@ -46,7 +50,7 @@ const app = new Hono()
   })
   .post(
     "/share-tokens",
-    requireAuth(["calendar"]),
+    lazyRequireAuth(["calendar"]),
     zValidator(
       "json",
       z.object({
@@ -90,7 +94,7 @@ const app = new Hono()
   )
   .delete(
     "/share-tokens/:id",
-    requireAuth(["calendar"]),
+    lazyRequireAuth(["calendar"]),
     zValidator(
       "param",
       z.object({
@@ -214,22 +218,12 @@ const app = new Hono()
         .collection("events");
 
       // Optimized query with proper indexing for date range filtering
-      let eventsSnapshot;
-      try {
-        eventsSnapshot = await eventsRef
-          .where("start", "<=", sixMonthsFromNow.toISOString())
-          .where("end", ">=", currentDate.toISOString())
-          .orderBy("start", "asc")
-          .limit(50) // Reasonable limit for API response
-          .get();
-      } catch (firebaseError) {
-        console.error(
-          `Firebase query error for user ${user.userId}:`,
-          firebaseError,
-        );
-        // Return empty snapshot to avoid breaking the API
-        eventsSnapshot = { docs: [], empty: true };
-      }
+      const eventsSnapshot = await eventsRef
+        .where("start", "<=", sixMonthsFromNow.toISOString())
+        .where("end", ">=", currentDate.toISOString())
+        .orderBy("start", "asc")
+        .limit(50) // Reasonable limit for API response
+        .get();
 
       // Convert Firebase documents to event objects
       const formattedEvents = eventsSnapshot.docs.map((doc) => {

@@ -7,6 +7,9 @@ export const getTimeOnDate = (date: Date, time: string) => {
   return set(date, { hours: hour, minutes: minute });
 };
 
+export const formatNandaDestination = (bus: { to_nanda: string }) =>
+  bus.to_nanda;
+
 export const exportNotes = (bus: BusDepartureDetails, lang: Language) => {
   const notes = [];
   if (bus.route == "校園公車" && bus.description) notes.push(bus.description);

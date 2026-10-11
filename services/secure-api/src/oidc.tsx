@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { importPKCS8, importSPKI, jwtVerify, SignJWT } from "jose";
 import { getCookie, setCookie } from "hono/cookie";
 import { nthuAuth } from "./nthuoauth";
-import { PrismaClient } from "@prisma/client";
+import prisma from "./client";
 import { env } from "hono/adapter";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
@@ -22,7 +22,6 @@ import {
 import { isBootstrapSuperuser } from "./const/admin";
 import { VALID_SCOPES } from "./const/scopes";
 
-const prisma = new PrismaClient();
 const ISSUER = "https://auth.nthumods.com";
 const accessTokenExpiry: number = 30 * 60; // 30 minutes
 const refreshTokenExpiry: number = 30 * 24 * 60 * 60; // 30 days
@@ -1051,6 +1050,7 @@ const app = new Hono()
 
   // Userinfo Endpoint
   .get("/userinfo", async (c) => {
+    c.header("Cache-Control", "private, no-store");
     const accessToken = c.req.header("Authorization")?.split(" ")[1];
     if (!accessToken) return c.json({ error: "unauthorized" }, 401);
 
@@ -1257,16 +1257,26 @@ const app = new Hono()
        * for any errors, return { active: false }
        */
       const { token, token_type_hint } = c.req.valid("form");
+      c.header("Cache-Control", "private, no-store");
       const authHeader = c.req.header("Authorization");
-      if (!authHeader) {
+      const basicAuth = authHeader?.match(/^Basic\s+(\S+)$/i)?.[1];
+      if (!basicAuth) {
         return c.json({ error: "invalid_request" }, 400);
       }
-      const [client_id, client_secret] = atob(authHeader.split(" ")[1]).split(
-        ":",
-      );
-      if (!client_id || !client_secret) {
+
+      let credentials: string;
+      try {
+        credentials = atob(basicAuth);
+      } catch {
         return c.json({ error: "invalid_request" }, 400);
       }
+      const separator = credentials.indexOf(":");
+      if (separator <= 0) {
+        return c.json({ error: "invalid_request" }, 400);
+      }
+      const client_id = credentials.slice(0, separator);
+      const client_secret = credentials.slice(separator + 1);
+      if (!client_secret) return c.json({ error: "invalid_request" }, 400);
       const client = await prisma.client.findUnique({
         where: { clientId: client_id },
       });

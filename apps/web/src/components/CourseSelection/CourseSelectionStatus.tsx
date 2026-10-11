@@ -12,20 +12,22 @@ import { formatInTimeZone } from "date-fns-tz";
 import { useSettings } from "@/hooks/contexts/settings";
 import { useLocalStorage } from "usehooks-ts";
 
-const formatPeriodDate = (date: string, language: "en" | "zh") =>
-  formatInTimeZone(
-    fromTaipeiDateKey(date),
-    TAIPEI_TIME_ZONE,
-    language === "zh" ? "M月d日" : "MMM d",
-    { locale: getLocale(language) },
-  );
+const formatPeriodDate = (
+  date: string,
+  language: "en" | "zh",
+  dateFormat: string,
+) =>
+  formatInTimeZone(fromTaipeiDateKey(date), TAIPEI_TIME_ZONE, dateFormat, {
+    locale: getLocale(language),
+  });
 
 export const formatDateRange = (
   period: CourseSelectionPeriod,
   language: "en" | "zh",
+  dateFormat: string,
 ) => {
-  const start = formatPeriodDate(period.startDate, language);
-  const end = formatPeriodDate(period.endDate, language);
+  const start = formatPeriodDate(period.startDate, language, dateFormat);
+  const end = formatPeriodDate(period.endDate, language, dateFormat);
   return start === end ? start : `${start}–${end}`;
 };
 
@@ -100,7 +102,11 @@ const CourseSelectionStatus = ({
           {dict.course.selection_period.phases[period.phase]}
         </span>
         <span className="text-xs text-muted-foreground">
-          {formatDateRange(period, language)}
+          {formatDateRange(
+            period,
+            language,
+            dict.course.selection_period.date_format,
+          )}
         </span>
         <span
           className={cn(

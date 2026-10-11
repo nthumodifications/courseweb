@@ -72,6 +72,7 @@ export const auth = (requiredScopes?: string[]): MiddlewareHandler => {
         body: new URLSearchParams({
           token,
         }),
+        signal: AbortSignal.timeout(8_000),
       });
 
       if (!response.ok) {
@@ -80,9 +81,38 @@ export const auth = (requiredScopes?: string[]): MiddlewareHandler => {
         });
       }
 
-      const introspection: IntrospectionResponse = await response.json();
+      let introspection: IntrospectionResponse;
+      let parsed: unknown;
+      try {
+        parsed = await response.json();
+      } catch {
+        throw new HTTPException(502, {
+          message: "Authentication service returned invalid data",
+        });
+      }
+
+      if (
+        parsed === null ||
+        typeof parsed !== "object" ||
+        Array.isArray(parsed) ||
+        typeof (parsed as { active?: unknown }).active !== "boolean"
+      ) {
+        throw new HTTPException(401, {
+          message: "Unauthorized",
+        });
+      }
+      introspection = parsed as IntrospectionResponse;
 
       if (!introspection.active) {
+        throw new HTTPException(401, {
+          message: "Unauthorized",
+        });
+      }
+
+      if (
+        typeof introspection.username !== "string" ||
+        !introspection.username.trim()
+      ) {
         throw new HTTPException(401, {
           message: "Unauthorized",
         });

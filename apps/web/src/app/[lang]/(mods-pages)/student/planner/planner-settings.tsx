@@ -102,21 +102,15 @@ export function PlannerSettings({
     resolver: zodResolver(
       z.object({
         id: z.string().optional(),
-        title: z
-          .string()
-          .min(1, { message: ps.titleRequired ?? "規劃名稱為必填欄位" }),
-        department: z
-          .string()
-          .min(1, { message: ps.departmentRequired ?? "學系/學院為必填欄位" }),
+        title: z.string().min(1, { message: ps.titleRequired }),
+        department: z.string().min(1, { message: ps.departmentRequired }),
         enrollmentYear: z.string().min(1, {
-          message: ps.enrollmentYearRequired ?? "入學學年為必填欄位",
+          message: ps.enrollmentYearRequired,
         }),
         graduationYear: z.string().min(1, {
-          message: ps.graduationYearRequired ?? "預計畢業學年為必填欄位",
+          message: ps.graduationYearRequired,
         }),
-        requiredCredits: z
-          .number()
-          .min(0, { message: ps.creditsNonNegative ?? "畢業學分不能為負數" }),
+        requiredCredits: z.number().min(0, { message: ps.creditsNonNegative }),
         description: z.string().optional(),
       }),
     ),
@@ -216,9 +210,8 @@ export function PlannerSettings({
           // never told the parent view to refresh. Both are now handled.
           onSettingsUpdated();
           toast({
-            title: ps.removeCoursesSuccessTitle ?? "課程已移除",
-            description:
-              ps.removeCoursesSuccessDescription ?? "所有課程已被移除。",
+            title: ps.removeCoursesSuccessTitle,
+            description: ps.removeCoursesSuccessDescription,
           });
           break;
         case "resetPlanner": {
@@ -232,9 +225,8 @@ export function PlannerSettings({
           // of now-nonexistent data on screen.
           onSettingsUpdated();
           toast({
-            title: ps.resetPlannerSuccessTitle ?? "規劃已重設",
-            description:
-              ps.resetPlannerSuccessDescription ?? "所有規劃資料已被刪除。",
+            title: ps.resetPlannerSuccessTitle,
+            description: ps.resetPlannerSuccessDescription,
           });
           onClose();
           break;
@@ -271,8 +263,8 @@ export function PlannerSettings({
     } catch (error) {
       console.error(`Error during ${action}:`, error);
       toast({
-        title: ps.actionFailTitle ?? "操作失敗",
-        description: ps.actionFailDescription ?? "操作失敗，請再試一次。",
+        title: ps.actionFailTitle,
+        description: ps.actionFailDescription,
         variant: "destructive",
       });
     }
@@ -283,10 +275,8 @@ export function PlannerSettings({
   // executed on a second click of a differently-styled button.
   const handleRemoveCoursesClick = async () => {
     const ok = await confirm({
-      title: ps.removeCoursesConfirmTitle ?? "移除所有課程？",
-      description:
-        ps.removeCoursesConfirmDescription ??
-        "確定要移除所有課程嗎？此操作無法還原。",
+      title: ps.removeCoursesConfirmTitle,
+      description: ps.removeCoursesConfirmDescription,
       confirmLabel: common.delete,
       cancelLabel: common.cancel,
       destructive: true,
@@ -297,10 +287,8 @@ export function PlannerSettings({
 
   const handleResetPlannerClick = async () => {
     const ok = await confirm({
-      title: ps.resetPlannerConfirmTitle ?? "重設整個規劃？",
-      description:
-        ps.resetPlannerConfirmDescription ??
-        "確定要重設整個規劃嗎？所有資料將會被刪除，此操作無法還原。",
+      title: ps.resetPlannerConfirmTitle,
+      description: ps.resetPlannerConfirmDescription,
       confirmLabel: common.delete,
       cancelLabel: common.cancel,
       destructive: true,
@@ -334,10 +322,8 @@ export function PlannerSettings({
       } catch (error) {
         console.error("Error parsing import data:", error);
         toast({
-          title: ps.importFailTitle ?? "匯入失敗",
-          description:
-            ps.importParseFailDescription ??
-            "無法解析匯入的資料檔案，請確保它是有效的格式。",
+          title: ps.importFailTitle,
+          description: ps.importParseFailDescription,
           variant: "destructive",
         });
       }
@@ -389,10 +375,8 @@ export function PlannerSettings({
         if (result.error.length > 0) {
           console.error("Error importing semesters:", result.error);
           toast({
-            title: ps.importFailTitle ?? "匯入失敗",
-            description:
-              ps.importSemestersFailDescription ??
-              "無法匯入學期資料，請檢查格式。",
+            title: ps.importFailTitle,
+            description: ps.importSemestersFailDescription,
             variant: "destructive",
           });
         }
@@ -409,10 +393,8 @@ export function PlannerSettings({
         if (result.error.length > 0) {
           console.error("Error importing courses:", result.error);
           toast({
-            title: ps.importFailTitle ?? "匯入失敗",
-            description:
-              ps.importCoursesFailDescription ??
-              "無法匯入課程資料，請檢查格式。",
+            title: ps.importFailTitle,
+            description: ps.importCoursesFailDescription,
             variant: "destructive",
           });
         }
@@ -427,10 +409,8 @@ export function PlannerSettings({
         if (result.error.length > 0) {
           console.error("Error importing folders:", result.error);
           toast({
-            title: ps.importFailTitle ?? "匯入失敗",
-            description:
-              ps.importFoldersFailDescription ??
-              "無法匯入資料夾資料，請檢查格式。",
+            title: ps.importFailTitle,
+            description: ps.importFoldersFailDescription,
             variant: "destructive",
           });
         }
@@ -444,8 +424,8 @@ export function PlannerSettings({
       setImportConfirmOpen(false);
 
       toast({
-        title: ps.importSuccessTitle ?? "匯入成功",
-        description: ps.importSuccessDescription ?? "規劃資料已成功匯入",
+        title: ps.importSuccessTitle,
+        description: ps.importSuccessDescription,
       });
 
       // Notify parent and close
@@ -454,9 +434,8 @@ export function PlannerSettings({
     } catch (error) {
       console.error("Error importing data:", error);
       toast({
-        title: ps.importFailTitle ?? "匯入失敗",
-        description:
-          ps.importGenericFailDescription ?? "無法匯入資料，請再試一次。",
+        title: ps.importFailTitle,
+        description: ps.importGenericFailDescription,
         variant: "destructive",
       });
     }
@@ -469,14 +448,10 @@ export function PlannerSettings({
         <DialogContent className="border-border max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
           <DialogHeader className="pb-2">
             <DialogTitle>
-              {isNewPlanner
-                ? (ps.createTitle ?? "建立新規劃")
-                : (ps.settingsTitle ?? "規劃設定")}
+              {isNewPlanner ? ps.createTitle : ps.settingsTitle}
             </DialogTitle>
             <DialogDescription className="text-muted-foreground text-sm">
-              {isNewPlanner
-                ? (ps.createDescription ?? "建立新的畢業規劃")
-                : (ps.settingsDescription ?? "設定畢業規劃的基本資訊")}
+              {isNewPlanner ? ps.createDescription : ps.settingsDescription}
             </DialogDescription>
           </DialogHeader>
 
@@ -486,12 +461,8 @@ export function PlannerSettings({
             className="flex-1 flex flex-col overflow-hidden"
           >
             <TabsList className="bg-muted/50 mb-2">
-              <TabsTrigger value="basic">
-                {ps.basicTab ?? "基本設定"}
-              </TabsTrigger>
-              <TabsTrigger value="actions">
-                {ps.actionsTab ?? "進階操作"}
-              </TabsTrigger>
+              <TabsTrigger value="basic">{ps.basicTab}</TabsTrigger>
+              <TabsTrigger value="actions">{ps.actionsTab}</TabsTrigger>
             </TabsList>
 
             {/*
@@ -518,14 +489,12 @@ export function PlannerSettings({
                   <div className="space-y-3">
                     <div>
                       <Label htmlFor="planner-title" className="text-sm">
-                        {ps.titleLabel ?? "規劃名稱"}
+                        {ps.titleLabel}
                       </Label>
                       <Input
                         id="planner-title"
                         className="bg-muted/50 border-border h-8 mt-1"
-                        placeholder={
-                          ps.titlePlaceholder ?? "例如：我的畢業規劃"
-                        }
+                        placeholder={ps.titlePlaceholder}
                         {...register("title")}
                       />
                       {errors.title && (
@@ -537,14 +506,12 @@ export function PlannerSettings({
 
                     <div>
                       <Label htmlFor="planner-department" className="text-sm">
-                        {ps.departmentLabel ?? "學系/學院"}
+                        {ps.departmentLabel}
                       </Label>
                       <Input
                         id="planner-department"
                         className="bg-muted/50 border-border h-8 mt-1"
-                        placeholder={
-                          ps.departmentPlaceholder ?? "例如：資訊工程學系"
-                        }
+                        placeholder={ps.departmentPlaceholder}
                         {...register("department")}
                       />
                       {errors.department && (
@@ -560,7 +527,7 @@ export function PlannerSettings({
                           htmlFor="planner-enrollment-year"
                           className="text-sm"
                         >
-                          {ps.enrollmentYearLabel ?? "入學學年"}
+                          {ps.enrollmentYearLabel}
                         </Label>
                         <Input
                           id="planner-enrollment-year"
@@ -580,7 +547,7 @@ export function PlannerSettings({
                           htmlFor="planner-graduation-year"
                           className="text-sm"
                         >
-                          {ps.graduationYearLabel ?? "預計畢業學年"}
+                          {ps.graduationYearLabel}
                         </Label>
                         <Input
                           id="planner-graduation-year"
@@ -601,7 +568,7 @@ export function PlannerSettings({
                         htmlFor="planner-required-credits"
                         className="text-sm"
                       >
-                        {ps.requiredCreditsLabel ?? "畢業學分要求"}
+                        {ps.requiredCreditsLabel}
                       </Label>
                       <Input
                         id="planner-required-credits"
@@ -620,12 +587,12 @@ export function PlannerSettings({
 
                     <div>
                       <Label htmlFor="planner-description" className="text-sm">
-                        {ps.descriptionLabel ?? "規劃描述"}
+                        {ps.descriptionLabel}
                       </Label>
                       <Textarea
                         id="planner-description"
                         className="bg-muted/50 border-border min-h-[80px] mt-1"
-                        placeholder={ps.descriptionPlaceholder ?? "不必填"}
+                        placeholder={ps.descriptionPlaceholder}
                         {...register("description")}
                       />
                       {errors.description && (
@@ -647,7 +614,7 @@ export function PlannerSettings({
                       <AccordionTrigger className="text-sm py-2">
                         <div className="flex items-center">
                           <Trash2 className="h-4 w-4 mr-2" />
-                          {ps.dataManagementTitle ?? "資料管理"}
+                          {ps.dataManagementTitle}
                         </div>
                       </AccordionTrigger>
                       <AccordionContent>
@@ -660,11 +627,10 @@ export function PlannerSettings({
                               onClick={handleRemoveCoursesClick}
                             >
                               <Trash2 className="h-4 w-4 mr-2" />
-                              {ps.removeCoursesAction ?? "移除所有課程"}
+                              {ps.removeCoursesAction}
                             </Button>
                             <p className="text-muted-foreground text-xs mt-1">
-                              {ps.removeCoursesDescription ??
-                                "從所有學期移除課程，但保留學期和規劃設定"}
+                              {ps.removeCoursesDescription}
                             </p>
                           </div>
 
@@ -676,11 +642,10 @@ export function PlannerSettings({
                               onClick={handleResetPlannerClick}
                             >
                               <RefreshCw className="h-4 w-4 mr-2" />
-                              {ps.resetPlannerAction ?? "完全重設規劃"}
+                              {ps.resetPlannerAction}
                             </Button>
                             <p className="text-muted-foreground text-xs mt-1">
-                              {ps.resetPlannerDescription ??
-                                "刪除所有規劃資料，包含學期和課程"}
+                              {ps.resetPlannerDescription}
                             </p>
                           </div>
                         </div>
@@ -691,7 +656,7 @@ export function PlannerSettings({
                       <AccordionTrigger className="text-sm py-2">
                         <div className="flex items-center">
                           <Download className="h-4 w-4 mr-2" />
-                          {ps.exportImportTitle ?? "匯出/匯入資料"}
+                          {ps.exportImportTitle}
                         </div>
                       </AccordionTrigger>
                       <AccordionContent>
@@ -704,11 +669,10 @@ export function PlannerSettings({
                               onClick={() => handleConfirmAction("export")}
                             >
                               <Download className="h-4 w-4 mr-2" />
-                              {ps.exportAction ?? "匯出規劃資料 (JSON)"}
+                              {ps.exportAction}
                             </Button>
                             <p className="text-muted-foreground text-xs mt-1">
-                              {ps.exportDescription ??
-                                "匯出所有規劃資料，包含學期和課程"}
+                              {ps.exportDescription}
                             </p>
                           </div>
 
@@ -720,11 +684,10 @@ export function PlannerSettings({
                               onClick={() => fileInputRef.current?.click()}
                             >
                               <Upload className="h-4 w-4 mr-2" />
-                              {ps.importAction ?? "匯入規劃資料 (JSON)"}
+                              {ps.importAction}
                             </Button>
                             <p className="text-muted-foreground text-xs mt-1">
-                              {ps.importDescription ??
-                                "從匯出的 JSON 檔案匯入完整規劃資料"}
+                              {ps.importDescription}
                             </p>
                             <input
                               aria-label="json"
@@ -751,9 +714,7 @@ export function PlannerSettings({
             </Button>
             <Button type="submit" disabled={isSubmitting} form="plannerForm">
               <Save className="h-4 w-4 mr-2" />
-              {isNewPlanner
-                ? (ps.createSubmit ?? "建立規劃")
-                : (ps.saveSubmit ?? "儲存設定")}
+              {isNewPlanner ? ps.createSubmit : ps.saveSubmit}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -762,12 +723,9 @@ export function PlannerSettings({
       <AlertDialog open={importConfirmOpen} onOpenChange={setImportConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              {ps.importConfirmDialogTitle ?? "確認匯入資料"}
-            </AlertDialogTitle>
+            <AlertDialogTitle>{ps.importConfirmDialogTitle}</AlertDialogTitle>
             <AlertDialogDescription>
-              {ps.importConfirmDialogDescription ??
-                "這將會覆蓋所有現有的規劃資料，包括學期、課程和類別。此操作無法還原。"}
+              {ps.importConfirmDialogDescription}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -776,7 +734,7 @@ export function PlannerSettings({
               className="bg-red-200 hover:bg-red-400 dark:bg-red-900 dark:hover:bg-red-800"
               onClick={handleImportConfirm}
             >
-              {ps.confirmImport ?? "確認匯入"}
+              {ps.confirmImport}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -120,30 +120,44 @@ const course: MinimalCourse = {
 
 describe("timetable calendar event dates", () => {
   if (!timezoneChild) {
-    test("keeps Taipei event dates across process time zones", () => {
+    test("keeps Taipei event dates across process time zones", async () => {
       const environment = Object.fromEntries(
         Object.entries(process.env).filter(
           (entry): entry is [string, string] => entry[1] !== undefined,
         ),
       );
 
-      for (const { name } of timezones) {
-        const result = Bun.spawnSync(
-          [process.execPath, "test", import.meta.path],
-          {
-            env: {
-              ...environment,
-              TZ: name,
-              [TIMEZONE_CHILD_ENV]: "1",
+      const results = await Promise.all(
+        timezones.map(async ({ name }) => {
+          const child = Bun.spawn(
+            [process.execPath, "test", import.meta.path],
+            {
+              env: {
+                ...environment,
+                TZ: name,
+                [TIMEZONE_CHILD_ENV]: "1",
+              },
+              stdout: "pipe",
+              stderr: "pipe",
             },
-            stdout: "pipe",
-            stderr: "pipe",
-          },
-        );
-        const output = `${new TextDecoder().decode(result.stdout)}\n${new TextDecoder().decode(result.stderr)}`;
-        expect(result.exitCode, `${name}\n${output}`).toBe(0);
+          );
+          const [exitCode, stdout, stderr] = await Promise.all([
+            child.exited,
+            new Response(child.stdout).text(),
+            new Response(child.stderr).text(),
+          ]);
+          return {
+            exitCode,
+            output: `${stdout}\n${stderr}`,
+            name,
+          };
+        }),
+      );
+
+      for (const result of results) {
+        expect(result.exitCode, `${result.name}\n${result.output}`).toBe(0);
       }
-    }, 30_000);
+    });
     return;
   }
 
@@ -229,5 +243,32 @@ describe("timetable calendar event dates", () => {
       events = timetableToCalendarEvent(malformedTimetable, "zh");
     }).not.toThrow();
     expect(events).toEqual([]);
+  });
+
+  test("skips a course whose semester metadata is unavailable", () => {
+    const unknownSemester: CourseTimeslotData = {
+      course: { ...course, semester: "99999" },
+      venue: "Room",
+      dayOfWeek: 0,
+      startTime: 0,
+      endTime: 1,
+      color: "#000000",
+      textColor: "#ffffff",
+    };
+
+    expect(timetableToCalendarEvent([unknownSemester], "en")).toEqual([]);
+  });
+
+  test("preserves HEAD output for a valid timetable event", () => {
+    const [event] = timetableToCalendarEvent(
+      createTimetableFromCourses([course]),
+      "en",
+    );
+
+    expect(event?.title).toBe(course.name_en);
+    expect(event?.location).toBe(course.venues[0]);
+    expect(event?.start).toEqual(taipeiDate("2026-02-26T15:30"));
+    expect(event?.end).toEqual(taipeiDate("2026-02-26T17:20"));
+    expect(event?.repeat?.value).toBe(taipeiDate("2026-06-14T00:00").getTime());
   });
 });

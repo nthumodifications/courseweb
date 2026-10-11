@@ -40,4 +40,20 @@ describe("shortlink redirect", () => {
       error: { message: "Invalid redirect URL" },
     });
   });
+
+  it("rejects an oversized slug before KV access", async () => {
+    const fetchMock = mock(
+      async () => new Response("https://nthumods.com/zh/timetable"),
+    );
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
+
+    const response = await shortlinkRedirect.request(
+      `/${"x".repeat(129)}`,
+      {},
+      env,
+    );
+
+    expect(response.status).toBe(400);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
 });

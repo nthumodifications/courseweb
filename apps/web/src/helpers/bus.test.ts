@@ -1,6 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import type { BusDepartureDetails } from "@/libs/bus";
-import { exportNotes, getTimeOnDate } from "./bus";
+import en from "@/dictionaries/en.json";
+import zh from "@/dictionaries/zh.json";
+import { exportNotes, formatNandaDestination, getTimeOnDate } from "./bus";
 
 const campusBus = (
   overrides: Partial<Extract<BusDepartureDetails, { route: "校園公車" }>> = {},
@@ -22,6 +24,11 @@ const nandaBus = (
 });
 
 describe("campus bus helpers", () => {
+  test("preserves the old Nanda destination in both languages", () => {
+    expect(formatNandaDestination(en.bus)).toBe("To Nanda");
+    expect(formatNandaDestination(zh.bus)).toBe("往南大校區");
+  });
+
   test("sets a departure time without mutating the reference date", () => {
     const date = new Date(2026, 9, 9, 3, 4, 5);
 

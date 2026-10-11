@@ -3,6 +3,7 @@ import { CourseTimeslotData } from "@/types/timetable";
 import { scheduleTimeSlots } from "@courseweb/shared";
 import { useSettings } from "@/hooks/contexts/settings";
 import { cn } from "@/lib/utils";
+import useDictionary from "@/dictionaries/useDictionary";
 
 interface TimetableDotsProps {
   timetableData: CourseTimeslotData[];
@@ -17,6 +18,7 @@ const TimetableDots: FC<TimetableDotsProps> = ({
   className,
 }) => {
   const { language } = useSettings();
+  const dict = useDictionary();
 
   if (timetableData.length === 0) {
     return (
@@ -26,7 +28,7 @@ const TimetableDots: FC<TimetableDotsProps> = ({
           className,
         )}
       >
-        {language === "zh" ? "尚未加入課程" : "No courses added yet"}
+        {dict.timetable.no_courses_added}
       </div>
     );
   }

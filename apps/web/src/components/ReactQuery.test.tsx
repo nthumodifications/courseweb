@@ -2,7 +2,18 @@ import { act, createElement } from "react";
 import { createRoot } from "react-dom/client";
 import { JSDOM } from "jsdom";
 import { dehydrate, QueryClient, useQueryClient } from "@tanstack/react-query";
-import { describe, expect, mock, test } from "bun:test";
+import { afterAll, afterEach, describe, expect, mock, test } from "bun:test";
+import { captureGlobalState } from "@/test-utils/global-state";
+
+const actualPersister = await import("@/lib/idb_persister");
+const restoreGlobals = captureGlobalState([
+  "window",
+  "document",
+  "HTMLElement",
+  "MutationObserver",
+  "Node",
+]);
+let activeDom: JSDOM | undefined;
 
 const seedClient = new QueryClient();
 seedClient.setQueryData(["issues"], { privateBody: "legacy report" });
@@ -63,12 +74,14 @@ describe("React Query persistence", () => {
 
   test("removes restored issue reports and rewrites the filtered snapshot", async () => {
     const dom = new JSDOM("<!doctype html><html><body></body></html>");
+    activeDom = dom;
     Object.assign(globalThis, {
       window: dom.window,
       document: dom.window.document,
       HTMLElement: dom.window.HTMLElement,
       MutationObserver: dom.window.MutationObserver,
       Node: dom.window.Node,
+      IS_REACT_ACT_ENVIRONMENT: true,
     });
 
     let queryClient: QueryClient | undefined;
@@ -95,5 +108,16 @@ describe("React Query persistence", () => {
     ).toEqual([["courses"]]);
 
     await act(async () => root.unmount());
+  });
+
+  afterEach(() => {
+    activeDom?.window.close();
+    activeDom = undefined;
+    restoreGlobals();
+  });
+
+  afterAll(() => {
+    mock.module("@/lib/idb_persister", () => actualPersister);
+    seedClient.clear();
   });
 });

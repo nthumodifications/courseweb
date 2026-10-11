@@ -5,6 +5,8 @@ import summarize from "./summarize";
 import searchIntent from "./search-intent";
 import { testGeminiKey } from "./llm";
 
+const MAX_TEST_KEY_BODY_BYTES = 8 * 1024;
+
 const app = new Hono<{ Bindings: Bindings }>()
   .use(
     "/*",
@@ -15,19 +17,45 @@ const app = new Hono<{ Bindings: Bindings }>()
     }),
   )
   .post("/test-key", async (c) => {
-    let body: { apiKey?: unknown };
+    const contentLength = Number(c.req.header("content-length"));
+    if (
+      Number.isFinite(contentLength) &&
+      contentLength > MAX_TEST_KEY_BODY_BYTES
+    ) {
+      return c.json({ ok: false, code: "body_too_large" }, 413);
+    }
+
+    let rawBody: string;
     try {
-      body = await c.req.json<{ apiKey?: unknown }>();
+      rawBody = await c.req.text();
     } catch {
       return c.json(
         { ok: false, code: "auth", error: "Invalid JSON body" },
-        200,
+        400,
       );
     }
-    if (typeof body.apiKey !== "string" || !body.apiKey.trim()) {
+    if (rawBody.length > MAX_TEST_KEY_BODY_BYTES) {
+      return c.json({ ok: false, code: "body_too_large" }, 413);
+    }
+
+    let body: { apiKey?: unknown };
+    try {
+      body = JSON.parse(rawBody) as { apiKey?: unknown };
+    } catch {
+      return c.json(
+        { ok: false, code: "auth", error: "Invalid JSON body" },
+        400,
+      );
+    }
+    if (
+      !body ||
+      typeof body !== "object" ||
+      typeof body.apiKey !== "string" ||
+      !body.apiKey.trim()
+    ) {
       return c.json(
         { ok: false, code: "auth", error: "A Gemini API key is required" },
-        200,
+        400,
       );
     }
     const result = await testGeminiKey(body.apiKey.trim());

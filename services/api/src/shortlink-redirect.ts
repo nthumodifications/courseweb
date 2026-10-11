@@ -9,7 +9,7 @@ const endpoint = (key: string, accountID: string, namespaceID: string) =>
 
 const app = new Hono().get(
   "/:slug",
-  zValidator("param", z.object({ slug: z.string() })),
+  zValidator("param", z.object({ slug: z.string().trim().min(1).max(128) })),
   async (c) => {
     const { slug } = c.req.valid("param");
     const {

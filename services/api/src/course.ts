@@ -23,172 +23,159 @@ const getContribDates = async (c: Context, courseId: string) => {
     }));
 };
 
+const MAX_COURSE_IDS = 2_000;
+const COURSE_QUERY_CHUNK_SIZE = 100;
+const courseIdSchema = z.string().trim().min(1).max(100);
+const courseListSchema = z.union([
+  courseIdSchema,
+  z.array(courseIdSchema).min(1).max(MAX_COURSE_IDS),
+]);
+const courseListQueryValidator = zValidator(
+  "query",
+  z.object({
+    //expect courses to be string if 1 item, array if multiple
+    courses: courseListSchema,
+  }),
+);
+const courseParamValidator = zValidator(
+  "param",
+  z.object({
+    courseId: courseIdSchema,
+  }),
+);
+
+const queryInChunks = async <T>(
+  ids: string[],
+  query: (chunk: string[]) => PromiseLike<{ data: T[] | null; error: unknown }>,
+): Promise<{ data: T[]; error: unknown }> => {
+  const uniqueIds = [...new Set(ids)];
+  const data: T[] = [];
+
+  for (
+    let start = 0;
+    start < uniqueIds.length;
+    start += COURSE_QUERY_CHUNK_SIZE
+  ) {
+    const result = await query(
+      uniqueIds.slice(start, start + COURSE_QUERY_CHUNK_SIZE),
+    );
+    if (result.error) return { data: [], error: result.error };
+    data.push(...(result.data ?? []));
+  }
+
+  return { data, error: null };
+};
+
 const app = new Hono()
-  .get(
-    "/",
-    zValidator(
-      "query",
-      z.object({
-        //expect courses to be string if 1 item, array if multiple
-        courses: z.union([z.string(), z.array(z.string())]),
-      }),
-    ),
-    async (c) => {
-      const { courses: _courses } = c.req.valid("query");
+  .get("/", courseListQueryValidator, async (c) => {
+    const { courses: _courses } = c.req.valid("query");
 
-      const courses = Array.isArray(_courses) ? _courses : [_courses];
+    const courses = Array.isArray(_courses) ? _courses : [_courses];
 
-      const { data, error } = await supabase_server(c)
-        .from("courses")
-        .select("*")
-        .in("raw_id", courses);
-      if (error) {
-        console.error(error);
-        throw new Error("Failed to fetch course data");
-      }
-      return c.json(data);
-    },
-  )
-  .get(
-    "/dates",
-    zValidator(
-      "query",
-      z.object({
-        courses: z.union([z.string(), z.array(z.string())]),
-      }),
-    ),
-    async (c) => {
-      const { courses: _courses } = c.req.valid("query");
-      const courses = Array.isArray(_courses) ? _courses : [_courses];
-      const { data, error } = await supabase_server(c)
-        .from("course_dates")
-        .select("*")
-        .in("raw_id", courses);
-      if (error) {
-        console.error(error);
-        return c.json([]);
-      }
-      return c.json(
-        data.map((d) => ({
-          raw_id: d.raw_id,
-          id: d.id,
-          type: d.type,
-          title: d.title,
-          date: d.date,
-        })),
+    const { data, error } = await queryInChunks<any>(courses, (chunk) =>
+      supabase_server(c).from("courses").select("*").in("raw_id", chunk),
+    );
+    if (error) {
+      console.error(error);
+      throw new Error("Failed to fetch course data");
+    }
+    return c.json(data);
+  })
+  .get("/dates", courseListQueryValidator, async (c) => {
+    const { courses: _courses } = c.req.valid("query");
+    const courses = Array.isArray(_courses) ? _courses : [_courses];
+    const { data, error } = await queryInChunks<any>(courses, (chunk) =>
+      supabase_server(c).from("course_dates").select("*").in("raw_id", chunk),
+    );
+    if (error) {
+      console.error(error);
+      return c.json([]);
+    }
+    return c.json(
+      data.map((d) => ({
+        raw_id: d.raw_id,
+        id: d.id,
+        type: d.type,
+        title: d.title,
+        date: d.date,
+      })),
+    );
+  })
+  .get("/:courseId", courseParamValidator, async (c) => {
+    const { courseId } = c.req.valid("param");
+    const { data, error } = await supabase_server(c)
+      .from("courses")
+      .select("*")
+      .eq("raw_id", courseId);
+    if (error) {
+      throw new Error(error.message);
+    }
+    return c.json(data![0]);
+  })
+  .get("/:courseId/syllabus", courseParamValidator, async (c) => {
+    const { courseId } = c.req.valid("param");
+
+    const { data, error } = await supabase_server(c)
+      .from("courses")
+      .select(
+        `*, course_syllabus ( * ), course_scores ( * ), course_dates ( * )`,
+      )
+      .eq("raw_id", courseId);
+    if (error) {
+      throw new Error(error.message);
+    }
+    return c.json(data![0]);
+  })
+  .get("/:courseId/minimal", courseParamValidator, async (c) => {
+    const { courseId } = c.req.valid("param");
+    const { data, error } = await supabase_server(c)
+      .from("courses")
+      .select(selectMinimalStr)
+      .eq("raw_id", courseId);
+    if (error) {
+      throw new Error(error.message);
+    }
+    return c.json(data![0]);
+  })
+  .get("/:courseId/ptt", courseParamValidator, async (c) => {
+    const { courseId } = c.req.valid("param");
+    const { data, error } = await supabase_server(c)
+      .from("courses")
+      .select("*")
+      .eq("raw_id", courseId);
+    if (error) {
+      console.error(error);
+      throw new Error("Failed to fetch course data");
+    }
+    const course = data![0];
+
+    //TODO: use better search to find the posts
+    try {
+      const PTTWEBSITE = `https://www.ptt.cc/bbs/NTHU_Course/search?q=`;
+      const searchTerm = encodeURI(
+        `${course!.name_zh} ${course!.teacher_zh?.join(" ")}`,
       );
-    },
-  )
-  .get(
-    "/:courseId",
-    zValidator(
-      "param",
-      z.object({
-        courseId: z.string(),
-      }),
-    ),
-    async (c) => {
-      const { courseId } = c.req.valid("param");
-      const { data, error } = await supabase_server(c)
-        .from("courses")
-        .select("*")
-        .eq("raw_id", courseId);
-      if (error) {
-        throw new Error(error.message);
-      }
-      return c.json(data![0]);
-    },
-  )
-  .get(
-    "/:courseId/syllabus",
-    zValidator(
-      "param",
-      z.object({
-        courseId: z.string(),
-      }),
-    ),
-    async (c) => {
-      const { courseId } = c.req.valid("param");
+      const res = await fetch(`${PTTWEBSITE}${searchTerm}`);
+      const html = await res.text();
+      const root = parseHTML(html).document;
 
-      const { data, error } = await supabase_server(c)
-        .from("courses")
-        .select(
-          `*, course_syllabus ( * ), course_scores ( * ), course_dates ( * )`,
-        )
-        .eq("raw_id", courseId);
-      if (error) {
-        throw new Error(error.message);
-      }
-      return c.json(data![0]);
-    },
-  )
-  .get(
-    "/:courseId/minimal",
-    zValidator(
-      "param",
-      z.object({
-        courseId: z.string(),
-      }),
-    ),
-    async (c) => {
-      const { courseId } = c.req.valid("param");
-      const { data, error } = await supabase_server(c)
-        .from("courses")
-        .select(selectMinimalStr)
-        .eq("raw_id", courseId);
-      if (error) {
-        throw new Error(error.message);
-      }
-      return c.json(data![0]);
-    },
-  )
-  .get(
-    "/:courseId/ptt",
-    zValidator(
-      "param",
-      z.object({
-        courseId: z.string(),
-      }),
-    ),
-    async (c) => {
-      const { courseId } = c.req.valid("param");
-      const { data, error } = await supabase_server(c)
-        .from("courses")
-        .select("*")
-        .eq("raw_id", courseId);
-      if (error) {
-        console.error(error);
-        throw new Error("Failed to fetch course data");
-      }
-      const course = data![0];
+      const posts_link = root.querySelectorAll(".r-ent");
+      const reviews = [];
+      for (const post_link of posts_link) {
+        const link = post_link.querySelector(".title a");
+        try {
+          const res = await fetch(
+            `https://www.ptt.cc${link!.getAttribute("href")}`,
+          );
+          const html = await res.text();
+          const root = parseHTML(html).document;
+          const post = root.querySelector("#main-content");
+          const fullContent = post!.textContent!;
+          const content = fullContent
+            .split("看板NTHU_Course標題")[1]
+            .split("--")[0];
 
-      //TODO: use better search to find the posts
-      try {
-        const PTTWEBSITE = `https://www.ptt.cc/bbs/NTHU_Course/search?q=`;
-        const searchTerm = encodeURI(
-          `${course!.name_zh} ${course!.teacher_zh?.join(" ")}`,
-        );
-        const res = await fetch(`${PTTWEBSITE}${searchTerm}`);
-        const html = await res.text();
-        const root = parseHTML(html).document;
-
-        const posts_link = root.querySelectorAll(".r-ent");
-        const reviews = [];
-        for (const post_link of posts_link) {
-          const link = post_link.querySelector(".title a");
-          try {
-            const res = await fetch(
-              `https://www.ptt.cc${link!.getAttribute("href")}`,
-            );
-            const html = await res.text();
-            const root = parseHTML(html).document;
-            const post = root.querySelector("#main-content");
-            const fullContent = post!.textContent!;
-            const content = fullContent
-              .split("看板NTHU_Course標題")[1]
-              .split("--")[0];
-
-            const excessiveText = `===================個人想寫的公告===================
+          const excessiveText = `===================個人想寫的公告===================
 //↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
 有鑑於學校目前把很多科目的成績分布都不公開處理，導致選課資訊的流通被強力阻撓，
 希望大家能夠多多發文寫每科的修課心得，讓後面要修課的人得到比較透明的資訊！希望
@@ -206,67 +193,57 @@ const app = new Hono()
 
 `;
 
-            const contentWithoutExcessiveText = content.replace(
-              excessiveText,
-              "",
-            );
+          const contentWithoutExcessiveText = content.replace(
+            excessiveText,
+            "",
+          );
 
-            const date = post!.querySelectorAll(".article-meta-value")[3]
-              ?.textContent;
-            const review = { content: contentWithoutExcessiveText, date };
-            reviews.push(review);
-          } catch (error) {
-            console.error(error);
-          }
+          const date = post!.querySelectorAll(".article-meta-value")[3]
+            ?.textContent;
+          const review = { content: contentWithoutExcessiveText, date };
+          reviews.push(review);
+        } catch (error) {
+          console.error(error);
         }
-        return c.json(reviews);
-      } catch (error) {
-        console.error(error);
-        throw new Error("Failed to fetch ptt data");
       }
-    },
-  )
-  .get(
-    "/:courseId/related",
-    zValidator(
-      "param",
-      z.object({
-        courseId: z.string(),
-      }),
-    ),
-    async (c) => {
-      const { courseId } = c.req.valid("param");
-      const { data: dataCourse, error: courseError } = await supabase_server(c)
-        .from("courses")
-        .select("*")
-        .eq("raw_id", courseId);
-      if (courseError) {
-        console.error(courseError);
-        throw new Error("Failed to fetch course data");
-      }
-      const course = dataCourse![0];
-      const semester = Number.parseInt(course.semester.substring(0, 3));
-      const getsemesters = [
-        semester - 2,
-        semester - 1,
-        semester,
-        semester + 1,
-      ].flatMap((s) => [s.toString() + "10", s.toString() + "20"]);
+      return c.json(reviews);
+    } catch (error) {
+      console.error(error);
+      throw new Error("Failed to fetch ptt data");
+    }
+  })
+  .get("/:courseId/related", courseParamValidator, async (c) => {
+    const { courseId } = c.req.valid("param");
+    const { data: dataCourse, error: courseError } = await supabase_server(c)
+      .from("courses")
+      .select("*")
+      .eq("raw_id", courseId);
+    if (courseError) {
+      console.error(courseError);
+      throw new Error("Failed to fetch course data");
+    }
+    const course = dataCourse![0];
+    const semester = Number.parseInt(course.semester.substring(0, 3));
+    const getsemesters = [
+      semester - 2,
+      semester - 1,
+      semester,
+      semester + 1,
+    ].flatMap((s) => [s.toString() + "10", s.toString() + "20"]);
 
-      const { data, error } = await supabase_server(c)
-        .from("courses")
-        .select("*, course_scores(*)")
-        .eq("department", course.department)
-        .eq("course", course.course)
-        .eq("name_zh", course.name_zh) //due to the way the course ids are arranged, this is the best way to get the same course
-        .in("semester", getsemesters)
-        .not("raw_id", "eq", course.raw_id)
-        .order("raw_id", { ascending: false });
-      if (error) throw error;
-      if (!data) throw new Error("No data");
-      return c.json(data);
-    },
-  )
+    const { data, error } = await supabase_server(c)
+      .from("courses")
+      .select("*, course_scores(*)")
+      .eq("department", course.department)
+      .eq("course", course.course)
+      .eq("name_zh", course.name_zh) //due to the way the course ids are arranged, this is the best way to get the same course
+      .in("semester", getsemesters)
+      .not("raw_id", "eq", course.raw_id)
+      .order("raw_id", { ascending: false });
+    if (error) throw error;
+    if (!data) throw new Error("No data");
+    return c.json(data);
+  })
   .get("/classes", async (c) => {
     const { data, error } = await supabase_server(c)
       .from("distinct_classes")
@@ -280,36 +257,18 @@ const app = new Hono()
     }[];
     return c.json(filteredData.map((item) => item.class));
   })
-  .get(
-    "/:courseId/syllabus/file",
-    zValidator(
-      "param",
-      z.object({
-        courseId: z.string(),
-      }),
-    ),
-    (c) => {
-      const { courseId } = c.req.valid("param");
-      const { SUPABASE_URL } = env<{ SUPABASE_URL: string }>(c);
-      return c.redirect(
-        `${SUPABASE_URL}/storage/v1/object/public/syllabus/${encodeURIComponent(courseId)}.pdf`,
-      );
-    },
-  )
-  .get(
-    "/:courseId/dates",
-    zValidator(
-      "param",
-      z.object({
-        courseId: z.string(),
-      }),
-    ),
-    async (c) => {
-      const { courseId } = c.req.valid("param");
-      const dates = await getContribDates(c, courseId);
-      return c.json(dates);
-    },
-  )
+  .get("/:courseId/syllabus/file", courseParamValidator, (c) => {
+    const { courseId } = c.req.valid("param");
+    const { SUPABASE_URL } = env<{ SUPABASE_URL: string }>(c);
+    return c.redirect(
+      `${SUPABASE_URL}/storage/v1/object/public/syllabus/${encodeURIComponent(courseId)}.pdf`,
+    );
+  })
+  .get("/:courseId/dates", courseParamValidator, async (c) => {
+    const { courseId } = c.req.valid("param");
+    const dates = await getContribDates(c, courseId);
+    return c.json(dates);
+  })
   .post(
     "/:courseId/dates",
     zValidator(
@@ -325,12 +284,7 @@ const app = new Hono()
         ),
       }),
     ),
-    zValidator(
-      "param",
-      z.object({
-        courseId: z.string(),
-      }),
-    ),
+    courseParamValidator,
     async (c) => {
       return c.notFound();
       // try {
