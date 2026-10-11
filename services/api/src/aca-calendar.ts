@@ -8,6 +8,7 @@ import {
   parseCourseSelectionPeriods,
   type AcademicCalendarEvent,
 } from "./course-selection-periods";
+import { fetchUpstream, UpstreamHttpError } from "./utils/upstream";
 
 export type CalendarApiResponse = {
   kind: string;
@@ -115,29 +116,9 @@ const app = new Hono()
       const windowEnd = end.toISOString().slice(0, 10);
       const CALENDAR_API_URL = `https://www.googleapis.com/calendar/v3/calendars/nthu.acad%40gmail.com/events?key=${CALENDAR_API_KEY}&timeMin=${upstreamStart.toISOString().slice(0, 10)}T00:00:00Z&timeMax=${windowEnd}T00:00:00Z`;
       try {
-        const res = await fetch(CALENDAR_API_URL, {
+        const res = await fetchUpstream(CALENDAR_API_URL, {
           signal: AbortSignal.timeout(8_000),
         });
-        if (!res.ok) {
-          // Google reports a revoked, deleted or API-disabled key as a 400
-          // API_KEY_INVALID. Surface that as a distinct upstream failure so it is
-          // not mistaken for a bug in this handler.
-          // The upstream error body echoes back the caller's own query
-          // parameters, so strip control characters and cap the length before
-          // logging it — otherwise a crafted `start`/`end` could forge log lines.
-          const detail = (await res.text())
-            .replace(/[\u0000-\u001F\u007F]+/g, " ")
-            .slice(0, 500);
-          console.error(
-            `Google Calendar request failed (${res.status}): ${detail}`,
-          );
-          throw new HTTPException(502, {
-            message:
-              res.status === 400 || res.status === 403
-                ? "Academic calendar upstream rejected the API key"
-                : "Academic calendar upstream is unavailable",
-          });
-        }
         const calendarDatas = parseCalendarPayload(await res.json());
         if (!calendarDatas) {
           console.error("Google Calendar response had an invalid items array");
@@ -179,6 +160,20 @@ const app = new Hono()
         );
       } catch (error) {
         if (error instanceof HTTPException) throw error;
+        if (error instanceof UpstreamHttpError) {
+          const detail = (await error.response.text())
+            .replace(/[\u0000-\u001F\u007F]+/g, " ")
+            .slice(0, 500);
+          console.error(
+            `Google Calendar request failed (${error.response.status}): ${detail}`,
+          );
+          throw new HTTPException(502, {
+            message:
+              error.response.status === 400 || error.response.status === 403
+                ? "Academic calendar upstream rejected the API key"
+                : "Academic calendar upstream is unavailable",
+          });
+        }
         console.error("Failed to fetch academic calendar", error);
         throw new HTTPException(502, {
           message: "Academic calendar upstream is unavailable",

@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, test, mock } from "bun:test";
 import weather, { parseWeatherResponse } from "./weather";
+import { failingFetch, upstreamFailureCases } from "./test-helpers/upstream";
 
 const originalFetch = globalThis.fetch;
 const originalKey = process.env.CWA_API_KEY;
@@ -94,20 +95,15 @@ describe("weather upstream parser", () => {
     );
   });
 
-  test.each([
-    ["empty body", new Response("")],
-    ["HTML error page with 200", new Response("<html>error</html>")],
-    ["upstream 5xx", new Response("down", { status: 503 })],
-    ["timeout", new Error("timeout")],
-  ])("returns 502 for %s", async (_label, result) => {
-    process.env.CWA_API_KEY = "test-key";
-    globalThis.fetch = mock(async () => {
-      if (result instanceof Error) throw result;
-      return result;
-    }) as unknown as typeof fetch;
-    const response = await weather.request("/");
-    expect(response.status).toBe(502);
-  });
+  test.each(upstreamFailureCases)(
+    "returns 502 for %s",
+    async (_label, makeResult) => {
+      process.env.CWA_API_KEY = "test-key";
+      globalThis.fetch = failingFetch(makeResult);
+      const response = await weather.request("/");
+      expect(response.status).toBe(502);
+    },
+  );
 
   test("preserves missing and unusual values accepted by HEAD", () => {
     const payload = weatherPayload();

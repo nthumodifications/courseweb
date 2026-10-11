@@ -9,6 +9,7 @@ import {
   type UsageSnapshotRow,
 } from "./collector";
 import { taipeiSlotAt } from "./model";
+import { failingFetch, upstreamFailureCases } from "../test-helpers/upstream";
 
 describe("usage collector validation", () => {
   it("keeps the profile rebuild budget at two per tick", () => {
@@ -92,17 +93,10 @@ describe("usage collector validation", () => {
     ).toBe(true);
   });
 
-  it.each([
-    ["5xx", () => new Response("down", { status: 503 })],
-    ["empty body", () => new Response("")],
-    ["HTML error page", () => new Response("<html>error</html>")],
-    ["timeout", () => Promise.reject(new Error("timeout"))],
-  ])(
+  it.each(upstreamFailureCases)(
     "surfaces %s without returning empty success data",
-    async (_label, makeResponse) => {
-      const result = await fetchUsageUpstreams(
-        (async () => await makeResponse()) as typeof fetch,
-      );
+    async (_label, makeResult) => {
+      const result = await fetchUsageUpstreams(failingFetch(makeResult));
       expect(result.gym.samples).toBeNull();
       expect(result.library.samples).toBeNull();
     },
