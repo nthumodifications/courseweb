@@ -98,6 +98,51 @@ describe("local-search projection and ranking", () => {
     );
     expect(rankLocalIds([prefix, exact], [0, 1], "450")).toEqual([1, 0]);
   });
+
+  const orderingRecords = [
+    record({
+      raw_id: "11510MATH 101002",
+      objectID: "11510MATH 101002",
+      department: "MATH",
+      course: "1010",
+      class: "2",
+      name_en: "Calculus",
+    }),
+    record({
+      raw_id: "11510CS  101002",
+      objectID: "11510CS  101002",
+      department: "CS",
+      course: "1010",
+      class: "2",
+      name_en: "Calculus",
+    }),
+    record({
+      raw_id: "11510CS  200001",
+      objectID: "11510CS  200001",
+      department: "CS",
+      course: "2000",
+      class: "1",
+      name_en: "Calculus",
+    }),
+    record({
+      raw_id: "11510CS  101001",
+      objectID: "11510CS  101001",
+      department: "CS",
+      course: "1010",
+      class: "1",
+      name_en: "Calculus",
+    }),
+  ];
+
+  test.each([
+    ["browse", "", [3, 2, 1, 0], [3, 2, 1, 0]],
+    ["query", "1010", [0, 1, 3], [3, 1, 0]],
+  ] as const)(
+    "%s keeps the old course ordering contract",
+    (_name, query, input, expected) => {
+      expect(rankLocalIds(orderingRecords, input, query)).toEqual(expected);
+    },
+  );
 });
 
 describe("time masks and local refinements", () => {
