@@ -15,6 +15,7 @@ import useDictionary from "@/dictionaries/useDictionary";
 import { useEffect } from "react";
 import { Language } from "@/types/settings";
 import { Helmet } from "react-helmet-async";
+import { serializeJsonLd } from "@/lib/seo";
 
 type BusRouteDetailsPageProps = {
   params: {
@@ -75,7 +76,7 @@ const BusRouteDetailsPage = () => {
   const seoHelmet = (
     <Helmet>
       <script type="application/ld+json">
-        {JSON.stringify(busRouteJsonLd)}
+        {serializeJsonLd(busRouteJsonLd)}
       </script>
     </Helmet>
   );

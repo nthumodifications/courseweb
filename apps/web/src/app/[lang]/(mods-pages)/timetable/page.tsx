@@ -11,6 +11,7 @@ import { semesterInfo } from "@courseweb/shared";
 import { useHeaderPortal } from "@/components/Portal/HeaderPortal";
 import { useEffect, useRef } from "react";
 import { Helmet } from "react-helmet-async";
+import { serializeJsonLd } from "@/lib/seo";
 import { useSettings } from "@/hooks/contexts/settings";
 import { timetableEvents } from "@/lib/trackingEvents";
 import { filterHiddenCourses } from "@/helpers/timetableVisibility";
@@ -118,7 +119,7 @@ const TimetablePage = () => {
     <>
       <Helmet>
         <script type="application/ld+json">
-          {JSON.stringify(timetableJsonLd)}
+          {serializeJsonLd(timetableJsonLd)}
         </script>
       </Helmet>
       <div className="flex flex-col w-full h-full">

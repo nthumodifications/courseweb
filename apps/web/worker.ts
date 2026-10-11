@@ -162,36 +162,120 @@ interface CourseMetaData {
   zhUrl: string;
   enUrl: string;
   ogType: string;
+  jsonLd: unknown[];
+}
+
+function escapeJsonLd(value: unknown): string {
+  return JSON.stringify(value)
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/&/g, "\\u0026")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
 }
 
 function buildCourseMetaData(course: any, lang: string): CourseMetaData {
-  const semester = toPrettySemester(course.semester);
+  const nameZh =
+    typeof course.name_zh === "string" && course.name_zh.trim()
+      ? course.name_zh.trim()
+      : "NTHU Course";
+  const nameEn =
+    typeof course.name_en === "string" && course.name_en.trim()
+      ? course.name_en.trim()
+      : nameZh;
+  const department =
+    typeof course.department === "string" && course.department.trim()
+      ? course.department.trim()
+      : "NTHU";
+  const semester = toPrettySemester(String(course.semester ?? ""));
   const teachersZh = Array.isArray(course.teacher_zh)
-    ? course.teacher_zh.join("、")
+    ? course.teacher_zh
+        .filter(
+          (teacher: unknown): teacher is string =>
+            typeof teacher === "string" && teacher.trim().length > 0,
+        )
+        .join("、")
     : "";
   const teachersEn = Array.isArray(course.teacher_en)
-    ? course.teacher_en.join(", ")
-    : teachersZh;
+    ? course.teacher_en
+        .filter(
+          (teacher: unknown): teacher is string =>
+            typeof teacher === "string" && teacher.trim().length > 0,
+        )
+        .join(", ")
+    : "";
+  const displayTeachersEn = teachersEn || teachersZh || "NTHU faculty";
+  const displayTeachersZh = teachersZh || "清大教師";
 
   const title =
     lang === "zh"
-      ? `${course.name_zh} ${teachersZh} - ${semester} 清大${course.department}課程 | NTHUMods`
-      : `${course.name_en} ${teachersEn} - ${semester} NTHU ${course.department} | NTHUMods`;
+      ? `${nameZh} ${displayTeachersZh} - ${semester} 清大${department}課程 | NTHUMods`
+      : `${nameEn} ${displayTeachersEn} - ${semester} NTHU ${department} | NTHUMods`;
 
   const description =
     lang === "zh"
-      ? `清大 ${semester} ${course.name_zh}（${course.name_en}），${teachersZh} 授課。查看課程大綱、評分記錄與歷年開課資訊。`
-      : `NTHU ${semester} ${course.name_en} (${course.name_zh}), taught by ${teachersEn}. View syllabus, past scores, and course history.`;
+      ? `清大 ${semester} ${nameZh}（${nameEn}），${displayTeachersZh} 授課。查看課程大綱、評分記錄與歷年開課資訊。`
+      : `NTHU ${semester} ${nameEn} (${nameZh}), taught by ${displayTeachersEn}. View syllabus, past scores, and course history.`;
 
   const ogTitle =
     lang === "zh"
-      ? `${course.name_zh} - ${course.department} | NTHUMods`
-      : `${course.name_en} - ${course.department} | NTHUMods`;
+      ? `${nameZh} - ${department} | NTHUMods`
+      : `${nameEn} - ${department} | NTHUMods`;
 
-  const courseId = encodeURIComponent(course.raw_id);
+  const courseId = encodeURIComponent(String(course.raw_id ?? ""));
   const canonicalUrl = `https://nthumods.com/${lang}/courses/${courseId}`;
   const zhUrl = `https://nthumods.com/zh/courses/${courseId}`;
   const enUrl = `https://nthumods.com/en/courses/${courseId}`;
+  const instructors = Array.isArray(course.teacher_zh)
+    ? course.teacher_zh
+        .filter(
+          (teacher: unknown): teacher is string =>
+            typeof teacher === "string" && teacher.trim().length > 0,
+        )
+        .map((name: string) => ({ "@type": "Person", name }))
+    : [];
+  const jsonLd: unknown[] = [
+    {
+      "@context": "https://schema.org",
+      "@type": "Course",
+      name: lang === "en" ? nameEn : nameZh,
+      alternateName: lang === "en" ? nameZh : nameEn,
+      description,
+      provider: {
+        "@type": "Organization",
+        name: "NTHUMods",
+        url: "https://nthumods.com",
+      },
+      ...(instructors.length > 0 ? { instructor: instructors } : {}),
+      courseCode: department,
+      url: canonicalUrl,
+      inLanguage: lang === "en" ? "en" : "zh-TW",
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: lang === "en" ? "Home" : "首頁",
+          item: `https://nthumods.com/${lang}`,
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: lang === "en" ? "Courses" : "課程",
+          item: `https://nthumods.com/${lang}/courses`,
+        },
+        {
+          "@type": "ListItem",
+          position: 3,
+          name: lang === "en" ? nameEn : nameZh,
+          item: canonicalUrl,
+        },
+      ],
+    },
+  ];
 
   return {
     title,
@@ -202,6 +286,7 @@ function buildCourseMetaData(course: any, lang: string): CourseMetaData {
     zhUrl,
     enUrl,
     ogType: "article",
+    jsonLd,
   };
 }
 
@@ -240,19 +325,30 @@ async function handleCourseDetailPage(
     );
 
     if (!apiRes.ok || apiRes.status === 404) {
-      return handleMissingCourse(lang, env, origin);
+      return handleGenericBotPage(
+        new URL(`${origin}/${lang}/courses/${encodeURIComponent(courseId)}`),
+        env,
+      );
     }
 
     const course = (await apiRes.json()) as any;
 
     if (!course?.name_zh) {
-      return handleMissingCourse(lang, env, origin);
+      return handleGenericBotPage(
+        new URL(`${origin}/${lang}/courses/${encodeURIComponent(courseId)}`),
+        env,
+      );
     }
 
     const meta = buildCourseMetaData(course, lang);
     const shellRes = await fetchAppShell(env, origin);
 
     let rewriter = new HTMLRewriter()
+      .on("html", {
+        element(el) {
+          el.setAttribute("lang", lang === "en" ? "en" : "zh-TW");
+        },
+      })
       .on("title", {
         element(el) {
           el.setInnerContent(meta.title);
@@ -300,41 +396,31 @@ async function handleCourseDetailPage(
       });
 
     rewriter = applyHreflang(rewriter, meta.zhUrl, meta.enUrl, meta.zhUrl);
+    rewriter = rewriter.on("head", {
+      element(el) {
+        el.append(
+          `<script type="application/ld+json">${escapeJsonLd([
+            ...meta.jsonLd,
+            {
+              "@context": "https://schema.org",
+              "@type": "WebPage",
+              name: meta.title,
+              description: meta.description,
+              url: meta.canonicalUrl,
+              inLanguage: lang === "en" ? "en" : "zh-TW",
+            },
+          ])}</script>`,
+          { html: true },
+        );
+      },
+    });
     return rewriter.transform(shellRes);
   } catch {
-    return handleMissingCourse(lang, env, origin);
+    return handleGenericBotPage(
+      new URL(`${origin}/${lang}/courses/${encodeURIComponent(courseId)}`),
+      env,
+    );
   }
-}
-
-async function handleMissingCourse(
-  lang: string,
-  env: Env,
-  origin: string,
-): Promise<Response> {
-  const shellRes = await fetchAppShell(env, origin);
-  const coursesUrl = `https://nthumods.com/${lang}/courses`;
-
-  const notFoundShell = new Response(shellRes.body, {
-    status: 404,
-    statusText: "Not Found",
-    headers: new Headers({
-      ...Object.fromEntries(shellRes.headers),
-      "X-Robots-Tag": "noindex, follow",
-    }),
-  });
-
-  return new HTMLRewriter()
-    .on('meta[name="robots"]', {
-      element(el) {
-        el.setAttribute("content", "noindex, follow");
-      },
-    })
-    .on('link[rel="canonical"]', {
-      element(el) {
-        el.setAttribute("href", coursesUrl);
-      },
-    })
-    .transform(notFoundShell);
 }
 
 async function handleDepartmentPage(url: URL, env: Env): Promise<Response> {
@@ -377,6 +463,11 @@ async function handleDepartmentPage(url: URL, env: Env): Promise<Response> {
     const shellRes = await fetchAppShell(env, url.origin);
 
     let rewriter = new HTMLRewriter()
+      .on("html", {
+        element(el) {
+          el.setAttribute("lang", lang === "en" ? "en" : "zh-TW");
+        },
+      })
       .on("title", {
         element(el) {
           el.setInnerContent(title);
@@ -453,6 +544,11 @@ async function handleBusPage(
     const shellRes = await fetchAppShell(env, origin);
 
     let rewriter = new HTMLRewriter()
+      .on("html", {
+        element(el) {
+          el.setAttribute("lang", lang === "en" ? "en" : "zh-TW");
+        },
+      })
       .on("title", {
         element(el) {
           el.setInnerContent(title);
@@ -688,11 +784,17 @@ async function handleGenericBotPage(url: URL, env: Env): Promise<Response> {
 
   const shellRes = await fetchAppShell(env, url.origin);
 
-  let rewriter = new HTMLRewriter().on('link[rel="canonical"]', {
-    element(el) {
-      el.setAttribute("href", canonicalUrl);
-    },
-  });
+  let rewriter = new HTMLRewriter()
+    .on("html", {
+      element(el) {
+        el.setAttribute("lang", lang === "en" ? "en" : "zh-TW");
+      },
+    })
+    .on('link[rel="canonical"]', {
+      element(el) {
+        el.setAttribute("href", canonicalUrl);
+      },
+    });
 
   rewriter = applyHreflang(rewriter, zhUrl, enUrl, zhUrl);
 
@@ -1027,7 +1129,7 @@ export default {
 
     // Course detail page
     const courseMatch =
-      /^\/(zh|en)\/courses\/(?!modules(?:\/|$)|module(?:\/|$))(.+)$/.exec(
+      /^\/(zh|en)\/courses\/(?!modules(?:\/|$)|module(?:\/|$)|instructor(?:\/|$))(.+)$/.exec(
         url.pathname,
       );
     if (courseMatch) {

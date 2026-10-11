@@ -15,6 +15,7 @@ import { lastSemester } from "@courseweb/shared";
 import CourseSidePanel from "./CourseSidePanel";
 import { createResilientSearchClient } from "@/lib/search-client";
 import useDictionary from "@/dictionaries/useDictionary";
+import { serializeJsonLd } from "@/lib/seo";
 
 const searchClient = createResilientSearchClient();
 const sessionStorageCache = createInfiniteHitsSessionStorageCache();
@@ -53,7 +54,7 @@ const CourseSearchContainer = () => {
       />
       <meta property="og:type" content="website" />
       <script type="application/ld+json">
-        {JSON.stringify([
+        {serializeJsonLd([
           {
             "@context": "https://schema.org",
             "@type": "BreadcrumbList",
