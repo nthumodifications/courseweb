@@ -75,19 +75,28 @@ export const DownloadTimetableDialogDynamic = ({
 }: {
   icsfileLink: string;
   children?: React.ReactNode;
-}) => (
-  <Suspense
-    fallback={
-      <Button variant="ghost" size="icon" className="h-8 w-8" disabled>
-        <Loader2 className="w-4 h-4 animate-spin" />
-      </Button>
-    }
-  >
-    <DownloadTimetableDialogLazy icsfileLink={icsfileLink}>
-      {children}
-    </DownloadTimetableDialogLazy>
-  </Suspense>
-);
+}) => {
+  const dict = useDictionary();
+  return (
+    <Suspense
+      fallback={
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          aria-label={dict.common.loading}
+          disabled
+        >
+          <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+        </Button>
+      }
+    >
+      <DownloadTimetableDialogLazy icsfileLink={icsfileLink}>
+        {children}
+      </DownloadTimetableDialogLazy>
+    </Suspense>
+  );
+};
 
 const ShareSyncTimetableDialogLazy = lazy(
   () => import("./ShareSyncTimetableDialog"),
@@ -309,6 +318,7 @@ const TimetableCourseListItem = ({
                     className="rounded-l-none"
                     variant="outline"
                     size="icon"
+                    aria-label={dict.a11y.delete}
                     onClick={() => deleteCourse(course.raw_id)}
                   >
                     <Trash className="w-4 h-4" />

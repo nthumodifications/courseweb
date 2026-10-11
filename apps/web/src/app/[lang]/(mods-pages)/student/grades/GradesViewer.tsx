@@ -58,7 +58,11 @@ const SemesterGradeCard = ({
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant={"outline"} size={"icon"}>
+        <Button
+          variant={"outline"}
+          size={"icon"}
+          aria-label={dict.a11y.view_semester_details}
+        >
           <ExternalLink className="w-4 h-4" />
         </Button>
       </DialogTrigger>
@@ -162,9 +166,7 @@ const GradeCard = ({ title, data }: { title: string; data: string }) => (
     <div className="text-center text-muted-foreground text-sm font-medium leading-none">
       {title}
     </div>
-    <div className="text-center text-foreground text-xl font-bold">
-      {data}
-    </div>
+    <div className="text-center text-foreground text-xl font-bold">{data}</div>
   </div>
 );
 

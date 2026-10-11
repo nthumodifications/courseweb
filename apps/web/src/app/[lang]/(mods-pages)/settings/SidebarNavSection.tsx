@@ -106,6 +106,7 @@ const SortableSidebarRow = ({
       <def.Icon className="h-4 w-4 text-muted-foreground" />
       <div className="flex-1 text-sm font-medium">{label}</div>
       <Switch
+        aria-label={label}
         checked={item.enabled}
         onCheckedChange={(val) => onToggle(item.id, val)}
       />

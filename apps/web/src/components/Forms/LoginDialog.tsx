@@ -2,6 +2,7 @@ import {
   Button,
   Dialog,
   DialogContent,
+  DialogTitle,
   DialogTrigger,
   ScrollArea,
 } from "@courseweb/ui";
@@ -18,6 +19,7 @@ const LoginDialog = ({ children }: { children?: ReactNode }) => {
         {children || <Button variant="outline">{dict.ccxp.connect}</Button>}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px] h-screen lg:h-auto w-full ">
+        <DialogTitle className="sr-only">{dict.a11y.login}</DialogTitle>
         <ScrollArea className="h-full">
           <h1>{dict.common.coming_soon}</h1>
         </ScrollArea>

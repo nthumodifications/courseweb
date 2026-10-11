@@ -7,6 +7,7 @@ import {
   Button,
   Dialog,
   DialogContent,
+  DialogTitle,
   DialogTrigger,
   ScrollArea,
   cn,
@@ -31,6 +32,9 @@ const AppList = () => {
                 <Settings size={20} className="cursor-pointer" />
               </DialogTrigger>
               <DialogContent>
+                <DialogTitle className="sr-only">
+                  {dict.applist.edit_pinned_apps_title}
+                </DialogTitle>
                 <div className="flex flex-col gap-4">
                   <h1 className="font-bold text-muted-foreground">
                     {dict.applist.edit_pinned_apps_title}
@@ -70,6 +74,11 @@ const AppList = () => {
                               <Button
                                 size="icon"
                                 variant="ghost"
+                                aria-label={
+                                  pinnedApps.includes(app.id)
+                                    ? dict.a11y.unfavorite
+                                    : dict.a11y.favorite
+                                }
                                 onClick={() => toggleApp(app.id)}
                               >
                                 <Star

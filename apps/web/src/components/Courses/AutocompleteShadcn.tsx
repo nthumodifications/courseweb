@@ -67,6 +67,7 @@ export const AutocompleteShadcn = ({
                     onClick={() => field.onChange("")}
                     variant="ghost"
                     size="icon"
+                    aria-label={dict.a11y.clear}
                   >
                     <X className="h-4 w-4" />
                   </Button>

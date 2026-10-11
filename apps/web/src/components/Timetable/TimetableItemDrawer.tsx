@@ -15,6 +15,7 @@ import {
   PopoverTrigger,
   Drawer,
   DrawerContent,
+  DrawerTitle,
   DrawerTrigger,
   Button,
   Input,
@@ -114,7 +115,10 @@ const TimetableCourseQuickAccess = ({ course }: { course: MinimalCourse }) => {
                 ></div>
               </div>
             </PopoverTrigger>
-            <PopoverContent className="p-0">
+            <PopoverContent
+              className="p-0"
+              aria-label={dict.timetable.custom_items.color_label}
+            >
               <Compact
                 color={colorMap[course.raw_id]}
                 onChange={(color) => {
@@ -221,6 +225,9 @@ export const TimetableItemDrawer = ({
     <Drawer>
       <DrawerTrigger asChild>{children}</DrawerTrigger>
       <DrawerContent>
+        <DrawerTitle className="sr-only">
+          {course.name_zh} - {course.teacher_zh.join(",")}
+        </DrawerTitle>
         <TimetableCourseQuickAccess course={course} />
       </DrawerContent>
     </Drawer>
@@ -329,6 +336,7 @@ const CustomTimetableItemEditor = ({
           {dict.timetable.custom_items.title_label}
         </label>
         <Input
+          aria-label={dict.timetable.custom_items.title_label}
           value={title}
           onChange={(event) => setTitle(event.target.value)}
           placeholder={dict.timetable.custom_items.title_placeholder}
@@ -343,6 +351,7 @@ const CustomTimetableItemEditor = ({
             {dict.timetable.custom_items.short_code_label}
           </label>
           <Input
+            aria-label={dict.timetable.custom_items.short_code_label}
             value={shortCode}
             onChange={(event) => setShortCode(event.target.value)}
             placeholder={dict.timetable.custom_items.short_code_placeholder}
@@ -354,6 +363,7 @@ const CustomTimetableItemEditor = ({
             {dict.timetable.custom_items.venue_label}
           </label>
           <Input
+            aria-label={dict.timetable.custom_items.venue_label}
             value={venue}
             onChange={(event) => setVenue(event.target.value)}
             placeholder={dict.timetable.custom_items.venue_placeholder}
@@ -423,6 +433,7 @@ const CustomTimetableItemEditor = ({
           {dict.timetable.custom_items.note_label}
         </label>
         <textarea
+          aria-label={dict.timetable.custom_items.note_label}
           value={note}
           onChange={(event) => setNote(event.target.value)}
           placeholder={dict.timetable.custom_items.note_placeholder}
@@ -444,7 +455,10 @@ const CustomTimetableItemEditor = ({
               aria-label={dict.timetable.custom_items.color_label}
             />
           </PopoverTrigger>
-          <PopoverContent className="p-0 w-auto">
+          <PopoverContent
+            className="p-0 w-auto"
+            aria-label={dict.timetable.custom_items.color_label}
+          >
             <Compact
               color={color}
               onChange={(next) => setColor(next.hex)}
@@ -524,6 +538,9 @@ export const TimetableCustomItemDrawer = ({
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>{children}</DrawerTrigger>
       <DrawerContent>
+        <DrawerTitle className="sr-only">
+          {dict.timetable.custom_items.editor_title}
+        </DrawerTitle>
         <CustomTimetableItemEditor
           item={item}
           onSave={handleSave}

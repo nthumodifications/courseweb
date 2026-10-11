@@ -127,6 +127,7 @@ export const ThemeSection = () => {
             <button
               key={preset.id}
               onClick={() => setPreset(preset.id)}
+              aria-pressed={config.preset === preset.id}
               className={cn(
                 "group flex h-full min-w-0 flex-col gap-2 rounded-md border border-border p-2 text-left transition-colors",
                 config.preset === preset.id
@@ -184,6 +185,7 @@ export const ThemeSection = () => {
                   <button
                     key={f}
                     onClick={() => setFont(f)}
+                    aria-pressed={(config.font ?? "inter") === f}
                     className={cn(
                       "rounded border px-2 py-2 text-xs transition-all",
                       (config.font ?? "inter") === f
@@ -215,6 +217,7 @@ export const ThemeSection = () => {
             <button
               key={opt.value}
               onClick={() => setRadius(opt.value)}
+              aria-pressed={config.radius === opt.value}
               className={cn(
                 "flex flex-col gap-2 rounded border px-4 py-2 text-xs transition-all",
                 config.radius === opt.value
@@ -258,6 +261,7 @@ export const ThemeSection = () => {
             max={1.25}
             step={0.125}
             value={config.fontScale}
+            aria-label={dict.settings.appearance.font_scale.title}
             onChange={(e) => setFontScale(Number.parseFloat(e.target.value))}
             className="flex-1 accent-primary"
           />
@@ -280,6 +284,7 @@ export const ThemeSection = () => {
             <button
               key={opt.value}
               onClick={() => setDensity(opt.value)}
+              aria-pressed={config.density === opt.value}
               className={cn(
                 "flex-1 rounded border px-2 py-2 text-xs transition-all",
                 config.density === opt.value
@@ -303,6 +308,7 @@ export const ThemeSection = () => {
             <button
               key={opt.value}
               onClick={() => setBackground(opt.value)}
+              aria-pressed={config.background === opt.value}
               className={cn(
                 "flex h-16 w-full min-w-0 flex-col items-center justify-center gap-1 rounded border px-1 py-2 text-center text-xs leading-tight transition-all",
                 config.background === opt.value
@@ -325,6 +331,7 @@ export const ThemeSection = () => {
             <input
               type="color"
               defaultValue="#7c5cbf"
+              aria-label={dict.settings.appearance.background.from}
               onChange={(e) =>
                 setBackground("gradient", { from: e.target.value })
               }
@@ -336,6 +343,7 @@ export const ThemeSection = () => {
             <input
               type="color"
               defaultValue="#5e81ac"
+              aria-label={dict.settings.appearance.background.to}
               onChange={(e) =>
                 setBackground("gradient", { to: e.target.value })
               }

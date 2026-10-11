@@ -13,7 +13,12 @@ import { Calendar, FilterIcon } from "lucide-react";
 const sessionStorageCache = createInfiniteHitsSessionStorageCache();
 
 import { Separator } from "@courseweb/ui";
-import { Drawer, DrawerContent, DrawerTrigger } from "@courseweb/ui";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@courseweb/ui";
 import { Button } from "@courseweb/ui";
 import { lastSemester } from "@courseweb/shared";
 import useDictionary from "@/dictionaries/useDictionary";
@@ -210,6 +215,9 @@ const CourseSearchContainer = (props: CourseSearchContainerProps) => {
                   <FilterDrawerTrigger />
                 </DrawerTrigger>
                 <DrawerContent>
+                  <DrawerTitle className="sr-only">
+                    {dict.planner.coursePicker.filters}
+                  </DrawerTitle>
                   <ScrollArea className="w-full max-h-[90vh] overflow-auto">
                     <div className="flex flex-row justify-end px-4 py-2 w-full">
                       <ResetFiltersButton />
@@ -234,6 +242,9 @@ const CourseSearchContainer = (props: CourseSearchContainerProps) => {
                   </Button>
                 </DrawerTrigger>
                 <DrawerContent>
+                  <DrawerTitle className="sr-only">
+                    {dict.planner.coursePicker.takenCourses}
+                  </DrawerTitle>
                   <ScrollArea className="w-full max-h-[80vh] overflow-auto p-2">
                     <TakenCoursesPanel
                       items={props.items}

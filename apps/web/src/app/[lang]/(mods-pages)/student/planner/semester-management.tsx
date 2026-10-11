@@ -400,6 +400,9 @@ export function SemesterManagement({
                     </div>
                     <div className="flex items-center gap-2">
                       <Switch
+                        aria-label={
+                          dict.planner.semesterManagement.activeSwitchLabel
+                        }
                         checked={semester.isActive}
                         onCheckedChange={() => handleToggleActive(semester)}
                       />
@@ -746,6 +749,9 @@ export function SemesterManagement({
                     <div className="flex items-center gap-2">
                       <Switch
                         id="semester-active"
+                        aria-label={
+                          dict.planner.semesterManagement.activeSwitchLabel
+                        }
                         checked={watch("isActive")}
                         onCheckedChange={(checked) =>
                           setValue("isActive", checked)

@@ -1,6 +1,7 @@
 const FullLogo = () => {
   return (
     <svg
+      aria-hidden="true"
       width="145"
       height="19"
       viewBox="0 0 168 22"

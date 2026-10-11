@@ -124,10 +124,13 @@ const CommandPalette = () => {
             <Search className="h-4 w-4 text-muted-foreground shrink-0" />
             <Command.Input
               autoFocus
+              aria-label={labels.placeholder}
               placeholder={labels.placeholder}
               className="flex-1 bg-transparent outline-none text-sm placeholder:text-muted-foreground"
             />
             <button
+              type="button"
+              aria-label={labels.close}
               onClick={() => setOpen(false)}
               className="text-muted-foreground hover:text-foreground transition-colors"
             >

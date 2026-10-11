@@ -1,4 +1,4 @@
-import { Dialog, DialogContent } from "@courseweb/ui";
+import { Dialog, DialogContent, DialogTitle } from "@courseweb/ui";
 import { toast } from "@courseweb/ui";
 import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -43,6 +43,7 @@ export default function AuthCallback() {
   return (
     <Dialog open={true}>
       <DialogContent className="sm:max-w-md">
+        <DialogTitle className="sr-only">{dict.auth.logging_in}</DialogTitle>
         <div className="flex flex-col items-center justify-center p-6 space-y-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <h2 className="text-xl font-semibold tracking-tight">

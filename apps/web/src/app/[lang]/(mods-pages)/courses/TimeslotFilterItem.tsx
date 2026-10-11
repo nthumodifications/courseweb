@@ -169,7 +169,12 @@ const TimeslotFilterItem = ({
         </Select>
 
         <div>
-          <Button variant="outline" size="icon" onClick={clear}>
+          <Button
+            variant="outline"
+            size="icon"
+            aria-label={dict.a11y.clear}
+            onClick={clear}
+          >
             <Trash size="16" />
           </Button>
         </div>

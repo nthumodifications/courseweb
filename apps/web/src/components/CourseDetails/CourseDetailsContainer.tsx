@@ -985,6 +985,7 @@ const CourseDetailContainer = ({
                           <Button
                             variant="ghost"
                             size="icon"
+                            aria-label={dict.a11y.view_course_details}
                             onClick={() => openCourse(m.raw_id)}
                           >
                             <ArrowRight size={16} />

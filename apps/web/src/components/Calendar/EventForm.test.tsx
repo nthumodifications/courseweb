@@ -67,6 +67,19 @@ const installDom = (activeDom: JSDOM) => {
   });
 };
 
+const waitFor = async (
+  predicate: () => boolean,
+  timeoutMs = 2000,
+): Promise<void> => {
+  const deadline = Date.now() + timeoutMs;
+  while (!predicate()) {
+    if (Date.now() >= deadline) {
+      throw new Error("Timed out waiting for the condition");
+    }
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+};
+
 const restoreGlobals = () => {
   if (!previousGlobals) return;
   const globalObject = globalThis as Record<string, unknown>;
@@ -155,10 +168,9 @@ describe("calendar event repeat date", () => {
 
     await act(async () => {
       repeatDateTrigger?.click();
-    });
-    await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
+    await waitFor(() => document.querySelector('[role="grid"]') !== null);
 
     const calendar = document.querySelector<HTMLElement>('[role="grid"]');
     if (!calendar) throw new Error(document.body.innerHTML);

@@ -325,6 +325,7 @@ const PrerequisiteGraph = ({
   const renderNarrowConnector = (key: string) => (
     <div key={key} className="relative h-6 w-full" aria-hidden="true">
       <svg
+        aria-hidden="true"
         className="absolute top-1/2 h-5 w-[6px] -translate-x-1/2 -translate-y-1/2 text-border"
         style={{ left: narrowAnchorCenter ?? "50%" }}
         viewBox="0 0 6 20"

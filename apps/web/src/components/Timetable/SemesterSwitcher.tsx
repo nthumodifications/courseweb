@@ -32,14 +32,26 @@ const SemesterSwitcher = ({
 
   return (
     <div className="flex flex-row items-center justify-center gap-4 px-4 py-2 w-full">
-      <Button variant="ghost" size="icon" disabled={!hasPrev} onClick={goPrev}>
+      <Button
+        variant="ghost"
+        size="icon"
+        aria-label={dict.calendar.accessibility.previous_period}
+        disabled={!hasPrev}
+        onClick={goPrev}
+      >
         <ChevronLeft />
       </Button>
       <span className="text-lg font-bold">
         {rocYear(semesterObj.year)}-{semesterObj.semester}{" "}
         {dict.timetable.semester_suffix}
       </span>
-      <Button variant="ghost" size="icon" disabled={!hasNext} onClick={goNext}>
+      <Button
+        variant="ghost"
+        size="icon"
+        aria-label={dict.calendar.accessibility.next_period}
+        disabled={!hasNext}
+        onClick={goNext}
+      >
         <ChevronRight />
       </Button>
     </div>

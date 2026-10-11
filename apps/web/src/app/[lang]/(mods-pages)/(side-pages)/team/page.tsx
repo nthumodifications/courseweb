@@ -59,7 +59,11 @@ const Team = () => {
                   <div className="flex flex-row gap-2">
                     {member.link && (
                       <Button asChild variant="ghost" size="icon">
-                        <a href={`${member.link}`} target="_blank">
+                        <a
+                          href={`${member.link}`}
+                          target="_blank"
+                          aria-label={dict.team.personal_link}
+                        >
                           <Link2 />
                         </a>
                       </Button>
@@ -69,6 +73,7 @@ const Team = () => {
                         <a
                           href={`https://github.com/${member.github}`}
                           target="_blank"
+                          aria-label={dict.team.github_profile}
                         >
                           <Github />
                         </a>
@@ -79,6 +84,7 @@ const Team = () => {
                         <a
                           href={`https://linkedin.com/in/${member.linkedin}`}
                           target="_blank"
+                          aria-label={dict.team.linkedin_profile}
                         >
                           <LinkedinIcon />
                         </a>
@@ -108,21 +114,30 @@ const Team = () => {
                   <div className="flex flex-row gap-2">
                     {member.link && (
                       <Button asChild variant="ghost" size="icon">
-                        <a href={`${member.link}`}>
+                        <a
+                          href={`${member.link}`}
+                          aria-label={dict.team.personal_link}
+                        >
                           <Link2 />
                         </a>
                       </Button>
                     )}
                     {member.github && (
                       <Button asChild variant="ghost" size="icon">
-                        <a href={`https://github.com/${member.github}`}>
+                        <a
+                          href={`https://github.com/${member.github}`}
+                          aria-label={dict.team.github_profile}
+                        >
                           <Github />
                         </a>
                       </Button>
                     )}
                     {member.linkedin && (
                       <Button asChild variant="ghost" size="icon">
-                        <a href={`https://linkedin.com/in/${member.linkedin}`}>
+                        <a
+                          href={`https://linkedin.com/in/${member.linkedin}`}
+                          aria-label={dict.team.linkedin_profile}
+                        >
                           <LinkedinIcon />
                         </a>
                       </Button>
