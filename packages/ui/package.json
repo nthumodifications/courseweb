@@ -2,6 +2,7 @@
   "name": "@courseweb/ui",
   "version": "0.0.0",
   "private": true,
+  "sideEffects": false,
   "description": "Shared React UI components for CoursWeb applications",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",

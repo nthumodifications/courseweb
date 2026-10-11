@@ -1,11 +1,12 @@
 import { Outlet, useParams } from "react-router-dom";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import ModsError from "@/app/[lang]/(mods-pages)/error";
 import { SidebarProvider, SidebarInset } from "@courseweb/ui";
 import { CalendarProvider } from "@/components/Calendar/calendar_hook";
 import { HeaderPortalProvider } from "@/components/Portal/HeaderPortal";
-import { ChatProvider, ChatContainer, ChatFAB } from "@/components/Chat";
+import { ChatProvider, useChatContext } from "@/components/Chat/ChatProvider";
+import { ChatFAB } from "@/components/Chat/ChatFAB";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
@@ -21,6 +22,30 @@ import useDictionary from "@/dictionaries/useDictionary";
 const WhatsNewDialogDynamic = lazy(
   () => import("@/components/Changelog/WhatsNewDialog"),
 );
+
+const ChatContainerDynamic = lazy(() =>
+  import("@/components/Chat/ChatContainer").then((module) => ({
+    default: module.ChatContainer,
+  })),
+);
+
+const ChatContainerWhenOpen = () => {
+  const { isOpen } = useChatContext();
+  // Load on first open, then stay mounted so closing keeps the conversation.
+  const [hasOpened, setHasOpened] = useState(isOpen);
+
+  useEffect(() => {
+    if (isOpen) setHasOpened(true);
+  }, [isOpen]);
+
+  if (!hasOpened) return null;
+
+  return (
+    <Suspense fallback={null}>
+      <ChatContainerDynamic />
+    </Suspense>
+  );
+};
 
 const MainLayout = () => {
   const { lang } = useParams<{ lang: string }>();
@@ -60,7 +85,7 @@ const MainLayout = () => {
                 </div>
               </SidebarInset>
               <BottomNav />
-              <ChatContainer />
+              <ChatContainerWhenOpen />
               <ChatFAB />
               <CommandPalette />
               <CustomCSSInjector />

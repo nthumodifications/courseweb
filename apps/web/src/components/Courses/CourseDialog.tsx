@@ -7,6 +7,8 @@ import {
   useEffect,
   useRef,
   useMemo,
+  lazy,
+  Suspense,
   PropsWithChildren,
 } from "react";
 import { useLocation } from "react-router-dom";
@@ -19,7 +21,6 @@ import {
   ScrollArea,
 } from "@courseweb/ui";
 import { ExternalLink } from "lucide-react";
-import CourseDetailContainer from "@/components/CourseDetails/CourseDetailsContainer";
 import { Language } from "@/types/settings";
 import { useSettings } from "@/hooks/contexts/settings";
 import useDictionary from "@/dictionaries/useDictionary";
@@ -30,6 +31,10 @@ interface CourseDialogContextValue {
 
 const CourseDialogContext = createContext<CourseDialogContextValue | null>(
   null,
+);
+
+const CourseDetailContainerDynamic = lazy(
+  () => import("@/components/CourseDetails/CourseDetailsContainer"),
 );
 
 /**
@@ -117,11 +122,13 @@ export const CourseDialogProvider: FC<PropsWithChildren> = ({ children }) => {
             <Separator />
             <ScrollArea className="h-[80vh]">
               <div className="px-4 py-2 lg:px-8 lg:py-4">
-                <CourseDetailContainer
-                  lang={language as Language}
-                  courseId={courseId}
-                  modal={true}
-                />
+                <Suspense fallback={null}>
+                  <CourseDetailContainerDynamic
+                    lang={language as Language}
+                    courseId={courseId}
+                    modal={true}
+                  />
+                </Suspense>
               </div>
             </ScrollArea>
           </DialogContent>
