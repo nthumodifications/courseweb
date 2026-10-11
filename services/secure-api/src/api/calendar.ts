@@ -28,6 +28,28 @@ const publicCalendarUrl = (c: any, userId: string, token: string) => {
   return url.toString();
 };
 
+const getEtag = async (body: string) => {
+  // Weak because DTSTAMP is excluded so unchanged timetable identity stays stable.
+  const identity = body.replace(/^DTSTAMP:[^\r\n]*\r\n/gm, "");
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(identity),
+  );
+  const hex = Array.from(new Uint8Array(digest), (byte) =>
+    byte.toString(16).padStart(2, "0"),
+  ).join("");
+  return `W/"${hex}"`;
+};
+
+const matchesIfNoneMatch = (value: string | undefined, etag: string) =>
+  value?.split(",").some((candidate) => {
+    const trimmed = candidate.trim();
+    return (
+      trimmed === "*" ||
+      trimmed.replace(/^W\//i, "") === etag.replace(/^W\//i, "")
+    );
+  }) ?? false;
+
 const app = new Hono()
   .get("/share-tokens", lazyRequireAuth(["calendar"]), async (c) => {
     const tokens = await prisma.calendarShareToken.findMany({
@@ -124,7 +146,8 @@ const app = new Hono()
     },
   )
   // Public endpoint for accessing calendar via dedicated share token
-  .get(
+  .on(
+    ["GET", "HEAD"],
     "/ics/:userId",
     zValidator(
       "param",
@@ -181,12 +204,19 @@ const app = new Hono()
         const calendar = await createICalendar(userId, includeFullDetails, c);
 
         // Set proper content type for iCalendar file
-        c.header("Content-Type", "text/calendar");
+        c.header("Content-Type", "text/calendar; charset=utf-8");
         c.header(
           "Content-Disposition",
-          `attachment; filename=${userId}_calendar.ics`,
+          `attachment; filename=${encodeURIComponent(userId)}_calendar.ics`,
         );
-        c.header("Cache-Control", "private, max-age=3600"); // Cache for 1 hour
+        c.header("Cache-Control", "private, max-age=300");
+        c.header("Vary", "Accept-Encoding");
+        const etag = await getEtag(calendar);
+        c.header("ETag", etag);
+        const ifNoneMatch = c.req.header("If-None-Match");
+        if (matchesIfNoneMatch(ifNoneMatch, etag)) {
+          return new Response(null, { status: 304, headers: c.res.headers });
+        }
 
         return c.body(calendar);
       } catch (error) {

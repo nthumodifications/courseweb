@@ -6,6 +6,7 @@ import {
   afterAll,
   beforeEach,
   mock,
+  setSystemTime,
 } from "bun:test";
 import {
   mockPrismaClient,
@@ -235,11 +236,205 @@ describe("Calendar API", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(response.headers.get("Content-Type")).toContain("text/calendar");
+    expect(response.headers.get("Content-Type")).toBe(
+      "text/calendar; charset=utf-8",
+    );
+    expect(response.headers.get("Content-Disposition")).toBe(
+      "attachment; filename=test-user-id_calendar.ics",
+    );
+    expect(response.headers.get("Cache-Control")).toBe("private, max-age=300");
+    expect(response.headers.get("Vary")).toBe("Accept-Encoding");
+    const etag = response.headers.get("ETag");
+    expect(etag).toMatch(/^W\/"[0-9a-f]{64}"$/);
     const normalizeGeneratedIds = (body: string) =>
       body.replaceAll(/UID:[^\r\n]+/g, "UID:<generated>");
-    expect(normalizeGeneratedIds(await response.text())).toBe(
+    const body = await response.text();
+    expect(normalizeGeneratedIds(body)).toBe(
       normalizeGeneratedIds(expectedBody),
     );
+
+    mockCalendarShareFindUnique.mockResolvedValue({
+      id: "share-id",
+      revokedAt: null,
+      expiresAt: null,
+      includeFullDetails: false,
+      user: { userId: "test-user-id" },
+    });
+    mockCalendarShareUpdate.mockResolvedValue({});
+    const head = await calendarHandler.request(
+      "http://test/ics/test-user-id?token=share-token",
+      { method: "HEAD" },
+    );
+    expect(head.status).toBe(200);
+    expect(await head.text()).toBe("");
   });
+
+  test("keeps unchanged secure feed ETags stable across different DTSTAMP values", async () => {
+    setSystemTime(new Date("2026-10-09T12:00:00Z"));
+    try {
+      const url = "http://test/ics/test-user-id?token=share-token";
+      const getFeed = async () => {
+        mockCalendarShareFindUnique.mockResolvedValueOnce({
+          id: "share-id",
+          revokedAt: null,
+          expiresAt: null,
+          includeFullDetails: false,
+          user: { userId: "test-user-id" },
+        });
+        mockCalendarShareUpdate.mockResolvedValueOnce({});
+        return calendarHandler.request(url);
+      };
+
+      const first = await getFeed();
+      const firstBody = await first.text();
+      const firstEtag = first.headers.get("ETag");
+
+      setSystemTime(new Date("2026-10-09T12:10:00Z"));
+      const second = await getFeed();
+      const secondBody = await second.text();
+      const secondEtag = second.headers.get("ETag");
+
+      expect(firstBody).not.toBe(secondBody);
+      expect(firstBody.match(/DTSTAMP:[^\r\n]+/)?.[0]).not.toBe(
+        secondBody.match(/DTSTAMP:[^\r\n]+/)?.[0],
+      );
+      expect(firstEtag).toBe(secondEtag);
+
+      mockCalendarShareFindUnique.mockResolvedValueOnce({
+        id: "share-id",
+        revokedAt: null,
+        expiresAt: null,
+        includeFullDetails: false,
+        user: { userId: "test-user-id" },
+      });
+      mockCalendarShareUpdate.mockResolvedValueOnce({});
+      mockFirebaseGet.mockResolvedValueOnce({
+        docs: [
+          {
+            id: "changed-event",
+            data: () => ({
+              title: "Changed event",
+              start: "2026-10-09T01:00:00.000Z",
+              end: "2026-10-09T02:00:00.000Z",
+              actualEnd: "2026-10-09T02:00:00.000Z",
+              allDay: false,
+              repeat: null,
+            }),
+          },
+        ],
+      });
+      const changed = await calendarHandler.request(url);
+      expect(changed.headers.get("ETag")).not.toBe(firstEtag);
+    } finally {
+      setSystemTime();
+    }
+  });
+
+  test.each(["strong", "weak", "list", "wildcard"] as const)(
+    "returns 304 for %s If-None-Match validators",
+    async (kind) => {
+      setSystemTime(new Date("2026-10-09T12:00:00Z"));
+      try {
+        mockCalendarShareFindUnique.mockResolvedValueOnce({
+          id: "share-id",
+          revokedAt: null,
+          expiresAt: null,
+          includeFullDetails: false,
+          user: { userId: "test-user-id" },
+        });
+        mockCalendarShareUpdate.mockResolvedValueOnce({});
+        const url = "http://test/ics/test-user-id?token=share-token";
+        const first = await calendarHandler.request(url);
+        const etag = first.headers.get("ETag")!;
+        const ifNoneMatch = {
+          strong: etag.slice(2),
+          weak: etag,
+          list: `"unrelated", ${etag}`,
+          wildcard: "*",
+        }[kind];
+
+        mockCalendarShareFindUnique.mockResolvedValueOnce({
+          id: "share-id",
+          revokedAt: null,
+          expiresAt: null,
+          includeFullDetails: false,
+          user: { userId: "test-user-id" },
+        });
+        mockCalendarShareUpdate.mockResolvedValueOnce({});
+        const response = await calendarHandler.request(url, {
+          headers: { "If-None-Match": ifNoneMatch },
+        });
+
+        expect(response.status).toBe(304);
+        expect(response.headers.get("ETag")).toBe(etag);
+        expect(await response.text()).toBe("");
+      } finally {
+        setSystemTime();
+      }
+    },
+  );
+
+  test("returns origin/main's exact 200 body for a truly empty feed", async () => {
+    mockCalendarShareFindUnique.mockResolvedValueOnce({
+      id: "share-id",
+      revokedAt: null,
+      expiresAt: null,
+      includeFullDetails: false,
+      user: { userId: "test-user-id" },
+    });
+    mockCalendarShareUpdate.mockResolvedValueOnce({});
+    mockFirebaseGet.mockResolvedValueOnce({ docs: [], empty: true });
+
+    const response = await calendarHandler.request(
+      "http://test/ics/test-user-id?token=share-token",
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.text()).toBe(
+      [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//NTHUMods//Calendar//EN",
+        "CALSCALE:GREGORIAN",
+        "METHOD:PUBLISH",
+        "NAME:Test User's Calendar",
+        "X-WR-CALNAME:Test User's Calendar",
+        "REFRESH-INTERVAL;VALUE=DURATION:PT5M",
+        "X-PUBLISHED-TTL:PT5M",
+        "END:VCALENDAR",
+      ].join("\r\n"),
+    );
+  });
+
+  test.each([
+    ["valid token", "http://test/ics/test-user-id?token=share-token", 200],
+    ["empty calendar", "http://test/ics/test-user-id?token=share-token", 200],
+    ["missing token", "http://test/ics/test-user-id", 400],
+    [
+      "malformed type",
+      "http://test/ics/test-user-id?token=share-token&type=other",
+      400,
+    ],
+    ["bad token", "http://test/ics/test-user-id?token=bad-token", 403],
+  ] as const)(
+    "keeps origin/main status for %s",
+    async (_name, url, expectedStatus) => {
+      mockCalendarShareFindUnique.mockResolvedValue(
+        url.includes("bad-token")
+          ? undefined
+          : {
+              id: "share-id",
+              revokedAt: null,
+              expiresAt: null,
+              includeFullDetails: false,
+              user: { userId: "test-user-id" },
+            },
+      );
+      mockCalendarShareUpdate.mockResolvedValue({});
+
+      const response = await calendarHandler.request(url);
+
+      expect(response.status).toBe(expectedStatus);
+    },
+  );
 });
