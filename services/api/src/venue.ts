@@ -22,6 +22,15 @@ type PeoOccupancyResponse = {
   data: PeoOccupancyItem[];
 };
 
+export function parsePeoOccupancyPayload(
+  payload: unknown,
+): { data: unknown } | null {
+  if (!payload || typeof payload !== "object") return null;
+  const value = payload as Partial<PeoOccupancyResponse>;
+  if (value.status !== 200) return null;
+  return { data: value.data };
+}
+
 const app = new Hono<{ Bindings: Bindings }>()
   // Rate limiting middleware for all venue routes
   .use("*", venueRateLimitMiddleware)
@@ -46,12 +55,13 @@ const app = new Hono<{ Bindings: Bindings }>()
       if (!res.ok) {
         return c.json({ error: "Failed to fetch occupancy data" }, 502);
       }
-      const json = (await res.json()) as PeoOccupancyResponse;
-      if (json.status !== 200) {
+      const parsed = parsePeoOccupancyPayload(await res.json());
+      if (!parsed) {
         return c.json({ error: "Upstream API error" }, 502);
       }
-      return c.json(json.data);
-    } catch {
+      return c.json(parsed.data);
+    } catch (error) {
+      console.error("Failed to fetch occupancy data", error);
       return c.json({ error: "Failed to fetch occupancy data" }, 502);
     }
   })

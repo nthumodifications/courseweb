@@ -119,6 +119,10 @@ interface Course {
 
 const baseUrl = `https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/6/6.2/6.2.9/JH629002.php`;
 
+export function decodeSchoolText(bytes: ArrayBuffer): string {
+  return new TextDecoder("big5").decode(new Uint8Array(bytes));
+}
+
 export const scrapeArchivedCourses = async (env: Env, semester: string) => {
   // Fetch landing page with retry
   const landingPageRes = await retryWithBackoff(
@@ -132,9 +136,7 @@ export const scrapeArchivedCourses = async (env: Env, semester: string) => {
       }
       return response
         .arrayBuffer()
-        .then((arrayBuffer) =>
-          new TextDecoder("big5").decode(new Uint8Array(arrayBuffer)),
-        );
+        .then((arrayBuffer) => decodeSchoolText(arrayBuffer));
     },
     3,
     1000,
@@ -292,9 +294,7 @@ export const scrapeArchivedCourses = async (env: Env, semester: string) => {
         const response = await fetchCourses(department, semester);
         const text = await response
           .arrayBuffer()
-          .then((arrayBuffer) =>
-            new TextDecoder("big5").decode(new Uint8Array(arrayBuffer)),
-          );
+          .then((arrayBuffer) => decodeSchoolText(arrayBuffer));
 
         const doc = parseHTML(text).document;
         const table = Array.from(
@@ -303,12 +303,17 @@ export const scrapeArchivedCourses = async (env: Env, semester: string) => {
           | HTMLTableElement
           | undefined;
 
-        const rows = Array.from(table?.querySelectorAll("tr") ?? []);
+        if (!table) throw new Error("Course table was not found");
+        const rows = Array.from(table.querySelectorAll("tr"));
         const departmentCourses: Course[] = [];
 
         for (let rowIndex = 2; rowIndex < rows.length; rowIndex += 2) {
           const row = rows[rowIndex];
           const cells = row.querySelectorAll("td") as HTMLTableCellElement[];
+
+          if (!rows[rowIndex + 1]) {
+            throw new Error(`Course row ${rowIndex} was incomplete`);
+          }
 
           const course_id = cells[0].textContent?.trim() ?? "";
           if (course_id === "") {
@@ -608,39 +613,51 @@ const downloadPDF = async (env: Env, url: string, c_key: string) => {
     );
 
     console.log(`Successfully uploaded PDF for ${c_key}`);
+    return true;
   } catch (error) {
     console.error(`Failed to download/upload PDF for ${c_key}:`, error);
+    return false;
   }
 };
 
+export function parseSyllabusMarkup(html: string): {
+  brief: string | null;
+  keywords: string | null;
+  content: string | null;
+  pdfHref: string | null;
+} | null {
+  const doc = parseHTML(html).document;
+  const tables = doc.querySelectorAll("table");
+  const briefCell = tables[4]?.querySelector(".class2");
+  const contentCell = tables[5]?.querySelector(".class2");
+  if (!briefCell || !contentCell) return null;
+  const pdfHref = contentCell.textContent?.includes("觀看上傳之檔案(.pdf)")
+    ? (contentCell.querySelector("a")?.getAttribute("href") ?? null)
+    : null;
+  if (contentCell.textContent?.includes("觀看上傳之檔案(.pdf)") && !pdfHref) {
+    return null;
+  }
+  return {
+    brief: briefCell.textContent,
+    keywords: doc.querySelector("p")?.textContent ?? null,
+    content: pdfHref ? null : contentCell.textContent,
+    pdfHref,
+  };
+}
+
 const parseContent = async (env: Env, html: string, c_key: string) => {
   console.log("parsing " + c_key);
-  const doc = parseHTML(html).document;
-  const brief = doc
-    .querySelectorAll("table")[4]
-    ?.querySelector(".class2")?.textContent;
-  const keywords = doc.querySelector("p")?.textContent;
-  let content = null;
-  if (
-    doc
-      .querySelectorAll("table")[5]
-      ?.querySelector(".class2")
-      ?.textContent?.includes("觀看上傳之檔案(.pdf)")
-  ) {
-    const url =
-      "https://www.ccxp.nthu.edu.tw" +
-      doc
-        .querySelectorAll("table")[5]
-        ?.querySelector(".class2 a")
-        ?.getAttribute("href");
-    await downloadPDF(env, url, c_key);
-  } else {
-    content = doc
-      .querySelectorAll("table")[5]
-      ?.querySelector(".class2")?.textContent;
+  const parsed = parseSyllabusMarkup(html);
+  if (!parsed) throw new Error("Syllabus table markup was not found");
+  let content = parsed.content;
+  if (parsed.pdfHref) {
+    const url = "https://www.ccxp.nthu.edu.tw" + parsed.pdfHref;
+    if (!(await downloadPDF(env, url, c_key))) {
+      throw new Error("Syllabus PDF download failed");
+    }
   }
 
-  return { brief, keywords, content };
+  return { brief: parsed.brief, keywords: parsed.keywords, content };
 };
 
 const getAnonACIX = async () => {
@@ -701,7 +718,7 @@ export const scrapeSyllabus = async (
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
         const arrayBuffer = await response.arrayBuffer();
-        return new TextDecoder("big5").decode(new Uint8Array(arrayBuffer));
+        return decodeSchoolText(arrayBuffer);
       },
       3,
       1500,
