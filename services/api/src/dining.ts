@@ -19,18 +19,6 @@ const app = new Hono().get("/", async (c) => {
       return c.json({ error: "Dining service is unavailable" }, 502);
     }
 
-    const body = await upstreamResponse.clone().text();
-    if (!body.trim()) {
-      console.error("Dining API returned an empty body");
-      return c.json({ error: "Dining service is unavailable" }, 502);
-    }
-    try {
-      JSON.parse(body);
-    } catch {
-      console.error("Dining API returned an unparseable body");
-      return c.json({ error: "Dining service is unavailable" }, 502);
-    }
-
     return new Response(upstreamResponse.body, {
       status: upstreamResponse.status,
       headers: {

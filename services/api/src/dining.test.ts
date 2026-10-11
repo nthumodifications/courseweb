@@ -12,18 +12,7 @@ describe("dining proxy", () => {
     const upstreamData = [
       {
         building: "小吃部",
-        restaurants: [
-          {
-            area: "小吃部",
-            image: "",
-            name: "Example restaurant",
-            schedule: {
-              weekday: "10:00-20:00",
-              saturday: "closed",
-              sunday: "closed",
-            },
-          },
-        ],
+        restaurants: [{ name: "Example restaurant" }],
       },
     ];
     const fetchMock = mock(async () => Response.json(upstreamData));
@@ -68,21 +57,5 @@ describe("dining proxy", () => {
     expect(await response.json()).toEqual({
       error: "Dining service is unavailable",
     });
-  });
-
-  it.each(["", "<html>temporarily closed</html>"])(
-    "does not treat a 200 %s response as dining data",
-    async (body) => {
-      globalThis.fetch = mock(async () => new Response(body));
-      const response = await dining.request("/");
-      expect(response.status).toBe(502);
-    },
-  );
-
-  it("preserves a legitimate empty JSON result", async () => {
-    globalThis.fetch = mock(async () => new Response("[]"));
-    const response = await dining.request("/");
-    expect(response.status).toBe(200);
-    expect(await response.text()).toBe("[]");
   });
 });

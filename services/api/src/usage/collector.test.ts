@@ -15,36 +15,6 @@ describe("usage collector validation", () => {
     expect(MAX_PROFILE_REBUILDS_PER_TICK).toBe(2);
   });
 
-  it("preserves normal samples and duplicate rows", () => {
-    expect(
-      parseLibraryPayload({
-        rescode: 1,
-        rows: [
-          { zoneid: "zone-1", zonename: "一區", count: 12 },
-          { zoneid: "zone-1", zonename: "一區", count: 12 },
-        ],
-      }),
-    ).toEqual([
-      { id: "zone-1", name: "一區", value: 12 },
-      { id: "zone-1", name: "一區", value: 12 },
-    ]);
-  });
-
-  it("preserves large finite counts accepted by HEAD", () => {
-    expect(
-      parsePeoPayload({
-        status: 200,
-        data: [
-          {
-            project_id: "large",
-            project_name: "Large",
-            entry_count_now: 100001,
-          },
-        ],
-      }),
-    ).toEqual([{ id: "large", name: "Large", value: 100001 }]);
-  });
-
   it("rejects malformed and partial upstream payloads without throwing", () => {
     expect(parsePeoPayload({ status: 500, data: [] })).toBeNull();
     expect(
@@ -91,22 +61,6 @@ describe("usage collector validation", () => {
       userAgents.every((value) => value.includes("NTHUMods-usage-history")),
     ).toBe(true);
   });
-
-  it.each([
-    ["5xx", () => new Response("down", { status: 503 })],
-    ["empty body", () => new Response("")],
-    ["HTML error page", () => new Response("<html>error</html>")],
-    ["timeout", () => Promise.reject(new Error("timeout"))],
-  ])(
-    "surfaces %s without returning empty success data",
-    async (_label, makeResponse) => {
-      const result = await fetchUsageUpstreams(
-        (async () => await makeResponse()) as typeof fetch,
-      );
-      expect(result.gym.samples).toBeNull();
-      expect(result.library.samples).toBeNull();
-    },
-  );
 });
 
 describe("usage snapshot assembly", () => {

@@ -32,33 +32,41 @@ type WeatherAPIResponse = {
 type WeatherData = {
   date: string;
   weatherData: {
-    MinT: string | undefined;
-    MaxT: string | undefined;
-    PoP12h: string | undefined;
-    Wx: string | undefined;
-    WeatherDescription: string | undefined;
+    MinT: string;
+    MaxT: string;
+    PoP12h: string;
+    Wx: string;
+    WeatherDescription: string;
   };
 }[];
 
-export function parseWeatherResponse(
-  payload: unknown,
-  now = new Date(),
-): WeatherData {
-  const apiResponse = payload as {
-    success?: boolean;
-    result?: unknown;
-    records: WeatherAPIResponse;
-  };
-  if (apiResponse.success === false) {
-    throw new Error("Failed to fetch data " + String(apiResponse.result));
-  }
-  const weatherResponse = apiResponse.records as WeatherAPIResponse;
-  const days = getRangeOfDays(
-    toZonedTime(now, "Asia/Taipei"),
-    toZonedTime(new Date(now.getTime() + 86400000 * 4), "Asia/Taipei"),
+const app = new Hono().get("/", async (c) => {
+  const { CWA_API_KEY } = env<{ CWA_API_KEY: string }>(c);
+
+  const res = await fetch(
+    `https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-D0047-055?Authorization=${CWA_API_KEY}&format=JSON&locationName=%E6%9D%B1%E5%8D%80&elementName=MinT,MaxT,PoP12h,Wx,WeatherDescription`,
   );
 
-  return days.map((day) => {
+  if (!res.ok) {
+    throw new Error("Failed to fetch data " + res.status + (await res.text()));
+  }
+  const apiResponse = (await res.json()) as any;
+  if (apiResponse.success === false) {
+    throw new Error("Failed to fetch data " + apiResponse.result);
+  }
+
+  const weatherResponse = apiResponse.records as WeatherAPIResponse;
+
+  // format data to be simpler
+  // MinT, MaxT, PoP12h, Wx, WeatherDescription
+  //get a range of 5 days starting from today
+  const days = getRangeOfDays(
+    toZonedTime(new Date(), "Asia/Taipei"),
+    toZonedTime(new Date(Date.now() + 86400000 * 4), "Asia/Taipei"),
+  );
+
+  // for each day, get the the MinT, MaxT, PoP12h, Wx, WeatherDescription for the day
+  const weatherData = days.map((day) => {
     const dayElements =
       weatherResponse.Locations[0].Location[0].WeatherElement.map((element) => {
         const data = element.Time.find(
@@ -117,22 +125,7 @@ export function parseWeatherResponse(
       weatherData,
     };
   });
-}
-
-const app = new Hono().get("/", async (c) => {
-  try {
-    const { CWA_API_KEY } = env<{ CWA_API_KEY: string }>(c);
-    const res = await fetch(
-      `https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-D0047-055?Authorization=${CWA_API_KEY}&format=JSON&locationName=%E6%9D%B1%E5%8D%80&elementName=MinT,MaxT,PoP12h,Wx,WeatherDescription`,
-    );
-    if (!res.ok) {
-      throw new Error(`Weather upstream returned HTTP ${res.status}`);
-    }
-    return c.json(parseWeatherResponse(await res.json()));
-  } catch (error) {
-    console.error("Failed to fetch weather data", error);
-    return c.json({ error: "Weather service unavailable" }, 502);
-  }
+  return c.json(weatherData);
 });
 
 export default app;
