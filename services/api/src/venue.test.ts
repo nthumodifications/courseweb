@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it, mock } from "bun:test";
 import venue, { parsePeoOccupancyPayload } from "./venue";
-import { failingFetch, upstreamFailureCases } from "./test-helpers/upstream";
 
 const originalFetch = globalThis.fetch;
 
@@ -76,12 +75,16 @@ describe("venue occupancy proxy", () => {
     expect(parsePeoOccupancyPayload(payload)).toEqual({ data: payload.data });
   });
 
-  it.each(upstreamFailureCases)(
-    "returns 502 for upstream %s",
-    async (_label, makeResult) => {
-      globalThis.fetch = failingFetch(makeResult);
-      const response = await venue.request("/occupancy");
-      expect(response.status).toBe(502);
-    },
-  );
+  it.each([
+    ["5xx", new Response("down", { status: 503 })],
+    ["timeout", new Error("timeout")],
+    ["HTML error page with 200", new Response("<html>error</html>")],
+  ])("returns 502 for upstream %s", async (_label, result) => {
+    globalThis.fetch = mock(async () => {
+      if (result instanceof Error) throw result;
+      return result;
+    }) as unknown as typeof fetch;
+    const response = await venue.request("/occupancy");
+    expect(response.status).toBe(502);
+  });
 });

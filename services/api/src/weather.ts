@@ -3,7 +3,6 @@ import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import { env } from "hono/adapter";
 import { getRangeOfDays } from "./utils/dates";
-import { fetchUpstream } from "./utils/upstream";
 
 type WeatherAPIResponse = {
   Locations: {
@@ -123,9 +122,12 @@ export function parseWeatherResponse(
 const app = new Hono().get("/", async (c) => {
   try {
     const { CWA_API_KEY } = env<{ CWA_API_KEY: string }>(c);
-    const res = await fetchUpstream(
+    const res = await fetch(
       `https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-D0047-055?Authorization=${CWA_API_KEY}&format=JSON&locationName=%E6%9D%B1%E5%8D%80&elementName=MinT,MaxT,PoP12h,Wx,WeatherDescription`,
     );
+    if (!res.ok) {
+      throw new Error(`Weather upstream returned HTTP ${res.status}`);
+    }
     return c.json(parseWeatherResponse(await res.json()));
   } catch (error) {
     console.error("Failed to fetch weather data", error);

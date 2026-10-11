@@ -1,5 +1,4 @@
 import { Hono } from "hono";
-import { fetchUpstream } from "./utils/upstream";
 
 export interface YouBikeStationData {
   id: string;
@@ -129,12 +128,19 @@ const app = new Hono().get("/", async (c) => {
   }
 
   try {
-    const response = await fetchUpstream(YOUBIKE_API_URL, {
+    const response = await fetch(YOUBIKE_API_URL, {
       headers: {
         Accept: "application/json",
       },
       signal: AbortSignal.timeout(YOUBIKE_TIMEOUT_MS),
     });
+
+    if (!response.ok) {
+      console.error(`YouBike API returned ${response.status}`);
+      const staleResponse = await readCachedResponse();
+      if (staleResponse) return staleResponse;
+      return c.json({ error: "YouBike service unavailable" }, 502);
+    }
 
     const campusStations = parseYouBikePayload(await response.json());
     if (!campusStations) {

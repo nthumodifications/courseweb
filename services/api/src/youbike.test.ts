@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, test, mock } from "bun:test";
 import youbike, { parseYouBikePayload } from "./youbike";
-import { failingFetch, upstreamFailureCases } from "./test-helpers/upstream";
 
 const originalFetch = globalThis.fetch;
 const originalCaches = (globalThis as typeof globalThis & { caches?: unknown })
@@ -105,14 +104,19 @@ describe("YouBike upstream parser", () => {
     ).toEqual([expect.objectContaining({ lat: 24.795, lng: 120.993 })]);
   });
 
-  test.each(upstreamFailureCases)(
-    "returns 502 and does not cache %s",
-    async (_label, makeResult) => {
-      globalThis.fetch = failingFetch(makeResult);
-      const response = await youbike.request("/");
-      expect(response.status).toBe(502);
-    },
-  );
+  test.each([
+    ["5xx", new Response("down", { status: 503 })],
+    ["empty body", new Response("")],
+    ["HTML error page with 200", new Response("<html>error</html>")],
+    ["timeout", new Error("timeout")],
+  ])("returns 502 and does not cache %s", async (_label, result) => {
+    globalThis.fetch = mock(async () => {
+      if (result instanceof Error) throw result;
+      return result;
+    }) as unknown as typeof fetch;
+    const response = await youbike.request("/");
+    expect(response.status).toBe(502);
+  });
 
   test("does not serve an invalid old cached snapshot", async () => {
     (globalThis as typeof globalThis & { caches?: unknown }).caches = {

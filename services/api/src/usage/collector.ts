@@ -20,7 +20,6 @@ import type {
   UsageSeries,
   UsageSource,
 } from "./types";
-import { fetchUpstream } from "../utils/upstream";
 
 export const PEO_OCCUPANCY_URL =
   "https://peo178.et.nthu.edu.tw/api/verify/count/report";
@@ -121,14 +120,12 @@ async function fetchJson(
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const response = await fetchUpstream(
-      url,
-      {
-        headers: { Accept: "application/json", "User-Agent": USAGE_USER_AGENT },
-        signal: controller.signal,
-      },
-      { fetcher },
-    );
+    const response = await fetcher(url, {
+      headers: { Accept: "application/json", "User-Agent": USAGE_USER_AGENT },
+      signal: controller.signal,
+    });
+    if (!response.ok)
+      throw new Error(`${url} returned HTTP ${response.status}`);
     const parsed = parse(await response.json());
     if (!parsed) throw new Error(`${url} returned a malformed payload`);
     return parsed;

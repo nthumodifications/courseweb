@@ -50,9 +50,6 @@ mock.module("./config/supabase_server", () => ({
       return { select: () => ({ in: syllabusIn }) };
     },
   }),
-  supabaseWithEnv: () => {
-    throw new Error("supabaseWithEnv is not used in search fallback tests");
-  },
 }));
 
 const { default: fallbackSearch } = await import("./search-fallback");

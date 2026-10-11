@@ -19,9 +19,6 @@ mock.module("./config/supabase_server", () => ({
       select: () => ({ in: inQuery, eq: eqQuery }),
     }),
   }),
-  supabaseWithEnv: () => {
-    throw new Error("supabaseWithEnv is not used in course tests");
-  },
 }));
 
 const { default: course } = await import("./course");

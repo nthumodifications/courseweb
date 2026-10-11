@@ -25,9 +25,6 @@ mock.module("./config/supabase_server", () => ({
       }),
     }),
   }),
-  supabaseWithEnv: () => {
-    throw new Error("supabaseWithEnv is not used in timetable ICS tests");
-  },
 }));
 
 const { default: timetableIcsApp } = await import("./timetable-ics");

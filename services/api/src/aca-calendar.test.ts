@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, mock, test } from "bun:test";
 import app, { parseCalendarPayload } from "./aca-calendar";
-import { failingFetch, upstreamFailureCases } from "./test-helpers/upstream";
 
 const originalFetch = globalThis.fetch;
 const originalCalendarApiKey = process.env.CALENDAR_API_KEY;
@@ -112,15 +111,20 @@ describe("academic calendar overlap filtering", () => {
     expect(requestInit?.signal).toBeInstanceOf(AbortSignal);
   });
 
-  test.each(upstreamFailureCases)(
-    "surfaces upstream %s as 502",
-    async (_label, makeResult) => {
-      process.env.CALENDAR_API_KEY = "test-key";
-      globalThis.fetch = failingFetch(makeResult);
-      const response = await app.request(
-        "/?start=2026-09-14T00:00:00.000Z&end=2026-09-21T00:00:00.000Z",
-      );
-      expect(response.status).toBe(502);
-    },
-  );
+  test.each([
+    ["5xx", new Response("down", { status: 503 })],
+    ["empty body", new Response("")],
+    ["HTML error page with 200", new Response("<html>error</html>")],
+    ["timeout", new Error("timeout")],
+  ])("surfaces upstream %s as 502", async (_label, result) => {
+    process.env.CALENDAR_API_KEY = "test-key";
+    globalThis.fetch = mock(async () => {
+      if (result instanceof Error) throw result;
+      return result;
+    }) as unknown as typeof fetch;
+    const response = await app.request(
+      "/?start=2026-09-14T00:00:00.000Z&end=2026-09-21T00:00:00.000Z",
+    );
+    expect(response.status).toBe(502);
+  });
 });
