@@ -20,8 +20,8 @@ export type CourseDialogHistoryState = {
 export const parseCourseDialogPath = (
   path: string,
 ): CourseDialogView | null => {
-  const url = new URL(path, "http://courseweb.local");
-  const courseMatch = url.pathname.match(/^\/(en|zh)\/courses\/([^/]+)$/);
+  const url = new URL(path, "https://courseweb.local");
+  const courseMatch = /^(?:\/(en|zh)\/courses\/([^/]+))$/.exec(url.pathname);
   if (courseMatch) {
     return {
       type: "course",
@@ -31,8 +31,8 @@ export const parseCourseDialogPath = (
     };
   }
 
-  const instructorMatch = url.pathname.match(
-    /^\/(en|zh)\/courses\/instructor\/([^/]+)$/,
+  const instructorMatch = /^(?:\/(en|zh)\/courses\/instructor\/([^/]+))$/.exec(
+    url.pathname,
   );
   if (instructorMatch) {
     return {
@@ -43,8 +43,8 @@ export const parseCourseDialogPath = (
     };
   }
 
-  const moduleMatch = url.pathname.match(
-    /^\/(en|zh)\/courses\/module\/([^/]+)$/,
+  const moduleMatch = /^(?:\/(en|zh)\/courses\/module\/([^/]+))$/.exec(
+    url.pathname,
   );
   if (moduleMatch) {
     return {

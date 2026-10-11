@@ -29,7 +29,7 @@ const hasDialogState = () => {
 
 const getLocation = () => {
   if (typeof window === "undefined") {
-    throw new Error("Course search routing requires a browser window");
+    throw new TypeError("Course search routing requires a browser window");
   }
 
   const background = dialogBackground();

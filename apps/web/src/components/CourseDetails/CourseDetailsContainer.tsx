@@ -43,8 +43,10 @@ import useDictionary from "@/dictionaries/useDictionary";
 import { useQuery } from "@tanstack/react-query";
 import { lazyWithRetry } from "@/lib/chunk-recovery";
 import CourseDetailsSkeleton from "./CourseDetailsSkeleton";
-import { useCourseLink } from "@/components/Courses/CourseDialog";
-import { CourseDialogLink } from "@/components/Courses/CourseDialog";
+import {
+  CourseDialogLink,
+  useCourseLink,
+} from "@/components/Courses/CourseDialog";
 import { ModuleTermAvailability } from "@/components/Courses/ModuleTermAvailability";
 import { InstructorLink } from "@/components/Courses/InstructorLink";
 import {
@@ -73,9 +75,6 @@ import {
 } from "@/lib/ptt";
 import {
   CourseDetailSection,
-  COURSE_DETAIL_SECTION_IDS,
-  COURSE_DETAIL_DIALOG_EXCLUDED_SECTION_IDS,
-  getCourseDetailDialogSectionIds,
   type CourseDetailSectionId,
 } from "./courseDetailSections";
 
@@ -113,7 +112,7 @@ export {
   COURSE_DETAIL_SECTION_IDS,
   COURSE_DETAIL_DIALOG_EXCLUDED_SECTION_IDS,
   getCourseDetailDialogSectionIds,
-};
+} from "./courseDetailSections";
 
 export const buildCourseProviderJsonLd = (providerAlternateName: string) => ({
   "@type": "EducationalOrganization",

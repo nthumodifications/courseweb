@@ -664,7 +664,7 @@ const assertDialogHistoryStable = async ({
   });
 
   expect(window.location.href).toBe(dialogUrl);
-  expect(window.history.length).toBe(historyLength);
+  expect(window.history).toHaveLength(historyLength);
   if (dialogState) {
     expect(window.history.state?.usr?.dialog).toEqual(dialogState);
     expect(router.state.location.state?.dialog).toEqual(dialogState);
@@ -1146,7 +1146,7 @@ describe("course dialog routing", () => {
     const historyLength = window.history.length;
     await clickText("Change variant");
     await waitForText("Module CS 1010 ?title=Variant+C");
-    expect(window.history.length).toBe(historyLength);
+    expect(window.history).toHaveLength(historyLength);
     expect(router.state.location.state?.dialog).toBeTruthy();
     await act(async () => router.navigate(-1));
     await waitForText("Course 11410-CS 1010 1");

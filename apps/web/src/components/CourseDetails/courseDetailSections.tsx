@@ -26,23 +26,17 @@ export const COURSE_DETAIL_SECTION_REGISTRY = [
 export type CourseDetailSectionId =
   (typeof COURSE_DETAIL_SECTION_REGISTRY)[number]["id"];
 
-// Keep exclusions as objects so a future dialog-only omission must explain why.
-export const COURSE_DETAIL_DIALOG_EXCLUSIONS: readonly {
-  id: CourseDetailSectionId;
-  reason: string;
-}[] = [];
-
 export const COURSE_DETAIL_SECTION_IDS = COURSE_DETAIL_SECTION_REGISTRY.map(
   ({ id }) => id,
 ) as CourseDetailSectionId[];
 
-export const COURSE_DETAIL_DIALOG_EXCLUDED_SECTION_IDS =
-  COURSE_DETAIL_DIALOG_EXCLUSIONS.map(({ id }) => id);
+// Kept as an exported compatibility surface; there are currently no dialog-only exclusions.
+export const COURSE_DETAIL_DIALOG_EXCLUDED_SECTION_IDS: readonly CourseDetailSectionId[] =
+  [];
 
-export const getCourseDetailDialogSectionIds = () =>
-  COURSE_DETAIL_SECTION_REGISTRY.filter(
-    ({ id }) => !COURSE_DETAIL_DIALOG_EXCLUDED_SECTION_IDS.includes(id),
-  ).map(({ id }) => id);
+export const getCourseDetailDialogSectionIds = () => [
+  ...COURSE_DETAIL_SECTION_IDS,
+];
 
 export const isRegisteredCourseDetailSection = (
   id: string,

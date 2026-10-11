@@ -3,7 +3,6 @@ import { ArrowRight } from "lucide-react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
-  Button,
   ErrorState,
   Separator,
   Select,
@@ -330,118 +329,116 @@ export const ModulePageContent = ({
     lang === "en" ? latestOffering.name_en : latestOffering.name_zh;
 
   return (
-    <>
-      <CoursePageState
-        lang={lang}
-        dict={dict}
-        inDialog={inDialog}
-        title={`${pageName} ${module.department} ${module.course} | NTHUMods`}
-        description={`${pageName} (${latestOffering.name_zh}) ${dict.course.module.history}`}
-      >
-        <CoursePageContent inDialog={inDialog}>
-          <div className={contentClass}>
-            {/* Mirrors the course detail header line for line. */}
-            <header className="flex min-w-0 flex-col gap-2">
-              <div className="font-medium text-base">
-                {academicYearRange(selectedVariant.semesters)}{" "}
-                {dict.course.module.academic_years}
-              </div>
-              <div className="font-bold text-xl text-nthu-600">
-                {module.department} {module.course}
-              </div>
-              <h1 className="min-w-0 whitespace-normal font-bold text-xl">
-                {latestOffering.name_zh}
-              </h1>
-              <h2 className="min-w-0 whitespace-normal font-medium">
-                {latestOffering.name_en}
-              </h2>
-              <div className="flex flex-row flex-wrap gap-1 text-sm">
-                <ModuleChip>
-                  {selectedVariant.credits.join(" / ")}{" "}
-                  {dict.course.module.credits_unit}
-                </ModuleChip>
-                <ModuleChip>
-                  {selectedVariant.semesters.length}{" "}
-                  {dict.course.module.semesters_count}
-                </ModuleChip>
-              </div>
-              <ModuleTermAvailability semesters={selectedVariant.semesters} />
-            </header>
+    <CoursePageState
+      lang={lang}
+      dict={dict}
+      inDialog={inDialog}
+      title={`${pageName} ${module.department} ${module.course} | NTHUMods`}
+      description={`${pageName} (${latestOffering.name_zh}) ${dict.course.module.history}`}
+    >
+      <CoursePageContent inDialog={inDialog}>
+        <div className={contentClass}>
+          {/* Mirrors the course detail header line for line. */}
+          <header className="flex min-w-0 flex-col gap-2">
+            <div className="font-medium text-base">
+              {academicYearRange(selectedVariant.semesters)}{" "}
+              {dict.course.module.academic_years}
+            </div>
+            <div className="font-bold text-xl text-nthu-600">
+              {module.department} {module.course}
+            </div>
+            <h1 className="min-w-0 whitespace-normal font-bold text-xl">
+              {latestOffering.name_zh}
+            </h1>
+            <h2 className="min-w-0 whitespace-normal font-medium">
+              {latestOffering.name_en}
+            </h2>
+            <div className="flex flex-row flex-wrap gap-1 text-sm">
+              <ModuleChip>
+                {selectedVariant.credits.join(" / ")}{" "}
+                {dict.course.module.credits_unit}
+              </ModuleChip>
+              <ModuleChip>
+                {selectedVariant.semesters.length}{" "}
+                {dict.course.module.semesters_count}
+              </ModuleChip>
+            </div>
+            <ModuleTermAvailability semesters={selectedVariant.semesters} />
+          </header>
 
-            <VariantPicker
-              module={module}
-              selectedVariant={selectedVariant}
-              lang={lang}
-              dict={dict}
-              onChange={(title) => {
-                const next = new URLSearchParams(searchParams);
-                next.set("title", title);
-                setSelectedInstructor(null);
-                if (inDialog && onDialogSearchChange) {
-                  onDialogSearchChange(next);
-                } else {
-                  setPageSearchParams(next, { replace: true });
-                }
-              }}
-            />
+          <VariantPicker
+            module={module}
+            selectedVariant={selectedVariant}
+            lang={lang}
+            dict={dict}
+            onChange={(title) => {
+              const next = new URLSearchParams(searchParams);
+              next.set("title", title);
+              setSelectedInstructor(null);
+              if (inDialog && onDialogSearchChange) {
+                onDialogSearchChange(next);
+              } else {
+                setPageSearchParams(next, { replace: true });
+              }
+            }}
+          />
 
-            <Separator />
+          <Separator />
 
-            <div className="grid min-w-0 gap-x-10 gap-y-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
-              {/* Phones see the summary first; on desktop it is the side column. */}
-              <aside className="flex min-w-0 flex-col gap-6 lg:order-last lg:sticky lg:top-4 lg:self-start">
-                <ModuleStats variant={selectedVariant} />
-                <ModuleInstructors
-                  variant={selectedVariant}
-                  lang={lang}
-                  selected={selectedInstructor}
-                  onSelect={setSelectedInstructor}
-                />
-              </aside>
-              <div className="flex min-w-0 flex-col gap-6">
-                {prerequisiteOffering &&
-                  parsedPrerequisite &&
-                  prerequisiteGraph &&
-                  (prerequisiteGraph.requirements.length > 0 ||
-                    prerequisiteGraph.unlocks.length > 0) && (
-                    <section
-                      aria-labelledby="module-prerequisites"
-                      className="flex flex-col gap-2"
-                    >
-                      <h2 id="module-prerequisites" className="font-bold">
-                        {dict.course.details.prerequesites}
-                      </h2>
-                      <PrerequisiteBlock
-                        parsed={parsedPrerequisite}
-                        course={prerequisiteOffering}
-                        rows={prerequisiteRows}
-                        lang={lang}
-                        dict={dict}
-                      />
-                      {prerequisitesDiffer && (
-                        <p className="text-sm text-muted-foreground">
-                          {dict.course.details.prerequisite_based_on_offering.replace(
-                            "{semester}",
-                            toPrettySemester(prerequisiteOffering.semester),
-                          )}
-                        </p>
-                      )}
-                    </section>
-                  )}
-                <ModuleBrief variant={selectedVariant} />
-                <ModuleDemand variant={selectedVariant} />
-                <OfferingList
-                  variant={selectedVariant}
-                  lang={lang}
-                  dict={dict}
-                  selectedInstructor={selectedInstructor}
-                />
-              </div>
+          <div className="grid min-w-0 gap-x-10 gap-y-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
+            {/* Phones see the summary first; on desktop it is the side column. */}
+            <aside className="flex min-w-0 flex-col gap-6 lg:order-last lg:sticky lg:top-4 lg:self-start">
+              <ModuleStats variant={selectedVariant} />
+              <ModuleInstructors
+                variant={selectedVariant}
+                lang={lang}
+                selected={selectedInstructor}
+                onSelect={setSelectedInstructor}
+              />
+            </aside>
+            <div className="flex min-w-0 flex-col gap-6">
+              {prerequisiteOffering &&
+                parsedPrerequisite &&
+                prerequisiteGraph &&
+                (prerequisiteGraph.requirements.length > 0 ||
+                  prerequisiteGraph.unlocks.length > 0) && (
+                  <section
+                    aria-labelledby="module-prerequisites"
+                    className="flex flex-col gap-2"
+                  >
+                    <h2 id="module-prerequisites" className="font-bold">
+                      {dict.course.details.prerequesites}
+                    </h2>
+                    <PrerequisiteBlock
+                      parsed={parsedPrerequisite}
+                      course={prerequisiteOffering}
+                      rows={prerequisiteRows}
+                      lang={lang}
+                      dict={dict}
+                    />
+                    {prerequisitesDiffer && (
+                      <p className="text-sm text-muted-foreground">
+                        {dict.course.details.prerequisite_based_on_offering.replace(
+                          "{semester}",
+                          toPrettySemester(prerequisiteOffering.semester),
+                        )}
+                      </p>
+                    )}
+                  </section>
+                )}
+              <ModuleBrief variant={selectedVariant} />
+              <ModuleDemand variant={selectedVariant} />
+              <OfferingList
+                variant={selectedVariant}
+                lang={lang}
+                dict={dict}
+                selectedInstructor={selectedInstructor}
+              />
             </div>
           </div>
-        </CoursePageContent>
-      </CoursePageState>
-    </>
+        </div>
+      </CoursePageContent>
+    </CoursePageState>
   );
 };
 

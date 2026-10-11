@@ -1,4 +1,11 @@
-import { afterEach, describe, expect, mock, test } from "bun:test";
+import {
+  afterEach,
+  describe,
+  expect,
+  mock,
+  setSystemTime,
+  test,
+} from "bun:test";
 import app, { parseCalendarPayload } from "./aca-calendar";
 import { failingFetch, upstreamFailureCases } from "./test-helpers/upstream";
 
@@ -132,57 +139,62 @@ describe("academic calendar overlap filtering", () => {
   });
 
   test("suppresses only Google phases represented by the stored schedule", async () => {
-    process.env.CALENDAR_API_KEY = "test-key";
-    globalThis.fetch = mock(async (input: RequestInfo | URL) =>
-      googleCalendarResponse(new Request(input)),
-    ) as unknown as typeof fetch;
-    const db = {
-      prepare: () => ({
-        bind: () => ({
-          all: async () => ({
-            results: [
-              {
-                data: JSON.stringify({
-                  semester: "11510",
-                  periods: [
-                    {
-                      id: "course-selection:11510:round-1",
-                      semester: "11510",
-                      phase: "round-1",
-                      audience: "unspecified",
-                      startDate: "2026-08-25",
-                      endDate: "2026-08-27",
-                      sourceEventId: "scraped:11510:round-1",
-                      sourceSummary: "第1次選課 115/8/25～115/8/27",
-                    },
-                  ],
-                  metadata: { fetchedAt: "2026-10-09T18:00:00.000Z" },
-                }),
-              },
-            ],
+    setSystemTime(new Date("2026-10-11T03:00:00.000Z"));
+    try {
+      process.env.CALENDAR_API_KEY = "test-key";
+      globalThis.fetch = mock(async (input: RequestInfo | URL) =>
+        googleCalendarResponse(new Request(input)),
+      ) as unknown as typeof fetch;
+      const db = {
+        prepare: () => ({
+          bind: () => ({
+            all: async () => ({
+              results: [
+                {
+                  data: JSON.stringify({
+                    semester: "11510",
+                    periods: [
+                      {
+                        id: "course-selection:11510:round-1",
+                        semester: "11510",
+                        phase: "round-1",
+                        audience: "unspecified",
+                        startDate: "2026-08-25",
+                        endDate: "2026-08-27",
+                        sourceEventId: "scraped:11510:round-1",
+                        sourceSummary: "第1次選課 115/8/25～115/8/27",
+                      },
+                    ],
+                    metadata: { fetchedAt: "2026-10-09T18:00:00.000Z" },
+                  }),
+                },
+              ],
+            }),
           }),
         }),
-      }),
-    };
+      };
 
-    const response = await app.request(
-      "/?start=2026-08-20T00:00:00.000Z&end=2026-09-21T00:00:00.000Z",
-      {},
-      { DB: db, CALENDAR_API_KEY: "test-key" } as never,
-    );
-    const body = await response.json();
+      const response = await app.request(
+        "/?start=2026-08-20T00:00:00.000Z&end=2026-09-21T00:00:00.000Z",
+        {},
+        { DB: db, CALENDAR_API_KEY: "test-key" } as never,
+      );
+      const body = await response.json();
 
-    expect(body).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ id: "straddles-today" }),
-        expect.objectContaining({ id: "scraped:11510:round-1" }),
-      ]),
-    );
-    expect(body).not.toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ id: "google-round-1" }),
-      ]),
-    );
+      expect(body).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ id: "straddles-today" }),
+          expect.objectContaining({ id: "scraped:11510:round-1" }),
+        ]),
+      );
+      expect(body).not.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ id: "google-round-1" }),
+        ]),
+      );
+    } finally {
+      setSystemTime();
+    }
   });
   test("sets a timeout on the Google Calendar request", async () => {
     process.env.CALENDAR_API_KEY = "test-key";

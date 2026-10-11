@@ -51,7 +51,7 @@ describe("course search history routing", () => {
       expect(window.location.pathname).toBe(
         `/${language}/courses/11420PE%20%20206097`,
       );
-      expect(window.history.length).toBe(historyLength);
+      expect(window.history).toHaveLength(historyLength);
 
       window.history.replaceState(
         null,
@@ -62,7 +62,7 @@ describe("course search history routing", () => {
       jest.runAllTimers();
       expect(window.location.pathname).toBe(`/${language}/courses`);
       expect(window.location.search).toContain("discrete");
-      expect(window.history.length).toBe(historyLength + 1);
+      expect(window.history).toHaveLength(historyLength + 1);
     },
   );
 });

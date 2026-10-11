@@ -161,7 +161,7 @@ const resolveLinkPath = (
   location: Pick<Location, "pathname" | "search" | "hash">,
 ) => {
   const target = typeof to === "string" ? to : createPath(to);
-  const base = `http://courseweb.local${locationPath(location)}`;
+  const base = `https://courseweb.local${locationPath(location)}`;
   const resolved = new URL(target, base);
   return `${resolved.pathname}${resolved.search}${resolved.hash}`;
 };
@@ -321,7 +321,8 @@ export const CourseDialogProvider: FC<PropsWithChildren> = ({ children }) => {
     (search: URLSearchParams) => {
       if (!activeView || !state) return;
       const nextSearch = search.toString();
-      const nextPath = `${location.pathname}${nextSearch ? `?${nextSearch}` : ""}${location.hash}`;
+      const nextSearchSuffix = nextSearch ? `?${nextSearch}` : "";
+      const nextPath = `${location.pathname}${nextSearchSuffix}${location.hash}`;
       navigate(nextPath, { replace: true, state: location.state });
     },
     [activeView, location, navigate, state],
@@ -355,6 +356,10 @@ export const CourseDialogProvider: FC<PropsWithChildren> = ({ children }) => {
       replaceDialogSearch,
     }),
     [openCourse, openDialogPath, replaceDialogSearch, resolveDialogPath],
+  );
+  const shellContextValue = useMemo(
+    () => ({ openDialogPath, resolveDialogPath }),
+    [openDialogPath, resolveDialogPath],
   );
 
   const currentIdx = historyIndex();
@@ -412,11 +417,11 @@ export const CourseDialogProvider: FC<PropsWithChildren> = ({ children }) => {
             <ScrollArea className="h-[80vh] [&>div[data-radix-scroll-area-viewport]>div]:!block">
               <div className="min-w-0 max-w-full px-4 py-2 lg:px-8 lg:py-4">
                 <Suspense
-                  fallback={<div role="status">{dict.common.loading}</div>}
+                  fallback={
+                    <output className="block">{dict.common.loading}</output>
+                  }
                 >
-                  <CourseDialogShellContext.Provider
-                    value={{ openDialogPath, resolveDialogPath }}
-                  >
+                  <CourseDialogShellContext.Provider value={shellContextValue}>
                     <DialogView
                       key={activeView.path}
                       view={activeView}
