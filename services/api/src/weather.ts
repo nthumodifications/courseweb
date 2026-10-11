@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import { env } from "hono/adapter";
+import { HTTPException } from "hono/http-exception";
 import { getRangeOfDays } from "./utils/dates";
 import { fetchUpstream } from "./utils/upstream";
 
@@ -129,7 +130,9 @@ const app = new Hono().get("/", async (c) => {
     return c.json(parseWeatherResponse(await res.json()));
   } catch (error) {
     console.error("Failed to fetch weather data", error);
-    return c.json({ error: "Weather service unavailable" }, 502);
+    throw new HTTPException(502, {
+      res: c.json({ error: "Weather service unavailable" }, 502),
+    });
   }
 });
 

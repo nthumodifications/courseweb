@@ -25,11 +25,11 @@ type PeoOccupancyResponse = {
 
 export function parsePeoOccupancyPayload(
   payload: unknown,
-): { data: unknown } | null {
+): { data: PeoOccupancyItem[] } | null {
   if (!payload || typeof payload !== "object") return null;
   const value = payload as Partial<PeoOccupancyResponse>;
   if (value.status !== 200) return null;
-  return { data: value.data };
+  return { data: value.data as PeoOccupancyItem[] };
 }
 
 const app = new Hono<{ Bindings: Bindings }>()
