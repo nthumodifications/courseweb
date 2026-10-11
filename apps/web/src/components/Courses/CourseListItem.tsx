@@ -1,6 +1,6 @@
 import { CourseDefinition, CourseSyllabusView } from "@/config/supabase";
 import useDictionary from "@/dictionaries/useDictionary";
-import { FC, memo, ReactNode } from "react";
+import { FC, Fragment, memo, ReactNode } from "react";
 import CourseTagList from "./CourseTagsList";
 import SelectCourseButton from "./SelectCourseButton";
 import {
@@ -17,6 +17,8 @@ import { sanitizeCourseHtml } from "@/lib/sanitizeHtml";
 import { cleanSyllabusFields } from "@/lib/syllabus-text";
 import { hasTimes } from "@/helpers/courses";
 import { MinimalCourse } from "@/types/courses";
+import { InstructorLink } from "./InstructorLink";
+import { pairInstructorNames } from "@/lib/instructors";
 
 // Memoize the CourseListItem component
 type CourseListItemCourse = CourseDefinition &
@@ -46,6 +48,27 @@ type CourseListItemProps = {
   dimmed?: boolean;
   onCourseClick?: (courseId: string) => void;
 };
+
+const InstructorNames = ({
+  names,
+  identityNames,
+  lang,
+}: {
+  names: readonly string[];
+  identityNames: readonly string[];
+  lang: string;
+}) => (
+  <>
+    {names.map((displayName, index) => (
+      <Fragment key={`${displayName}-${index}`}>
+        {index > 0 ? "," : ""}
+        <InstructorLink lang={lang} name={identityNames[index] ?? ""}>
+          {displayName}
+        </InstructorLink>
+      </Fragment>
+    ))}
+  </>
+);
 
 const CourseListItem: FC<CourseListItemProps> = memo((props) => {
   const {
@@ -82,18 +105,26 @@ const CourseListItem: FC<CourseListItemProps> = memo((props) => {
     setHoverCourse(hovering ? course : null);
   };
 
-  const courseTitle = course
-    ? englishNames === "replace"
-      ? `${course.name_en} - ${course.teacher_en?.join(",")}`
-      : englishNames
-        ? `${course.name_zh} - ${course.teacher_zh.join(",")}`
-        : language === "zh"
-          ? `${course.name_zh} - ${course.teacher_zh.join(",")}`
-          : `${course.name_en} - ${course.teacher_en?.join(",")}`
+  const useEnglishTitle =
+    englishNames === "replace" ||
+    (englishNames !== "add" && englishNames !== "none" && language === "en");
+  const bilingualNames = pairInstructorNames(
+    course?.teacher_zh,
+    course?.teacher_en,
+  );
+  const titleName = course
+    ? useEnglishTitle
+      ? course.name_en
+      : course.name_zh
     : dict.course.details.favourite_unavailable;
-  const englishCourseTitle = course
-    ? `${course.name_en} - ${course.teacher_en?.join(",")}`
-    : undefined;
+  const titleTeachers = course
+    ? useEnglishTitle
+      ? (course.teacher_en ?? [])
+      : course.teacher_zh
+    : [];
+  const titleTeacherIdentities = useEnglishTitle
+    ? bilingualNames.map(({ nameZh }) => nameZh)
+    : titleTeachers;
 
   return (
     <div
@@ -124,29 +155,53 @@ const CourseListItem: FC<CourseListItemProps> = memo((props) => {
               </p>
             )}
           </div>
-          <button
-            className="flex min-w-0 max-w-full flex-row items-start gap-1 text-left font-bold hover:underline cursor-pointer"
-            onClick={() => {
-              if (!courseId) return;
-              if (onCourseClick) {
-                onCourseClick(courseId);
-              } else {
-                openCourse(courseId);
-              }
-            }}
-            onMouseEnter={() => course && handleHover(true)}
-            onMouseLeave={() => course && handleHover(false)}
-          >
-            <span className="min-w-0 whitespace-normal">{courseTitle}</span>
+          <div className="flex min-w-0 max-w-full flex-row items-start text-left">
+            <button
+              className="flex min-w-0 max-w-full flex-row items-start gap-1 text-left font-bold hover:underline cursor-pointer"
+              onClick={() => {
+                if (!courseId) return;
+                if (onCourseClick) {
+                  onCourseClick(courseId);
+                } else {
+                  openCourse(courseId);
+                }
+              }}
+              onMouseEnter={() => course && handleHover(true)}
+              onMouseLeave={() => course && handleHover(false)}
+            >
+              <span className="min-w-0 whitespace-normal">{titleName}</span>
+            </button>
+            {course && titleTeachers.length > 0 && (
+              <span className="font-bold">
+                {" - "}
+                <InstructorNames
+                  names={titleTeachers}
+                  identityNames={titleTeacherIdentities}
+                  lang={language}
+                />
+              </span>
+            )}
             {showChevron && (
               <ChevronRight
                 className="mt-0.5 h-4 w-4 shrink-0"
                 aria-hidden="true"
               />
             )}
-          </button>
-          {englishNames === "add" && englishCourseTitle && (
-            <div className="text-sm">{englishCourseTitle}</div>
+          </div>
+          {englishNames === "add" && course && (
+            <div className="text-sm">
+              {course.name_en}
+              {(course.teacher_en ?? []).length > 0 && (
+                <>
+                  {" - "}
+                  <InstructorNames
+                    names={course.teacher_en ?? []}
+                    identityNames={bilingualNames.map(({ nameZh }) => nameZh)}
+                    lang={language}
+                  />
+                </>
+              )}
+            </div>
           )}
           {course && (
             <>

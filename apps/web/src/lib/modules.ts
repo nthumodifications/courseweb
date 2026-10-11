@@ -232,6 +232,29 @@ const normalizeModuleRow = <
 const normalizeOffering = (row: ModuleOfferingRow): ModuleOffering =>
   normalizeModuleRow(row);
 
+const getInstructorRows = async (name: string, select: string) => {
+  const pageSize = 1000;
+  const rows: unknown[] = [];
+  const supabase = await loadSupabase();
+  const filterValue = `{${serializePostgresArrayElement(name)}}`;
+
+  for (let from = 0; ; from += pageSize) {
+    const { data, error } = await supabase
+      .from("courses")
+      .select(select)
+      .filter("teacher_zh", "cs", filterValue)
+      .order("semester", { ascending: true })
+      .order("raw_id", { ascending: true })
+      .range(from, from + pageSize - 1);
+
+    if (error) throw error;
+    rows.push(...(data ?? []));
+    if ((data?.length ?? 0) < pageSize) break;
+  }
+
+  return rows;
+};
+
 const buildHistory = (offerings: ModuleOffering[]) => {
   const history = new Map<string, ModuleHistory>();
 
@@ -588,29 +611,17 @@ export const getModuleOfferings = async (moduleKey: string) => {
 };
 
 export const getInstructorOfferings = async (name: string) => {
-  const pageSize = 1000;
-  const rows: unknown[] = [];
-  const supabase = await loadSupabase();
-  const filterValue = `{${serializePostgresArrayElement(name)}}`;
-
-  for (let from = 0; ; from += pageSize) {
-    const { data, error } = await supabase
-      .from("courses")
-      .select(MODULE_OFFERING_SELECT)
-      .filter("teacher_zh", "cs", filterValue)
-      .order("semester", { ascending: true })
-      .order("raw_id", { ascending: true })
-      .range(from, from + pageSize - 1);
-
-    if (error) throw error;
-    rows.push(...(data ?? []));
-    if ((data?.length ?? 0) < pageSize) break;
-  }
-
-  return rows
+  return (await getInstructorRows(name, MODULE_OFFERING_SELECT))
     .map((row) => normalizeOffering(row as unknown as ModuleOfferingRow))
     .filter((offering) => getSemesterTerm(offering.semester));
 };
+
+export const getInstructorCourses = async (
+  name: string,
+): Promise<CourseDefinition[]> =>
+  (await getInstructorRows(name, "*"))
+    .map((row) => row as CourseDefinition)
+    .filter((course) => getSemesterTerm(String(course.semester)));
 
 /** Published class averages for these offerings; an empty list on failure. */
 export const getModuleScores = async (

@@ -4,7 +4,12 @@ import { resolve } from "node:path";
 import { CHANGELOG } from "@/const/changelog";
 import { ROUTE_PATHS } from "@/routerPaths";
 import { CHANGELOG_PREVIEW_REGISTRY } from "./previewRegistry";
-import { getHighlightedRelease, shouldShowWhatsNew } from "./changelogLogic";
+import {
+  getHighlightedRelease,
+  hasReleaseActionForHref,
+  isReleaseUnread,
+  shouldShowWhatsNew,
+} from "./changelogLogic";
 
 const matchesRoutePath = (pathname: string, routePath: string) => {
   const pathnameParts = pathname.split("/");
@@ -58,6 +63,46 @@ describe("What's new release selection", () => {
       ).toBe(false);
     }
   });
+
+  test("keeps the indicator tied to onboarding and the last seen version", () => {
+    expect(
+      isReleaseUnread({
+        lastSeenVersion: null,
+        currentVersion: "2026.10.1",
+        hasVisitedBefore: true,
+      }),
+    ).toBe(true);
+    expect(
+      isReleaseUnread({
+        lastSeenVersion: "2026.09.1",
+        currentVersion: "2026.10.1",
+        hasVisitedBefore: true,
+      }),
+    ).toBe(true);
+    expect(
+      isReleaseUnread({
+        lastSeenVersion: "2026.10.1",
+        currentVersion: "2026.10.1",
+        hasVisitedBefore: true,
+      }),
+    ).toBe(false);
+    expect(
+      isReleaseUnread({
+        lastSeenVersion: null,
+        currentVersion: "2026.10.1",
+        hasVisitedBefore: false,
+      }),
+    ).toBe(false);
+  });
+});
+
+test("matches release actions to localized and locale-free links", () => {
+  const release = CHANGELOG[0];
+
+  expect(hasReleaseActionForHref(release, "/bus")).toBe(true);
+  expect(hasReleaseActionForHref(release, "/zh/bus")).toBe(true);
+  expect(hasReleaseActionForHref(release, "/courses/modules")).toBe(true);
+  expect(hasReleaseActionForHref(release, "/settings")).toBe(false);
 });
 
 test("every release visual has a registry entry or public image", () => {

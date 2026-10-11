@@ -24,6 +24,7 @@ import useUpcomingEvents, {
   UpcomingDayGroup,
   UpcomingEvent,
 } from "@/hooks/useUpcomingEvents";
+import CampusBusSuggestion from "./CampusBusSuggestion";
 
 type DaySchedule = {
   day: Date;
@@ -336,6 +337,7 @@ const TodaySchedule: FC = () => {
       {isCoursesEmpty && <NoClassPickedReminder />}
       {renderPinnedApps()}
       <NextUpLine event={nextEvent} />
+      <CampusBusSuggestion events={dashboardEvents} />
       {upcomingEvents.length > 0 && (
         <section className="rounded-lg border border-border p-4">
           <h2 className="mb-2 text-base font-medium">

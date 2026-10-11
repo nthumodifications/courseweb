@@ -3,7 +3,7 @@ import { FC, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSettings } from "@/hooks/contexts/settings";
 import useDictionary from "@/dictionaries/useDictionary";
-import { cn, useSidebar } from "@courseweb/ui";
+import { Badge, cn, useSidebar } from "@courseweb/ui";
 import { useLocalStorage } from "usehooks-ts";
 import {
   DEFAULT_SIDEBAR_NAV_ITEMS,
@@ -11,6 +11,8 @@ import {
   SidebarNavItemId,
 } from "@/app/[lang]/(mods-pages)/settings/SidebarNavSection";
 import { useAdminIdentity } from "@/app/[lang]/admin/api";
+import { hasReleaseActionForHref } from "./Changelog/changelogLogic";
+import { useUnseenRelease } from "./Changelog/useUnseenRelease";
 
 const SideNav: FC = () => {
   const location = useLocation();
@@ -19,6 +21,7 @@ const SideNav: FC = () => {
   const dict = useDictionary();
   const navigate = useNavigate();
   const { setOpenMobile, isMobile } = useSidebar();
+  const unseenRelease = useUnseenRelease();
   const [navItems] = useLocalStorage<SidebarNavItemConfig[]>(
     "sidebar_nav_items",
     DEFAULT_SIDEBAR_NAV_ITEMS,
@@ -89,6 +92,12 @@ const SideNav: FC = () => {
         >
           <span className="w-6 h-6">{link.icon}</span>
           <span className="flex-1 font-medium">{link.title}</span>
+          {unseenRelease &&
+            hasReleaseActionForHref(unseenRelease, link.href) && (
+              <Badge variant="secondary" className="shrink-0">
+                {dict.changelog.new}
+              </Badge>
+            )}
         </button>
       ))}
 

@@ -7,6 +7,7 @@ import {
   type ModuleScore,
   type ScoreSummary,
 } from "@/lib/module-insights";
+import type { CourseDefinition } from "@/config/supabase";
 
 /** The display form for an instructor name, without changing its identity. */
 export const normaliseInstructorName = (value: string) =>
@@ -250,4 +251,41 @@ export const getInstructorGradeHistory = (
     average,
     offerings: publishedOfferings,
   };
+};
+
+export interface InstructorSemesterGroup {
+  semester: string;
+  courses: CourseDefinition[];
+}
+
+const semesterSortValue = (semester: string) => {
+  const match = /^(\d{3})([123])$/.exec(semester);
+  if (!match) return Number.MIN_SAFE_INTEGER;
+
+  return Number(match[1]) * 3 + Number(match[2]);
+};
+
+/** Group exact instructor matches by semester, newest semester first. */
+export const groupInstructorCourses = (
+  courses: readonly CourseDefinition[],
+): InstructorSemesterGroup[] => {
+  const groups = new Map<string, CourseDefinition[]>();
+  for (const course of courses) {
+    const current = groups.get(course.semester) ?? [];
+    current.push(course);
+    groups.set(course.semester, current);
+  }
+
+  return [...groups.entries()]
+    .map(([semester, semesterCourses]) => ({
+      semester,
+      courses: [...semesterCourses].sort((left, right) =>
+        right.raw_id.localeCompare(left.raw_id),
+      ),
+    }))
+    .sort(
+      (left, right) =>
+        semesterSortValue(right.semester) - semesterSortValue(left.semester) ||
+        right.semester.localeCompare(left.semester),
+    );
 };

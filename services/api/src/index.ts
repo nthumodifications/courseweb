@@ -32,6 +32,7 @@ import { D1Database } from "@cloudflare/workers-types";
 import type { ProviderName } from "./ai/llm";
 import usage from "./usage";
 import { syncUsageTick } from "./usage/collector";
+import contributeGrades from "./contribute-grades";
 
 export type Bindings = {
   DB: D1Database;
@@ -56,6 +57,7 @@ export type Bindings = {
   SEARCH_RATE_LIMITER?: RateLimit;
   SHORTLINK_RATE_LIMITER?: RateLimit;
   ISSUE_RATE_LIMITER?: RateLimit;
+  CONTRIBUTE_RATE_LIMITER?: RateLimit;
   TDX_CLIENT_ID?: string;
   TDX_CLIENT_SECRET?: string;
 };
@@ -99,7 +101,8 @@ export const app = new Hono<{ Bindings: Bindings }>()
   .route("/recruit", recruit)
   .route("/dining", dining)
   .route("/youbike", youbike)
-  .route("/usage", usage);
+  .route("/usage", usage)
+  .route("/contribute", contributeGrades);
 
 export default {
   fetch: app.fetch.bind(app),

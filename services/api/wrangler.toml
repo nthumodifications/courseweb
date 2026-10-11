@@ -84,6 +84,14 @@ namespace_id = "1006"
   limit = 5
   period = 60
 
+[[ratelimits]]
+name = "CONTRIBUTE_RATE_LIMITER"
+namespace_id = "1007"
+
+  [ratelimits.simple]
+  limit = 30
+  period = 60
+
 [triggers]
 crons = ["0 2 * * 1", "0 2 * * *", "*/10 * * * *"] # PEO Monday; selection dates daily; usage every 10 minutes
 
