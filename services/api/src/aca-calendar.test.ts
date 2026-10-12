@@ -1,4 +1,11 @@
-import { afterEach, describe, expect, mock, test } from "bun:test";
+import {
+  afterEach,
+  describe,
+  expect,
+  mock,
+  setSystemTime,
+  test,
+} from "bun:test";
 import app, { parseCalendarPayload } from "./aca-calendar";
 import { failingFetch, upstreamFailureCases } from "./test-helpers/upstream";
 
@@ -43,6 +50,7 @@ const googleCalendarResponse = (request: Request) => {
 };
 
 afterEach(() => {
+  setSystemTime();
   globalThis.fetch = originalFetch;
   if (originalCalendarApiKey === undefined) {
     delete process.env.CALENDAR_API_KEY;
@@ -132,6 +140,7 @@ describe("academic calendar overlap filtering", () => {
   });
 
   test("suppresses only Google phases represented by the stored schedule", async () => {
+    setSystemTime(new Date("2026-10-10T00:00:00.000Z"));
     process.env.CALENDAR_API_KEY = "test-key";
     globalThis.fetch = mock(async (input: RequestInfo | URL) =>
       googleCalendarResponse(new Request(input)),
