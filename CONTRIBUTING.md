@@ -9,6 +9,8 @@
 
 穩定性規則：替換舊路徑前，必須刪除被替換的東西，或建立有移除日期的 issue；feature flag 必須有負責人和移除日期；main 保持綠燈，紅燈時先修復；課表、規劃器和收藏等使用者資料路徑，必須有涵蓋舊格式升級的測試。完整規則見 [docs/STABILITY.md](docs/STABILITY.md)。
 
+文件索引：[docs/README.md](docs/README.md)。
+
 ## Before your first change
 
 Use Bun 1.3 or newer, clone the repository, and run:
@@ -138,6 +140,8 @@ Keep the inventory and removal order in [docs/STABILITY.md](docs/STABILITY.md).
   `bun run setup --full`.
 - `services/api` is port 5001, `services/secure-api` is port 5002, and the web
   app is port 5173. Vite chooses another free port when needed.
+- If local Wrangler/Miniflare D1 reports `HashIndex detected hash table inconsistency`
+  or `ECONNRESET` on Windows, rerun with a new temporary `--persist-to` directory.
 - PowerShell, Git Bash, and macOS/Linux are supported for setup. The data-sync
   shell helper is platform-specific: use `run-docker.bat` on Windows or
   `run-docker.sh` on macOS/Linux.
