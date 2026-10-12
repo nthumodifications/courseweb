@@ -33,9 +33,10 @@ const WeatherForecast: FC<WeatherForecastProps> = ({
 }) => (
   <div className="grid min-w-0 grid-cols-4 gap-2">
     {forecasts.map((forecast, index) => {
-      const weatherData = forecast.weatherData;
+      const weatherData = forecast?.weatherData;
       const weekday =
-        formatWeatherWeekday(forecast.date, language) || labels.missingValue;
+        formatWeatherWeekday(forecast?.date ?? "", language) ||
+        labels.missingValue;
       const maxTemperature = weatherData?.MaxT
         ? `${weatherData.MaxT}°`
         : labels.missingValue;
@@ -48,7 +49,7 @@ const WeatherForecast: FC<WeatherForecastProps> = ({
 
       return (
         <div
-          key={`${forecast.date}-${index}`}
+          key={`${forecast?.date ?? "missing"}-${index}`}
           className="flex h-20 min-w-0 flex-col items-center justify-between text-center"
           aria-label={`${weekday}, ${labels.high} ${maxTemperature}, ${labels.low} ${minTemperature}, ${labels.rain} ${rainChance}`}
         >
