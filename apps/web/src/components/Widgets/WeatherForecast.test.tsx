@@ -54,4 +54,22 @@ describe("WeatherForecast markup", () => {
       expect(markup).toContain("—");
     }
   });
+
+  it("does not throw when the API includes an empty forecast row", () => {
+    const markup = renderToStaticMarkup(
+      <WeatherForecast
+        forecasts={[null] as never[]}
+        language="en"
+        labels={{
+          high: en.settings.calendar.widget_dashboard.weather.high,
+          low: en.settings.calendar.widget_dashboard.weather.low,
+          missingValue:
+            en.settings.calendar.widget_dashboard.weather.missing_value,
+          rain: en.settings.calendar.widget_dashboard.weather.rain,
+        }}
+      />,
+    );
+
+    expect(markup).toContain("—");
+  });
 });
