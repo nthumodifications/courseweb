@@ -7,6 +7,8 @@
 密鑰；`bun run doctor` 可以檢查設定。需要 API、登入服務或資料同步時，請先和
 維護者確認權限與資料庫，再執行 `bun run setup --full`。
 
+穩定性規則：替換舊路徑前，必須刪除被替換的東西，或建立有移除日期的 issue；feature flag 必須有負責人和移除日期；main 保持綠燈，紅燈時先修復；課表、規劃器和收藏等使用者資料路徑，必須有涵蓋舊格式升級的測試。完整規則見 [docs/STABILITY.md](docs/STABILITY.md)。
+
 ## Before your first change
 
 Use Bun 1.3 or newer, clone the repository, and run:
@@ -87,6 +89,15 @@ Do not run data-sync against shared infrastructure without an explicit review.
 5. Review the diff, describe the user-visible behavior, and open a PR against
    `main`. Follow the repository's Conventional Commits convention for the PR
    title/commit message.
+
+## Stability rules
+
+- A replacement is not done until the thing it replaces is deleted or has a dated removal issue.
+- Do not add a feature flag without an owner and a removal date.
+- Keep `main` green. Fix a red `main` before anything else merges.
+- User data paths such as timetable, planner, and favourites need a test that covers upgrading from the previous stored format.
+
+Keep the inventory and removal order in [docs/STABILITY.md](docs/STABILITY.md).
 
 ## Announcing a feature in What's New
 
