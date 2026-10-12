@@ -133,18 +133,52 @@ export const mapTriageLabels = (
   );
 };
 
-const sensitivePublicTextPatterns = [
-  /(?<![A-Za-z0-9])\+886[ -]?9\d{2}[ -]?\d{3}[ -]?\d{3}(?![A-Za-z0-9])/g,
-  /(?<![A-Za-z0-9])09\d{2}[ -]?\d{3}[ -]?\d{3}(?![A-Za-z0-9])/g,
-  /(?<![A-Za-z0-9])\d{9}(?![A-Za-z0-9])/g,
-  /[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/g,
-];
+// Matches a local mobile such as 0912-345-678.
+const taiwanMobileLocalPattern =
+  /(?<![A-Za-z0-9])(?:09\d{2}(?:[ .-]?\d{3})[ .-]?\d{3}|\(09\d{2}\)(?:[ .-]?\d{3})[ .-]?\d{3}|09\d{2}\(\d{3}\)[ .-]?\d{3})(?![A-Za-z0-9])/g;
+// Matches an international mobile such as +886 912 345 678.
+const taiwanMobileInternationalPattern =
+  /(?<![A-Za-z0-9])(?:\+886|\(\+886\))(?:[ .-]?9\d{2}|\(9\d{2}\))(?:[ .-]?\d{3})[ .-]?\d{3}(?![A-Za-z0-9])/g;
+// Matches a student ID such as 109062123.
+const studentIdPattern =
+  /(?<![A-Za-z0-9/=#_-])(?:[sSuU])?(?:08\d|09\d|1[01]\d)\d{6}(?![A-Za-z0-9/])/g;
+// Matches an email such as student@example.com.
+const emailPattern = /(?<![A-Za-z0-9])[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/g;
 
-export const redactPublicText = (value: string) =>
-  sensitivePublicTextPatterns.reduce(
-    (result, pattern) => result.replace(pattern, "[redacted]"),
-    value,
+const sensitivePublicTextPattern = new RegExp(
+  [
+    emailPattern,
+    taiwanMobileLocalPattern,
+    taiwanMobileInternationalPattern,
+    studentIdPattern,
+  ]
+    .map((pattern) => pattern.source)
+    .join("|"),
+  "g",
+);
+
+const normalizeFullWidthDigits = (value: string) =>
+  value.replace(/[０-９]/g, (digit) =>
+    String.fromCharCode(
+      digit.charCodeAt(0) - "０".charCodeAt(0) + "0".charCodeAt(0),
+    ),
   );
+
+export const redactPublicText = (value: string) => {
+  const normalizedValue = normalizeFullWidthDigits(value);
+  sensitivePublicTextPattern.lastIndex = 0;
+  // Full-width digits use one UTF-16 code unit each, so normalized indexes splice the original safely.
+  const result: string[] = [];
+  let cursor = 0;
+  let redacted = false;
+  let match: RegExpExecArray | null;
+  while ((match = sensitivePublicTextPattern.exec(normalizedValue)) !== null) {
+    result.push(value.slice(cursor, match.index), "[redacted]");
+    cursor = match.index + match[0].length;
+    redacted = true;
+  }
+  return redacted ? result.concat(value.slice(cursor)).join("") : value;
+};
 
 const diagnosticsSchema = z.object({
   appVersion: z.string().max(MAX_DIAGNOSTIC_TEXT_LENGTH),
@@ -172,17 +206,22 @@ const diagnosticsSchema = z.object({
 type IssueDiagnostics = z.infer<typeof diagnosticsSchema>;
 
 export const sanitizeDiagnosticText = (value: string) =>
-  value
+  redactPublicText(value)
     .replaceAll("`", "'")
     .replaceAll("@", "[at]")
     .slice(0, MAX_DIAGNOSTIC_TEXT_LENGTH);
 
 const sanitizeFeatureFlags = (values: string[] | undefined) =>
-  (values ?? []).filter((value) => LOCAL_FEATURE_FLAGS.has(value));
+  (values ?? [])
+    .map(sanitizeDiagnosticText)
+    .filter((value) => LOCAL_FEATURE_FLAGS.has(value));
 
 const sanitizeClientErrorNames = (values: string[]) => [
   ...new Set(
-    values.map((value) => (CLIENT_ERROR_NAMES.has(value) ? value : "Other")),
+    values.map((value) => {
+      const safeValue = sanitizeDiagnosticText(value);
+      return CLIENT_ERROR_NAMES.has(safeValue) ? safeValue : "Other";
+    }),
   ),
 ];
 

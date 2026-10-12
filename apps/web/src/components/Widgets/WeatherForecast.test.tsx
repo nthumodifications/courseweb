@@ -55,10 +55,10 @@ describe("WeatherForecast markup", () => {
     }
   });
 
-  it("does not throw when the API includes an empty forecast row", () => {
+  it("drops null forecast rows before rendering columns", () => {
     const markup = renderToStaticMarkup(
       <WeatherForecast
-        forecasts={[null] as never[]}
+        forecasts={[forecasts[0], null] as never[]}
         language="en"
         labels={{
           high: en.settings.calendar.widget_dashboard.weather.high,
@@ -70,6 +70,6 @@ describe("WeatherForecast markup", () => {
       />,
     );
 
-    expect(markup).toContain("—");
+    expect(markup.split('class="flex h-20').length - 1).toBe(1);
   });
 });

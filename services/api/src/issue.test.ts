@@ -209,6 +209,46 @@ describe("issue creation abuse controls", () => {
     expect(githubRequest.labels).toEqual(["generic", "bug", "search"]);
   });
 
+  it("redacts client-controlled diagnostics before sanitizing their text", async () => {
+    const diagnostics = {
+      ...issueDiagnostics,
+      appVersion: "student@example.com",
+      buildCommit: "0912.345.678",
+      viewportSize: "s109062123",
+    } as const;
+    const requests = mockGithub();
+    const response = await postIssue(
+      issuePayload({
+        title: "Report student@example.com 0912.345.678 109062123",
+        body: "Contact student@example.com; phone 0912.345.678; id 109062123",
+        diagnostics,
+      }),
+      githubEnv,
+    );
+    const diagnosticsBlock = formatDiagnosticsBlock({
+      ...diagnostics,
+      appVersion: "[redacted]",
+      buildCommit: "[redacted]",
+      viewportSize: "[redacted]",
+    });
+
+    expect(response.status).toBe(200);
+    expect(requests[1]?.init?.body).toBe(
+      JSON.stringify({
+        title: "Report [redacted] [redacted] [redacted]",
+        body: [
+          "Contact [redacted]; phone [redacted]; id [redacted]",
+          "",
+          diagnosticsBlock,
+        ].join("\n"),
+        labels: ["courses"],
+      }),
+    );
+    expect(String(requests[1]?.init?.body)).not.toMatch(
+      /student@example\.com|0912\.345\.678|109062123/,
+    );
+  });
+
   it("derives triage labels from validated report fields, not client labels", async () => {
     const requests = mockGithub();
     await postIssue(
@@ -352,12 +392,36 @@ describe("issue creation abuse controls", () => {
   for (const [value, expected] of [
     ["student@example.com", "[redacted]"],
     ["109062123", "[redacted]"],
+    ["120062123", "120062123"],
+    ["119062123", "[redacted]"],
+    ["080062123", "[redacted]"],
     ["0912345678", "[redacted]"],
     ["0912-345-678", "[redacted]"],
     ["0912 345 678", "[redacted]"],
+    ["甲0912.345.678乙", "甲[redacted]乙"],
+    ["甲0912(345)678乙", "甲[redacted]乙"],
+    ["甲(0912)345-678乙", "甲[redacted]乙"],
     ["+886 912 345 678", "[redacted]"],
     ["+886-912345678", "[redacted]"],
     ["+886-912-345-678", "[redacted]"],
+    ["甲+886.912.345.678乙", "甲[redacted]乙"],
+    ["甲+886(912)345.678乙", "甲[redacted]乙"],
+    ["甲(+886)912-345-678乙", "甲[redacted]乙"],
+    ["學號１０９０６２１２３。", "學號[redacted]。"],
+    ["聯絡０９１２３４５６７８！", "聯絡[redacted]！"],
+    ["s109062123", "[redacted]"],
+    ["S109062123", "[redacted]"],
+    ["u109062123", "[redacted]"],
+    ["學號109062123", "學號[redacted]"],
+    ["id:109062123", "id:[redacted]"],
+    ["123456789", "123456789"],
+    [
+      "https://example.test/109062123/stack",
+      "https://example.test/109062123/stack",
+    ],
+    ["?run=109062123", "?run=109062123"],
+    ["ERR_509062123", "ERR_509062123"],
+    ["1090621234", "1090621234"],
     ["11410CS 135601", "11410CS 135601"],
     ["11410EECS203001", "11410EECS203001"],
     ["11410", "11410"],
@@ -380,6 +444,33 @@ describe("issue creation abuse controls", () => {
       expect(redactPublicText(value)).toBe(expected);
     });
   }
+
+  for (const [value, expected, domain] of [
+    ["s109062123@m109.nthu.edu.tw", "[redacted]", "m109.nthu.edu.tw"],
+    ["S109062123@oz.nthu.edu.tw", "[redacted]", "oz.nthu.edu.tw"],
+    ["109062123@gapp.nthu.edu.tw", "[redacted]", "gapp.nthu.edu.tw"],
+    ["u109062123@nthu.edu.tw", "[redacted]", "nthu.edu.tw"],
+    ["s１０９０６２１２３@m109.nthu.edu.tw", "[redacted]", "m109.nthu.edu.tw"],
+    ["１０９０６２１２３@gapp.nthu.edu.tw", "[redacted]", "gapp.nthu.edu.tw"],
+    ["u１０９０６２１２３@nthu.edu.tw", "[redacted]", "nthu.edu.tw"],
+  ] as const) {
+    it(`redacts the whole NTHU email address: ${value}`, () => {
+      const redacted = redactPublicText(value);
+
+      expect(redacted).toBe(expected);
+      expect(redacted).not.toContain("@");
+      expect(redacted).not.toContain(domain);
+    });
+  }
+
+  it("redacts a long adversarial input in linear time", () => {
+    const value = "x109062123".repeat(1_000);
+    const startedAt = performance.now();
+    const redacted = redactPublicText(value);
+
+    expect(redacted).toBe(value);
+    expect(performance.now() - startedAt).toBeLessThan(1_000);
+  });
 
   it("redacts title and user text while preserving the full diagnostics block", async () => {
     const diagnostics = {
