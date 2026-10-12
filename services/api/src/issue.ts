@@ -29,8 +29,6 @@ const REPORT_AREAS = [
   "bus",
   "other",
 ] as const;
-type ReportLabel =
-  (typeof REPORT_TYPES)[number] | (typeof REPORT_AREAS)[number];
 const REPORT_ROUTE_PATTERNS = [
   "/[lang]/timetable",
   "/[lang]/calendar",
@@ -41,8 +39,52 @@ const REPORT_ROUTE_PATTERNS = [
   "/[lang]/contribute",
   "/[lang]/other",
 ] as const;
-const PROVISIONED_TRIAGE_LABELS = new Set(["bug", "search", "timetable"]);
-const ALLOWED_ISSUE_LABELS = new Set(["generic"]);
+const ALLOWED_ISSUE_LABEL_NAMES = [
+  "bug",
+  "enhancement",
+  "commend",
+  "search",
+  "sync",
+  "timetable",
+  "calendar",
+  "courses",
+  "apps",
+  "ai",
+  "planner",
+  "dashboard",
+  "generic",
+  "needs-info",
+] as const;
+type GithubIssueLabel = (typeof ALLOWED_ISSUE_LABEL_NAMES)[number];
+const ALLOWED_ISSUE_LABELS = new Set<GithubIssueLabel>(
+  ALLOWED_ISSUE_LABEL_NAMES,
+);
+const CLIENT_ISSUE_LABELS = new Set<GithubIssueLabel>(["generic"]);
+const REPORT_TYPE_LABELS: Record<
+  (typeof REPORT_TYPES)[number],
+  GithubIssueLabel
+> = {
+  bug: "bug",
+  "missing-data": "bug",
+  suggestion: "enhancement",
+  praise: "commend",
+};
+const REPORT_AREA_LABELS: Partial<
+  Record<(typeof REPORT_AREAS)[number], GithubIssueLabel>
+> = {
+  timetable: "timetable",
+  search: "search",
+  "sync-login": "sync",
+  bus: "apps",
+};
+const REPORT_ROUTE_LABELS: Partial<
+  Record<(typeof REPORT_ROUTE_PATTERNS)[number], GithubIssueLabel>
+> = {
+  "/[lang]/calendar": "calendar",
+  "/[lang]/courses": "courses",
+  "/[lang]/timetable": "timetable",
+  "/[lang]/bus": "apps",
+};
 const MAX_DIAGNOSTIC_TEXT_LENGTH = 160;
 const MAX_DIAGNOSTIC_FEATURE_FLAGS = 10;
 const MAX_CLIENT_ERROR_NAMES = 8;
@@ -60,19 +102,43 @@ const CLIENT_ERROR_NAMES = new Set([
 ]);
 
 export const filterIssueLabels = (labels: string[]) => [
-  ...new Set(labels.filter((label) => ALLOWED_ISSUE_LABELS.has(label))),
+  ...new Set(
+    labels.filter(
+      (label): label is GithubIssueLabel =>
+        CLIENT_ISSUE_LABELS.has(label as GithubIssueLabel) &&
+        ALLOWED_ISSUE_LABELS.has(label as GithubIssueLabel),
+    ),
+  ),
 ];
 
 export const mapTriageLabels = (
   reportType?: (typeof REPORT_TYPES)[number],
   reportArea?: (typeof REPORT_AREAS)[number],
-) =>
-  [reportType, reportArea].filter(
-    (label): label is ReportLabel =>
-      label !== undefined && PROVISIONED_TRIAGE_LABELS.has(label),
-  );
+  route?: (typeof REPORT_ROUTE_PATTERNS)[number],
+) => {
+  const typeLabel = reportType ? REPORT_TYPE_LABELS[reportType] : undefined;
+  const areaLabel = reportArea ? REPORT_AREA_LABELS[reportArea] : undefined;
+  const routeLabel =
+    !areaLabel &&
+    (reportArea === undefined || reportArea === "other") &&
+    route !== undefined
+      ? REPORT_ROUTE_LABELS[route]
+      : undefined;
 
-const sensitivePublicTextPatterns = [/[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/g];
+  return [typeLabel, areaLabel, routeLabel].filter(
+    (label, index, labels): label is GithubIssueLabel =>
+      label !== undefined &&
+      ALLOWED_ISSUE_LABELS.has(label) &&
+      labels.indexOf(label) === index,
+  );
+};
+
+const sensitivePublicTextPatterns = [
+  /(?<![A-Za-z0-9])\+886[ -]?9\d{2}[ -]?\d{3}[ -]?\d{3}(?![A-Za-z0-9])/g,
+  /(?<![A-Za-z0-9])09\d{2}[ -]?\d{3}[ -]?\d{3}(?![A-Za-z0-9])/g,
+  /(?<![A-Za-z0-9])\d{9}(?![A-Za-z0-9])/g,
+  /[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/g,
+];
 
 export const redactPublicText = (value: string) =>
   sensitivePublicTextPatterns.reduce(
@@ -489,7 +555,7 @@ const app = new Hono<{ Bindings: Bindings }>()
       const repoName = "courseweb";
       const safeLabels = [
         ...filterIssueLabels(labels),
-        ...mapTriageLabels(reportType, reportArea),
+        ...mapTriageLabels(reportType, reportArea, safeDiagnostics?.route),
       ];
       const deduplicatedLabels = [...new Set(safeLabels)];
 

@@ -223,7 +223,7 @@ describe("issue creation abuse controls", () => {
     );
     const githubRequest = JSON.parse(String(requests[1]?.init?.body));
 
-    expect(githubRequest.labels).toEqual(["generic", "search"]);
+    expect(githubRequest.labels).toEqual(["generic", "bug", "search"]);
   });
 
   it("emits only labels provisioned in the GitHub repository", async () => {
@@ -240,7 +240,7 @@ describe("issue creation abuse controls", () => {
     );
     const githubRequest = JSON.parse(String(requests[1]?.init?.body));
 
-    expect(githubRequest.labels).toEqual(["generic"]);
+    expect(githubRequest.labels).toEqual(["generic", "bug", "sync"]);
   });
 
   it("accepts an old client payload and reports no optional fields applied", async () => {
@@ -326,18 +326,83 @@ describe("issue creation abuse controls", () => {
     ]);
   });
 
-  it("maps report type and area to fixed triage labels", () => {
-    expect(mapTriageLabels("bug", "search")).toEqual(["bug", "search"]);
-    expect(mapTriageLabels("missing-data", "sync-login")).toEqual([]);
-    expect(mapTriageLabels()).toEqual([]);
-  });
+  for (const [reportType, reportArea, route, expected] of [
+    ["bug", undefined, undefined, ["bug"]],
+    ["missing-data", undefined, undefined, ["bug"]],
+    ["suggestion", undefined, undefined, ["enhancement"]],
+    ["praise", undefined, undefined, ["commend"]],
+    [undefined, "timetable", undefined, ["timetable"]],
+    [undefined, "search", undefined, ["search"]],
+    [undefined, "sync-login", undefined, ["sync"]],
+    [undefined, "bus", undefined, ["apps"]],
+    [undefined, "other", "/[lang]/calendar", ["calendar"]],
+    [undefined, "other", "/[lang]/courses", ["courses"]],
+    [undefined, "other", "/[lang]/timetable", ["timetable"]],
+    [undefined, "other", "/[lang]/bus", ["apps"]],
+    [undefined, undefined, "/[lang]/calendar", ["calendar"]],
+    ["bug", "other", "/[lang]/timetable", ["bug", "timetable"]],
+    ["bug", "search", "/[lang]/calendar", ["bug", "search"]],
+    [undefined, "other", "/[lang]/account", []],
+  ] as const) {
+    it(`maps ${reportType ?? "no type"}/${reportArea ?? "no area"}/${route ?? "no route"}`, () => {
+      expect(mapTriageLabels(reportType, reportArea, route)).toEqual(expected);
+    });
+  }
 
-  it("redacts emails but preserves non-contact numeric report data", () => {
-    const publicText = redactPublicText(
-      "Contact student@example.com; error code 12345678.",
+  for (const [value, expected] of [
+    ["student@example.com", "[redacted]"],
+    ["109062123", "[redacted]"],
+    ["0912345678", "[redacted]"],
+    ["0912-345-678", "[redacted]"],
+    ["0912 345 678", "[redacted]"],
+    ["+886 912 345 678", "[redacted]"],
+    ["+886-912345678", "[redacted]"],
+    ["+886-912-345-678", "[redacted]"],
+    ["11410CS 135601", "11410CS 135601"],
+    ["11410EECS203001", "11410EECS203001"],
+    ["11410", "11410"],
+    [
+      "https://github.com/nthumodifications/courseweb/issues/951",
+      "https://github.com/nthumodifications/courseweb/issues/951",
+    ],
+    ["#951", "#951"],
+    ["2026-10-12T12:34:56.789Z", "2026-10-12T12:34:56.789Z"],
+    ["1728736496789", "1728736496789"],
+    [
+      "0123456789abcdef0123456789abcdef01234567",
+      "0123456789abcdef0123456789abcdef01234567",
+    ],
+    ["1234567", "1234567"],
+    ["1920x1080", "1920x1080"],
+    ["2026.10.11", "2026.10.11"],
+  ] as const) {
+    it(`redacts or preserves ${value}`, () => {
+      expect(redactPublicText(value)).toBe(expected);
+    });
+  }
+
+  it("redacts title and user text while preserving the full diagnostics block", async () => {
+    const diagnostics = {
+      ...issueDiagnostics,
+      appVersion: "2026.10.11",
+      buildCommit: "0123456789abcdef0123456789abcdef01234567",
+      route: "/[lang]/calendar",
+      viewportSize: "1920x1080",
+    } as const;
+    const diagnosticsBlock = formatDiagnosticsBlock(diagnostics);
+    const { githubRequest } = await submitGithubIssue(
+      issuePayload({
+        title: "Report 109062123",
+        body: "Call 0912-345-678; email student@example.com",
+        diagnostics,
+      }),
     );
-    expect(publicText).not.toContain("student@example.com");
-    expect(publicText).toContain("12345678");
+
+    expect(githubRequest.title).toBe("Report [redacted]");
+    expect(githubRequest.body).toBe(
+      ["Call [redacted]; email [redacted]", "", diagnosticsBlock].join("\n"),
+    );
+    expect(githubRequest.labels).toEqual(["calendar"]);
   });
 
   it("uses only the diagnostics allowlist and drops unknown fields", () => {
