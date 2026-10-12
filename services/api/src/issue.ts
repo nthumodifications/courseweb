@@ -133,17 +133,64 @@ export const mapTriageLabels = (
   );
 };
 
+const combinePatternParts = (...parts: RegExp[]) =>
+  new RegExp(parts.map((pattern) => pattern.source).join(""));
+
+const combinePublicTextPatterns = (
+  patterns: readonly RegExp[],
+  includeEndBoundary = true,
+) =>
+  new RegExp(
+    `(?<![A-Za-z0-9])(?:${patterns
+      .map((pattern) => pattern.source)
+      .join("|")})${includeEndBoundary ? "(?![A-Za-z0-9])" : ""}`,
+    "g",
+  );
+
 // Matches a local mobile such as 0912-345-678.
-const taiwanMobileLocalPattern =
-  /(?<![A-Za-z0-9])(?:09\d{2}(?:[ .-]?\d{3})[ .-]?\d{3}|\(09\d{2}\)(?:[ .-]?\d{3})[ .-]?\d{3}|09\d{2}\(\d{3}\)[ .-]?\d{3})(?![A-Za-z0-9])/g;
+const taiwanMobileLocalPlainPattern = /09\d{2}[ .-]?\d{3}[ .-]?\d{3}/;
+const taiwanMobileLocalParenthesizedPrefixPattern =
+  /\(09\d{2}\)[ .-]?\d{3}[ .-]?\d{3}/;
+const taiwanMobileLocalParenthesizedMiddlePattern =
+  /09\d{2}\(\d{3}\)[ .-]?\d{3}/;
+const taiwanMobileLocalPattern = combinePublicTextPatterns([
+  taiwanMobileLocalPlainPattern,
+  taiwanMobileLocalParenthesizedPrefixPattern,
+  taiwanMobileLocalParenthesizedMiddlePattern,
+]);
 // Matches an international mobile such as +886 912 345 678.
-const taiwanMobileInternationalPattern =
-  /(?<![A-Za-z0-9])(?:\+886|\(\+886\))(?:[ .-]?9\d{2}|\(9\d{2}\))(?:[ .-]?\d{3})[ .-]?\d{3}(?![A-Za-z0-9])/g;
+const taiwanMobileInternationalCountryCodePattern = /(?:\+886|\(\+886\))/;
+const taiwanMobileInternationalNumberPattern =
+  /(?:[ .-]?9\d{2}|\(9\d{2}\))[ .-]?\d{3}[ .-]?\d{3}/;
+const taiwanMobileInternationalPattern = combinePublicTextPatterns([
+  combinePatternParts(
+    taiwanMobileInternationalCountryCodePattern,
+    taiwanMobileInternationalNumberPattern,
+  ),
+]);
 // Matches a student ID such as 109062123.
-const studentIdPattern =
-  /(?<![A-Za-z0-9/=#_-])(?:[sSuU])?(?:08\d|09\d|1[01]\d)\d{6}(?![A-Za-z0-9/])/g;
+const studentIdPrefixPattern = /[sSuU]?/;
+const studentIdYearPattern = /(?:08\d|09\d|1[01]\d)/;
+const studentIdNumberPattern = /\d{6}/;
+const studentIdPattern = new RegExp(
+  `(?<![A-Za-z0-9/=#_-])${
+    combinePatternParts(
+      studentIdPrefixPattern,
+      studentIdYearPattern,
+      studentIdNumberPattern,
+    ).source
+  }(?![A-Za-z0-9/])`,
+  "g",
+);
 // Matches an email such as student@example.com.
-const emailPattern = /(?<![A-Za-z0-9])[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/g;
+const emailLocalPartPattern = /(?:[\w+-]+\.)*[\w+-]+/;
+const emailDomainPattern = /(?:[A-Za-z0-9-]+\.)+[A-Za-z]{2,}/;
+const emailPattern = new RegExp(
+  `(?<![A-Za-z0-9.])${
+    combinePatternParts(emailLocalPartPattern, /@/, emailDomainPattern).source
+  }`,
+  "g",
+);
 
 const sensitivePublicTextPattern = new RegExp(
   [
@@ -159,8 +206,8 @@ const sensitivePublicTextPattern = new RegExp(
 
 const normalizeFullWidthDigits = (value: string) =>
   value.replace(/[０-９]/g, (digit) =>
-    String.fromCharCode(
-      digit.charCodeAt(0) - "０".charCodeAt(0) + "0".charCodeAt(0),
+    String.fromCodePoint(
+      digit.codePointAt(0)! - "０".codePointAt(0)! + "0".codePointAt(0)!,
     ),
   );
 

@@ -125,6 +125,99 @@ const submitGithubIssue = async (payload: Record<string, unknown>) => {
   return { response, responsePayload, githubRequest };
 };
 
+const parseTwoColumnCases = (table: string): Array<readonly [string, string]> =>
+  table
+    .trim()
+    .split("\n")
+    .map((row) => {
+      const separator = row.indexOf("|");
+      return [row.slice(0, separator), row.slice(separator + 1)] as const;
+    });
+
+type TriageCase = readonly [
+  Parameters<typeof mapTriageLabels>[0],
+  Parameters<typeof mapTriageLabels>[1],
+  Parameters<typeof mapTriageLabels>[2],
+  readonly string[],
+];
+
+const parseTriageCases = (table: string): TriageCase[] =>
+  table
+    .trim()
+    .split("\n")
+    .map((row) => {
+      const [reportType, reportArea, route, expected] = row.split("|");
+      return [
+        reportType || undefined,
+        reportArea || undefined,
+        route || undefined,
+        expected ? expected.split(",") : [],
+      ] as TriageCase;
+    });
+
+const triageCases = parseTriageCases(`
+bug|||bug
+missing-data|||bug
+suggestion|||enhancement
+praise|||commend
+|timetable||timetable
+|search||search
+|sync-login||sync
+|bus||apps
+|other|/[lang]/calendar|calendar
+|other|/[lang]/courses|courses
+|other|/[lang]/timetable|timetable
+|other|/[lang]/bus|apps
+||/[lang]/calendar|calendar
+bug|other|/[lang]/timetable|bug,timetable
+bug|search|/[lang]/calendar|bug,search
+|other|/[lang]/account|
+`);
+
+const redactionCases = parseTwoColumnCases(`
+student@example.com|[redacted]
+109062123|[redacted]
+120062123|120062123
+119062123|[redacted]
+080062123|[redacted]
+0912345678|[redacted]
+0912-345-678|[redacted]
+0912 345 678|[redacted]
+甲0912.345.678乙|甲[redacted]乙
+甲0912(345)678乙|甲[redacted]乙
+甲(0912)345-678乙|甲[redacted]乙
++886 912 345 678|[redacted]
++886-912345678|[redacted]
++886-912-345-678|[redacted]
+甲+886.912.345.678乙|甲[redacted]乙
+甲+886(912)345.678乙|甲[redacted]乙
+甲(+886)912-345-678乙|甲[redacted]乙
+學號１０９０６２１２３。|學號[redacted]。
+聯絡０９１２３４５６７８！|聯絡[redacted]！
+s109062123|[redacted]
+S109062123|[redacted]
+u109062123|[redacted]
+學號109062123|學號[redacted]
+id:109062123|id:[redacted]
+123456789|123456789
+https://example.test/109062123/stack|https://example.test/109062123/stack
+?run=109062123|?run=109062123
+ERR_509062123|ERR_509062123
+1090621234|1090621234
+11410CS 135601|11410CS 135601
+11410EECS203001|11410EECS203001
+11410|11410
+https://github.com/nthumodifications/courseweb/issues/951|https://github.com/nthumodifications/courseweb/issues/951
+#951|#951
+2026-10-12T12:34:56.789Z|2026-10-12T12:34:56.789Z
+1728736496789|1728736496789
+0123456789abcdef0123456789abcdef01234567|0123456789abcdef0123456789abcdef01234567
+1234567|1234567
+1920x1080|1920x1080
+2026.10.11|2026.10.11
+mail a.b+c@x.co, thanks|mail [redacted], thanks
+`);
+
 describe("issue creation abuse controls", () => {
   it("rejects oversized issue tag filters before GitHub access", async () => {
     const requests = mockGithub();
@@ -366,80 +459,13 @@ describe("issue creation abuse controls", () => {
     ]);
   });
 
-  for (const [reportType, reportArea, route, expected] of [
-    ["bug", undefined, undefined, ["bug"]],
-    ["missing-data", undefined, undefined, ["bug"]],
-    ["suggestion", undefined, undefined, ["enhancement"]],
-    ["praise", undefined, undefined, ["commend"]],
-    [undefined, "timetable", undefined, ["timetable"]],
-    [undefined, "search", undefined, ["search"]],
-    [undefined, "sync-login", undefined, ["sync"]],
-    [undefined, "bus", undefined, ["apps"]],
-    [undefined, "other", "/[lang]/calendar", ["calendar"]],
-    [undefined, "other", "/[lang]/courses", ["courses"]],
-    [undefined, "other", "/[lang]/timetable", ["timetable"]],
-    [undefined, "other", "/[lang]/bus", ["apps"]],
-    [undefined, undefined, "/[lang]/calendar", ["calendar"]],
-    ["bug", "other", "/[lang]/timetable", ["bug", "timetable"]],
-    ["bug", "search", "/[lang]/calendar", ["bug", "search"]],
-    [undefined, "other", "/[lang]/account", []],
-  ] as const) {
+  for (const [reportType, reportArea, route, expected] of triageCases) {
     it(`maps ${reportType ?? "no type"}/${reportArea ?? "no area"}/${route ?? "no route"}`, () => {
       expect(mapTriageLabels(reportType, reportArea, route)).toEqual(expected);
     });
   }
 
-  for (const [value, expected] of [
-    ["student@example.com", "[redacted]"],
-    ["109062123", "[redacted]"],
-    ["120062123", "120062123"],
-    ["119062123", "[redacted]"],
-    ["080062123", "[redacted]"],
-    ["0912345678", "[redacted]"],
-    ["0912-345-678", "[redacted]"],
-    ["0912 345 678", "[redacted]"],
-    ["甲0912.345.678乙", "甲[redacted]乙"],
-    ["甲0912(345)678乙", "甲[redacted]乙"],
-    ["甲(0912)345-678乙", "甲[redacted]乙"],
-    ["+886 912 345 678", "[redacted]"],
-    ["+886-912345678", "[redacted]"],
-    ["+886-912-345-678", "[redacted]"],
-    ["甲+886.912.345.678乙", "甲[redacted]乙"],
-    ["甲+886(912)345.678乙", "甲[redacted]乙"],
-    ["甲(+886)912-345-678乙", "甲[redacted]乙"],
-    ["學號１０９０６２１２３。", "學號[redacted]。"],
-    ["聯絡０９１２３４５６７８！", "聯絡[redacted]！"],
-    ["s109062123", "[redacted]"],
-    ["S109062123", "[redacted]"],
-    ["u109062123", "[redacted]"],
-    ["學號109062123", "學號[redacted]"],
-    ["id:109062123", "id:[redacted]"],
-    ["123456789", "123456789"],
-    [
-      "https://example.test/109062123/stack",
-      "https://example.test/109062123/stack",
-    ],
-    ["?run=109062123", "?run=109062123"],
-    ["ERR_509062123", "ERR_509062123"],
-    ["1090621234", "1090621234"],
-    ["11410CS 135601", "11410CS 135601"],
-    ["11410EECS203001", "11410EECS203001"],
-    ["11410", "11410"],
-    [
-      "https://github.com/nthumodifications/courseweb/issues/951",
-      "https://github.com/nthumodifications/courseweb/issues/951",
-    ],
-    ["#951", "#951"],
-    ["2026-10-12T12:34:56.789Z", "2026-10-12T12:34:56.789Z"],
-    ["1728736496789", "1728736496789"],
-    [
-      "0123456789abcdef0123456789abcdef01234567",
-      "0123456789abcdef0123456789abcdef01234567",
-    ],
-    ["1234567", "1234567"],
-    ["1920x1080", "1920x1080"],
-    ["2026.10.11", "2026.10.11"],
-  ] as const) {
+  for (const [value, expected] of redactionCases) {
     it(`redacts or preserves ${value}`, () => {
       expect(redactPublicText(value)).toBe(expected);
     });
@@ -470,6 +496,16 @@ describe("issue creation abuse controls", () => {
 
     expect(redacted).toBe(value);
     expect(performance.now() - startedAt).toBeLessThan(1_000);
+  });
+
+  it("redacts adversarial email inputs in linear time", () => {
+    for (const value of ["a.".repeat(5_000), `a@${"a.".repeat(10_000)}`]) {
+      const startedAt = performance.now();
+      const redacted = redactPublicText(value);
+
+      expect(redacted).toBe(value);
+      expect(performance.now() - startedAt).toBeLessThan(100);
+    }
   });
 
   it("redacts title and user text while preserving the full diagnostics block", async () => {
