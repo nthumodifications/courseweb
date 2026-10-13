@@ -3,7 +3,11 @@ import { describe, expect, test } from "bun:test";
 import { WebStorageStateStore } from "oidc-client-ts";
 import {
   clearCredentialStorage,
+  consumePostSigninRedirect,
+  readAiSettings,
+  rememberPostSigninRedirect,
   removeLegacyCredentialStorage,
+  writeAiSettings,
 } from "./credentialStorage";
 
 const createStorage = () => {
@@ -35,19 +39,151 @@ describe("credential storage", () => {
     dom.window.close();
   });
 
-  test("keeps the AI key across a fresh page load", () => {
+  test("round-trips a fresh AI key with its save time", () => {
     const dom = createStorage();
     const localStorage = dom.window.localStorage;
-    const sessionStorage = dom.window.sessionStorage;
+    const now = 1_700_000_000_000;
 
-    const aiSettings = JSON.stringify({
+    writeAiSettings(
+      { useCustomKey: true, apiKey: "gemini-key" },
+      localStorage,
+      () => now,
+    );
+
+    expect(readAiSettings(localStorage, () => now)).toEqual({
       useCustomKey: true,
       apiKey: "gemini-key",
+      savedAt: now,
     });
-    localStorage.setItem("ai_settings", aiSettings);
 
-    expect(sessionStorage).toHaveLength(0);
-    expect(localStorage.getItem("ai_settings")).toBe(aiSettings);
+    dom.window.close();
+  });
+
+  test.each([
+    [89, true],
+    [91, false],
+  ])("expires an AI key at %i days", (ageInDays, expectedPresent) => {
+    const dom = createStorage();
+    const localStorage = dom.window.localStorage;
+    const now = 1_700_000_000_000;
+    const savedAt = now - ageInDays * 24 * 60 * 60 * 1000;
+
+    localStorage.setItem(
+      "ai_settings",
+      JSON.stringify({ useCustomKey: true, apiKey: "gemini-key", savedAt }),
+    );
+
+    expect(readAiSettings(localStorage, () => now)).toEqual(
+      expectedPresent
+        ? { useCustomKey: true, apiKey: "gemini-key", savedAt }
+        : null,
+    );
+    if (expectedPresent) {
+      expect(localStorage.getItem("ai_settings")).not.toBeNull();
+    } else {
+      expect(localStorage.getItem("ai_settings")).toBeNull();
+    }
+
+    dom.window.close();
+  });
+
+  test("stamps a legacy AI key on first read", () => {
+    const dom = createStorage();
+    const localStorage = dom.window.localStorage;
+    const now = 1_700_000_000_000;
+    localStorage.setItem(
+      "ai_settings",
+      JSON.stringify({ useCustomKey: true, apiKey: "legacy-key" }),
+    );
+
+    expect(readAiSettings(localStorage, () => now)).toEqual({
+      useCustomKey: true,
+      apiKey: "legacy-key",
+      savedAt: now,
+    });
+    expect(JSON.parse(localStorage.getItem("ai_settings")!)).toEqual({
+      useCustomKey: true,
+      apiKey: "legacy-key",
+      savedAt: now,
+    });
+
+    dom.window.close();
+  });
+
+  test("removes malformed AI settings without throwing", () => {
+    const dom = createStorage();
+    const localStorage = dom.window.localStorage;
+    localStorage.setItem("ai_settings", "not-json");
+
+    expect(() =>
+      readAiSettings(localStorage, () => 1_700_000_000_000),
+    ).not.toThrow();
+    expect(readAiSettings(localStorage, () => 1_700_000_000_000)).toBeNull();
+    expect(localStorage.getItem("ai_settings")).toBeNull();
+
+    dom.window.close();
+  });
+
+  test("removes AI settings with wrong field types", () => {
+    const dom = createStorage();
+    const localStorage = dom.window.localStorage;
+    localStorage.setItem(
+      "ai_settings",
+      JSON.stringify({ useCustomKey: "yes", apiKey: "gemini-key" }),
+    );
+
+    expect(readAiSettings(localStorage, () => 1_700_000_000_000)).toBeNull();
+    expect(localStorage.getItem("ai_settings")).toBeNull();
+
+    dom.window.close();
+  });
+
+  test("does not persist an AI key when custom-key use is disabled", () => {
+    const dom = createStorage();
+    const localStorage = dom.window.localStorage;
+
+    writeAiSettings(
+      { useCustomKey: false, apiKey: "must-not-persist" },
+      localStorage,
+      () => 1_700_000_000_000,
+    );
+
+    expect(JSON.parse(localStorage.getItem("ai_settings")!)).toEqual({
+      useCustomKey: false,
+      savedAt: 1_700_000_000_000,
+    });
+    expect(localStorage.getItem("ai_settings")).not.toContain(
+      "must-not-persist",
+    );
+
+    dom.window.close();
+  });
+
+  test("accepts and consumes only same-origin post-sign-in paths", () => {
+    const dom = createStorage();
+    const localStorage = dom.window.localStorage;
+    const accepted = ["/zh/chat", "/en/student/grades?x=1#y"];
+    const rejected = [
+      "//evil.com",
+      "/\\evil.com",
+      "https://evil.com",
+      "javascript:alert(1)",
+      "",
+      null,
+      "/en/chat\n/evil",
+    ];
+
+    for (const value of accepted) {
+      rememberPostSigninRedirect(value, localStorage);
+      expect(consumePostSigninRedirect(localStorage)).toBe(value);
+      expect(localStorage.getItem("redirectUri")).toBeNull();
+    }
+
+    for (const value of rejected) {
+      rememberPostSigninRedirect(value, localStorage);
+      expect(consumePostSigninRedirect(localStorage)).toBe("/");
+      expect(localStorage.getItem("redirectUri")).toBeNull();
+    }
 
     dom.window.close();
   });

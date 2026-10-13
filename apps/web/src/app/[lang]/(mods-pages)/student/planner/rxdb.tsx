@@ -124,6 +124,31 @@ export type SemesterDocType = ExtractDocumentTypeFromTypedRxJsonSchema<
   typeof semesterSchema
 >;
 
+export const plannerMigrationStrategies = {
+  folders: {
+    1: (oldDoc: any) => oldDoc,
+    2: (oldDoc: any) => oldDoc,
+  },
+  items: {
+    1: (oldDoc: any) => oldDoc,
+    2: (oldDoc: any) => oldDoc,
+  },
+  plannerdata: {
+    1: (oldDoc: any) => {
+      delete oldDoc.updatedAt;
+      delete oldDoc.createdAt;
+      return oldDoc;
+    },
+    2: (oldDoc: any) => oldDoc,
+    3: (oldDoc: any) => oldDoc,
+  },
+  semesters: {
+    1: (oldDoc: any) => oldDoc,
+    2: (oldDoc: any) => oldDoc,
+    3: (oldDoc: any) => oldDoc,
+  },
+} as const;
+
 export const initializeRxDB = async () => {
   if (import.meta.env.DEV) {
     await import("rxdb/plugins/dev-mode").then((m) =>
@@ -149,38 +174,19 @@ export const initializeRxDB = async () => {
   await db.addCollections({
     folders: {
       schema: foldersSchema,
-      migrationStrategies: {
-        1: (oldDoc) => oldDoc,
-        2: (oldDoc) => oldDoc,
-      },
+      migrationStrategies: plannerMigrationStrategies.folders,
     },
     items: {
       schema: itemsSchema,
-      migrationStrategies: {
-        1: (oldDoc) => oldDoc,
-        2: (oldDoc) => oldDoc,
-      },
+      migrationStrategies: plannerMigrationStrategies.items,
     },
     plannerdata: {
       schema: plannerDataSchema,
-      migrationStrategies: {
-        // migrate from v1 → v2
-        1: (oldDoc) => {
-          delete (oldDoc as any).updatedAt;
-          delete (oldDoc as any).createdAt;
-          return oldDoc;
-        },
-        2: (oldDoc) => oldDoc,
-        3: (oldDoc) => oldDoc,
-      },
+      migrationStrategies: plannerMigrationStrategies.plannerdata,
     },
     semesters: {
       schema: semesterSchema,
-      migrationStrategies: {
-        1: (oldDoc) => oldDoc,
-        2: (oldDoc) => oldDoc,
-        3: (oldDoc) => oldDoc,
-      },
+      migrationStrategies: plannerMigrationStrategies.semesters,
     },
   });
 

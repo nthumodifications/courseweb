@@ -10,6 +10,15 @@ export const CREDENTIAL_STORAGE_PREFIXES = ["oidc."] as const;
 
 export const CREDENTIAL_COOKIE_NAMES = ["ACIXSTORE"] as const;
 
+export interface AiSettings {
+  useCustomKey: boolean;
+  apiKey?: string;
+  savedAt: number;
+}
+
+const POST_SIGNIN_REDIRECT_STORAGE_KEY = "redirectUri";
+const AI_SETTINGS_MAX_AGE_MS = 90 * 24 * 60 * 60 * 1000;
+
 type StorageLike = Pick<
   Storage,
   "length" | "key" | "getItem" | "setItem" | "removeItem"
@@ -68,6 +77,150 @@ const removeStorageKey = (storage: StorageLike | undefined, key: string) => {
   } catch {
     // Storage may be unavailable in privacy-restricted contexts.
   }
+};
+
+const readStorageKey = (storage: StorageLike | undefined, key: string) => {
+  try {
+    return storage?.getItem(key) ?? null;
+  } catch {
+    return null;
+  }
+};
+
+const getNow = (clock: () => number): number => {
+  try {
+    const value = clock();
+    return Number.isFinite(value) ? value : Date.now();
+  } catch {
+    return Date.now();
+  }
+};
+
+const parseAiSettings = (
+  value: string | null,
+):
+  | (Omit<AiSettings, "savedAt"> & {
+      savedAt?: number;
+    })
+  | null => {
+  if (!value) return null;
+
+  try {
+    const parsed: unknown = JSON.parse(value);
+    if (!parsed || typeof parsed !== "object") return null;
+
+    const settings = parsed as {
+      useCustomKey?: unknown;
+      apiKey?: unknown;
+      savedAt?: unknown;
+    };
+    if (typeof settings.useCustomKey !== "boolean") return null;
+    if (settings.apiKey !== undefined && typeof settings.apiKey !== "string") {
+      return null;
+    }
+    if (
+      settings.savedAt !== undefined &&
+      typeof settings.savedAt !== "number"
+    ) {
+      return null;
+    }
+
+    return {
+      useCustomKey: settings.useCustomKey,
+      ...(settings.apiKey === undefined ? {} : { apiKey: settings.apiKey }),
+      ...(settings.savedAt === undefined ? {} : { savedAt: settings.savedAt }),
+    };
+  } catch {
+    return null;
+  }
+};
+
+/** Reads the custom AI key and expires or migrates its local record. */
+export const readAiSettings = (
+  storage = getBrowserStorage("localStorage"),
+  clock: () => number = Date.now,
+): AiSettings | null => {
+  const raw = readStorageKey(storage, AI_SETTINGS_STORAGE_KEY);
+  const parsed = parseAiSettings(raw);
+  if (!parsed) {
+    if (raw !== null) removeStorageKey(storage, AI_SETTINGS_STORAGE_KEY);
+    return null;
+  }
+
+  const now = getNow(clock);
+  const savedAt = parsed.savedAt ?? now;
+  if (now - savedAt > AI_SETTINGS_MAX_AGE_MS) {
+    removeStorageKey(storage, AI_SETTINGS_STORAGE_KEY);
+    return null;
+  }
+
+  const settings: AiSettings = {
+    useCustomKey: parsed.useCustomKey,
+    ...(parsed.apiKey === undefined ? {} : { apiKey: parsed.apiKey }),
+    savedAt,
+  };
+  if (parsed.savedAt === undefined) {
+    try {
+      storage?.setItem(AI_SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+    } catch {
+      // Storage may be unavailable in privacy-restricted contexts.
+    }
+  }
+  return settings;
+};
+
+/** Writes only the custom AI setting and its timestamp to local storage. */
+export const writeAiSettings = (
+  settings: { useCustomKey: boolean; apiKey?: string },
+  storage = getBrowserStorage("localStorage"),
+  clock: () => number = Date.now,
+) => {
+  const savedAt = getNow(clock);
+  const stored = {
+    useCustomKey: settings.useCustomKey,
+    ...(settings.useCustomKey && settings.apiKey !== undefined
+      ? { apiKey: settings.apiKey }
+      : {}),
+    savedAt,
+  };
+  try {
+    storage?.setItem(AI_SETTINGS_STORAGE_KEY, JSON.stringify(stored));
+  } catch {
+    // Storage may be unavailable in privacy-restricted contexts.
+  }
+};
+
+const isSafePostSigninRedirect = (value: unknown): value is string => {
+  if (typeof value !== "string" || !value.startsWith("/")) return false;
+  if (value.startsWith("//") || value.startsWith("/\\")) return false;
+  if (value.includes("\\") || /[\u0000-\u001f\u007f]/.test(value)) {
+    return false;
+  }
+  return !/^[a-z][a-z\d+.-]*:/i.test(value);
+};
+
+export const rememberPostSigninRedirect = (
+  value: unknown,
+  storage = getBrowserStorage("localStorage"),
+) => {
+  if (isSafePostSigninRedirect(value)) {
+    try {
+      storage?.setItem(POST_SIGNIN_REDIRECT_STORAGE_KEY, value);
+    } catch {
+      // Storage may be unavailable in privacy-restricted contexts.
+    }
+  } else {
+    removeStorageKey(storage, POST_SIGNIN_REDIRECT_STORAGE_KEY);
+  }
+};
+
+/** Reads and removes the one-shot post-sign-in redirect. */
+export const consumePostSigninRedirect = (
+  storage = getBrowserStorage("localStorage"),
+) => {
+  const value = readStorageKey(storage, POST_SIGNIN_REDIRECT_STORAGE_KEY);
+  removeStorageKey(storage, POST_SIGNIN_REDIRECT_STORAGE_KEY);
+  return isSafePostSigninRedirect(value) ? value : "/";
 };
 
 /** Removes leftovers from the removed proxy-login feature on startup. */

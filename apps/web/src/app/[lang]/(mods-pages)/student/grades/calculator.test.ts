@@ -124,6 +124,37 @@ describe("grade predictor", () => {
     });
   });
 
+  test("drops malformed stored values without dropping valid grade data", () => {
+    expect(
+      normalizeGradebook({
+        entries: [
+          { id: "valid", courseName: "Valid", credits: 3, score: 90 },
+          { id: "bad-score", courseName: "Bad", credits: 3, score: "90" },
+          null,
+          "not an entry",
+        ],
+        semesters: [
+          semesters[0],
+          { id: "bad-semester", name: "Bad", gpa: "3.0", credits: 3 },
+          null,
+        ],
+        baseline: { currentGpa: 3.2, completedCredits: null },
+      }),
+    ).toEqual({
+      entries: [
+        {
+          id: "valid",
+          courseName: "Valid",
+          credits: 3,
+          score: 90,
+          letterGrade: "A+",
+        },
+      ],
+      semesters: [semesters[0]],
+      baseline: { currentGpa: "", completedCredits: "" },
+    });
+  });
+
   test("merges course and semester entries from two signed-in devices", () => {
     expect(
       mergeGradebooks(

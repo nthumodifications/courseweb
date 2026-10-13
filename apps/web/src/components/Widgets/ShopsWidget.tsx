@@ -56,10 +56,9 @@ const ShopsWidget: FC<ShopsWidgetProps> = ({
       ? storedArea
       : "anywhere";
   const { data = [], isLoading, error } = useDining();
-  const today = getTodayKey();
+  const today = getTodayKey(now);
 
   const openShops = useMemo<OpenShop[]>(() => {
-    void now;
     return data
       .flatMap((diningArea) => diningArea.restaurants)
       .filter((shop) => area === "anywhere" || shop.area === area)

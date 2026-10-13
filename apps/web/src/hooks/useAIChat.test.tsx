@@ -50,6 +50,10 @@ const setupDom = () => {
   const dom = new JSDOM("<!doctype html><html><body></body></html>", {
     url: "http://localhost/",
   });
+  const analyticsCalls: unknown[][] = [];
+  Object.defineProperty(dom.window, "gtag", {
+    value: (...args: unknown[]) => analyticsCalls.push(args),
+  });
   Object.assign(globalThis, {
     window: dom.window,
     document: dom.window.document,
@@ -57,7 +61,7 @@ const setupDom = () => {
     localStorage: dom.window.localStorage,
     IS_REACT_ACT_ENVIRONMENT: true,
   });
-  return dom;
+  return { dom, analyticsCalls };
 };
 
 const streamResponse = (...events: Record<string, unknown>[]) =>
@@ -67,7 +71,7 @@ const streamResponse = (...events: Record<string, unknown>[]) =>
   );
 
 const renderChat = async () => {
-  const dom = setupDom();
+  const { dom, analyticsCalls } = setupDom();
   let result: HookResult | undefined;
   const Probe = () => {
     result = useAIChat({ apiEndpoint: "http://localhost/chat" });
@@ -78,7 +82,7 @@ const renderChat = async () => {
   await act(async () => {
     root.render(createElement(Probe));
   });
-  return { getResult: () => result };
+  return { getResult: () => result, analyticsCalls };
 };
 
 const sendMessage = async (
@@ -174,5 +178,22 @@ describe("useAIChat empty completed streams", () => {
     });
     expect(rendered.getResult()?.error).toBeNull();
     expect(rendered.getResult()?.chatError).toBeNull();
+  });
+
+  test("does not send AI error text to analytics", async () => {
+    installFetch(async () =>
+      streamResponse({
+        type: "error",
+        code: "auth",
+        data: { error: "secret-like-api-key" },
+      }),
+    );
+    const rendered = await renderChat();
+
+    await sendMessage(rendered, "Try this");
+
+    expect(JSON.stringify(rendered.analyticsCalls)).not.toContain(
+      "secret-like-api-key",
+    );
   });
 });

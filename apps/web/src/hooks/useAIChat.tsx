@@ -3,7 +3,7 @@ import useUserTimetable from "./contexts/useUserTimetable";
 import { useAuth } from "react-oidc-context";
 import { event as gtagEvent } from "@/lib/gtag";
 import { SSEParser, ParsedSSEEvent } from "./sseParser";
-import { AI_SETTINGS_STORAGE_KEY } from "@/lib/credentialStorage";
+import { readAiSettings } from "@/lib/credentialStorage";
 
 export type ChatErrorCode =
   | "quota"
@@ -119,17 +119,10 @@ function getErrorMessage(data: unknown, fallback: string) {
 }
 
 function getStoredApiKey() {
-  try {
-    const settings = window.localStorage.getItem(AI_SETTINGS_STORAGE_KEY);
-    if (!settings) return undefined;
-    const parsed = JSON.parse(settings) as {
-      useCustomKey?: boolean;
-      apiKey?: string;
-    };
-    return parsed.useCustomKey && parsed.apiKey ? parsed.apiKey : undefined;
-  } catch {
-    return undefined;
-  }
+  const settings = readAiSettings();
+  return settings?.useCustomKey && settings.apiKey
+    ? settings.apiKey
+    : undefined;
 }
 
 export function useAIChat(options: UseAIChatOptions = {}) {
@@ -536,7 +529,6 @@ export function useAIChat(options: UseAIChatOptions = {}) {
             action: "ai_chat_error",
             category: "AI Chat",
             label: failure.code,
-            data: { error_message: failure.message },
           });
         }
       } finally {

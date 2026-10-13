@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "react-oidc-context";
+import { rememberPostSigninRedirect } from "@/lib/credentialStorage";
 import useDictionary from "@/dictionaries/useDictionary";
 
 function LoginPrompt() {
@@ -19,7 +20,7 @@ function LoginPrompt() {
   const dict = useDictionary();
 
   const handleLogin = () => {
-    localStorage.setItem("redirectUri", window.location.pathname);
+    rememberPostSigninRedirect(window.location.pathname);
     signinRedirect();
   };
 
