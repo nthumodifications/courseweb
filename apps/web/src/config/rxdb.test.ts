@@ -104,4 +104,20 @@ describe("event schema v2 migration", () => {
       courseId: null,
     });
   });
+
+  it("preserves tombstones and is idempotent after the v1-to-v2 upgrade", () => {
+    const oldDocument = {
+      id: "deleted-event",
+      title: "Deleted event",
+      allDay: false,
+      start: "2026-09-10T01:00:00.000Z",
+      end: "2026-09-10T02:00:00.000Z",
+      repeat: null,
+      _deleted: true,
+    };
+
+    const migrated = migrateEventToV2(oldDocument);
+    expect(migrated._deleted).toBe(true);
+    expect(migrateEventToV2(migrated)).toEqual(migrated);
+  });
 });
