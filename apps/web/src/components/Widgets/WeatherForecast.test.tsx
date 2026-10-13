@@ -54,4 +54,22 @@ describe("WeatherForecast markup", () => {
       expect(markup).toContain("—");
     }
   });
+
+  it("drops null forecast rows before rendering columns", () => {
+    const markup = renderToStaticMarkup(
+      <WeatherForecast
+        forecasts={[forecasts[0], null] as never[]}
+        language="en"
+        labels={{
+          high: en.settings.calendar.widget_dashboard.weather.high,
+          low: en.settings.calendar.widget_dashboard.weather.low,
+          missingValue:
+            en.settings.calendar.widget_dashboard.weather.missing_value,
+          rain: en.settings.calendar.widget_dashboard.weather.rain,
+        }}
+      />,
+    );
+
+    expect(markup.split('class="flex h-20').length - 1).toBe(1);
+  });
 });

@@ -39,7 +39,6 @@ export const CHANGELOG: ChangelogRelease[] = [
   {
     version: "2026.10.2",
     date: "2026-10-10",
-    highlight: true,
     title: {
       zh: "課程、課表與儀表板更新",
       en: "Courses, timetable & dashboard updates",
@@ -138,6 +137,7 @@ export const CHANGELOG: ChangelogRelease[] = [
   {
     version: "2026.10.1",
     date: "2026-10-07",
+    highlight: true,
     title: {
       zh: "公車、YouBike、課程與課表更新",
       en: "Buses, YouBike, courses & timetable",

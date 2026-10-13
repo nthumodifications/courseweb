@@ -17,6 +17,53 @@ export type CourseDialogHistoryState = {
   };
 };
 
+export const createCourseDialogHistoryState = (
+  background: CourseDialogBackground,
+  originIdx?: number,
+): CourseDialogHistoryState => ({
+  dialog: {
+    background,
+    ...(originIdx === undefined ? {} : { originIdx }),
+  },
+});
+
+export const hasPreviousCourseDialogView = ({
+  currentIdx,
+  originIdx,
+}: {
+  currentIdx: number | undefined;
+  originIdx: number | undefined;
+}) =>
+  typeof currentIdx === "number" &&
+  typeof originIdx === "number" &&
+  currentIdx > originIdx + 1;
+
+export const getPreviousCourseDialogDelta = ({
+  currentIdx,
+  originIdx,
+}: {
+  currentIdx: number | undefined;
+  originIdx: number | undefined;
+}) => (hasPreviousCourseDialogView({ currentIdx, originIdx }) ? -1 : undefined);
+
+export const getCourseDialogCloseNavigation = ({
+  background,
+  currentIdx,
+  originIdx,
+}: {
+  background: CourseDialogBackground;
+  currentIdx: number | undefined;
+  originIdx: number | undefined;
+}) =>
+  typeof originIdx === "number" &&
+  typeof currentIdx === "number" &&
+  originIdx < currentIdx
+    ? { type: "delta" as const, delta: originIdx - currentIdx }
+    : {
+        type: "replace" as const,
+        path: `${background.pathname}${background.search}${background.hash}`,
+      };
+
 export const parseCourseDialogPath = (
   path: string,
 ): CourseDialogView | null => {

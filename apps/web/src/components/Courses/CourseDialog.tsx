@@ -34,12 +34,22 @@ import useDictionary from "@/dictionaries/useDictionary";
 import { lazyWithRetry } from "@/lib/chunk-recovery";
 import {
   parseCourseDialogPath,
+  createCourseDialogHistoryState,
+  getCourseDialogCloseNavigation,
+  getPreviousCourseDialogDelta,
+  hasPreviousCourseDialogView,
   type CourseDialogBackground,
   type CourseDialogHistoryState,
   type CourseDialogView,
 } from "./courseDialogRouting";
 
-export { parseCourseDialogPath } from "./courseDialogRouting";
+export {
+  createCourseDialogHistoryState,
+  getCourseDialogCloseNavigation,
+  getPreviousCourseDialogDelta,
+  hasPreviousCourseDialogView,
+  parseCourseDialogPath,
+} from "./courseDialogRouting";
 export type {
   CourseDialogBackground,
   CourseDialogHistoryState,
@@ -190,12 +200,6 @@ const historyIndex = () => {
   return typeof idx === "number" ? idx : undefined;
 };
 
-const backgroundTo = (background: CourseDialogBackground) => ({
-  pathname: background.pathname,
-  search: background.search,
-  hash: background.hash,
-});
-
 /** A real router link that becomes a location.state dialog entry. */
 export const CourseDialogLink = forwardRef<HTMLAnchorElement, LinkProps>(
   ({ to, onClick, target, download, ...props }, ref) => {
@@ -290,7 +294,7 @@ export const CourseDialogProvider: FC<PropsWithChildren> = ({ children }) => {
       }
 
       navigate(path, {
-        state: { dialog: { background, originIdx } },
+        state: createCourseDialogHistoryState(background, originIdx),
       });
     },
     [location, navigate],
@@ -313,14 +317,15 @@ export const CourseDialogProvider: FC<PropsWithChildren> = ({ children }) => {
     closeFocusRef.current = openerRef.current;
     const currentIdx = historyIndex();
     const originIdx = state.dialog.originIdx;
-    if (
-      typeof originIdx === "number" &&
-      typeof currentIdx === "number" &&
-      originIdx < currentIdx
-    ) {
-      navigate(originIdx - currentIdx);
+    const navigation = getCourseDialogCloseNavigation({
+      background: state.dialog.background,
+      currentIdx,
+      originIdx,
+    });
+    if (navigation.type === "delta") {
+      navigate(navigation.delta);
     } else {
-      navigate(backgroundTo(state.dialog.background), { replace: true });
+      navigate(navigation.path, { replace: true });
     }
   }, [navigate, state]);
 
@@ -371,10 +376,14 @@ export const CourseDialogProvider: FC<PropsWithChildren> = ({ children }) => {
 
   const currentIdx = historyIndex();
   const originIdx = state?.dialog.originIdx;
-  const hasPreviousDialogView =
-    typeof currentIdx === "number" &&
-    typeof originIdx === "number" &&
-    currentIdx > originIdx + 1;
+  const hasPreviousDialogView = hasPreviousCourseDialogView({
+    currentIdx,
+    originIdx,
+  });
+  const previousDialogDelta = getPreviousCourseDialogDelta({
+    currentIdx,
+    originIdx,
+  });
 
   return (
     <CourseDialogContext.Provider value={contextValue}>
@@ -395,7 +404,7 @@ export const CourseDialogProvider: FC<PropsWithChildren> = ({ children }) => {
                   variant="ghost"
                   size="sm"
                   aria-label={dict.common.back}
-                  onClick={() => navigate(-1)}
+                  onClick={() => navigate(previousDialogDelta!)}
                 >
                   <ChevronLeft className="mr-2 h-4 w-4" aria-hidden="true" />
                   {dict.common.back}

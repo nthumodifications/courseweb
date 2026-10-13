@@ -29,8 +29,6 @@ const REPORT_AREAS = [
   "bus",
   "other",
 ] as const;
-type ReportLabel =
-  (typeof REPORT_TYPES)[number] | (typeof REPORT_AREAS)[number];
 const REPORT_ROUTE_PATTERNS = [
   "/[lang]/timetable",
   "/[lang]/calendar",
@@ -41,8 +39,52 @@ const REPORT_ROUTE_PATTERNS = [
   "/[lang]/contribute",
   "/[lang]/other",
 ] as const;
-const PROVISIONED_TRIAGE_LABELS = new Set(["bug", "search", "timetable"]);
-const ALLOWED_ISSUE_LABELS = new Set(["generic"]);
+const ALLOWED_ISSUE_LABEL_NAMES = [
+  "bug",
+  "enhancement",
+  "commend",
+  "search",
+  "sync",
+  "timetable",
+  "calendar",
+  "courses",
+  "apps",
+  "ai",
+  "planner",
+  "dashboard",
+  "generic",
+  "needs-info",
+] as const;
+type GithubIssueLabel = (typeof ALLOWED_ISSUE_LABEL_NAMES)[number];
+const ALLOWED_ISSUE_LABELS = new Set<GithubIssueLabel>(
+  ALLOWED_ISSUE_LABEL_NAMES,
+);
+const CLIENT_ISSUE_LABELS = new Set<GithubIssueLabel>(["generic"]);
+const REPORT_TYPE_LABELS: Record<
+  (typeof REPORT_TYPES)[number],
+  GithubIssueLabel
+> = {
+  bug: "bug",
+  "missing-data": "bug",
+  suggestion: "enhancement",
+  praise: "commend",
+};
+const REPORT_AREA_LABELS: Partial<
+  Record<(typeof REPORT_AREAS)[number], GithubIssueLabel>
+> = {
+  timetable: "timetable",
+  search: "search",
+  "sync-login": "sync",
+  bus: "apps",
+};
+const REPORT_ROUTE_LABELS: Partial<
+  Record<(typeof REPORT_ROUTE_PATTERNS)[number], GithubIssueLabel>
+> = {
+  "/[lang]/calendar": "calendar",
+  "/[lang]/courses": "courses",
+  "/[lang]/timetable": "timetable",
+  "/[lang]/bus": "apps",
+};
 const MAX_DIAGNOSTIC_TEXT_LENGTH = 160;
 const MAX_DIAGNOSTIC_FEATURE_FLAGS = 10;
 const MAX_CLIENT_ERROR_NAMES = 8;
@@ -60,25 +102,130 @@ const CLIENT_ERROR_NAMES = new Set([
 ]);
 
 export const filterIssueLabels = (labels: string[]) => [
-  ...new Set(labels.filter((label) => ALLOWED_ISSUE_LABELS.has(label))),
+  ...new Set(
+    labels.filter(
+      (label): label is GithubIssueLabel =>
+        CLIENT_ISSUE_LABELS.has(label as GithubIssueLabel) &&
+        ALLOWED_ISSUE_LABELS.has(label as GithubIssueLabel),
+    ),
+  ),
 ];
 
 export const mapTriageLabels = (
   reportType?: (typeof REPORT_TYPES)[number],
   reportArea?: (typeof REPORT_AREAS)[number],
+  route?: (typeof REPORT_ROUTE_PATTERNS)[number],
+) => {
+  const typeLabel = reportType ? REPORT_TYPE_LABELS[reportType] : undefined;
+  const areaLabel = reportArea ? REPORT_AREA_LABELS[reportArea] : undefined;
+  const routeLabel =
+    !areaLabel &&
+    (reportArea === undefined || reportArea === "other") &&
+    route !== undefined
+      ? REPORT_ROUTE_LABELS[route]
+      : undefined;
+
+  return [typeLabel, areaLabel, routeLabel].filter(
+    (label, index, labels): label is GithubIssueLabel =>
+      label !== undefined &&
+      ALLOWED_ISSUE_LABELS.has(label) &&
+      labels.indexOf(label) === index,
+  );
+};
+
+const combinePatternParts = (...parts: RegExp[]) =>
+  new RegExp(parts.map((pattern) => pattern.source).join(""));
+
+const combinePublicTextPatterns = (
+  patterns: readonly RegExp[],
+  includeEndBoundary = true,
 ) =>
-  [reportType, reportArea].filter(
-    (label): label is ReportLabel =>
-      label !== undefined && PROVISIONED_TRIAGE_LABELS.has(label),
+  new RegExp(
+    `(?<![A-Za-z0-9])(?:${patterns
+      .map((pattern) => pattern.source)
+      .join("|")})${includeEndBoundary ? "(?![A-Za-z0-9])" : ""}`,
+    "g",
   );
 
-const sensitivePublicTextPatterns = [/[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/g];
+// Matches a local mobile such as 0912-345-678.
+const taiwanMobileLocalPlainPattern = /09\d{2}[ .-]?\d{3}[ .-]?\d{3}/;
+const taiwanMobileLocalParenthesizedPrefixPattern =
+  /\(09\d{2}\)[ .-]?\d{3}[ .-]?\d{3}/;
+const taiwanMobileLocalParenthesizedMiddlePattern =
+  /09\d{2}\(\d{3}\)[ .-]?\d{3}/;
+const taiwanMobileLocalPattern = combinePublicTextPatterns([
+  taiwanMobileLocalPlainPattern,
+  taiwanMobileLocalParenthesizedPrefixPattern,
+  taiwanMobileLocalParenthesizedMiddlePattern,
+]);
+// Matches an international mobile such as +886 912 345 678.
+const taiwanMobileInternationalCountryCodePattern = /(?:\+886|\(\+886\))/;
+const taiwanMobileInternationalNumberPattern =
+  /(?:[ .-]?9\d{2}|\(9\d{2}\))[ .-]?\d{3}[ .-]?\d{3}/;
+const taiwanMobileInternationalPattern = combinePublicTextPatterns([
+  combinePatternParts(
+    taiwanMobileInternationalCountryCodePattern,
+    taiwanMobileInternationalNumberPattern,
+  ),
+]);
+// Matches a student ID such as 109062123.
+const studentIdPrefixPattern = /[sSuU]?/;
+const studentIdYearPattern = /(?:08\d|09\d|1[01]\d)/;
+const studentIdNumberPattern = /\d{6}/;
+const studentIdPattern = new RegExp(
+  `(?<![A-Za-z0-9/=#_-])${
+    combinePatternParts(
+      studentIdPrefixPattern,
+      studentIdYearPattern,
+      studentIdNumberPattern,
+    ).source
+  }(?![A-Za-z0-9/])`,
+  "g",
+);
+// Matches an email such as student@example.com.
+const emailLocalPartPattern = /(?:[\w+-]+\.)*[\w+-]+/;
+const emailDomainPattern = /(?:[A-Za-z0-9-]+\.)+[A-Za-z]{2,}/;
+const emailPattern = new RegExp(
+  `(?<![A-Za-z0-9.])${
+    combinePatternParts(emailLocalPartPattern, /@/, emailDomainPattern).source
+  }`,
+  "g",
+);
 
-export const redactPublicText = (value: string) =>
-  sensitivePublicTextPatterns.reduce(
-    (result, pattern) => result.replace(pattern, "[redacted]"),
-    value,
+const sensitivePublicTextPattern = new RegExp(
+  [
+    emailPattern,
+    taiwanMobileLocalPattern,
+    taiwanMobileInternationalPattern,
+    studentIdPattern,
+  ]
+    .map((pattern) => pattern.source)
+    .join("|"),
+  "g",
+);
+
+const normalizeFullWidthDigits = (value: string) =>
+  value.replace(/[０-９]/g, (digit) =>
+    String.fromCodePoint(
+      digit.codePointAt(0)! - "０".codePointAt(0)! + "0".codePointAt(0)!,
+    ),
   );
+
+export const redactPublicText = (value: string) => {
+  const normalizedValue = normalizeFullWidthDigits(value);
+  sensitivePublicTextPattern.lastIndex = 0;
+  // Full-width digits use one UTF-16 code unit each, so normalized indexes splice the original safely.
+  const result: string[] = [];
+  let cursor = 0;
+  let redacted = false;
+  let match: RegExpExecArray | null;
+  while ((match = sensitivePublicTextPattern.exec(normalizedValue)) !== null) {
+    result.push(value.slice(cursor, match.index), "[redacted]");
+    cursor = match.index + match[0].length;
+    redacted = true;
+  }
+  return redacted ? result.concat(value.slice(cursor)).join("") : value;
+};
 
 const diagnosticsSchema = z.object({
   appVersion: z.string().max(MAX_DIAGNOSTIC_TEXT_LENGTH),
@@ -106,17 +253,22 @@ const diagnosticsSchema = z.object({
 type IssueDiagnostics = z.infer<typeof diagnosticsSchema>;
 
 export const sanitizeDiagnosticText = (value: string) =>
-  value
+  redactPublicText(value)
     .replaceAll("`", "'")
     .replaceAll("@", "[at]")
     .slice(0, MAX_DIAGNOSTIC_TEXT_LENGTH);
 
 const sanitizeFeatureFlags = (values: string[] | undefined) =>
-  (values ?? []).filter((value) => LOCAL_FEATURE_FLAGS.has(value));
+  (values ?? [])
+    .map(sanitizeDiagnosticText)
+    .filter((value) => LOCAL_FEATURE_FLAGS.has(value));
 
 const sanitizeClientErrorNames = (values: string[]) => [
   ...new Set(
-    values.map((value) => (CLIENT_ERROR_NAMES.has(value) ? value : "Other")),
+    values.map((value) => {
+      const safeValue = sanitizeDiagnosticText(value);
+      return CLIENT_ERROR_NAMES.has(safeValue) ? safeValue : "Other";
+    }),
   ),
 ];
 
@@ -489,7 +641,7 @@ const app = new Hono<{ Bindings: Bindings }>()
       const repoName = "courseweb";
       const safeLabels = [
         ...filterIssueLabels(labels),
-        ...mapTriageLabels(reportType, reportArea),
+        ...mapTriageLabels(reportType, reportArea, safeDiagnostics?.route),
       ];
       const deduplicatedLabels = [...new Set(safeLabels)];
 

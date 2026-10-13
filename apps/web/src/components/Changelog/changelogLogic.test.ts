@@ -24,7 +24,10 @@ const matchesRoutePath = (pathname: string, routePath: string) => {
 
 describe("What's new release selection", () => {
   test("selects the highlighted release", () => {
-    expect(getHighlightedRelease(CHANGELOG)?.version).toBe("2026.10.2");
+    expect(getHighlightedRelease(CHANGELOG)?.version).toBe("2026.10.1");
+    expect(
+      CHANGELOG.find((release) => release.version === "2026.10.2")?.highlight,
+    ).toBeUndefined();
   });
 
   test("keeps releases newest-first with one highlighted release", () => {
@@ -52,22 +55,33 @@ describe("What's new release selection", () => {
     }
   });
 
-  test("shows the current release when the version has not been seen", () => {
+  test("shows the highlighted release when it has not been seen", () => {
     expect(
       shouldShowWhatsNew({
         lastSeenVersion: null,
-        currentVersion: "2026.10.2",
+        currentVersion: "2026.10.1",
         hasVisitedBefore: true,
         hasOpenDialog: false,
       }),
     ).toBe(true);
   });
 
+  test("does not show a dialog after the highlighted release was seen", () => {
+    expect(
+      shouldShowWhatsNew({
+        lastSeenVersion: "2026.10.1",
+        currentVersion: getHighlightedRelease(CHANGELOG)!.version,
+        hasVisitedBefore: true,
+        hasOpenDialog: false,
+      }),
+    ).toBe(false);
+  });
+
   test("shows an unseen release after onboarding", () => {
     expect(
       shouldShowWhatsNew({
         lastSeenVersion: "2026.09.1",
-        currentVersion: "2026.10.2",
+        currentVersion: "2026.10.1",
         hasVisitedBefore: true,
         hasOpenDialog: false,
       }),
@@ -82,7 +96,7 @@ describe("What's new release selection", () => {
       expect(
         shouldShowWhatsNew({
           lastSeenVersion: "2026.09.1",
-          currentVersion: "2026.10.2",
+          currentVersion: "2026.10.1",
           ...state,
         }),
       ).toBe(false);
@@ -93,28 +107,28 @@ describe("What's new release selection", () => {
     expect(
       isReleaseUnread({
         lastSeenVersion: null,
-        currentVersion: "2026.10.2",
+        currentVersion: "2026.10.1",
         hasVisitedBefore: true,
       }),
     ).toBe(true);
     expect(
       isReleaseUnread({
         lastSeenVersion: "2026.09.1",
-        currentVersion: "2026.10.2",
+        currentVersion: "2026.10.1",
         hasVisitedBefore: true,
       }),
     ).toBe(true);
     expect(
       isReleaseUnread({
-        lastSeenVersion: "2026.10.2",
-        currentVersion: "2026.10.2",
+        lastSeenVersion: "2026.10.1",
+        currentVersion: "2026.10.1",
         hasVisitedBefore: true,
       }),
     ).toBe(false);
     expect(
       isReleaseUnread({
         lastSeenVersion: null,
-        currentVersion: "2026.10.2",
+        currentVersion: "2026.10.1",
         hasVisitedBefore: false,
       }),
     ).toBe(false);
