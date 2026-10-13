@@ -4,9 +4,10 @@ import { afterEach, describe, expect, test } from "bun:test";
 import {
   createMemoryRouter,
   RouterProvider,
+  type Location,
   useLocation,
 } from "react-router-dom";
-import { usePageLocation } from "@/hooks/usePageLocation";
+import { getPageLocation, usePageLocation } from "@/hooks/usePageLocation";
 import { installTestDom } from "@/testDom";
 
 let active: ReturnType<typeof installTestDom> | undefined;
@@ -76,9 +77,43 @@ describe("page location metadata source", () => {
     activeRouter?.dispose();
     activeRoot = undefined;
     activeRouter = undefined;
-    document.head.innerHTML = "";
+    if (typeof document !== "undefined") document.head.innerHTML = "";
     active?.restore();
     active = undefined;
+  });
+
+  test("maps dialog locations to their background for page metadata", () => {
+    const location = {
+      pathname: "/en/courses/11410-CS%201010%201",
+      search: "?dialog=1",
+      hash: "#details",
+      state: {
+        dialog: {
+          background: {
+            pathname: "/en/courses",
+            search: "?semester=fall",
+            hash: "#top",
+            key: "background",
+          },
+        },
+      },
+      key: "dialog",
+    } as Location;
+
+    expect(getPageLocation(location)).toEqual({
+      ...location,
+      pathname: "/en/courses",
+      search: "?semester=fall",
+      hash: "#top",
+      key: "background",
+      state: null,
+    });
+
+    const plainLocation = {
+      ...location,
+      state: null,
+    } as Location;
+    expect(getPageLocation(plainLocation)).toBe(plainLocation);
   });
 
   test("keeps global metadata on the background while a dialog is open", async () => {
