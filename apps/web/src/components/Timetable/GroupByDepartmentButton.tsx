@@ -11,8 +11,7 @@ const GroupByDepartmentButton = ({
 }: GroupByDepartmentButtonProps) => {
   const dict = useDictionary();
 
-  const { setColorMap, getSemesterCourses, currentColors } =
-    useUserTimetable();
+  const { setColorMap, getSemesterCourses, currentColors } = useUserTimetable();
 
   const handleGroupByDepartment = () => {
     const semesterCourses = getSemesterCourses(semester);

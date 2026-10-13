@@ -88,23 +88,26 @@ const ViewTimetablePage = () => {
       customItems: normalizeCustomTimetableStorage(sharedCustomItems),
       colorMap,
     };
-    setCourses((courses) =>
-      mergeTimetableImport(
-        { courses, customItems: {}, colorMap: {} },
-        sharedTimetable,
-      ).courses,
+    setCourses(
+      (courses) =>
+        mergeTimetableImport(
+          { courses, customItems: {}, colorMap: {} },
+          sharedTimetable,
+        ).courses,
     );
-    setColorMap((colorMap) =>
-      mergeTimetableImport(
-        { courses: {}, customItems: {}, colorMap },
-        sharedTimetable,
-      ).colorMap,
+    setColorMap(
+      (colorMap) =>
+        mergeTimetableImport(
+          { courses: {}, customItems: {}, colorMap },
+          sharedTimetable,
+        ).colorMap,
     );
-    setCustomItems((customItems) =>
-      mergeTimetableImport(
-        { courses: {}, customItems, colorMap: {} },
-        sharedTimetable,
-      ).customItems,
+    setCustomItems(
+      (customItems) =>
+        mergeTimetableImport(
+          { courses: {}, customItems, colorMap: {} },
+          sharedTimetable,
+        ).customItems,
     );
     navigate(`/${routeLang}/timetable`);
   };

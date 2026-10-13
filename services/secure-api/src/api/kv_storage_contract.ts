@@ -51,9 +51,11 @@ const hasSameId = (
 
 const matchesArrayEntry = (previousEntry: unknown, nextEntry: unknown) => {
   if (isPrimitive(previousEntry) || isPrimitive(nextEntry)) {
-    return isPrimitive(previousEntry) &&
+    return (
+      isPrimitive(previousEntry) &&
       isPrimitive(nextEntry) &&
-      Object.is(previousEntry, nextEntry);
+      Object.is(previousEntry, nextEntry)
+    );
   }
 
   if (isPlainRecord(previousEntry) && isPlainRecord(nextEntry)) {
@@ -91,11 +93,7 @@ const losesSyncedDataAtDepth = (
         isPlainRecord(previousEntry) &&
         isPlainRecord(nextValue[nextIndex]) &&
         hasSameId(previousEntry, nextValue[nextIndex]) &&
-        losesSyncedDataAtDepth(
-          previousEntry,
-          nextValue[nextIndex],
-          depth + 1,
-        )
+        losesSyncedDataAtDepth(previousEntry, nextValue[nextIndex], depth + 1)
       ) {
         return true;
       }

@@ -205,8 +205,9 @@ describe("useSyncedStorage remote read states", () => {
     );
     await waitForResult(
       rendered.getResult,
-      (result) => Object.keys((result?.[0] as Record<string, string[]>) ?? {})
-        .length === 3,
+      (result) =>
+        Object.keys((result?.[0] as Record<string, string[]>) ?? {}).length ===
+        3,
     );
 
     expect(rendered.getResult()?.[0]).toEqual(legacyCourses);

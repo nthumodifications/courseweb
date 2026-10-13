@@ -67,11 +67,15 @@ const jsonRequest = (path: string, payload: unknown) =>
     body: JSON.stringify(payload),
   });
 
-const createApp = (firestore: ReturnType<typeof createFakeFirestore>, now = 0) =>
+const createApp = (
+  firestore: ReturnType<typeof createFakeFirestore>,
+  now = 0,
+) =>
   createKvStorageApp({
     auth: fakeAuth,
     rateLimit: noRateLimit,
-    getFirebaseAdmin: () => ({ adminFirestore: firestore.adminFirestore } as any),
+    getFirebaseAdmin: () =>
+      ({ adminFirestore: firestore.adminFirestore }) as any,
     now: () => now,
   });
 
@@ -198,9 +202,12 @@ describe("lossy synced data detection", () => {
         { nested: { items: ["B", "A", "C"] } },
       ),
     ).toBe(false);
-    expect(losesSyncedData({ nested: { value: "same" } }, { nested: { value: "same" } })).toBe(
-      false,
-    );
+    expect(
+      losesSyncedData(
+        { nested: { value: "same" } },
+        { nested: { value: "same" } },
+      ),
+    ).toBe(false);
   });
 
   test("does not throw past the recursion depth guard", () => {
@@ -221,9 +228,9 @@ describe("lossy synced data detection", () => {
         { "11410": ["B", "A"] },
       ),
     ).toBe(true);
-    expect(losesSyncedData({ "11410": ["A", "B"] }, { "11410": ["B", "A"] })).toBe(
-      false,
-    );
+    expect(
+      losesSyncedData({ "11410": ["A", "B"] }, { "11410": ["B", "A"] }),
+    ).toBe(false);
     expect(losesSyncedData({ "11410": ["A", "B"] }, { "11410": ["A"] })).toBe(
       true,
     );
@@ -248,9 +255,9 @@ describe("lossy synced data detection", () => {
     expect(losesSyncedData(["a", "b"], ["b", "a"])).toBe(false);
     expect(losesSyncedData(["a", "b"], ["a"])).toBe(true);
     expect(losesSyncedData({ theme: "dark" }, { theme: "light" })).toBe(false);
-    expect(losesSyncedData({ theme: "dark", font: 2 }, { theme: "light" })).toBe(
-      true,
-    );
+    expect(
+      losesSyncedData({ theme: "dark", font: 2 }, { theme: "light" }),
+    ).toBe(true);
     expect(losesSyncedData("old", { "11410": ["A"] })).toBe(false);
     expect(losesSyncedData({ "11410": [null] }, { "11410": [] })).toBe(true);
   });
@@ -270,16 +277,14 @@ describe("KV lossy-write backups", () => {
     });
     const app = createApp(firestore, Date.parse("2026-10-13T12:00:00.000Z"));
 
-    const response = await postValue(
-      app,
-      "courses",
-      { "11410": ["A"] },
-      11,
-      { deviceId: "new-device" },
-    );
+    const response = await postValue(app, "courses", { "11410": ["A"] }, 11, {
+      deviceId: "new-device",
+    });
 
     expect(response.status).toBe(200);
-    expect(firestore.records.get("users/test-user/storage/courses")?.value).toEqual({
+    expect(
+      firestore.records.get("users/test-user/storage/courses")?.value,
+    ).toEqual({
       "11410": ["A"],
     });
     const backup = firestore.records.get(
@@ -291,9 +296,9 @@ describe("KV lossy-write backups", () => {
       replacedAt: Date.parse("2026-10-13T12:00:00.000Z"),
       replacedByDeviceId: "new-device",
     });
-    expect(
-      (backup?.expireAt as { toMillis: () => number }).toMillis(),
-    ).toBe(Date.parse("2026-10-13T12:00:00.000Z") + 35 * 24 * 60 * 60 * 1000);
+    expect((backup?.expireAt as { toMillis: () => number }).toMillis()).toBe(
+      Date.parse("2026-10-13T12:00:00.000Z") + 35 * 24 * 60 * 60 * 1000,
+    );
     expect(firestore.readPaths).toEqual([
       "users/test-user/storage/courses",
       "users/test-user/storage_backups/courses__13",
@@ -310,12 +315,19 @@ describe("KV lossy-write backups", () => {
       const firestore = createFakeFirestore(
         stored === undefined
           ? {}
-          : { "users/test-user/storage/courses": { value: stored, lastModified: 1 } },
+          : {
+              "users/test-user/storage/courses": {
+                value: stored,
+                lastModified: 1,
+              },
+            },
       );
       const app = createApp(firestore, Date.parse("2026-10-13T12:00:00.000Z"));
       await postValue(app, "courses", incoming, 2);
       expect(
-        [...firestore.records.keys()].filter((path) => path.includes("storage_backups")),
+        [...firestore.records.keys()].filter((path) =>
+          path.includes("storage_backups"),
+        ),
       ).toHaveLength(0);
     }
   });
@@ -374,7 +386,8 @@ describe("KV lossy-write backups", () => {
     );
 
     expect(
-      firestore.records.get("users/test-user/storage_backups/grades__13")?.value,
+      firestore.records.get("users/test-user/storage_backups/grades__13")
+        ?.value,
     ).toEqual({
       entries: [{ id: "entry-a", courses: ["A", "B", "C"] }],
     });
@@ -389,7 +402,9 @@ describe("KV lossy-write backups", () => {
     const response = await postValue(app, "courses", { "11410": [] }, 9);
 
     expect(response.status).toBe(200);
-    expect(firestore.records.get("users/test-user/storage/courses")).toBe(previous);
+    expect(firestore.records.get("users/test-user/storage/courses")).toBe(
+      previous,
+    );
     expect(firestore.readPaths).toEqual(["users/test-user/storage/courses"]);
     expect(firestore.writePaths).toHaveLength(0);
   });
@@ -402,11 +417,13 @@ describe("KV lossy-write backups", () => {
 
     await postValue(app, "courses", { "11410": ["A"] }, 11, { merge: true });
 
-    expect(firestore.records.get("users/test-user/storage/courses")?.value).toEqual(
-      { "11410": ["A", "B"] },
-    );
     expect(
-      [...firestore.records.keys()].filter((path) => path.includes("storage_backups")),
+      firestore.records.get("users/test-user/storage/courses")?.value,
+    ).toEqual({ "11410": ["A", "B"] });
+    expect(
+      [...firestore.records.keys()].filter((path) =>
+        path.includes("storage_backups"),
+      ),
     ).toHaveLength(0);
   });
 
@@ -426,11 +443,15 @@ describe("KV lossy-write backups", () => {
     await postValue(app, "course_favourites", ["b"], 2);
     await postValue(app, "timetable_theme", { theme: "light" }, 2);
 
-    expect(firestore.records.has("users/test-user/storage_backups/course_favourites__13")).toBe(
-      true,
-    );
-    expect(firestore.records.has("users/test-user/storage_backups/timetable_theme__13")).toBe(
-      true,
-    );
+    expect(
+      firestore.records.has(
+        "users/test-user/storage_backups/course_favourites__13",
+      ),
+    ).toBe(true);
+    expect(
+      firestore.records.has(
+        "users/test-user/storage_backups/timetable_theme__13",
+      ),
+    ).toBe(true);
   });
 });
