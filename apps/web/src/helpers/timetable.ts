@@ -338,6 +338,8 @@ export const addTimetableFractions = (data: CourseTimeslotData[]) =>
   );
 
 const timetableDayCodes = "MTWRFSU";
+const getScheduleTimeIndex = ({ time }: { time: string }) =>
+  scheduleTimeSlots.findIndex((period) => period.time === time);
 
 export const createTimetableFromCourses = (
   data: MinimalCourse[],
@@ -398,9 +400,7 @@ export const createTimetableFromCourses = (
 
       groupedTimeslots.forEach((group) => {
         const day = group[0]!.day;
-        const times = group.map((time) =>
-          scheduleTimeSlots.findIndex((period) => period.time === time.time),
-        );
+        const times = group.map(getScheduleTimeIndex);
         const startTime = Math.min(...times);
         const endTime = Math.max(...times);
         const color = colorMap[course.raw_id] || "#555555";

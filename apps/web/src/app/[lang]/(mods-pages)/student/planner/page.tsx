@@ -130,9 +130,9 @@ function GraduationPlanner() {
     const updatePlannerStats = async () => {
       // recalculate progress when courses change
       const courseData = await coursesCol!.find().exec();
-      const completed = await calculateCompletedCredits(courseData);
-      const inProgress = await calculateInProgressCredits(courseData);
-      const planned = await calculatePlannedCredits(courseData);
+      const completed = calculateCompletedCredits(courseData);
+      const inProgress = calculateInProgressCredits(courseData);
+      const planned = calculatePlannedCredits(courseData);
       const percentage = await calculateProgressPercentage(
         plannerCol!,
         completed,
