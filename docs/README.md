@@ -1,6 +1,7 @@
 # Documentation
 
 - [`STABILITY.md`](STABILITY.md): current runtime paths, removal decisions, and tracking issues.
+- [`BROWSER-STORAGE.md`](BROWSER-STORAGE.md): credential-bearing browser storage and the deferred BFF plan.
 - [`GTM_SETUP.md`](GTM_SETUP.md): the verified Google Tag Manager integration and checks.
 - [`design/LANGUAGE.md`](design/LANGUAGE.md): executable design-language rules.
 - [`design/PHILOSOPHY.md`](design/PHILOSOPHY.md): the reasoning behind the design language.

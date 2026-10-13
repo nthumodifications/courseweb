@@ -5,7 +5,10 @@ import {
   getSyncedStorageBackupKey,
   getSyncedStorageKey,
 } from "./syncedStorage";
-import { clearCredentialStorage } from "@/lib/credentialStorage";
+import {
+  clearCredentialStorage,
+  rememberPostSigninRedirect,
+} from "@/lib/credentialStorage";
 
 export const useAccountActions = () => {
   const {
@@ -24,7 +27,7 @@ export const useAccountActions = () => {
   const timetableSyncCol = useRxCollection("timetablesync");
 
   const handleLogin = () => {
-    localStorage.setItem("redirectUri", window.location.pathname);
+    rememberPostSigninRedirect(window.location.pathname);
     signinRedirect();
   };
 

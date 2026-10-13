@@ -21,6 +21,7 @@ import {
 } from "@courseweb/ui";
 
 import { useLocalStorage } from "usehooks-ts";
+import { rememberPostSigninRedirect } from "@/lib/credentialStorage";
 import { motion } from "framer-motion";
 import { useAuth } from "react-oidc-context";
 import { GreenLineIcon } from "../BusIcons/GreenLineIcon";
@@ -454,8 +455,8 @@ const Help = ({ children }: { children?: ReactNode }) => {
   const { signinRedirect } = useAuth();
 
   const handleLogin = () => {
-    // set redirectUri in localStorage to current page
-    localStorage.setItem("redirectUri", window.location.pathname);
+    // Remember the current page for the sign-in callback.
+    rememberPostSigninRedirect(window.location.pathname);
     signinRedirect();
   };
 
