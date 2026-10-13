@@ -1,6 +1,6 @@
 import { useSettings } from "@/hooks/contexts/settings";
 import { differenceInMinutes, set } from "date-fns";
-import { FC, ReactNode, SVGProps, useMemo } from "react";
+import { FC, ReactNode, SVGProps, useMemo, type KeyboardEvent } from "react";
 import { ChevronRight, Star, Timer } from "lucide-react";
 import { cn } from "@courseweb/ui";
 import { useNavigate } from "react-router-dom";
@@ -86,6 +86,13 @@ export const BusListingItem = ({
     );
   };
 
+  const handleItemKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.target !== event.currentTarget) return;
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    handleItemClick();
+  };
+
   const openSchedule = () =>
     line === "city" && detailLine
       ? handleItemClick()
@@ -101,8 +108,11 @@ export const BusListingItem = ({
       )}
     >
       <div
+        role="button"
+        tabIndex={0}
         className="flex cursor-pointer flex-row items-center gap-4"
         onClick={handleItemClick}
+        onKeyDown={handleItemKeyDown}
       >
         <div className="shrink-0">
           {leading ?? (Icon ? <Icon className="h-7 w-7" /> : null)}

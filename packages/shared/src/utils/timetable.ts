@@ -5,6 +5,9 @@ import { getContrastColor } from "./colors";
 import { timetableColors } from "../constants/timetableColors";
 import { hasTimes } from "./courses";
 
+const getScheduleTimeIndex = ({ time }: { time: string }) =>
+  scheduleTimeSlots.map((slot) => slot.time).indexOf(time);
+
 export const createTimetableFromCourses = (
   data: MinimalCourse[],
   colorMap: { [courseId: string]: string } = colorMapFromCourses(
@@ -61,9 +64,7 @@ export const createTimetableFromCourses = (
 
       groupedTimeslots.forEach((group) => {
         const day = group[0].day;
-        const times = group.map((time) =>
-          scheduleTimeSlots.map((m) => m.time).indexOf(time.time),
-        );
+        const times = group.map(getScheduleTimeIndex);
 
         //get the start and end time
         const startTime = Math.min(...times);

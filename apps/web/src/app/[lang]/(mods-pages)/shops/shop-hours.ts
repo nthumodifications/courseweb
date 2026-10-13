@@ -10,7 +10,7 @@ const DAY_KEYS = [
   "saturday",
 ] as const;
 
-export const getTodayKey = () => DAY_KEYS[new Date().getDay()];
+export const getTodayKey = (date = new Date()) => DAY_KEYS[date.getDay()];
 
 const HOUR = 3600 * 1000;
 const CLOSED = "休息中";

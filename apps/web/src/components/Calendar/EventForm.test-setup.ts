@@ -47,9 +47,15 @@ Object.assign(globalThis, {
   getComputedStyle: bootstrapDom.window.getComputedStyle,
   MutationObserver: bootstrapDom.window.MutationObserver,
   ResizeObserver: class {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
+    observe() {
+      // Intentionally empty test stub.
+    }
+    unobserve() {
+      // Intentionally empty test stub.
+    }
+    disconnect() {
+      // Intentionally empty test stub.
+    }
   },
   IS_REACT_ACT_ENVIRONMENT: true,
 });

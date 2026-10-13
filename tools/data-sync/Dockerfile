@@ -19,7 +19,7 @@ COPY packages/eslint-config/package.json ./packages/eslint-config/package.json
 COPY tools/data-sync/package.json ./tools/data-sync/package.json
 
 # Install dependencies (can't use --frozen-lockfile in Docker with partial monorepo)
-RUN bun install
+RUN bun install --ignore-scripts
 
 # Production image
 FROM base AS runner

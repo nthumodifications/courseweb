@@ -368,7 +368,7 @@ export function SemesterPlanning({
       parent: newCourse.parent ?? "planner-1",
     });
     if (currentSemester) {
-      await onSemesterChange(newCourse.uuid, currentSemester);
+      onSemesterChange(newCourse.uuid, currentSemester);
     }
   };
 
