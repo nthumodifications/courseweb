@@ -24,6 +24,23 @@ Snapshot: `origin/main` at `616fa241`, 2026-10-12. Issue and PR states below wer
 | Deprecated filter wrapper  | `apps/web/src/app/[lang]/(mods-pages)/student/planner/course-picker/CheckboxExpandableFilter.tsx` was a deprecated wrapper already merged into `ExpandableFilter`; source and path greps found no importing call site.                                                                                                                                                                                                                                                                                                                                                                      | None found.                                                                   | remove    | needs an issue                    | Removed in this batch; no source, export, or dynamic-path consumer was found.                                    |
 | Legacy bus helper          | `apps/web/src/libs/bus.ts` labels filtered helpers legacy but implements them through `getAllBusData`; bus pages and widgets still import it.                                                                                                                                                                                                                                                                                                                                                                                                                                               | Bus page, route pages, and bus widgets.                                       | keep      | needs an issue                    | Not dead because current callers remain.                                                                         |
 
+## Synced-data recovery backups
+
+`POST /api/kv/:key` recursively checks the previous live record for lost
+non-empty arrays, maps, nested preferences, and ID-matched entries. A lossy
+write copies the previous record to
+`users/{userId}/storage_backups/{key}__{DD}` in the same transaction.
+The first lossy write of each UTC day owns that slot; later lossy writes that
+day are not backed up, so a second unrelated loss that day is not recoverable
+from the server backup. The slot is reused when that day number returns.
+Backups have `expireAt` set to 35 days after replacement. A maintainer must
+enable a Firestore TTL policy in the console for collection group
+`storage_backups`; until it is on, a slot lives until a later lossy write lands
+on the same day-of-month. The backup holds the same personal data as the live
+record, including values the user deleted on purpose, for up to 35 days once
+the TTL policy is on. Backups are not exposed by an endpoint; a maintainer
+copies the value and metadata back after confirming recovery.
+
 ## Ordered removal plan
 
 1. Remove the unreferenced superseded settings and redesign documents. This change covers it; #947 is OPEN.
