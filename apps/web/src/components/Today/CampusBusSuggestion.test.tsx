@@ -4,11 +4,19 @@ import { JSDOM } from "jsdom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, describe, expect, mock, test } from "bun:test";
 import type { UpcomingEvent } from "@/hooks/useUpcomingEvents";
+import { captureGlobalState } from "@/test-utils/global-state";
 
+const originalApiUrl = process.env.VITE_COURSEWEB_API_URL;
 process.env.VITE_COURSEWEB_API_URL ??= "https://api.example.test";
-(
-  globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
-).IS_REACT_ACT_ENVIRONMENT = true;
+const restoreGlobals = captureGlobalState([
+  "window",
+  "document",
+  "navigator",
+  "IS_REACT_ACT_ENVIRONMENT",
+]);
+const actualBus = await import("@/libs/bus");
+const actualUseTime = await import("@/hooks/useTime");
+const actualDictionary = await import("@/dictionaries/useDictionary");
 
 let busRequestCount = 0;
 
@@ -24,11 +32,13 @@ mock.module("@/hooks/useTime", () => ({
 mock.module("@/dictionaries/useDictionary", () => ({
   default: () => ({ bus: {} }),
 }));
-mock.module("@/features/bus/BusListingItem", () => ({
-  BusListingItem: () => null,
-}));
 
 const { default: CampusBusSuggestion } = await import("./CampusBusSuggestion");
+mock.module("@/libs/bus", () => actualBus);
+mock.module("@/hooks/useTime", () => actualUseTime);
+mock.module("@/dictionaries/useDictionary", () => actualDictionary);
+if (originalApiUrl === undefined) delete process.env.VITE_COURSEWEB_API_URL;
+else process.env.VITE_COURSEWEB_API_URL = originalApiUrl;
 
 let activeDom: JSDOM | null = null;
 let activeRoot: Root | null = null;
@@ -39,6 +49,7 @@ afterEach(async () => {
   activeRoot = null;
   activeDom = null;
   busRequestCount = 0;
+  restoreGlobals();
 });
 
 const renderSuggestion = async (events: readonly UpcomingEvent[]) => {
@@ -50,6 +61,7 @@ const renderSuggestion = async (events: readonly UpcomingEvent[]) => {
     window: dom.window,
     document: dom.window.document,
     navigator: dom.window.navigator,
+    IS_REACT_ACT_ENVIRONMENT: true,
   });
 
   const container = document.createElement("div");
