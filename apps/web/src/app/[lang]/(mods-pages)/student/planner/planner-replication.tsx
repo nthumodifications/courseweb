@@ -17,6 +17,7 @@ import {
   SemesterDocType,
 } from "./rxdb";
 import { normalizePlannerDataDocuments } from "./planner-response";
+import { ensurePlannerResponseOk } from "./planner-replication-contract";
 import client from "@/config/api";
 
 // Create context with more detailed initialization state
@@ -43,23 +44,6 @@ const hasPlannerScope = (auth: ReturnType<typeof useAuth>): boolean => {
   if (!auth.isAuthenticated || !auth.user) return false;
   const scopes = auth.user.scope?.split(" ") || [];
   return scopes.includes("planner");
-};
-
-type PlannerResponse = {
-  readonly ok: boolean;
-  readonly status: number;
-  text(): Promise<string>;
-};
-
-const ensurePlannerResponseOk = async (
-  response: PlannerResponse,
-  operation: string,
-) => {
-  if (response.ok) return;
-  const details = await response.text().catch(() => "");
-  throw new Error(
-    `${operation} failed with status ${response.status}${details ? `: ${details}` : ""}`,
-  );
 };
 
 // Provider component for setting up replication
