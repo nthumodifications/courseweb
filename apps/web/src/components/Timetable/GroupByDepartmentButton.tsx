@@ -1,5 +1,6 @@
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import useDictionary from "@/dictionaries/useDictionary";
+import { groupColorsByDepartment } from "@/helpers/timetableColors";
 import { Button } from "@courseweb/ui";
 
 type GroupByDepartmentButtonProps = {
@@ -15,27 +16,9 @@ const GroupByDepartmentButton = ({
 
   const handleGroupByDepartment = () => {
     const semesterCourses = getSemesterCourses(semester);
-
-    const departments = semesterCourses.reduce((acc, course) => {
-      if (!acc.includes(course.department)) {
-        acc.push(course.department);
-      }
-      return acc;
-    }, [] as string[]);
-
-    setColorMap((previousColorMap) => {
-      const newColorMap = { ...previousColorMap };
-      for (let i = 0; i < departments.length; i++) {
-        const color = currentColors[i % currentColors.length];
-
-        semesterCourses
-          .filter((course) => course.department === departments[i])
-          .forEach((course) => {
-            newColorMap[course.raw_id] = color;
-          });
-      }
-      return newColorMap;
-    });
+    setColorMap((previousColorMap) =>
+      groupColorsByDepartment(previousColorMap, semesterCourses, currentColors),
+    );
   };
 
   return (

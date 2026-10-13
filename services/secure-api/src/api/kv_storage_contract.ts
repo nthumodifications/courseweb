@@ -29,7 +29,7 @@ const safeJson = (value: unknown) => {
 };
 
 const hasOwn = (value: Record<string, unknown>, key: string) =>
-  Object.prototype.hasOwnProperty.call(value, key);
+  Object.hasOwn(value, key);
 
 const isPrimitive = (value: unknown) =>
   value === null || (typeof value !== "object" && typeof value !== "function");
@@ -68,6 +68,16 @@ const matchesArrayEntry = (previousEntry: unknown, nextEntry: unknown) => {
   return false;
 };
 
+const findUnmatchedArrayEntryIndex = (
+  previousEntry: unknown,
+  nextValue: unknown[],
+  matchedIndexes: Set<number>,
+) =>
+  nextValue.findIndex(
+    (nextEntry, index) =>
+      !matchedIndexes.has(index) && matchesArrayEntry(previousEntry, nextEntry),
+  );
+
 const losesSyncedDataAtDepth = (
   previousValue: unknown,
   nextValue: unknown,
@@ -76,42 +86,81 @@ const losesSyncedDataAtDepth = (
   if (depth > 8) return false;
 
   if (Array.isArray(previousValue)) {
-    if (previousValue.length === 0) return false;
-    if (!Array.isArray(nextValue)) return true;
-
-    const matchedIndexes = new Set<number>();
-    for (const previousEntry of previousValue) {
-      const nextIndex = nextValue.findIndex(
-        (nextEntry, index) =>
-          !matchedIndexes.has(index) &&
-          matchesArrayEntry(previousEntry, nextEntry),
-      );
-      if (nextIndex < 0) return true;
-      matchedIndexes.add(nextIndex);
-
-      if (
-        isPlainRecord(previousEntry) &&
-        isPlainRecord(nextValue[nextIndex]) &&
-        hasSameId(previousEntry, nextValue[nextIndex]) &&
-        losesSyncedDataAtDepth(previousEntry, nextValue[nextIndex], depth + 1)
-      ) {
-        return true;
-      }
-    }
-    return false;
+    return losesSyncedDataInArray(previousValue, nextValue, depth);
   }
 
-  if (!isPlainRecord(previousValue)) return false;
+  return isPlainRecord(previousValue)
+    ? losesSyncedDataInRecord(previousValue, nextValue, depth)
+    : false;
+};
+
+const losesSyncedDataInArrayEntry = (
+  previousEntry: unknown,
+  nextValue: unknown[],
+  matchedIndexes: Set<number>,
+  depth: number,
+) => {
+  const nextIndex = findUnmatchedArrayEntryIndex(
+    previousEntry,
+    nextValue,
+    matchedIndexes,
+  );
+  if (nextIndex < 0) return true;
+  matchedIndexes.add(nextIndex);
+
+  const nextEntry = nextValue[nextIndex];
+  if (!isPlainRecord(previousEntry) || !isPlainRecord(nextEntry)) {
+    return false;
+  }
+  if (!hasSameId(previousEntry, nextEntry)) return false;
+  return losesSyncedDataAtDepth(previousEntry, nextEntry, depth + 1);
+};
+
+const losesSyncedDataInArray = (
+  previousValue: unknown[],
+  nextValue: unknown,
+  depth: number,
+) => {
+  if (previousValue.length === 0) return false;
+  if (!Array.isArray(nextValue)) return true;
+
+  const matchedIndexes = new Set<number>();
+  for (const previousEntry of previousValue) {
+    if (
+      losesSyncedDataInArrayEntry(
+        previousEntry,
+        nextValue,
+        matchedIndexes,
+        depth,
+      )
+    ) {
+      return true;
+    }
+  }
+  return false;
+};
+
+const losesSyncedDataAtRecordKey = (
+  previousValue: Record<string, unknown>,
+  nextValue: Record<string, unknown>,
+  key: string,
+  depth: number,
+) => {
+  const previousChild = previousValue[key];
+  if (!hasOwn(nextValue, key)) return isNonEmpty(previousChild);
+  return losesSyncedDataAtDepth(previousChild, nextValue[key], depth + 1);
+};
+
+const losesSyncedDataInRecord = (
+  previousValue: Record<string, unknown>,
+  nextValue: unknown,
+  depth: number,
+) => {
   if (Object.keys(previousValue).length === 0) return false;
   if (!isPlainRecord(nextValue)) return true;
 
   for (const key of Object.keys(previousValue)) {
-    const previousChild = previousValue[key];
-    if (!hasOwn(nextValue, key)) {
-      if (isNonEmpty(previousChild)) return true;
-      continue;
-    }
-    if (losesSyncedDataAtDepth(previousChild, nextValue[key], depth + 1)) {
+    if (losesSyncedDataAtRecordKey(previousValue, nextValue, key, depth)) {
       return true;
     }
   }
