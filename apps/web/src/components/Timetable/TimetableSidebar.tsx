@@ -50,6 +50,7 @@ import {
   canSortTimetableCourses,
   reorderStoredCourseIdsByCredits,
 } from "@/helpers/timetable";
+import { groupColorsByDepartment } from "@/helpers/timetableColors";
 import { filterHiddenCourseIds } from "@/helpers/timetableVisibility";
 import { toWebcalCalendarFeedUrl } from "@/lib/calendar-subscription";
 
@@ -77,7 +78,6 @@ const TimetableSidebar = ({
     getSemesterCourses,
     courses,
     setCourses,
-    colorMap,
     setColorMap,
     currentColors,
     semesterCustomItems,
@@ -122,20 +122,9 @@ const TimetableSidebar = ({
 
   const handleGroupByDepartment = (semester: string) => {
     const semesterCourses = getSemesterCourses(semester);
-    const newColorMap = { ...colorMap };
-    const departments = semesterCourses.reduce((acc, course) => {
-      if (!acc.includes(course.department)) acc.push(course.department);
-      return acc;
-    }, [] as string[]);
-    for (let i = 0; i < departments.length; i++) {
-      const color = currentColors[i % currentColors.length];
-      semesterCourses
-        .filter((course) => course.department === departments[i])
-        .forEach((course) => {
-          newColorMap[course.raw_id] = color;
-        });
-    }
-    setColorMap(newColorMap);
+    setColorMap((previousColorMap) =>
+      groupColorsByDepartment(previousColorMap, semesterCourses, currentColors),
+    );
   };
 
   const sortByCredits = (semester: string) => {

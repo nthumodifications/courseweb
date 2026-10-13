@@ -36,6 +36,10 @@ const user = {
   expires_at: 1,
   profile: { name: "Test User", sub: "account-a" },
 };
+const authState: {
+  isAuthenticated: boolean;
+  user: typeof user | undefined;
+} = { isAuthenticated: true, user };
 const actualOidcContext = await import("react-oidc-context");
 const actualAuth = await import("@/config/auth");
 const actualUsehooksTs = await import("usehooks-ts");
@@ -127,7 +131,7 @@ const readLocalValue = <T,>(key: string, fallback: () => T): T => {
 };
 
 mock.module("react-oidc-context", () => ({
-  useAuth: () => ({ isAuthenticated: true, user }),
+  useAuth: () => authState,
 }));
 mock.module("@/config/auth", () => ({
   default: { api: { kv: { ":key": { $get: get, $post: post } } } },
@@ -169,6 +173,8 @@ describe("useSyncedStorage remote read states", () => {
   });
 
   afterEach(() => {
+    authState.isAuthenticated = true;
+    authState.user = user;
     activeDom?.window.close();
     activeDom = undefined;
     restoreGlobals();
@@ -181,6 +187,35 @@ describe("useSyncedStorage remote read states", () => {
         }),
     );
     post.mockImplementation(async () => new Response(null, { status: 200 }));
+  });
+
+  test("upgrades a raw anonymous timetable while retaining all semesters", async () => {
+    setupDom();
+    authState.isAuthenticated = false;
+    authState.user = undefined;
+    const legacyCourses = {
+      "11310": ["11310-COURSE"],
+      "11410": ["11410-COURSE"],
+      "11510": ["11510-COURSE"],
+    };
+    window.localStorage.setItem("courses", JSON.stringify(legacyCourses));
+
+    const rendered = await renderSyncedStorage(() =>
+      useSyncedStorage("courses", {}, mergeCourseStorage),
+    );
+    await waitForResult(
+      rendered.getResult,
+      (result) =>
+        Object.keys((result?.[0] as Record<string, string[]>) ?? {}).length ===
+        3,
+    );
+
+    expect(rendered.getResult()?.[0]).toEqual(legacyCourses);
+    expect(window.localStorage.getItem("courses")).toBe(
+      JSON.stringify(legacyCourses),
+    );
+
+    await cleanupSyncedStorage(rendered);
   });
 
   test("settles local data after a GET error without POST, then reconciles after success", async () => {

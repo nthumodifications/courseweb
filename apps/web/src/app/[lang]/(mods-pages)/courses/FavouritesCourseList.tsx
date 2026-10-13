@@ -31,6 +31,7 @@ import client from "@/config/api";
 import { getFavouriteCourseItems } from "./favouriteCourseItems";
 import type { FavouriteCourseItem } from "./favouriteCourseItems";
 import { FavouriteCourseActions } from "./FavouriteCourseActions";
+import { removeFavourite } from "@/helpers/favourites";
 
 const FavouriteCourseActionsContainer = ({
   courseId,
@@ -41,13 +42,12 @@ const FavouriteCourseActionsContainer = ({
     addCourse,
     deleteCourse,
     isCourseSelected,
-    favourites,
     setFavourites,
   } = useUserTimetable();
   const dict = useDictionary();
 
   const unfavourite = () => {
-    setFavourites(favourites.filter((fav) => fav != courseId));
+    setFavourites((previous) => removeFavourite(previous, courseId));
   };
 
   return (
