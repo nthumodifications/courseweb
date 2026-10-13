@@ -32,7 +32,7 @@ const course = (rawId: string, semester: string, teacher = "教師") =>
 describe("instructor identity and grouping", () => {
   test("round-trips encoded route names without merging identities", () => {
     for (const name of ["A/B", "A%2FB", "中文教師"]) {
-      const routeParam = decodeURIComponent(encodeInstructorRouteParam(name));
+      const routeParam = encodeInstructorRouteParam(name);
       expect(decodeInstructorRouteParam(routeParam)).toBe(name);
     }
 

@@ -3,7 +3,12 @@ import { createRoot } from "react-dom/client";
 import { Simulate } from "react-dom/test-utils";
 import { JSDOM } from "jsdom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { afterAll, afterEach, describe, expect, mock, test } from "bun:test";
+import { CookiesProvider } from "react-cookie";
+import { MemoryRouter, Route, Routes, useParams } from "react-router-dom";
+import type { AuthContextProps } from "react-oidc-context";
+import { afterEach, describe, expect, mock, test } from "bun:test";
+import en from "@/dictionaries/en.json";
+import zh from "@/dictionaries/zh.json";
 import { captureGlobalState } from "@/test-utils/global-state";
 
 process.env.VITE_COURSEWEB_API_URL ??= "https://api.example.test";
@@ -12,25 +17,36 @@ const restoreGlobals = captureGlobalState([
   "window",
   "document",
   "navigator",
+  "StorageEvent",
+  "getComputedStyle",
   "HTMLElement",
   "MutationObserver",
   "Node",
   "DocumentFragment",
   "ResizeObserver",
   "IS_REACT_ACT_ENVIRONMENT",
+  "turnstile",
 ]);
 const moduleDom = new JSDOM("<!doctype html><html><body></body></html>");
+const turnstile = {
+  render: () => "test-widget",
+  remove: () => undefined,
+  reset: () => undefined,
+  execute: () => undefined,
+  getResponse: () => "",
+  isExpired: () => false,
+};
 Object.assign(globalThis, {
   window: moduleDom.window,
   document: moduleDom.window.document,
   navigator: moduleDom.window.navigator,
+  turnstile,
 });
-const actualApi = await import("@/config/api");
-const actualDictionary = await import("@/dictionaries/useDictionary");
-const actualOidcContext = await import("react-oidc-context");
-const actualRouter = await import("react-router-dom");
-const actualTurnstile = await import("react-turnstile");
-const actualGtag = await import("@/lib/gtag");
+const { AuthContext } = await import("react-oidc-context");
+const testAuth = {
+  isAuthenticated: false,
+  user: null,
+} as AuthContextProps;
 moduleDom.window.close();
 restoreGlobals();
 let activeDom: JSDOM | undefined;
@@ -52,6 +68,25 @@ const knownIssuesGet = mock(async () =>
   ]),
 );
 const issuePost = mock(async () => Response.json({ applied: [] }));
+const mockSettings = {
+  language: "en",
+  darkMode: false,
+  pinnedApps: [],
+  showAcademicCalendar: true,
+  setShowAcademicCalendar: () => {},
+  setLanguage: () => {},
+  setDarkMode: () => {},
+  setTimetableTheme: () => {},
+  toggleApp: () => {},
+  analytics: true,
+  setAnalytics: () => {},
+};
+const passthroughSettingsProvider = ({ children }: React.PropsWithChildren) =>
+  children;
+mock.module("@/hooks/contexts/settings", () => ({
+  SettingsProvider: passthroughSettingsProvider,
+  useSettings: () => mockSettings,
+}));
 mock.module("@/config/api", () => ({
   default: {
     issue: {
@@ -61,33 +96,18 @@ mock.module("@/config/api", () => ({
   },
 }));
 mock.module("@/dictionaries/useDictionary", () => ({
-  default: () => ({
-    forms: {
-      issue: new Proxy({}, { get: (_target, property) => String(property) }),
-    },
-    issues: { form: { success: "submitted" } },
-  }),
+  default: () => (useParams().lang === "en" ? en : zh),
 }));
-const mockSettings = {
-  useSettings: () => ({ darkMode: false, language: "en" }),
-};
-mock.module("@/hooks/contexts/settings", () => mockSettings);
-mock.module("react-oidc-context", () => ({
-  useAuth: () => ({ isAuthenticated: false }),
-}));
-mock.module("react-router-dom", () => ({
-  useLocation: () => ({ pathname: "/en/courses" }),
-}));
-mock.module("react-turnstile", () => ({ default: () => null }));
-mock.module("@/lib/gtag", () => ({ event: () => {} }));
 
 const { default: EmptyIssueForm } = await import(
   "@/app/[lang]/(mods-pages)/(side-pages)/issues/EmptyIssueForm"
 );
 const { useIssueReport, useKnownIssues } = await import("./IssueReportForm");
-mock.module("@/dictionaries/useDictionary", () => actualDictionary);
 
-const renderInQueryClient = async (element: React.ReactNode) => {
+const renderInQueryClient = async (
+  element: React.ReactNode,
+  initialEntry = "/en/issues",
+) => {
   const dom = new JSDOM("<!doctype html><html><body></body></html>", {
     url: "http://localhost/en/issues",
   });
@@ -96,6 +116,7 @@ const renderInQueryClient = async (element: React.ReactNode) => {
     window: dom.window,
     document: dom.window.document,
     navigator: dom.window.navigator,
+    StorageEvent: dom.window.StorageEvent,
     HTMLElement: dom.window.HTMLElement,
     MutationObserver: dom.window.MutationObserver,
     Node: dom.window.Node,
@@ -105,7 +126,19 @@ const renderInQueryClient = async (element: React.ReactNode) => {
       unobserve() {}
       disconnect() {}
     },
+    getComputedStyle: dom.window.getComputedStyle,
+    turnstile,
   });
+  dom.window.matchMedia = (() => ({
+    matches: false,
+    media: "",
+    onchange: null,
+    addListener: () => undefined,
+    removeListener: () => undefined,
+    addEventListener: () => undefined,
+    removeEventListener: () => undefined,
+    dispatchEvent: () => false,
+  })) as typeof dom.window.matchMedia;
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
@@ -114,11 +147,44 @@ const renderInQueryClient = async (element: React.ReactNode) => {
   const root = createRoot(container);
   await act(async () => {
     root.render(
-      createElement(QueryClientProvider, { client: queryClient }, element),
+      createElement(
+        QueryClientProvider,
+        { client: queryClient },
+        createElement(
+          MemoryRouter,
+          { initialEntries: [initialEntry] },
+          createElement(
+            Routes,
+            null,
+            createElement(Route, {
+              path: "/:lang/*",
+              element: createElement(
+                CookiesProvider,
+                null,
+                createElement(
+                  AuthContext.Provider,
+                  { value: testAuth },
+                  createElement(passthroughSettingsProvider, null, element),
+                ),
+              ),
+            }),
+          ),
+        ),
+      ),
     );
   });
   return { container, dom, queryClient, root };
 };
+
+const defaultIssuePost = async () => Response.json({ applied: [] });
+
+const resetApiMocks = () => {
+  knownIssuesGet.mockClear();
+  issuePost.mockClear();
+  issuePost.mockImplementation(defaultIssuePost);
+};
+
+resetApiMocks();
 
 const waitFor = async (condition: () => boolean) => {
   for (let attempt = 0; attempt < 20; attempt += 1) {
@@ -130,6 +196,8 @@ const waitFor = async (condition: () => boolean) => {
 };
 
 describe("issue report integration", () => {
+  afterEach(resetApiMocks);
+
   test("does not load known issues on the issues page until a title is typed", async () => {
     knownIssuesGet.mockClear();
     const rendered = await renderInQueryClient(createElement(EmptyIssueForm));
@@ -261,13 +329,4 @@ afterEach(() => {
   activeDom?.window.close();
   activeDom = undefined;
   restoreGlobals();
-});
-
-afterAll(() => {
-  mock.module("@/config/api", () => actualApi);
-  mock.module("@/dictionaries/useDictionary", () => actualDictionary);
-  mock.module("react-oidc-context", () => actualOidcContext);
-  mock.module("react-router-dom", () => actualRouter);
-  mock.module("react-turnstile", () => actualTurnstile);
-  mock.module("@/lib/gtag", () => actualGtag);
 });

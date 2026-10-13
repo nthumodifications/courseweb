@@ -22,6 +22,12 @@ type CourseOverallGradeSummaryProps = {
   copy: CourseOverallGradeSummaryCopy;
 };
 
+export const hasCourseOverallGradeSummary = (
+  statistics: readonly CourseStatistic[] | undefined,
+  error?: unknown,
+) =>
+  Boolean(!error && statistics && summarizeCourseStatistics(statistics).length);
+
 const replaceSummaryValues = (
   template: string,
   values: { count: number; semesters: number },
@@ -72,7 +78,7 @@ const CourseOverallGradeSummary = ({
             : null;
 
           return (
-            <div key={summary.scale}>
+            <div key={summary.scale} className="flex flex-col gap-1">
               <p className="text-sm">
                 <span className="font-bold">{scaleLabel}:</span> {copy.average}{" "}
                 {summary.average.toFixed(2)}

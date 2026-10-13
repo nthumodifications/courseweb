@@ -25,9 +25,37 @@ const matchesRoutePath = (pathname: string, routePath: string) => {
 describe("What's new release selection", () => {
   test("selects the highlighted release", () => {
     expect(getHighlightedRelease(CHANGELOG)?.version).toBe("2026.10.1");
+    expect(
+      CHANGELOG.find((release) => release.version === "2026.10.2")?.highlight,
+    ).toBeUndefined();
   });
 
-  test("shows the current release when the version has not been seen", () => {
+  test("keeps releases newest-first with one highlighted release", () => {
+    expect(CHANGELOG).toEqual(
+      [...CHANGELOG].sort(
+        (left, right) =>
+          right.date.localeCompare(left.date) ||
+          right.version.localeCompare(left.version),
+      ),
+    );
+    expect(CHANGELOG.filter((release) => release.highlight)).toHaveLength(1);
+  });
+
+  test("keeps English and Traditional Chinese release copy in parity", () => {
+    for (const release of CHANGELOG) {
+      if (release.title) {
+        expect(Object.keys(release.title).sort()).toEqual(["en", "zh"]);
+      }
+      for (const item of release.items) {
+        expect(Object.keys(item.title).sort()).toEqual(["en", "zh"]);
+        if (item.description) {
+          expect(Object.keys(item.description).sort()).toEqual(["en", "zh"]);
+        }
+      }
+    }
+  });
+
+  test("shows the highlighted release when it has not been seen", () => {
     expect(
       shouldShowWhatsNew({
         lastSeenVersion: null,
@@ -36,6 +64,17 @@ describe("What's new release selection", () => {
         hasOpenDialog: false,
       }),
     ).toBe(true);
+  });
+
+  test("does not show a dialog after the highlighted release was seen", () => {
+    expect(
+      shouldShowWhatsNew({
+        lastSeenVersion: "2026.10.1",
+        currentVersion: getHighlightedRelease(CHANGELOG)!.version,
+        hasVisitedBefore: true,
+        hasOpenDialog: false,
+      }),
+    ).toBe(false);
   });
 
   test("shows an unseen release after onboarding", () => {
@@ -97,12 +136,13 @@ describe("What's new release selection", () => {
 });
 
 test("matches release actions to localized and locale-free links", () => {
-  const release = CHANGELOG[0];
+  const release = CHANGELOG.find((entry) => entry.version === "2026.10.1");
+  expect(release).toBeDefined();
 
-  expect(hasReleaseActionForHref(release, "/bus")).toBe(true);
-  expect(hasReleaseActionForHref(release, "/zh/bus")).toBe(true);
-  expect(hasReleaseActionForHref(release, "/courses/modules")).toBe(true);
-  expect(hasReleaseActionForHref(release, "/settings")).toBe(false);
+  expect(hasReleaseActionForHref(release!, "/bus")).toBe(true);
+  expect(hasReleaseActionForHref(release!, "/zh/bus")).toBe(true);
+  expect(hasReleaseActionForHref(release!, "/courses/modules")).toBe(true);
+  expect(hasReleaseActionForHref(release!, "/settings")).toBe(false);
 });
 
 test("every release visual has a registry entry or public image", () => {

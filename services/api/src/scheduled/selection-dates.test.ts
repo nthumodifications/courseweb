@@ -470,9 +470,12 @@ describe("scheduled sync", () => {
         metadata: { fetchedAt: "2020-10-09T18:00:00.000Z" },
       }),
     );
-    await expect(readStoredSelectionSchedules(db as never)).resolves.toEqual([
-      expect.objectContaining({ semester: "11610" }),
-    ]);
+    await expect(
+      readStoredSelectionSchedules(
+        db as never,
+        new Date("2026-10-11T03:00:00Z"),
+      ),
+    ).resolves.toEqual([expect.objectContaining({ semester: "11610" })]);
   });
 
   const malformedCurrentHtml = currentHtml.replace(
