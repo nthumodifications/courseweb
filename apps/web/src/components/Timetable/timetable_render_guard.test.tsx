@@ -109,14 +109,6 @@ mock.module("@/dictionaries/useDictionary", () => ({
     },
   }),
 }));
-mock.module("react-router-dom", () => ({
-  Link: ({ children }: { children: unknown }) => children,
-  useLocation: () => ({ pathname: "/en/timetable" }),
-  useNavigate: () => () => {},
-  useParams: () => ({ lang: "en" }),
-  useSearchParams: () => [new URLSearchParams(), () => {}],
-}));
-
 const useTestLocalStorage = <T,>(
   key: string,
   initialValue: T,
@@ -186,7 +178,6 @@ afterAll(() => {
   mock.module("@/lib/gtag", () => actualGtag);
   mock.module("@/hooks/contexts/settings", () => actualSettings);
   mock.module("@/dictionaries/useDictionary", () => actualDictionary);
-  mock.module("react-router-dom", () => actualRouter);
   mock.module("usehooks-ts", () => actualUsehooksTs);
 });
 
@@ -199,6 +190,8 @@ const TIMETABLE_THEME_KEY = "nthumods-storage-anonymous-timetable_theme";
 
 const syncedRecord = (value: unknown) =>
   JSON.stringify({ value, lastModified: 1, updatedAt: 1, deviceId: "test" });
+
+let activeCleanup: (() => Promise<void>) | undefined;
 
 const testCourse = {
   capacity: 30,
@@ -260,11 +253,13 @@ const renderTimetable = async (
   const root = createRoot(container);
   await act(async () => {
     root.render(
-      <QueryClientProvider client={queryClient}>
-        <UserTimetableProvider>
-          <CourseDialogProvider>{children}</CourseDialogProvider>
-        </UserTimetableProvider>
-      </QueryClientProvider>,
+      <actualRouter.MemoryRouter initialEntries={["/en/timetable"]}>
+        <QueryClientProvider client={queryClient}>
+          <UserTimetableProvider>
+            <CourseDialogProvider>{children}</CourseDialogProvider>
+          </UserTimetableProvider>
+        </QueryClientProvider>
+      </actualRouter.MemoryRouter>,
     );
     await new Promise((resolve) => setTimeout(resolve, 0));
   });
@@ -286,7 +281,11 @@ const renderTimetable = async (
       window.dispatchEvent(new StorageEvent("storage", { key, newValue }));
     });
   };
+  let cleaned = false;
   const cleanup = async () => {
+    if (cleaned) return;
+    cleaned = true;
+    activeCleanup = undefined;
     await act(async () => {
       root.unmount();
     });
@@ -295,11 +294,14 @@ const renderTimetable = async (
     restoreGlobals();
   };
 
+  activeCleanup = cleanup;
+
   return { container, cleanup, readState, waitFor, writeStorage };
 };
 
 describe("timetable provider render stability", () => {
-  afterEach(() => {
+  afterEach(async () => {
+    await activeCleanup?.();
     courseResponseData = [];
     restoreGlobals();
   });

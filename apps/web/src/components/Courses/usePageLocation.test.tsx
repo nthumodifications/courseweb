@@ -45,13 +45,12 @@ const MetadataProbe = () => {
   );
 };
 
-const renderRouter = () => {
+const renderRouter = (initialEntry = "/en/courses") => {
   const router = createMemoryRouter(
     [{ path: "*", element: createElement(MetadataProbe) }],
-    { initialEntries: ["/en/courses"] },
+    { initialEntries: [initialEntry] },
   );
   const container = document.createElement("div");
-  document.body.appendChild(container);
   const root = createRoot(container);
   activeRouter = router;
   activeRoot = root;
@@ -77,7 +76,6 @@ describe("page location metadata source", () => {
     activeRouter?.dispose();
     activeRoot = undefined;
     activeRouter = undefined;
-    document.body.innerHTML = "";
     document.head.innerHTML = "";
     active?.restore();
     active = undefined;
@@ -85,7 +83,7 @@ describe("page location metadata source", () => {
 
   test("keeps global metadata on the background while a dialog is open", async () => {
     active = installTestDom("/en/courses");
-    const { router } = renderRouter();
+    const { router, container } = renderRouter();
     await act(async () => {});
     const before = metadataSnapshot();
 
@@ -103,7 +101,7 @@ describe("page location metadata source", () => {
         },
       }),
     );
-    expect(document.body.textContent).toContain(
+    expect(container.textContent).toContain(
       "/en/courses/11410-CS%201010%201:/en/courses",
     );
     expect(metadataSnapshot()).toEqual(before);
