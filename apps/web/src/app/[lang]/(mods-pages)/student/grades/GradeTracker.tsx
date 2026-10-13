@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useAuth } from "react-oidc-context";
+import { rememberPostSigninRedirect } from "@/lib/credentialStorage";
 import { useLocalStorage } from "usehooks-ts";
 import {
   Badge,
@@ -276,7 +277,7 @@ const GradeTracker = () => {
 
   const handleSignIn = () => {
     localStorage.setItem(SYNC_INTENT_KEY, "true");
-    localStorage.setItem("redirectUri", window.location.pathname);
+    rememberPostSigninRedirect(window.location.pathname);
     void signinRedirect();
   };
 

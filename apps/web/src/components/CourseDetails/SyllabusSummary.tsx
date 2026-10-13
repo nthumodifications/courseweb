@@ -4,7 +4,7 @@ import { Sparkles, Loader2, AlertCircle, RotateCcw } from "lucide-react";
 import type { RawCourseID } from "@/types/courses";
 import client from "@/config/api";
 import useDictionary from "@/dictionaries/useDictionary";
-import { AI_SETTINGS_STORAGE_KEY } from "@/lib/credentialStorage";
+import { readAiSettings } from "@/lib/credentialStorage";
 
 interface SyllabusSummary {
   bullets: string[];
@@ -47,17 +47,9 @@ export default function SyllabusSummary({
     setError(null);
     setErrorCode(null);
     try {
-      let apiKey: string | undefined;
-      try {
-        const saved = window.localStorage.getItem(AI_SETTINGS_STORAGE_KEY);
-        if (saved) {
-          const parsed = JSON.parse(saved) as {
-            useCustomKey?: boolean;
-            apiKey?: string;
-          };
-          if (parsed.useCustomKey && parsed.apiKey) apiKey = parsed.apiKey;
-        }
-      } catch {}
+      const settings = readAiSettings();
+      const apiKey =
+        settings?.useCustomKey && settings.apiKey ? settings.apiKey : undefined;
 
       const res = apiKey
         ? await client.ai.summarize[":courseId"].$get(

@@ -8,6 +8,7 @@ import {
   hasAuthParams,
   useAuth,
 } from "react-oidc-context";
+import { consumePostSigninRedirect } from "@/lib/credentialStorage";
 
 const RefreshOnLoad = () => {
   const auth = useAuth();
@@ -48,8 +49,7 @@ const OidcAuthProvider = ({ children }: PropsWithChildren) => {
       userStore: new WebStorageStateStore({ store: window.localStorage }),
       automaticSilentRenew: true,
       onSigninCallback(user) {
-        const redirectUri = localStorage.getItem("redirectUri");
-        navigate(redirectUri ?? "/");
+        navigate(consumePostSigninRedirect());
       },
       ui_locales: language,
       post_logout_redirect_uri: window.location.origin,

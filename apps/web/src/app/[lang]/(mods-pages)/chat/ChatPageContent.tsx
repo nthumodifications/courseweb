@@ -6,6 +6,7 @@ import { AISettingsDialog } from "@/components/Chat/AISettingsDialog";
 import { ChatErrorAlert } from "@/components/Chat/ChatErrorAlert";
 import { useChatContext } from "@/components/Chat/ChatProvider";
 import { useAuth } from "react-oidc-context";
+import { rememberPostSigninRedirect } from "@/lib/credentialStorage";
 import { Button } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
 
@@ -14,7 +15,7 @@ function LoginPrompt() {
   const dict = useDictionary();
 
   const handleLogin = () => {
-    localStorage.setItem("redirectUri", window.location.pathname);
+    rememberPostSigninRedirect(window.location.pathname);
     signinRedirect();
   };
 
