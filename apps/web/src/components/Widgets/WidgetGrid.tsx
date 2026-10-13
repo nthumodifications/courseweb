@@ -32,6 +32,7 @@ import ShopsWidget from "./ShopsWidget";
 import UpcomingEventsWidget from "./UpcomingEventsWidget";
 import GradesWidget from "./GradesWidget";
 import { cn } from "@/lib/utils";
+import { WidgetErrorBoundary } from "./WidgetErrorBoundary";
 
 // Individual sortable widget wrapper
 const SortableWidget: FC<{
@@ -53,13 +54,13 @@ const SortableWidget: FC<{
   };
 
   const dragHandleProps = { ...attributes, ...listeners };
+  const commonProps = {
+    onRemove: () => onRemove(widget.id),
+    dragHandleProps,
+    isDragging,
+  };
 
   const renderWidget = () => {
-    const commonProps = {
-      onRemove: () => onRemove(widget.id),
-      dragHandleProps,
-      isDragging,
-    };
     switch (widget.type) {
       case "schedule":
         return <ScheduleWidget {...commonProps} />;
@@ -100,7 +101,15 @@ const SortableWidget: FC<{
       style={style}
       className={cn(isDragging && "z-50 relative")}
     >
-      {renderWidget()}
+      <WidgetErrorBoundary
+        widgetId={widget.id}
+        widgetType={widget.type}
+        onRemove={commonProps.onRemove}
+        dragHandleProps={dragHandleProps}
+        isDragging={isDragging}
+      >
+        {renderWidget()}
+      </WidgetErrorBoundary>
     </div>
   );
 };
