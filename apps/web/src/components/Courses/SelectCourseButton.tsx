@@ -5,6 +5,7 @@ import { Heart, Minus, Plus } from "lucide-react";
 import { Button } from "@courseweb/ui";
 import { lastSemester } from "@courseweb/shared";
 import { courseEvents } from "@/lib/trackingEvents";
+import { toggleFavourite } from "@/helpers/favourites";
 
 const SelectCourseButton = ({ courseId }: { courseId: RawCourseID }) => {
   const {
@@ -22,11 +23,7 @@ const SelectCourseButton = ({ courseId }: { courseId: RawCourseID }) => {
 
   const isInFavourites = favourites.includes(courseId);
   const handleToggleFavourite = () => {
-    if (isInFavourites) {
-      setFavourites(favourites.filter((fav) => fav != courseId));
-    } else {
-      setFavourites([...favourites, courseId]);
-    }
+    setFavourites((previous) => toggleFavourite(previous, courseId));
   };
 
   const handleAddCourse = () => {

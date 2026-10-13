@@ -22,6 +22,7 @@ import { useQuery } from "@tanstack/react-query";
 import client from "@/config/api";
 import useDictionary from "@/dictionaries/useDictionary";
 import { decodeTimetableShareQuery } from "@/helpers/timetableShare";
+import { mergeTimetableImport } from "@/helpers/timetableImport";
 
 const ViewTimetablePage = () => {
   const navigate = useNavigate();
@@ -82,9 +83,29 @@ const ViewTimetablePage = () => {
   }, [courses]);
 
   const handleImportCourses = () => {
-    setCourses(courseCodes!);
-    setColorMap(colorMap);
-    setCustomItems(normalizeCustomTimetableStorage(sharedCustomItems));
+    const sharedTimetable = {
+      courses: courseCodes!,
+      customItems: normalizeCustomTimetableStorage(sharedCustomItems),
+      colorMap,
+    };
+    setCourses((courses) =>
+      mergeTimetableImport(
+        { courses, customItems: {}, colorMap: {} },
+        sharedTimetable,
+      ).courses,
+    );
+    setColorMap((colorMap) =>
+      mergeTimetableImport(
+        { courses: {}, customItems: {}, colorMap },
+        sharedTimetable,
+      ).colorMap,
+    );
+    setCustomItems((customItems) =>
+      mergeTimetableImport(
+        { courses: {}, customItems, colorMap: {} },
+        sharedTimetable,
+      ).customItems,
+    );
     navigate(`/${routeLang}/timetable`);
   };
 

@@ -11,12 +11,11 @@ const GroupByDepartmentButton = ({
 }: GroupByDepartmentButtonProps) => {
   const dict = useDictionary();
 
-  const { colorMap, setColorMap, getSemesterCourses, currentColors } =
+  const { setColorMap, getSemesterCourses, currentColors } =
     useUserTimetable();
 
   const handleGroupByDepartment = () => {
     const semesterCourses = getSemesterCourses(semester);
-    const newColorMap = { ...colorMap };
 
     const departments = semesterCourses.reduce((acc, course) => {
       if (!acc.includes(course.department)) {
@@ -25,17 +24,19 @@ const GroupByDepartmentButton = ({
       return acc;
     }, [] as string[]);
 
-    for (let i = 0; i < departments.length; i++) {
-      const color = currentColors[i % currentColors.length];
+    setColorMap((previousColorMap) => {
+      const newColorMap = { ...previousColorMap };
+      for (let i = 0; i < departments.length; i++) {
+        const color = currentColors[i % currentColors.length];
 
-      semesterCourses
-        .filter((course) => course.department === departments[i])
-        .forEach((course) => {
-          newColorMap[course.raw_id] = color;
-        });
-    }
-
-    setColorMap(newColorMap);
+        semesterCourses
+          .filter((course) => course.department === departments[i])
+          .forEach((course) => {
+            newColorMap[course.raw_id] = color;
+          });
+      }
+      return newColorMap;
+    });
   };
 
   return (

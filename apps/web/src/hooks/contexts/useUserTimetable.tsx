@@ -349,7 +349,7 @@ const useUserTimetableProvider = (loadCourse = true) => {
           newColorMap[courseID] = newColors[i % newColors.length];
         });
       });
-      setColorMap(newColorMap);
+      setColorMap((colorMap) => ({ ...colorMap, ...newColorMap }));
       setUserDefinedColors({});
     },
     [courses],
