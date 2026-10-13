@@ -3,14 +3,9 @@ import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import type { MiddlewareHandler } from "hono";
 import { z } from "zod";
-import { Timestamp } from "firebase-admin/firestore";
 import { userRateLimit } from "../middleware/userRateLimit";
 import { getFirebaseAdmin } from "../config/firebase_admin";
-import {
-  losesSyncedData,
-  mergeSyncedValue,
-  validKeys,
-} from "./kv_storage_contract";
+import { mergeSyncedValue, validKeys } from "./kv_storage_contract";
 import {
   jsonValueSchema,
   kvKeyParamSchema,
@@ -30,11 +25,10 @@ type SecureApiEnv = {
   };
 };
 
-export type KvStorageDependencies = {
+type KvStorageDependencies = {
   auth?: MiddlewareHandler<SecureApiEnv>;
   rateLimit?: MiddlewareHandler<SecureApiEnv>;
   getFirebaseAdmin?: typeof getFirebaseAdmin;
-  now?: () => number;
 };
 
 const lazyRequireAuth = (scopes: string[]) =>
@@ -50,7 +44,6 @@ export const createKvStorageApp = ({
   auth = lazyRequireAuth(["kv"]),
   rateLimit = userRateLimit as MiddlewareHandler<SecureApiEnv>,
   getFirebaseAdmin: getAdmin = getFirebaseAdmin,
-  now = Date.now,
 }: KvStorageDependencies = {}) =>
   new Hono<SecureApiEnv>()
     .use(
@@ -155,34 +148,6 @@ export const createKvStorageApp = ({
           const nextDeviceId = incomingIsNewer
             ? deviceId
             : existingDeviceId || undefined;
-
-          if (
-            existing.exists &&
-            losesSyncedData(existingData?.["value"], nextValue)
-          ) {
-            const replacedAt = now();
-            const day = new Date(replacedAt).toISOString().slice(0, 10);
-            const backupRef = adminFirestore
-              .collection("users")
-              .doc(c.var.user.userId)
-              .collection("storage_backups")
-              .doc(`${key}__${day.slice(-2)}`);
-            const backup = await transaction.get(backupRef);
-            if (!backup.exists || backup.data()?.["day"] !== day) {
-              // Maintainers recover damaged values manually for now.
-              transaction.set(backupRef, {
-                ...existingData,
-                day,
-                replacedAt,
-                expireAt: Timestamp.fromMillis(
-                  replacedAt + 35 * 24 * 60 * 60 * 1000,
-                ),
-                ...(deviceId !== undefined
-                  ? { replacedByDeviceId: deviceId }
-                  : {}),
-              });
-            }
-          }
 
           transaction.set(storageRef, {
             value: nextValue,
