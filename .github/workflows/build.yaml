@@ -24,17 +24,23 @@ jobs:
     steps:
       # Checkout the repository
       - name: Checkout code
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # Setup Bun
       - name: Setup Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: latest
 
       # Install dependencies
       - name: Install dependencies
         run: bun install --frozen-lockfile
+
+      - name: Run design lint
+        run: bun run design-lint
+
+      - name: Test design-lint baseline comparison
+        run: bun run test:design-lint
 
       # Run tests for all services
       - name: Run tests
@@ -56,7 +62,7 @@ jobs:
     if: github.event_name == 'pull_request'
     steps:
       - name: Checkout code
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
@@ -99,24 +105,19 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     environment: production
-    outputs:
-      d1_access: ${{ steps.d1.outputs.access }}
     steps:
-      # The deploy token has been rejected by D1 (Cloudflare error 7403) since
-      # 2026-09-30. Until it is replaced, report that as one warning and skip
-      # the migration and the API deploy, instead of failing every push to main.
       - name: Check the token can reach D1
-        id: d1
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
           status=$(curl -s -o /tmp/d1.json -w '%{http_code}'             -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN"             "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/d1/database?per_page=1")
           if [ "$status" = "200" ]; then
-            echo "access=true" >> "$GITHUB_OUTPUT"
+            echo "D1 access check passed."
           elif [ "$status" = "401" ] || [ "$status" = "403" ] || grep -q '"code": *7403' /tmp/d1.json; then
-            echo "access=false" >> "$GITHUB_OUTPUT"
-            echo "::warning title=API not deployed::CLOUDFLARE_API_TOKEN cannot access D1 (HTTP $status). Migrations and the API deploy were skipped. Give the token D1 edit permission on this account, then re-run this workflow."
+            echo "::error title=API not deployed::CLOUDFLARE_API_TOKEN cannot access D1 (HTTP $status). Migrations and the API deploy were skipped. Give the token D1 edit permission on this account, then re-run this workflow."
+            cat /tmp/d1.json
+            exit 1
           else
             echo "Unexpected response from Cloudflare (HTTP $status)"
             cat /tmp/d1.json
@@ -124,22 +125,18 @@ jobs:
           fi
 
       - name: Checkout code
-        if: steps.d1.outputs.access == 'true'
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup Bun
-        if: steps.d1.outputs.access == 'true'
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: latest
 
       - name: Install dependencies
-        if: steps.d1.outputs.access == 'true'
         run: bun install --frozen-lockfile
 
       - name: Apply D1 migrations
-        if: steps.d1.outputs.access == 'true'
-        uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3
+        uses: cloudflare/wrangler-action@953926a2e2182532811c01a25e53647d93bf07c0 # v4.1.3
         with:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -150,16 +147,16 @@ jobs:
   deploy-api:
     runs-on: ubuntu-latest
     needs: [migrate-db]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.migrate-db.outputs.d1_access == 'true'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     environment: production
     steps:
       # Checkout the repository
       - name: Checkout code
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # Setup Bun
       - name: Setup Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: latest
 
@@ -175,10 +172,8 @@ jobs:
 
       # Deploy API service to Cloudflare Workers
       # `wrangler deploy` uploads the Worker (which puts the new code live) and
-      # then syncs routes and cron triggers. The deploy token cannot read the
-      # zone's Workers routes, so that second half fails with "No access" even
-      # though the code is deployed. Report exactly that case as a warning;
-      # any other failure still fails the job.
+      # then syncs routes and cron triggers. A route or cron sync failure fails
+      # the job even if the Worker code was uploaded.
       - name: Deploy API Service
         working-directory: services/api
         env:
@@ -193,8 +188,8 @@ jobs:
             exit 0
           fi
           if grep -q 'Uploaded nthumods-api' /tmp/wrangler-deploy.log             && grep -q '/workers/routes) failed' /tmp/wrangler-deploy.log             && grep -q 'No access to the specified resource' /tmp/wrangler-deploy.log; then
-            echo "::warning title=API deployed, routes and crons not synced::The Worker code was uploaded, but CLOUDFLARE_API_TOKEN cannot read the zone's Workers routes, so changes to routes or cron triggers in wrangler.toml were not applied. Add Zone > Workers Routes > Edit to the token to clear this."
-            exit 0
+            echo "::error title=API deployed, routes and crons not synced::The Worker code was uploaded, but CLOUDFLARE_API_TOKEN cannot read the zone's Workers routes, so changes to routes or cron triggers in wrangler.toml were not applied. Add Zone > Workers Routes > Edit to the token to clear this."
+            exit "$status"
           fi
           exit "$status"
 
@@ -268,10 +263,10 @@ jobs:
     environment: production
     steps:
       - name: Checkout code
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: latest
 
@@ -298,11 +293,11 @@ jobs:
     steps:
       # Checkout the repository
       - name: Checkout code
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # Log in to GitHub Container Registry
       - name: Log in to GHCR
-        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
@@ -334,10 +329,10 @@ jobs:
       packages: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Log in to GHCR
-        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}

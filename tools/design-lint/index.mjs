@@ -3,8 +3,17 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
-const root = path.resolve(fileURLToPath(new URL("../..", import.meta.url)));
-const baselinePath = path.join(root, "tools", "design-lint", "baseline.json");
+import {
+  compareBaseline,
+  formatStaleBaseline,
+} from "./baseline.mjs";
+
+const defaultRoot = fileURLToPath(new URL("../..", import.meta.url));
+const root = path.resolve(process.env.DESIGN_LINT_ROOT ?? defaultRoot);
+const baselinePath = path.resolve(
+  process.env.DESIGN_LINT_BASELINE ??
+    path.join(root, "tools", "design-lint", "baseline.json"),
+);
 const RULES = {
   "hardcoded-color": {
     description: "hardcoded gray/slate/zinc/neutral utility or non-token color",
@@ -432,11 +441,13 @@ function emptyCounts() {
 }
 
 const findings = [];
+const existingFiles = new Set();
 
 for (const sourceRoot of sourceRoots) {
   for (const filePath of walk(sourceRoot)) {
     const source = fs.readFileSync(filePath, "utf8");
     const relativePath = normalize(filePath);
+    existingFiles.add(relativePath);
     for (const ruleName of Object.keys(RULES)) {
       const matches = matchesFor(ruleName, filePath, source);
       findings.push(
@@ -472,7 +483,7 @@ if (process.argv.includes("--write-baseline")) {
     rules: Object.fromEntries(
       Object.keys(RULES).map((ruleName) => [
         ruleName,
-        { files: violations[ruleName], cleaned: [] },
+        { files: violations[ruleName] },
       ]),
     ),
   };
@@ -492,31 +503,11 @@ try {
   process.exit(1);
 }
 
-const baselineFindings = newFindings.filter((finding) => {
-  const ruleBaseline = baseline.rules?.[finding.ruleName] ?? {};
-  const allowed = ruleBaseline.files?.[finding.file];
-  const cleaned = ruleBaseline.cleaned?.includes(finding.file);
-  return (
-    cleaned ||
-    typeof allowed !== "number" ||
-    violations[finding.ruleName][finding.file] > allowed
-  );
+const { excess, stale } = compareBaseline({
+  violations,
+  baseline,
+  existingFiles,
 });
-
-const cleanedFiles = [];
-for (const [ruleName, ruleBaseline] of Object.entries(baseline.rules ?? {})) {
-  for (const file of Object.keys(ruleBaseline.files ?? {})) {
-    if (
-      !violations[ruleName]?.[file] &&
-      !ruleBaseline.cleaned?.includes(file)
-    ) {
-      cleanedFiles.push(`${ruleName}: ${file}`);
-    }
-  }
-}
-if (cleanedFiles.length > 0) {
-  console.log(`Cleaned baseline entries: ${cleanedFiles.length}`);
-}
 
 console.log("Design lint summary");
 for (const [ruleName, rule] of Object.entries(RULES)) {
@@ -527,13 +518,25 @@ for (const [ruleName, rule] of Object.entries(RULES)) {
   console.log(`  ${ruleName}: ${total} (${rule.description})`);
 }
 
-if (baselineFindings.length > 0) {
+if (stale.length > 0) {
+  console.error(formatStaleBaseline(stale).join("\n"));
+}
+
+if (excess.length > 0) {
   console.error("New design-lint violations:");
-  for (const finding of baselineFindings) {
+  for (const finding of newFindings.filter((finding) =>
+    excess.some(
+      (entry) =>
+        entry.ruleName === finding.ruleName && entry.file === finding.file,
+    ),
+  )) {
     console.error(
       `  ${finding.file}:${finding.line} ${finding.ruleName} ${finding.value}`,
     );
   }
+}
+
+if (stale.length > 0 || excess.length > 0) {
   process.exit(1);
 }
 
