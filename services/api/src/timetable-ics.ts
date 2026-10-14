@@ -1,7 +1,12 @@
 import { Hono, type Context } from "hono";
+import { env } from "hono/adapter";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import supabase_server from "./config/supabase_server";
+import {
+  fetchAcademicCalendarEvents,
+  getNoClassDates,
+} from "./aca-calendar";
 
 // ── Worker-local mirror of packages/shared/src/constants/semester.ts ─────────
 // The Worker cannot import @courseweb/shared here: its package export points at
@@ -143,6 +148,76 @@ export const EMPTY_CALENDAR =
   [...CALENDAR_METADATA, "END:VCALENDAR"].join("\r\n") + "\r\n";
 
 const CALENDAR_REFRESH_MS = 5 * 60 * 1000;
+const ACADEMIC_CALENDAR_TIMEOUT_MS = 3_000;
+const ACADEMIC_CALENDAR_CACHE_TTL_MS = 4 * 60 * 60 * 1000;
+
+type AcademicCalendarCacheEntry = {
+  expiresAt: number;
+  noClassDates: Set<string>;
+  hasSuccessfulData: boolean;
+};
+
+const academicCalendarCache = new Map<string, AcademicCalendarCacheEntry>();
+const missingAcademicCalendarKeyLogged = new Set<string>();
+const ACADEMIC_CALENDAR_FAILURE_RETRY_MS = 5 * 60 * 1000;
+
+const dateOnly = (date: Date): string => date.toISOString().slice(0, 10);
+
+async function getSemesterNoClassDates(
+  semester: string,
+  semObj: { begins: Date; ends: Date },
+  apiKey: string | undefined,
+): Promise<Set<string>> {
+  if (!apiKey) {
+    if (!missingAcademicCalendarKeyLogged.has(semester)) {
+      missingAcademicCalendarKeyLogged.add(semester);
+      console.error(
+        `[timetable-ics] Academic calendar unavailable for semester ${semester}; serving feed without EXDATEs`,
+      );
+    }
+    return new Set();
+  }
+
+  const now = Date.now();
+  const cached = academicCalendarCache.get(semester);
+  if (cached && cached.expiresAt > now) return cached.noClassDates;
+
+  try {
+    const events = await fetchAcademicCalendarEvents(
+      semObj.begins,
+      semObj.ends,
+      apiKey,
+      ACADEMIC_CALENDAR_TIMEOUT_MS,
+    );
+    const noClassDates = getNoClassDates(events, {
+      start: dateOnly(semObj.begins),
+      end: dateOnly(semObj.ends),
+    });
+    academicCalendarCache.set(semester, {
+      expiresAt: now + ACADEMIC_CALENDAR_CACHE_TTL_MS,
+      noClassDates,
+      hasSuccessfulData: true,
+    });
+    missingAcademicCalendarKeyLogged.delete(semester);
+    return noClassDates;
+  } catch (error) {
+    academicCalendarCache.set(semester, {
+      expiresAt: now + ACADEMIC_CALENDAR_FAILURE_RETRY_MS,
+      noClassDates: cached?.hasSuccessfulData ? cached.noClassDates : new Set(),
+      hasSuccessfulData: cached?.hasSuccessfulData ?? false,
+    });
+    if (!missingAcademicCalendarKeyLogged.has(semester)) {
+      missingAcademicCalendarKeyLogged.add(semester);
+      console.error(
+        `[timetable-ics] Academic calendar unavailable for semester ${semester}; serving feed without EXDATEs`,
+        error,
+      );
+    }
+    return cached?.hasSuccessfulData
+      ? cached.noClassDates
+      : new Set();
+  }
+}
 
 const stableFeedTimestamp = (now: Date) =>
   new Date(
@@ -270,7 +345,7 @@ export function firstOccurrence(
 export function generateTimetableIcs(
   courses: CourseRow[],
   semObj: { begins: Date; ends: Date },
-  _academicSelectionPeriods?: unknown[],
+  noClassDates?: Iterable<string>,
   generatedAt = new Date(),
 ): string {
   // semObj.begins = new Date(year, month, day) — UTC midnight in a UTC runtime.
@@ -279,6 +354,7 @@ export function generateTimetableIcs(
   const semStart = new Date(semObj.begins.getTime() - 8 * 60 * 60 * 1000);
   const semEnd = new Date(semObj.ends.getTime() - 8 * 60 * 60 * 1000);
   const dayAbbr = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
+  const excludedDates = new Set(noClassDates ?? []);
 
   const eventBlocks: string[] = [];
   for (const row of courses) {
@@ -296,6 +372,20 @@ export function generateTimetableIcs(
       dtStart.setUTCHours(startUtc.hours, startUtc.minutes, 0, 0);
       const dtEnd = new Date(occ);
       dtEnd.setUTCHours(endUtc.hours, endUtc.minutes, 0, 0);
+
+      const exdates: string[] = [];
+      for (
+        let occurrence = new Date(occ);
+        occurrence <= semEnd;
+        occurrence.setUTCDate(occurrence.getUTCDate() + 7)
+      ) {
+        const taipeiDate = occurrence.toISOString().slice(0, 10);
+        if (!excludedDates.has(taipeiDate)) continue;
+
+        const excludedStart = new Date(occurrence);
+        excludedStart.setUTCHours(startUtc.hours, startUtc.minutes, 0, 0);
+        exdates.push(`EXDATE:${formatDateTime(excludedStart)}`);
+      }
 
       const title = row.name_zh ?? row.name_en ?? "Course";
       const desc = [
@@ -320,6 +410,7 @@ export function generateTimetableIcs(
           `DTSTART:${formatDateTime(dtStart)}`,
           `DTEND:${formatDateTime(dtEnd)}`,
           `RRULE:FREQ=WEEKLY;BYDAY=${day};INTERVAL=1;UNTIL=${formatDateTime(semEnd)}`,
+          ...exdates.map(foldLine),
           foldLine(`SUMMARY:${escapeIcsText(title)}`),
           foldLine(`DESCRIPTION:${desc}`),
           foldLine(`LOCATION:${escapeIcsText(ev.venue)}`),
@@ -413,10 +504,16 @@ const appHandler = new Hono().on(
         return calendarResponse(c, EMPTY_CALENDAR);
       }
 
+      const { CALENDAR_API_KEY } = env<{ CALENDAR_API_KEY?: string }>(c);
+      const noClassDates = await getSemesterNoClassDates(
+        semester,
+        semObj,
+        CALENDAR_API_KEY,
+      );
       const icsContent = generateTimetableIcs(
         data,
         semObj,
-        undefined,
+        noClassDates,
         stableFeedTimestamp(new Date()),
       );
 

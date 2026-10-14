@@ -192,6 +192,22 @@ function validateIcs(ics: string): string[] {
       }
     }
 
+    const exdateValues = propMap.get("EXDATE") ?? [];
+    for (const exdate of exdateValues) {
+      if (!/^\d{8}T\d{6}Z$/.test(exdate)) {
+        errors.push(
+          `${label}: EXDATE value "${exdate}" is not a valid UTC datetime`,
+        );
+      } else if (
+        dtstartValues?.[0] &&
+        exdate.slice(9) !== dtstartValues[0].slice(9)
+      ) {
+        errors.push(
+          `${label}: EXDATE value "${exdate}" does not use DTSTART time-of-day "${dtstartValues[0].slice(9)}"`,
+        );
+      }
+    }
+
     // DTEND (not strictly required by RFC but expected for timetable events)
     const dtendValues = propMap.get("DTEND");
     if (dtendValues && dtendValues.length > 0) {
@@ -844,6 +860,64 @@ describe("generateTimetableIcs – all semesters", () => {
   });
 });
 
+describe("generateTimetableIcs – no-class dates", () => {
+  const noClassDates = new Set([
+    "2026-10-09",
+    "2026-10-26",
+    "2026-11-11",
+  ]);
+
+  it.each([
+    ["F3", "EXDATE:20261009T021000Z"],
+    ["M3", "EXDATE:20261026T021000Z"],
+    ["W3", "EXDATE:20261111T021000Z"],
+  ] as const)("adds an EXDATE for %s classes", (time, exdate) => {
+    const course = { ...SNAPSHOT_COURSE_11510, times: [time] };
+    const ics = generateTimetableIcs(
+      [course],
+      SEMESTER_11510,
+      noClassDates,
+      new Date(Date.UTC(2026, 9, 9, 12, 0, 0)),
+    );
+
+    expect(ics).toContain(exdate);
+    expect(validateIcs(ics)).toEqual([]);
+  });
+
+  it("does not exclude a Tuesday class when no Tuesday is a no-class date", () => {
+    const course = { ...SNAPSHOT_COURSE_11510, times: ["T3"] };
+    const ics = generateTimetableIcs(
+      [course],
+      SEMESTER_11510,
+      noClassDates,
+      new Date(Date.UTC(2026, 9, 9, 12, 0, 0)),
+    );
+
+    expect(ics).not.toContain("EXDATE:");
+  });
+
+  it("uses each VEVENT DTSTART time-of-day for every EXDATE", () => {
+    const course = { ...SNAPSHOT_COURSE_11510, times: ["M1M2", "W3"] };
+    const ics = generateTimetableIcs(
+      [course],
+      SEMESTER_11510,
+      new Set(["2026-10-26", "2026-11-11"]),
+      new Date(Date.UTC(2026, 9, 9, 12, 0, 0)),
+    );
+    const vevents = extractVEvents(ics);
+
+    expect(vevents).toHaveLength(2);
+    for (const props of vevents) {
+      const dtstart = props.find((line) => line.startsWith("DTSTART:"))!;
+      const exdates = props.filter((line) => line.startsWith("EXDATE:"));
+      expect(exdates).toHaveLength(1);
+      expect(exdates[0]!.slice(16)).toBe(dtstart.slice(17));
+      expect(exdates[0]).toMatch(/^EXDATE:\d{8}T\d{6}Z$/);
+    }
+    expect(validateIcs(ics)).toEqual([]);
+  });
+});
+
 describe("semester data", () => {
   it("keeps the Worker mirror equal to the canonical shared table", () => {
     const normalize = (semesters: typeof SEMESTER_INFO) =>
@@ -915,6 +989,87 @@ describe("timetable ICS route", () => {
       );
       expect(await head.text()).toBe("");
     } finally {
+      setSystemTime();
+    }
+  });
+
+  it("retries a failed academic fetch after five minutes and serves recovered EXDATEs", async () => {
+    const originalFetch = globalThis.fetch;
+    const originalCalendarApiKey = process.env.CALENDAR_API_KEY;
+    const url = "/calendar.ics?semester=11420&semester_11420=course-1";
+    let fetchCalls = 0;
+
+    try {
+      process.env.CALENDAR_API_KEY = "test-key";
+      setSystemTime(new Date("2026-03-01T12:00:00Z"));
+      globalThis.fetch = mock(async () => {
+        fetchCalls += 1;
+        if (fetchCalls === 1) throw new Error("academic calendar unavailable");
+        return new Response(
+          JSON.stringify({
+            items: [
+              {
+                id: "holiday",
+                summary: "Holiday (no class)",
+                start: { date: "2026-03-02" },
+                end: { date: "2026-03-03" },
+              },
+            ],
+          }),
+          { headers: { "Content-Type": "application/json" } },
+        );
+      }) as unknown as typeof fetch;
+
+      const failed = await timetableIcsApp.request(url);
+      expect(await failed.text()).not.toContain("EXDATE:");
+      expect(fetchCalls).toBe(1);
+
+      setSystemTime(new Date("2026-03-01T12:04:59Z"));
+      const beforeRetry = await timetableIcsApp.request(url);
+      expect(await beforeRetry.text()).not.toContain("EXDATE:");
+      expect(fetchCalls).toBe(1);
+
+      setSystemTime(new Date("2026-03-01T12:05:00Z"));
+      const recovered = await timetableIcsApp.request(url);
+      expect(await recovered.text()).toContain("EXDATE:20260302T000000Z");
+      expect(fetchCalls).toBe(2);
+    } finally {
+      globalThis.fetch = originalFetch;
+      if (originalCalendarApiKey === undefined) {
+        delete process.env.CALENDAR_API_KEY;
+      } else {
+        process.env.CALENDAR_API_KEY = originalCalendarApiKey;
+      }
+      setSystemTime();
+    }
+  });
+
+  it("serves the same feed when the academic calendar fetch fails", async () => {
+    setSystemTime(new Date("2026-10-09T12:00:00Z"));
+    const originalFetch = globalThis.fetch;
+    const originalCalendarApiKey = process.env.CALENDAR_API_KEY;
+    const url = "/calendar.ics?semester=11510&semester_11510=course-1";
+
+    try {
+      delete process.env.CALENDAR_API_KEY;
+      const today = await timetableIcsApp.request(url);
+      const todayBody = await today.text();
+
+      process.env.CALENDAR_API_KEY = "test-key";
+      globalThis.fetch = mock(async () => {
+        throw new Error("academic calendar unavailable");
+      }) as unknown as typeof fetch;
+      const fallback = await timetableIcsApp.request(url);
+
+      expect(fallback.status).toBe(200);
+      expect(await fallback.text()).toBe(todayBody);
+    } finally {
+      globalThis.fetch = originalFetch;
+      if (originalCalendarApiKey === undefined) {
+        delete process.env.CALENDAR_API_KEY;
+      } else {
+        process.env.CALENDAR_API_KEY = originalCalendarApiKey;
+      }
       setSystemTime();
     }
   });
