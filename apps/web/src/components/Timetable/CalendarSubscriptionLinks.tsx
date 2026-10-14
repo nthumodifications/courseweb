@@ -9,14 +9,22 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   Button,
+  Checkbox,
   toast,
 } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
 import authClient from "@/config/auth";
 import { useAuth } from "react-oidc-context";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocalStorage } from "usehooks-ts";
 import {
   buildCalendarSubscriptionLinks,
+  CALENDAR_FEED_INCLUDE_STORAGE_KEY,
+  CALENDAR_FEED_INCLUDES,
+  DEFAULT_CALENDAR_FEED_INCLUDES,
+  parseCalendarFeedIncludeSelection,
+  type CalendarFeedInclude,
+  type CalendarFeedIncludeSelection,
   type CalendarSubscriptionLinks as CalendarSubscriptionLinkUrls,
   toWebcalCalendarFeedUrl,
 } from "@/lib/calendar-subscription";
@@ -42,6 +50,10 @@ export type CalendarSubscriptionLinkLabels = {
   reset_confirm_description?: string;
   reset_confirm_cancel?: string;
   reset_confirm_action?: string;
+  include?: string;
+  classes?: string;
+  events?: string;
+  academic?: string;
 };
 
 type CalendarFeedClient = {
@@ -82,6 +94,8 @@ export const CalendarSubscriptionLinkList = ({
   onRetry,
   isResetting = false,
   subscriptionDisabled = false,
+  includeSelection,
+  onIncludeChange,
 }: {
   links: CalendarSubscriptionLinkUrls;
   labels: CalendarSubscriptionLinkLabels;
@@ -90,8 +104,35 @@ export const CalendarSubscriptionLinkList = ({
   onRetry?: () => void;
   isResetting?: boolean;
   subscriptionDisabled?: boolean;
+  includeSelection?: CalendarFeedIncludeSelection;
+  onIncludeChange?: (include: CalendarFeedInclude, checked: boolean) => void;
 }) => (
   <>
+    {includeSelection && onIncludeChange && labels.include && (
+      <fieldset className="flex flex-col gap-2">
+        <legend className="text-sm font-medium">{labels.include}</legend>
+        <div className="flex flex-col gap-2">
+          {CALENDAR_FEED_INCLUDES.map((include) => {
+            const label = labels[include];
+            if (!label) return null;
+            return (
+              <label
+                key={include}
+                className="flex items-center space-x-2 py-1 text-sm"
+              >
+                <Checkbox
+                  checked={includeSelection[include]}
+                  onCheckedChange={(checked) =>
+                    onIncludeChange(include, checked === true)
+                  }
+                />
+                <span>{label}</span>
+              </label>
+            );
+          })}
+        </div>
+      </fieldset>
+    )}
     {[
       [links.google, labels.google],
       [links.apple, labels.apple],
@@ -179,6 +220,12 @@ const CalendarSubscriptionLinks = ({ feedUrl }: { feedUrl: string }) => {
   const [isResetting, setIsResetting] = useState(false);
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
   const [retryNonce, setRetryNonce] = useState(0);
+  const [includeSelection, setIncludeSelection] =
+    useLocalStorage<CalendarFeedIncludeSelection>(
+      CALENDAR_FEED_INCLUDE_STORAGE_KEY,
+      DEFAULT_CALENDAR_FEED_INCLUDES,
+      { deserializer: parseCalendarFeedIncludeSelection },
+    );
   const resetInFlight = useRef(false);
   const sessionGeneration = useRef(0);
   const previousSession = useRef<{
@@ -236,9 +283,11 @@ const CalendarSubscriptionLinks = ({ feedUrl }: { feedUrl: string }) => {
   }, [accessToken, calendarFeedClient, isAuthenticated, retryNonce]);
 
   const activeFeedUrl = liveFeedUrl ?? feedUrl;
+  const isLiveState = Boolean(isAuthenticated && accessToken && liveFeedUrl);
   const links = buildCalendarSubscriptionLinks(
     activeFeedUrl,
     labels.calendar_name,
+    isLiveState ? includeSelection : undefined,
   );
   let subscriptionHint = labels.signed_out_hint ?? labels.subscription_hint;
   if (isAuthenticated && accessToken) {
@@ -282,6 +331,9 @@ const CalendarSubscriptionLinks = ({ feedUrl }: { feedUrl: string }) => {
   const isLiveLoading = Boolean(
     isAuthenticated && accessToken && !liveFeedUrl && !liveFeedError,
   );
+  const hasIncludedContent = CALENDAR_FEED_INCLUDES.some(
+    (include) => includeSelection[include],
+  );
 
   const handleCopy = () => {
     if (typeof navigator === "undefined" || !navigator.clipboard) return;
@@ -299,6 +351,16 @@ const CalendarSubscriptionLinks = ({ feedUrl }: { feedUrl: string }) => {
         links={links}
         labels={displayLabels}
         onCopy={handleCopy}
+        includeSelection={isLiveState ? includeSelection : undefined}
+        onIncludeChange={
+          isLiveState
+            ? (include, checked) =>
+                setIncludeSelection((current) => ({
+                  ...current,
+                  [include]: checked,
+                }))
+            : undefined
+        }
         onRetry={
           liveFeedError
             ? () => {
@@ -309,7 +371,9 @@ const CalendarSubscriptionLinks = ({ feedUrl }: { feedUrl: string }) => {
         }
         onReset={liveFeedUrl ? () => setIsResetConfirmOpen(true) : undefined}
         isResetting={isResetting}
-        subscriptionDisabled={isLiveLoading}
+        subscriptionDisabled={
+          isLiveLoading || (isLiveState && !hasIncludedContent)
+        }
       />
       {isResetConfirmOpen && (
         <AlertDialog
