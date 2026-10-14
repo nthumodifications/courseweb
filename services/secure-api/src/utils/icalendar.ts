@@ -129,7 +129,7 @@ export async function createICalendar(
     });
 
     if (!user) {
-      console.error(`User with ID ${userId} not found when creating iCalendar`);
+      console.error("User not found when creating iCalendar");
       throw new Error(`User with ID ${userId} not found`);
     }
 
@@ -174,7 +174,7 @@ export async function createICalendar(
               .get();
           } catch (firebaseError) {
             console.error(
-              `Firebase query error for user ${userId}:`,
+              "Firebase query error while creating iCalendar events:",
               firebaseError,
             );
             // Continue with empty events to serve at least a basic calendar
@@ -240,7 +240,7 @@ export async function createICalendar(
             }),
           });
         } catch (err) {
-          console.error("Error processing event:", event.id, err);
+          console.error("Error processing iCalendar event:", err);
           // Skip this event but continue with others
         }
       }

@@ -341,7 +341,7 @@ const readStoredCourses = async (
     const data = snapshot.data();
     return normalizeStoredCourses(data?.["value"] ?? data);
   } catch (error) {
-    console.error(`Error reading timetable storage for ${userId}:`, error);
+    console.error("Error reading timetable storage:", error);
     return {};
   }
 };
@@ -507,10 +507,7 @@ const fetchAcademicCalendarEvents = async (
   } catch (error) {
     if (!academicCalendarFailureWindows.has(cacheKey)) {
       academicCalendarFailureWindows.add(cacheKey);
-      console.error(
-        `Error fetching academic calendar for ${start}..${end}:`,
-        error,
-      );
+      console.error("Error fetching academic calendar:", error);
     }
     academicCalendarCache.set(cacheKey, {
       expiresAt: now.getTime() + ACADEMIC_CALENDAR_FAILURE_RETRY_MS,
@@ -585,9 +582,7 @@ const fetchTimetableCalendars = async (
       url.searchParams.set("semester", semester);
       url.searchParams.set(`semester_${semester}`, courseIds.join(","));
       if (url.toString().length > 8000) {
-        console.error(
-          `Skipping timetable calendar for ${semester}: URL too long`,
-        );
+        console.error("Skipping timetable calendar: URL too long");
         return null;
       }
       try {
@@ -599,10 +594,7 @@ const fetchTimetableCalendars = async (
         }
         return await response.text();
       } catch (error) {
-        console.error(
-          `Error fetching timetable calendar for ${semester}:`,
-          error,
-        );
+        console.error("Error fetching timetable calendar:", error);
         return null;
       }
     }),
@@ -679,7 +671,7 @@ const mergeCalendarEvents = (
   for (const event of [...classEvents, ...baseEvents, ...academicEvents]) {
     const uid = eventUid(event);
     if (uid && seenUids.has(uid)) {
-      console.warn(`Skipping duplicate calendar event UID: ${uid}`);
+      console.warn("Skipping duplicate calendar event UID");
       continue;
     }
     if (uid) seenUids.add(uid);
