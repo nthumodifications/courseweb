@@ -148,7 +148,7 @@ const TitleUpdater = () => {
   };
 
   return (
-    <Helmet>
+    <Helmet defer={false}>
       <html
         lang={isZh ? (zhScript === "hans" ? "zh-Hans" : "zh-Hant") : "en"}
       />
