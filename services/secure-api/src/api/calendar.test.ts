@@ -108,8 +108,11 @@ const mockFirebase = {
 import { createICalendar } from "../utils/icalendar";
 import { validateApiKey } from "../utils/apiKeyValidation";
 import { sha256hash } from "../utils/sha256";
-const { createCalendarApp } = await import("./calendar");
-const { SEMESTER_INFO: secureApiSemesterInfo } = await import("./calendar");
+const {
+  createCalendarApp,
+  SEMESTER_INFO: secureApiSemesterInfo,
+  trimTrailingSlashes,
+} = await import("./calendar");
 const calendarHandler = createCalendarApp(
   () => async (c: any, next: () => Promise<unknown>) => {
     c.set("user", { userId: "test-user-id" });
@@ -150,6 +153,31 @@ const validFeedToken = async (id: string) => {
     byte.toString(16).padStart(2, "0"),
   ).join("")}`;
   return { token, tokenHash: await sha256hash(token) };
+};
+
+const prepareTimetableFeed = async (id = "feed-id") => {
+  mockCalendarShareFindFirst.mockResolvedValueOnce({
+    id,
+    ...(await validFeedToken(id)),
+    createdAt: new Date("2026-10-14T00:00:00.000Z"),
+  });
+  const feedResponse = await calendarHandler.request("http://auth.test/feed", {
+    headers: { Authorization: "Bearer test-access-token" },
+  });
+  const feedUrl = ((await feedResponse.json()) as { url: string }).url.replace(
+    "/api/calendar",
+    "",
+  );
+  mockCalendarShareFindUnique.mockResolvedValue({
+    id,
+    name: "__timetable_feed__",
+    revokedAt: null,
+    expiresAt: null,
+    includeFullDetails: false,
+    user: { userId: "test-user-id" },
+  });
+  mockCalendarShareUpdate.mockResolvedValue({});
+  return feedUrl;
 };
 
 describe("Calendar API", () => {
@@ -527,29 +555,7 @@ describe("Calendar API", () => {
   serialTest(
     "merges live timetable classes with user events and supports ETag",
     async () => {
-      mockCalendarShareFindFirst.mockResolvedValueOnce({
-        id: "feed-id",
-        ...(await validFeedToken("feed-id")),
-        createdAt: new Date("2026-10-14T00:00:00.000Z"),
-      });
-      const feedResponse = await calendarHandler.request(
-        "http://auth.test/feed",
-        {
-          headers: { Authorization: "Bearer test-access-token" },
-        },
-      );
-      const feedUrl = (
-        (await feedResponse.json()) as { url: string }
-      ).url.replace("/api/calendar", "");
-      mockCalendarShareFindUnique.mockResolvedValue({
-        id: "feed-id",
-        name: "__timetable_feed__",
-        revokedAt: null,
-        expiresAt: null,
-        includeFullDetails: false,
-        user: { userId: "test-user-id" },
-      });
-      mockCalendarShareUpdate.mockResolvedValue({});
+      const feedUrl = await prepareTimetableFeed();
       const classCalendar = [
         "BEGIN:VCALENDAR",
         "BEGIN:VEVENT",
@@ -584,29 +590,7 @@ describe("Calendar API", () => {
   serialTest(
     "serves user events when the timetable upstream fails",
     async () => {
-      mockCalendarShareFindFirst.mockResolvedValueOnce({
-        id: "feed-id",
-        ...(await validFeedToken("feed-id")),
-        createdAt: new Date("2026-10-14T00:00:00.000Z"),
-      });
-      const feedResponse = await calendarHandler.request(
-        "http://auth.test/feed",
-        {
-          headers: { Authorization: "Bearer test-access-token" },
-        },
-      );
-      const feedUrl = (
-        (await feedResponse.json()) as { url: string }
-      ).url.replace("/api/calendar", "");
-      mockCalendarShareFindUnique.mockResolvedValue({
-        id: "feed-id",
-        name: "__timetable_feed__",
-        revokedAt: null,
-        expiresAt: null,
-        includeFullDetails: false,
-        user: { userId: "test-user-id" },
-      });
-      mockCalendarShareUpdate.mockResolvedValue({});
+      const feedUrl = await prepareTimetableFeed();
       mockTimetableFetch.mockResolvedValue(
         new Response("unavailable", { status: 503 }),
       );
@@ -673,29 +657,7 @@ describe("Calendar API", () => {
   serialTest(
     "keeps supported current classes when a newer semester fails",
     async () => {
-      mockCalendarShareFindFirst.mockResolvedValueOnce({
-        id: "feed-id",
-        ...(await validFeedToken("feed-id")),
-        createdAt: new Date("2026-10-14T00:00:00.000Z"),
-      });
-      const feedResponse = await calendarHandler.request(
-        "http://auth.test/feed",
-        {
-          headers: { Authorization: "Bearer test-access-token" },
-        },
-      );
-      const feedUrl = (
-        (await feedResponse.json()) as { url: string }
-      ).url.replace("/api/calendar", "");
-      mockCalendarShareFindUnique.mockResolvedValue({
-        id: "feed-id",
-        name: "__timetable_feed__",
-        revokedAt: null,
-        expiresAt: null,
-        includeFullDetails: false,
-        user: { userId: "test-user-id" },
-      });
-      mockCalendarShareUpdate.mockResolvedValue({});
+      const feedUrl = await prepareTimetableFeed();
       mockStorageGet.mockResolvedValue({
         exists: true,
         data: () => ({
@@ -725,29 +687,7 @@ describe("Calendar API", () => {
   serialTest(
     "keeps ETag and cache headers for weak, list, and wildcard validators",
     async () => {
-      mockCalendarShareFindFirst.mockResolvedValueOnce({
-        id: "feed-id",
-        ...(await validFeedToken("feed-id")),
-        createdAt: new Date("2026-10-14T00:00:00.000Z"),
-      });
-      const feedResponse = await calendarHandler.request(
-        "http://auth.test/feed",
-        {
-          headers: { Authorization: "Bearer test-access-token" },
-        },
-      );
-      const feedUrl = (
-        (await feedResponse.json()) as { url: string }
-      ).url.replace("/api/calendar", "");
-      mockCalendarShareFindUnique.mockResolvedValue({
-        id: "feed-id",
-        name: "__timetable_feed__",
-        revokedAt: null,
-        expiresAt: null,
-        includeFullDetails: false,
-        user: { userId: "test-user-id" },
-      });
-      mockCalendarShareUpdate.mockResolvedValue({});
+      const feedUrl = await prepareTimetableFeed();
       mockTimetableFetch.mockImplementation(() =>
         Promise.resolve(new Response("BEGIN:VCALENDAR\r\nEND:VCALENDAR\r\n")),
       );
@@ -813,29 +753,7 @@ describe("Calendar API", () => {
   serialTest(
     "normalizes and deduplicates timetable events before user events",
     async () => {
-      mockCalendarShareFindFirst.mockResolvedValueOnce({
-        id: "feed-id",
-        ...(await validFeedToken("feed-id")),
-        createdAt: new Date("2026-10-14T00:00:00.000Z"),
-      });
-      const feedResponse = await calendarHandler.request(
-        "http://auth.test/feed",
-        {
-          headers: { Authorization: "Bearer test-access-token" },
-        },
-      );
-      const feedUrl = (
-        (await feedResponse.json()) as { url: string }
-      ).url.replace("/api/calendar", "");
-      mockCalendarShareFindUnique.mockResolvedValue({
-        id: "feed-id",
-        name: "__timetable_feed__",
-        revokedAt: null,
-        expiresAt: null,
-        includeFullDetails: false,
-        user: { userId: "test-user-id" },
-      });
-      mockCalendarShareUpdate.mockResolvedValue({});
+      const feedUrl = await prepareTimetableFeed();
       mockFirebaseGet.mockResolvedValueOnce({
         docs: [
           {
@@ -868,29 +786,7 @@ describe("Calendar API", () => {
   );
 
   serialTest("bounds upstream requests and skips oversized URLs", async () => {
-    mockCalendarShareFindFirst.mockResolvedValueOnce({
-      id: "feed-id",
-      ...(await validFeedToken("feed-id")),
-      createdAt: new Date("2026-10-14T00:00:00.000Z"),
-    });
-    const feedResponse = await calendarHandler.request(
-      "http://auth.test/feed",
-      {
-        headers: { Authorization: "Bearer test-access-token" },
-      },
-    );
-    const feedUrl = (
-      (await feedResponse.json()) as { url: string }
-    ).url.replace("/api/calendar", "");
-    mockCalendarShareFindUnique.mockResolvedValue({
-      id: "feed-id",
-      name: "__timetable_feed__",
-      revokedAt: null,
-      expiresAt: null,
-      includeFullDetails: false,
-      user: { userId: "test-user-id" },
-    });
-    mockCalendarShareUpdate.mockResolvedValue({});
+    const feedUrl = await prepareTimetableFeed();
     mockStorageGet.mockResolvedValue({
       exists: true,
       data: () => ({
@@ -907,6 +803,11 @@ describe("Calendar API", () => {
     await calendarHandler.request(feedUrl);
 
     expect(mockTimetableFetch).toHaveBeenCalledTimes(1);
+  });
+
+  test("trims a long adversarial run of trailing slashes quickly", () => {
+    const base = "https://api.example.test";
+    expect(trimTrailingSlashes(`${base}${"/".repeat(1_000_000)}`)).toBe(base);
   });
 
   serialTest("keeps the secure-api semester mirror in sync with shared", () => {

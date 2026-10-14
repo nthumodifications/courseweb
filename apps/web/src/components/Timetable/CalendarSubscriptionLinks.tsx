@@ -59,6 +59,21 @@ type CalendarFeedClient = {
   };
 };
 
+const requestCalendarFeed = (
+  request:
+    | CalendarFeedClient["feed"]["$get"]
+    | CalendarFeedClient["feed"]["rotate"]["$post"],
+  accessToken: string,
+  signal?: AbortSignal,
+) =>
+  request(
+    {},
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      ...(signal ? { signal } : {}),
+    },
+  );
+
 export const CalendarSubscriptionLinkList = ({
   links,
   labels,
@@ -193,14 +208,11 @@ const CalendarSubscriptionLinks = ({ feedUrl }: { feedUrl: string }) => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 8_000);
 
-    void calendarFeedClient.feed
-      .$get(
-        {},
-        {
-          headers: { Authorization: `Bearer ${accessToken}` },
-          signal: controller.signal,
-        },
-      )
+    void requestCalendarFeed(
+      calendarFeedClient.feed.$get,
+      accessToken,
+      controller.signal,
+    )
       .then(async (response) => {
         if (!response.ok)
           throw new Error(`Feed request failed: ${response.status}`);
@@ -228,16 +240,16 @@ const CalendarSubscriptionLinks = ({ feedUrl }: { feedUrl: string }) => {
     activeFeedUrl,
     labels.calendar_name,
   );
-  const displayLabels = {
-    ...labels,
-    subscription_hint: liveFeedError
-      ? (labels.live_feed_error ?? labels.subscription_hint)
-      : isAuthenticated && accessToken
-        ? liveFeedUrl
-          ? labels.subscription_hint
-          : (labels.live_feed_loading ?? labels.subscription_hint)
-        : (labels.signed_out_hint ?? labels.subscription_hint),
-  };
+  let subscriptionHint = labels.signed_out_hint ?? labels.subscription_hint;
+  if (isAuthenticated && accessToken) {
+    subscriptionHint = liveFeedUrl
+      ? labels.subscription_hint
+      : (labels.live_feed_loading ?? labels.subscription_hint);
+  }
+  if (liveFeedError) {
+    subscriptionHint = labels.live_feed_error ?? labels.subscription_hint;
+  }
+  const displayLabels = { ...labels, subscription_hint: subscriptionHint };
 
   const handleReset = async () => {
     if (!accessToken || resetInFlight.current) return;
@@ -245,9 +257,9 @@ const CalendarSubscriptionLinks = ({ feedUrl }: { feedUrl: string }) => {
     const generation = sessionGeneration.current;
     setIsResetting(true);
     try {
-      const response = await calendarFeedClient.feed.rotate.$post(
-        {},
-        { headers: { Authorization: `Bearer ${accessToken}` } },
+      const response = await requestCalendarFeed(
+        calendarFeedClient.feed.rotate.$post,
+        accessToken,
       );
       if (!response.ok)
         throw new Error(`Feed rotation failed: ${response.status}`);

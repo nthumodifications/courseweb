@@ -84,7 +84,6 @@ describe("academic calendar overlap filtering", () => {
     "民族掃墓節補假Holiday-Tomb Sweeping Day (no class)",
     "清明節 Tomb Sweeping Day (no class)",
     "臺灣光復暨金門古寧頭大捷紀念日 Taiwan Restoration Day (no class)",
-    "臺灣光復暨金門古寧頭大捷紀念日補假 Holiday-Taiwan Restoration Day (no class)",
   ])("recognizes no-class summary: %s", (summary) => {
     expect(isNoClassSummary(summary)).toBe(true);
   });

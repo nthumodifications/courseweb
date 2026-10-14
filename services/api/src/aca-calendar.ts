@@ -122,16 +122,24 @@ export async function fetchAcademicCalendarEvents(
   return parsedCalendarDatas;
 }
 
-const BREAK_START_MARKER =
-  /(?:寒假|暑假|winter\s+break|summer\s+break)[^\n,，;；]{0,30}(?:開始|begins?)|(?:開始|begins?)[^\n,，;；]{0,30}(?:寒假|暑假|winter\s+break|summer\s+break)/iu;
-const PARTIAL_DAY_OR_CONDITIONAL_MARKER =
-  /(?:上午|下午|晚上|中午)\s*停課|停課\s*(?:上午|下午|晚上|中午)|\b(?:morning|afternoon|evening)\b|若[^\n。]{0,80}正常上課/iu;
+const BREAK_START_MARKERS = [
+  /(?:寒假|暑假)[^\n,，;；]{0,30}(?:開始|begins?)/iu,
+  /(?:winter\s+break|summer\s+break)[^\n,，;；]{0,30}(?:開始|begins?)/iu,
+  /(?:開始|begins?)[^\n,，;；]{0,30}(?:寒假|暑假)/iu,
+  /(?:開始|begins?)[^\n,，;；]{0,30}(?:winter\s+break|summer\s+break)/iu,
+];
+const PARTIAL_DAY_OR_CONDITIONAL_MARKERS = [
+  /(?:上午|下午|晚上|中午)\s*停課/iu,
+  /停課\s*(?:上午|下午|晚上|中午)/iu,
+  /\b(?:morning|afternoon|evening)\b/iu,
+  /若[^\n。]{0,80}正常上課/iu,
+];
 
 /** Return whether an academic event explicitly means that classes do not run. */
 export function isNoClassSummary(summary: string): boolean {
   if (
-    BREAK_START_MARKER.test(summary) ||
-    PARTIAL_DAY_OR_CONDITIONAL_MARKER.test(summary)
+    BREAK_START_MARKERS.some((marker) => marker.test(summary)) ||
+    PARTIAL_DAY_OR_CONDITIONAL_MARKERS.some((marker) => marker.test(summary))
   ) {
     return false;
   }
@@ -139,6 +147,24 @@ export function isNoClassSummary(summary: string): boolean {
 }
 
 export type InclusiveDateRange = { start: string; end: string };
+
+const noClassEventRange = (
+  event: CalendarApiResponse,
+  range: InclusiveDateRange | undefined,
+) => {
+  const eventStart = event.start.date;
+  const eventEndExclusive = event.end.date;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(eventStart)) return null;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(eventEndExclusive)) return null;
+
+  const rangeEndExclusive = range ? nextDate(range.end) : undefined;
+  const start = range && eventStart < range.start ? range.start : eventStart;
+  const end =
+    range && rangeEndExclusive && eventEndExclusive > rangeEndExclusive
+      ? rangeEndExclusive
+      : eventEndExclusive;
+  return { start, end };
+};
 
 /**
  * Expand no-class academic events into Taipei calendar dates. Google all-day
@@ -150,29 +176,19 @@ export function getNoClassDates(
   range?: InclusiveDateRange,
 ): Set<string> {
   const dates = new Set<string>();
-  const rangeEndExclusive = range ? nextDate(range.end) : undefined;
 
   for (const event of events) {
     if (!isNoClassSummary(event.summary)) continue;
 
-    const eventStart = event.start.date;
-    const eventEndExclusive = event.end.date;
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(eventStart)) continue;
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(eventEndExclusive)) continue;
+    const eventRange = noClassEventRange(event, range);
+    if (!eventRange) continue;
 
-    let date = range
-      ? eventStart < range.start
-        ? range.start
-        : eventStart
-      : eventStart;
-    const endExclusive =
-      range && rangeEndExclusive && eventEndExclusive > rangeEndExclusive
-        ? rangeEndExclusive
-        : eventEndExclusive;
-
-    while (date < endExclusive) {
+    for (
+      let date = eventRange.start;
+      date < eventRange.end;
+      date = nextDate(date)
+    ) {
       dates.add(date);
-      date = nextDate(date);
     }
   }
 

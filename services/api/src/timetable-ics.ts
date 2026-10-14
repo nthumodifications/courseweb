@@ -3,10 +3,7 @@ import { env } from "hono/adapter";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import supabase_server from "./config/supabase_server";
-import {
-  fetchAcademicCalendarEvents,
-  getNoClassDates,
-} from "./aca-calendar";
+import { fetchAcademicCalendarEvents, getNoClassDates } from "./aca-calendar";
 
 // ── Worker-local mirror of packages/shared/src/constants/semester.ts ─────────
 // The Worker cannot import @courseweb/shared here: its package export points at
@@ -165,14 +162,14 @@ const dateOnly = (date: Date): string => date.toISOString().slice(0, 10);
 
 async function getSemesterNoClassDates(
   semester: string,
-  semObj: { begins: Date; ends: Date },
+  semObj: { id: string; begins: Date; ends: Date },
   apiKey: string | undefined,
 ): Promise<Set<string>> {
   if (!apiKey) {
     if (!missingAcademicCalendarKeyLogged.has(semester)) {
       missingAcademicCalendarKeyLogged.add(semester);
       console.error(
-        `[timetable-ics] Academic calendar unavailable for semester ${semester}; serving feed without EXDATEs`,
+        `[timetable-ics] Academic calendar unavailable for semester ${semObj.id}; serving feed without EXDATEs`,
       );
     }
     return new Set();
@@ -209,13 +206,11 @@ async function getSemesterNoClassDates(
     if (!missingAcademicCalendarKeyLogged.has(semester)) {
       missingAcademicCalendarKeyLogged.add(semester);
       console.error(
-        `[timetable-ics] Academic calendar unavailable for semester ${semester}; serving feed without EXDATEs`,
+        `[timetable-ics] Academic calendar unavailable for semester ${semObj.id}; serving feed without EXDATEs`,
         error,
       );
     }
-    return cached?.hasSuccessfulData
-      ? cached.noClassDates
-      : new Set();
+    return cached?.hasSuccessfulData ? cached.noClassDates : new Set();
   }
 }
 

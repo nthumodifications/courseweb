@@ -129,6 +129,8 @@ const findActiveTimetableFeed = async (userId: string, secret: string) => {
     select: feedSelect,
   });
   for (const row of rows) {
+    // NOSONAR: creation order is part of the deterministic fallback contract;
+    // stop at the first valid feed instead of racing validation requests.
     if (await isValidTimetableFeed(row, secret)) return row;
   }
   return null;
@@ -167,17 +169,22 @@ const convergeTimetableFeeds = async (
     orderBy: [{ createdAt: "asc" }, { id: "asc" }],
     select: feedSelect,
   });
-  const validFeeds = [];
-  for (const feed of activeFeeds) {
-    if (await isValidTimetableFeed(feed, secret)) validFeeds.push(feed);
-  }
+  const validFeeds = (
+    await Promise.all(
+      activeFeeds.map(async (feed) =>
+        (await isValidTimetableFeed(feed, secret)) ? feed : null,
+      ),
+    )
+  ).filter((feed): feed is TimetableFeed => feed !== null);
   const [kept, ...duplicates] = validFeeds.length ? validFeeds : [fallback];
-  for (const duplicate of duplicates) {
-    await prisma.calendarShareToken.update({
-      where: { id: duplicate.id },
-      data: { revokedAt: new Date() },
-    });
-  }
+  await Promise.all(
+    duplicates.map((duplicate) =>
+      prisma.calendarShareToken.update({
+        where: { id: duplicate.id },
+        data: { revokedAt: new Date() },
+      }),
+    ),
+  );
   return kept!;
 };
 
@@ -197,14 +204,17 @@ const revokeOtherValidTimetableFeeds = async (
     orderBy: [{ createdAt: "asc" }, { id: "asc" }],
     select: feedSelect,
   });
-  for (const feed of activeFeeds) {
-    if (feed.id !== created.id && (await isValidTimetableFeed(feed, secret))) {
-      await prisma.calendarShareToken.update({
-        where: { id: feed.id },
-        data: { revokedAt: new Date() },
-      });
-    }
-  }
+  await Promise.all(
+    activeFeeds
+      .filter((feed) => feed.id !== created.id)
+      .map(async (feed) => {
+        if (!(await isValidTimetableFeed(feed, secret))) return;
+        await prisma.calendarShareToken.update({
+          where: { id: feed.id },
+          data: { revokedAt: new Date() },
+        });
+      }),
+  );
 };
 
 const timetableFeedResponse = async (
@@ -237,23 +247,38 @@ type StoredCourses = Record<string, string[]>;
 // Worker-local mirror of packages/shared/src/constants/semester.ts. The secure
 // API package cannot safely import the shared package at runtime in this repo;
 // calendar.test.ts compares this table with the canonical source.
-export const SEMESTER_INFO = [
-  { id: "10810", begins: new Date(2019, 8, 9), ends: new Date(2020, 0, 12) },
-  { id: "10820", begins: new Date(2020, 1, 17), ends: new Date(2020, 5, 21) },
-  { id: "10910", begins: new Date(2020, 8, 14), ends: new Date(2021, 0, 29) },
-  { id: "10920", begins: new Date(2021, 1, 22), ends: new Date(2021, 5, 25) },
-  { id: "11010", begins: new Date(2021, 8, 13), ends: new Date(2022, 0, 14) },
-  { id: "11020", begins: new Date(2022, 1, 14), ends: new Date(2022, 5, 17) },
-  { id: "11110", begins: new Date(2022, 8, 12), ends: new Date(2023, 0, 13) },
-  { id: "11120", begins: new Date(2023, 1, 13), ends: new Date(2023, 5, 16) },
-  { id: "11210", begins: new Date(2023, 8, 11), ends: new Date(2024, 0, 12) },
-  { id: "11220", begins: new Date(2024, 1, 19), ends: new Date(2024, 5, 23) },
-  { id: "11310", begins: new Date(2024, 8, 2), ends: new Date(2024, 11, 22) },
-  { id: "11320", begins: new Date(2025, 1, 17), ends: new Date(2025, 5, 8) },
-  { id: "11410", begins: new Date(2025, 8, 1), ends: new Date(2025, 11, 21) },
-  { id: "11420", begins: new Date(2026, 1, 23), ends: new Date(2026, 5, 14) },
-  { id: "11510", begins: new Date(2026, 8, 7), ends: new Date(2026, 11, 27) },
-];
+const parseSemesterDate = (value: string) => {
+  const [year, month, day] = value.split(",").map(Number);
+  return new Date(year!, month!, day!);
+};
+
+export const SEMESTER_INFO = `
+10810|2019,8,9|2020,0,12
+10820|2020,1,17|2020,5,21
+10910|2020,8,14|2021,0,29
+10920|2021,1,22|2021,5,25
+11010|2021,8,13|2022,0,14
+11020|2022,1,14|2022,5,17
+11110|2022,8,12|2023,0,13
+11120|2023,1,13|2023,5,16
+11210|2023,8,11|2024,0,12
+11220|2024,1,19|2024,5,23
+11310|2024,8,2|2024,11,22
+11320|2025,1,17|2025,5,8
+11410|2025,8,1|2025,11,21
+11420|2026,1,23|2026,5,14
+11510|2026,8,7|2026,11,27
+`
+  .trim()
+  .split("\n")
+  .map((row) => {
+    const [id, begins, ends] = row.split("|");
+    return {
+      id: id!,
+      begins: parseSemesterDate(begins!),
+      ends: parseSemesterDate(ends!),
+    };
+  });
 
 const normalizeStoredCourses = (value: unknown): StoredCourses => {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
@@ -307,42 +332,50 @@ const semestersWithCurrentClasses = (courses: StoredCourses) => {
     .slice(0, 6);
 };
 
+export const trimTrailingSlashes = (value: string) => {
+  let end = value.length;
+  while (end > 0 && value[end - 1] === "/") end -= 1;
+  return value.slice(0, end);
+};
+
 const timetableApiUrl = (c: any) => {
   const { COURSEWEB_API_URL } = env<{ COURSEWEB_API_URL?: string }>(c);
-  return (COURSEWEB_API_URL || DEFAULT_TIMETABLE_API_URL).replace(/\/+$/, "");
+  return trimTrailingSlashes(COURSEWEB_API_URL || DEFAULT_TIMETABLE_API_URL);
 };
 
 const fetchTimetableCalendars = async (
   c: any,
   courses: StoredCourses,
 ): Promise<string[]> => {
-  const calendars: string[] = [];
-  for (const [semester, courseIds] of semestersWithCurrentClasses(courses)) {
-    const url = new URL("/timetable/calendar.ics", `${timetableApiUrl(c)}/`);
-    url.searchParams.set("semester", semester);
-    url.searchParams.set(`semester_${semester}`, courseIds.join(","));
-    if (url.toString().length > 8000) {
-      console.error(
-        `Skipping timetable calendar for ${semester}: URL too long`,
-      );
-      continue;
-    }
-    try {
-      const response = await fetch(url, {
-        signal: AbortSignal.timeout(5000),
-      });
-      if (!response.ok) {
-        throw new Error(`upstream returned ${response.status}`);
+  const calendars = await Promise.all(
+    semestersWithCurrentClasses(courses).map(async ([semester, courseIds]) => {
+      const url = new URL("/timetable/calendar.ics", `${timetableApiUrl(c)}/`);
+      url.searchParams.set("semester", semester);
+      url.searchParams.set(`semester_${semester}`, courseIds.join(","));
+      if (url.toString().length > 8000) {
+        console.error(
+          `Skipping timetable calendar for ${semester}: URL too long`,
+        );
+        return null;
       }
-      calendars.push(await response.text());
-    } catch (error) {
-      console.error(
-        `Error fetching timetable calendar for ${semester}:`,
-        error,
-      );
-    }
-  }
-  return calendars;
+      try {
+        const response = await fetch(url, {
+          signal: AbortSignal.timeout(5000),
+        });
+        if (!response.ok) {
+          throw new Error(`upstream returned ${response.status}`);
+        }
+        return await response.text();
+      } catch (error) {
+        console.error(
+          `Error fetching timetable calendar for ${semester}:`,
+          error,
+        );
+        return null;
+      }
+    }),
+  );
+  return calendars.filter((calendar): calendar is string => calendar !== null);
 };
 
 const foldCalendarLine = (line: string) => {
@@ -366,8 +399,8 @@ const foldCalendarLine = (line: string) => {
 const normalizeCalendarLines = (calendar: string) => {
   const unfolded: string[] = [];
   for (const line of calendar
-    .replace(/\r\n/g, "\n")
-    .replace(/\r/g, "\n")
+    .replaceAll("\r\n", "\n")
+    .replaceAll("\r", "\n")
     .split("\n")) {
     if (/^[ \t]/.test(line) && unfolded.length > 0) {
       unfolded[unfolded.length - 1] += line.slice(1);
@@ -381,18 +414,24 @@ const normalizeCalendarLines = (calendar: string) => {
 const eventBlocksFrom = (calendar: string) => {
   const lines = normalizeCalendarLines(calendar);
   const blocks: string[] = [];
-  for (let index = 0; index < lines.length; index += 1) {
-    if (lines[index] !== "BEGIN:VEVENT") continue;
+  let index = 0;
+  while (index < lines.length) {
+    if (lines[index] !== "BEGIN:VEVENT") {
+      index += 1;
+      continue;
+    }
     const end = lines.indexOf("END:VEVENT", index + 1);
-    if (end < 0) continue;
+    if (end < 0) {
+      index += 1;
+      continue;
+    }
     blocks.push(lines.slice(index, end + 1).join("\r\n"));
-    index = end;
+    index = end + 1;
   }
   return blocks;
 };
 
-const eventUid = (block: string) =>
-  block.match(/(?:^|\r\n)UID:([^\r\n]*)/)?.[1];
+const eventUid = (block: string) => /(?:^|\r\n)UID:([^\r\n]*)/.exec(block)?.[1];
 
 const mergeCalendarEvents = (calendar: string, classCalendars: string[]) => {
   const baseLines = normalizeCalendarLines(calendar);
