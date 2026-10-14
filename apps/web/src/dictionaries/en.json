@@ -1374,7 +1374,19 @@
         "copied": "Copied",
         "copied_description": "Link copied to clipboard",
         "calendar_name": "NTHUMods Timetable",
-        "subscription_hint": "Subscriptions update automatically; calendar apps refresh on their own schedule."
+        "subscription_hint": "This live subscription follows timetable changes; Google refreshes about every 12–24 hours.",
+        "signed_out_hint": "Sign in to get a link that follows your timetable.",
+        "reset_link": "Reset link",
+        "resetting_link": "Resetting link…",
+        "reset_hint": "Old subscriptions stop updating after you reset the link.",
+        "reset_error": "Could not reset the calendar link. Please try again.",
+        "live_feed_error": "Live link unavailable; this link will not follow changes.",
+        "live_feed_loading": "Loading the live subscription…",
+        "retry_live_feed": "Try again",
+        "reset_confirm_title": "Reset calendar link?",
+        "reset_confirm_description": "Existing subscriptions on every device will stop updating.",
+        "reset_confirm_cancel": "Cancel",
+        "reset_confirm_action": "Reset link"
       }
     },
     "ShareTimetableDialog": {

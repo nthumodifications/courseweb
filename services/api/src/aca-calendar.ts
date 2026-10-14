@@ -48,6 +48,8 @@ const nextDate = (date: string): string => {
   return value.toISOString().slice(0, 10);
 };
 
+const calendarApiDate = (date: Date): string => date.toISOString().slice(0, 10);
+
 export function parseCalendarPayload(
   payload: unknown,
 ): CalendarApiResponse[] | null {
@@ -92,6 +94,107 @@ export function parseCalendarPayload(
   return parsed;
 }
 
+/**
+ * Fetch the Google academic calendar without applying the route-specific
+ * course-selection filtering. Consumers that need the raw academic events
+ * should use this function so the Google request and payload parsing stay in
+ * one place.
+ */
+export async function fetchAcademicCalendarEvents(
+  start: Date,
+  end: Date,
+  apiKey: string,
+  timeoutMs = 8_000,
+): Promise<CalendarApiResponse[]> {
+  const upstreamStart = new Date(start);
+  upstreamStart.setUTCDate(upstreamStart.getUTCDate() - 120);
+  const CALENDAR_API_URL = `https://www.googleapis.com/calendar/v3/calendars/nthu.acad%40gmail.com/events?key=${apiKey}&timeMin=${calendarApiDate(upstreamStart)}T00:00:00Z&timeMax=${calendarApiDate(end)}T00:00:00Z`;
+  const res = await fetchUpstream(CALENDAR_API_URL, {
+    signal: AbortSignal.timeout(timeoutMs),
+  });
+  const parsedCalendarDatas = parseCalendarPayload(await res.json());
+  if (!parsedCalendarDatas) {
+    console.error("Google Calendar response had an invalid items array");
+    throw new HTTPException(502, {
+      message: "Academic calendar upstream returned an unexpected payload",
+    });
+  }
+  return parsedCalendarDatas;
+}
+
+const BREAK_START_MARKERS = [
+  /(?:寒假|暑假)[^\n,，;；]{0,30}(?:開始|begins?)/iu,
+  /(?:winter\s+break|summer\s+break)[^\n,，;；]{0,30}(?:開始|begins?)/iu,
+  /(?:開始|begins?)[^\n,，;；]{0,30}(?:寒假|暑假)/iu,
+  /(?:開始|begins?)[^\n,，;；]{0,30}(?:winter\s+break|summer\s+break)/iu,
+];
+const PARTIAL_DAY_OR_CONDITIONAL_MARKERS = [
+  /(?:上午|下午|晚上|中午)\s*停課/iu,
+  /停課\s*(?:上午|下午|晚上|中午)/iu,
+  /\b(?:morning|afternoon|evening)\b/iu,
+  /若[^\n。]{0,80}正常上課/iu,
+];
+
+/** Return whether an academic event explicitly means that classes do not run. */
+export function isNoClassSummary(summary: string): boolean {
+  if (
+    BREAK_START_MARKERS.some((marker) => marker.test(summary)) ||
+    PARTIAL_DAY_OR_CONDITIONAL_MARKERS.some((marker) => marker.test(summary))
+  ) {
+    return false;
+  }
+  return /no\s+class/i.test(summary) || /停課|放假/.test(summary);
+}
+
+export type InclusiveDateRange = { start: string; end: string };
+
+const noClassEventRange = (
+  event: CalendarApiResponse,
+  range: InclusiveDateRange | undefined,
+) => {
+  const eventStart = event.start.date;
+  const eventEndExclusive = event.end.date;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(eventStart)) return null;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(eventEndExclusive)) return null;
+
+  const rangeEndExclusive = range ? nextDate(range.end) : undefined;
+  const start = range && eventStart < range.start ? range.start : eventStart;
+  const end =
+    range && rangeEndExclusive && eventEndExclusive > rangeEndExclusive
+      ? rangeEndExclusive
+      : eventEndExclusive;
+  return { start, end };
+};
+
+/**
+ * Expand no-class academic events into Taipei calendar dates. Google all-day
+ * event end dates are exclusive, so an event 10/26--10/28 yields 10/26 and
+ * 10/27 only.
+ */
+export function getNoClassDates(
+  events: CalendarApiResponse[],
+  range?: InclusiveDateRange,
+): Set<string> {
+  const dates = new Set<string>();
+
+  for (const event of events) {
+    if (!isNoClassSummary(event.summary)) continue;
+
+    const eventRange = noClassEventRange(event, range);
+    if (!eventRange) continue;
+
+    for (
+      let date = eventRange.start;
+      date < eventRange.end;
+      date = nextDate(date)
+    ) {
+      dates.add(date);
+    }
+  }
+
+  return dates;
+}
+
 const app = new Hono()
   // we using bun, write test with bun:test
   .get(
@@ -115,25 +218,15 @@ const app = new Hono()
         });
       }
 
-      const upstreamStart = new Date(start);
-      upstreamStart.setUTCDate(upstreamStart.getUTCDate() - 120);
       const windowStart = start.toISOString().slice(0, 10);
       const windowEnd = end.toISOString().slice(0, 10);
-      const CALENDAR_API_URL = `https://www.googleapis.com/calendar/v3/calendars/nthu.acad%40gmail.com/events?key=${CALENDAR_API_KEY}&timeMin=${upstreamStart.toISOString().slice(0, 10)}T00:00:00Z&timeMax=${windowEnd}T00:00:00Z`;
       let calendarDatas: CalendarApiResponse[];
       try {
-        const res = await fetchUpstream(CALENDAR_API_URL, {
-          signal: AbortSignal.timeout(8_000),
-        });
-        const parsedCalendarDatas = parseCalendarPayload(await res.json());
-        if (!parsedCalendarDatas) {
-          console.error("Google Calendar response had an invalid items array");
-          throw new HTTPException(502, {
-            message:
-              "Academic calendar upstream returned an unexpected payload",
-          });
-        }
-        calendarDatas = parsedCalendarDatas;
+        calendarDatas = await fetchAcademicCalendarEvents(
+          start,
+          end,
+          CALENDAR_API_KEY,
+        );
       } catch (error) {
         if (error instanceof HTTPException) throw error;
         if (error instanceof UpstreamHttpError) {

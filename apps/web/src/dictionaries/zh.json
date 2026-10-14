@@ -1374,7 +1374,19 @@
         "copied": "已複製",
         "copied_description": "連結已複製到剪貼簿",
         "calendar_name": "NTHUMods 課表",
-        "subscription_hint": "訂閱會自動更新，但各行事曆 App 會依自己的排程重新整理。"
+        "subscription_hint": "這是會跟隨課表變更的即時訂閱；Google 約每 12–24 小時重新整理一次。",
+        "signed_out_hint": "登入即可取得會跟隨課表變更的連結。",
+        "reset_link": "重設連結",
+        "resetting_link": "正在重設連結…",
+        "reset_hint": "重設後，舊訂閱將停止更新。",
+        "reset_error": "無法重設行事曆連結，請再試一次。",
+        "live_feed_error": "即時連結暫時無法使用；此連結不會跟隨課表變更。",
+        "live_feed_loading": "正在載入即時訂閱…",
+        "retry_live_feed": "再試一次",
+        "reset_confirm_title": "要重設行事曆連結嗎？",
+        "reset_confirm_description": "所有裝置上的現有訂閱都會停止更新。",
+        "reset_confirm_cancel": "取消",
+        "reset_confirm_action": "重設連結"
       }
     },
     "ShareTimetableDialog": {
