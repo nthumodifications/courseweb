@@ -6,7 +6,11 @@ import {
   setSystemTime,
   test,
 } from "bun:test";
-import app, { parseCalendarPayload } from "./aca-calendar";
+import app, {
+  getNoClassDates,
+  isNoClassSummary,
+  parseCalendarPayload,
+} from "./aca-calendar";
 import { failingFetch, upstreamFailureCases } from "./test-helpers/upstream";
 
 const originalFetch = globalThis.fetch;
@@ -60,6 +64,60 @@ afterEach(() => {
 });
 
 describe("academic calendar overlap filtering", () => {
+  test.each([
+    "國慶日補假 Holiday-Double Tenth Day (no class)",
+    "臺灣光復暨金門古寧頭大捷紀念日補假 Holiday-Taiwan Restoration Day (no class)",
+    "全校運動大會(停課一天)  Sports Day (no class)",
+    "校際活動週(停課一日，是否補課由教師自行決定) Intercollegiate Activities (no class: make-up classes are held at the teacher's discretion)",
+    "校際活動週(停課一日，課程由教師自行擇期補課)Intercollegiate Activities (no class: make-up classes will be scheduled)",
+    "中秋節 Mid-Autumn Festival (no class)",
+    "兒童節 Children's Day (No Class)",
+    "兒童節補假 Holiday- Children's Day (no class)",
+    "兒童節補假Holiday-Children's Day (No Class)",
+    "勞動節 International Labor’s Day (no class)",
+    "勞動節補假 Holiday-International Labor’s Day (no class)",
+    "和平紀念日 228 Peace Memorial Day (no class)",
+    "和平紀念日補假 Holiday-228 Peace Memorial Day (no class)",
+    "和平紀念日補假Holiday-228 Peace Memorial Day (No Class)",
+    "國慶日 Double Tenth Day (no class)",
+    "教師節 Teacher's Day (no class)",
+    "民族掃墓節補假Holiday-Tomb Sweeping Day (no class)",
+    "清明節 Tomb Sweeping Day (no class)",
+    "臺灣光復暨金門古寧頭大捷紀念日 Taiwan Restoration Day (no class)",
+    "臺灣光復暨金門古寧頭大捷紀念日補假 Holiday-Taiwan Restoration Day (no class)",
+  ])("recognizes no-class summary: %s", (summary) => {
+    expect(isNoClassSummary(summary)).toBe(true);
+  });
+
+  test.each([
+    "梅竹賽( 26日至28日，26日下午停課，是否補課由教師自行決定 ；若停賽則正常上課) [Tentative] Mei-Chu Game (2/26-2/28)",
+    "梅竹賽(6日至8日，6日下午停課，由教師自行擇期補課；若停賽則正常上課 Mei-Chu Game (3/6-3/8)",
+    "114學年度第2學期申請課程停修開始(至5月8日止)Course Withdrawal Begins(4/20-5/8)",
+    "停修 116/4/12（一）～ 4/29（四）",
+    "停修申請 無法繼續修習時可申請停修，成績單顯示「W」且不退費。 115/11/02（一）～ 11/20（五）",
+    "寒假開始 Winter Break Begins",
+    "暑假開始 Summer Vacation Begins",
+    "暑假開始Summer Vacation Begins",
+    "教師進修及休假研究申請案送人事室截止 Deadline for Submission of Faculty Sabbatical Leave Application",
+    "教師進修及休假研究申請案送人事室截止Deadline for Submission of Faculty Sabbatical Leave Application University Council Meeting",
+    "暑期班申請課程停修開始(至7日止) Summer Session Withdrawal (8/3-8/7)",
+    "新生領航營(至2日止)",
+    "教師送繳...成績截止",
+  ])("does not treat non-holiday summary as no-class: %s", (summary) => {
+    expect(isNoClassSummary(summary)).toBe(false);
+  });
+
+  test("expands an all-day multi-day event with an exclusive end date", () => {
+    const event = {
+      ...academicEvent("sports", "Sports Day (no class)", "2026-11-11"),
+      end: { date: "2026-11-13" },
+    };
+
+    expect(getNoClassDates([event])).toEqual(
+      new Set(["2026-11-11", "2026-11-12"]),
+    );
+  });
+
   test("preserves normal event shape and allows a closed window", () => {
     const event = academicEvent("holiday", "校慶補假", "2026-10-12");
     expect(parseCalendarPayload({ items: [event, event] })).toEqual([
