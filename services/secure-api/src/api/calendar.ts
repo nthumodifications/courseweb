@@ -545,7 +545,13 @@ const academicCalendarIcs = async (
     Math.floor(now.getTime() / (5 * 60 * 1000)) * (5 * 60 * 1000),
   );
 
-  for (const event of events) {
+  const eventsWithUids = await Promise.all(
+    events.map(async (event) => ({
+      event,
+      uid: await academicCalendarUid(event.id),
+    })),
+  );
+  for (const { event, uid } of eventsWithUids) {
     const period = event.courseSelectionPeriod;
     const start =
       period?.startDate && isDateKey(period.startDate)
@@ -556,7 +562,7 @@ const academicCalendarIcs = async (
         ? period.endDate
         : start;
     calendar.createEvent({
-      id: await academicCalendarUid(event.id),
+      id: uid,
       stamp,
       start: new Date(`${start}T00:00:00Z`),
       end: new Date(`${addDateKey(inclusiveEnd, 1)}T00:00:00Z`),
@@ -705,6 +711,101 @@ const matchesIfNoneMatch = (value: string | undefined, etag: string) =>
   }) ?? false;
 
 const etagFor = async (body: string) => `"${await sha256hash(body)}"`;
+
+const getVerifiedCalendarShareToken = async (
+  c: any,
+  userId: string,
+  suppliedToken: string,
+) => {
+  const tokenHash = await sha256hash(suppliedToken);
+  const shareToken = await prisma.calendarShareToken.findUnique({
+    where: { tokenHash },
+    include: {
+      user: {
+        select: {
+          userId: true,
+        },
+      },
+    },
+  });
+
+  if (!shareToken) rejectUnauthorized(c);
+  const verifiedShareToken = shareToken as NonNullable<typeof shareToken>;
+  if (verifiedShareToken.revokedAt) rejectUnauthorized(c);
+  if (
+    verifiedShareToken.expiresAt &&
+    verifiedShareToken.expiresAt < new Date()
+  ) {
+    rejectUnauthorized(c);
+  }
+  if (verifiedShareToken.user.userId !== userId) rejectUnauthorized(c);
+  return verifiedShareToken;
+};
+
+const authorizeCalendarShare = async (
+  c: any,
+  userId: string,
+  token: string | undefined,
+  calendarType: "basic" | "full",
+) => {
+  if (!token) rejectUnauthorized(c);
+  const suppliedToken = token as string;
+  const verifiedShareToken = await getVerifiedCalendarShareToken(
+    c,
+    userId,
+    suppliedToken,
+  );
+  const feedSecret =
+    verifiedShareToken.name === TIMETABLE_FEED_NAME
+      ? getCalendarFeedSecret(c)
+      : null;
+  const isTimetableFeed =
+    !!feedSecret &&
+    (await verifyCalendarFeedToken(
+      feedSecret,
+      verifiedShareToken.id,
+      suppliedToken,
+    ));
+
+  return {
+    verifiedShareToken,
+    isTimetableFeed,
+    includeFullDetails:
+      verifiedShareToken.includeFullDetails && calendarType === "full",
+  };
+};
+
+const buildSharedCalendar = async (
+  c: any,
+  userId: string,
+  includeFullDetails: boolean,
+  isTimetableFeed: boolean,
+  includes: Set<CalendarFeedInclude>,
+) => {
+  const baseCalendar = await createICalendar(
+    userId,
+    includeFullDetails,
+    c,
+    undefined,
+    undefined,
+    undefined,
+    includes.has("events"),
+  );
+  const timetableCalendars =
+    isTimetableFeed && includes.has("classes")
+      ? await fetchTimetableCalendars(c, await readStoredCourses(c, userId))
+      : [];
+  const academicCalendars: string[] = [];
+  if (includes.has("academic")) {
+    const academicEvents = await fetchAcademicCalendarEvents(c);
+    if (academicEvents.length > 0) {
+      academicCalendars.push(await academicCalendarIcs(academicEvents));
+    }
+  }
+  return timetableCalendars.length || academicCalendars.length
+    ? mergeCalendarEvents(baseCalendar, timetableCalendars, academicCalendars)
+    : baseCalendar;
+};
 
 export const createCalendarApp = (
   authFactory: (scopes: string[]) => MiddlewareHandler = lazyRequireAuth,
@@ -865,51 +966,8 @@ export const createCalendarApp = (
             include: includeQuery,
           } = c.req.valid("query");
           const includes = parseCalendarIncludes(includeQuery);
-
-          if (!token) rejectUnauthorized(c);
-          const suppliedToken = token as string;
-
-          let includeFullDetails = false;
-
-          const tokenHash = await sha256hash(suppliedToken);
-          const shareToken = await prisma.calendarShareToken.findUnique({
-            where: { tokenHash },
-            include: {
-              user: {
-                select: {
-                  userId: true,
-                },
-              },
-            },
-          });
-
-          if (!shareToken) rejectUnauthorized(c);
-          const verifiedShareToken = shareToken as NonNullable<
-            typeof shareToken
-          >;
-          if (verifiedShareToken.revokedAt) rejectUnauthorized(c);
-          if (
-            verifiedShareToken.expiresAt &&
-            verifiedShareToken.expiresAt < new Date()
-          ) {
-            rejectUnauthorized(c);
-          }
-          if (verifiedShareToken.user.userId !== userId) rejectUnauthorized(c);
-
-          const feedSecret =
-            verifiedShareToken.name === TIMETABLE_FEED_NAME
-              ? getCalendarFeedSecret(c)
-              : null;
-          const isTimetableFeed =
-            !!feedSecret &&
-            (await verifyCalendarFeedToken(
-              feedSecret,
-              verifiedShareToken.id,
-              suppliedToken,
-            ));
-
-          includeFullDetails =
-            verifiedShareToken.includeFullDetails && calendarType === "full";
+          const { verifiedShareToken, isTimetableFeed, includeFullDetails } =
+            await authorizeCalendarShare(c, userId, token, calendarType);
 
           await prisma.calendarShareToken.update({
             where: { id: verifiedShareToken.id },
@@ -917,42 +975,13 @@ export const createCalendarApp = (
           });
 
           try {
-            // Generate calendar data using the iCalendar utility
-            const baseCalendar = await createICalendar(
+            const calendar = await buildSharedCalendar(
+              c,
               userId,
               includeFullDetails,
-              c,
-              undefined,
-              undefined,
-              undefined,
-              includes.has("events"),
+              isTimetableFeed,
+              includes,
             );
-            const timetableCalendars: string[] = [];
-            if (isTimetableFeed && includes.has("classes")) {
-              timetableCalendars.push(
-                ...(await fetchTimetableCalendars(
-                  c,
-                  await readStoredCourses(c, userId),
-                )),
-              );
-            }
-            const academicCalendars: string[] = [];
-            if (includes.has("academic")) {
-              const academicEvents = await fetchAcademicCalendarEvents(c);
-              if (academicEvents.length > 0) {
-                academicCalendars.push(
-                  await academicCalendarIcs(academicEvents),
-                );
-              }
-            }
-            const calendar =
-              timetableCalendars.length || academicCalendars.length
-                ? mergeCalendarEvents(
-                    baseCalendar,
-                    timetableCalendars,
-                    academicCalendars,
-                  )
-                : baseCalendar;
             const includeKey = CALENDAR_FEED_INCLUDES.filter((include) =>
               includes.has(include),
             ).join(",");

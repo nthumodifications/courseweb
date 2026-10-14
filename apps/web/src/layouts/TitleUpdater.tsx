@@ -91,6 +91,38 @@ const shouldNoindexPath = (pathname: string): boolean => {
   );
 };
 
+const getPageTitle = (
+  isZh: boolean,
+  dictionaryTitle: string | undefined,
+  handle: RouteHandle | undefined,
+) =>
+  isZh ? (dictionaryTitle ?? handle?.titleZh ?? handle?.title) : handle?.title;
+
+const getDescription = (isZh: boolean, handle: RouteHandle | undefined) => {
+  if (!isZh)
+    return (
+      handle?.description ?? handle?.descriptionZh ?? DEFAULT_DESCRIPTION_EN
+    );
+  return handle?.descriptionZh ?? handle?.description ?? DEFAULT_DESCRIPTION_ZH;
+};
+
+const getFullTitle = (isZh: boolean, pageTitle: string | undefined) => {
+  if (pageTitle) return `${pageTitle} | NTHUMods`;
+  return isZh
+    ? "NTHUMods｜清大課程查詢・課表規劃・校車時刻表"
+    : "NTHUMods | NTHU Course Search & Campus Tools";
+};
+
+const getPageLanguage = (isZh: boolean, zhScript: string) => {
+  if (!isZh) return "en";
+  return zhScript === "hans" ? "zh-Hans" : "zh-Hant";
+};
+
+const getOpenGraphLocale = (isZh: boolean, zhScript: string) => {
+  if (!isZh) return "en_US";
+  return zhScript === "hans" ? "zh_CN" : "zh_TW";
+};
+
 const TitleUpdater = () => {
   const { zhScript } = useSettings();
   const dict = useDictionary();
@@ -106,17 +138,11 @@ const TitleUpdater = () => {
     handle?.titleZhKey === "course.instructor.title"
       ? dict.course.instructor.title
       : undefined;
-  const pageTitle = isZh
-    ? (dictionaryTitle ?? handle?.titleZh ?? handle?.title)
-    : handle?.title;
-  const description = isZh
-    ? (handle?.descriptionZh ?? handle?.description ?? DEFAULT_DESCRIPTION_ZH)
-    : (handle?.description ?? handle?.descriptionZh ?? DEFAULT_DESCRIPTION_EN);
-
-  let fullTitle = isZh
-    ? "NTHUMods｜清大課程查詢・課表規劃・校車時刻表"
-    : "NTHUMods | NTHU Course Search & Campus Tools";
-  if (pageTitle) fullTitle = pageTitle + " | NTHUMods";
+  const pageTitle = getPageTitle(isZh, dictionaryTitle, handle);
+  const description = getDescription(isZh, handle);
+  const fullTitle = getFullTitle(isZh, pageTitle);
+  const pageLanguage = getPageLanguage(isZh, zhScript);
+  const openGraphLocale = getOpenGraphLocale(isZh, zhScript);
 
   const canonicalPath = normalizePath(location.pathname);
   const canonicalUrl = `${BASE_URL}${canonicalPath}`;
@@ -139,7 +165,7 @@ const TitleUpdater = () => {
     name: fullTitle,
     url: canonicalUrl,
     description,
-    inLanguage: isZh ? (zhScript === "hans" ? "zh-Hans" : "zh-Hant") : "en",
+    inLanguage: pageLanguage,
     isPartOf: {
       "@type": "WebSite",
       url: BASE_URL,
@@ -149,9 +175,7 @@ const TitleUpdater = () => {
 
   return (
     <Helmet defer={false}>
-      <html
-        lang={isZh ? (zhScript === "hans" ? "zh-Hans" : "zh-Hant") : "en"}
-      />
+      <html lang={pageLanguage} />
       <title>{fullTitle}</title>
       <meta name="description" content={description} />
       <meta name="robots" content={robots} />
@@ -171,12 +195,7 @@ const TitleUpdater = () => {
       <meta property="og:url" content={canonicalUrl} />
       <meta property="og:image" content={DEFAULT_OG_IMAGE} />
       <meta property="og:site_name" content="NTHUMods" />
-      <meta
-        property="og:locale"
-        content={
-          isZh && zhScript === "hans" ? "zh_CN" : isZh ? "zh_TW" : "en_US"
-        }
-      />
+      <meta property="og:locale" content={openGraphLocale} />
 
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={fullTitle} />
