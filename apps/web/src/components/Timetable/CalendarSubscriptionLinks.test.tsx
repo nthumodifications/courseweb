@@ -42,6 +42,10 @@ const labels = {
   copied: "Copied",
   copied_description: "Link copied to clipboard",
   calendar_name: "NTHUMods Timetable",
+  include: "Include",
+  classes: "Classes",
+  events: "My events",
+  academic: "Academic calendar",
   subscription_hint: "Subscriptions update automatically.",
   signed_out_hint: "Sign in to get a link that follows your timetable.",
   reset_link: "Reset link",
@@ -72,7 +76,9 @@ mock.module("@/config/auth", () => ({
 mock.module("@/dictionaries/useDictionary", () => ({
   default: () => ({ dialogs: { ShareSyncTimetableDialog: { links: labels } } }),
 }));
-const sharedDom = new JSDOM("<!doctype html><html><body></body></html>");
+const sharedDom = new JSDOM("<!doctype html><html><body></body></html>", {
+  url: "https://app.example.test/",
+});
 const installSharedDom = () => {
   Object.assign(globalThis, {
     window: sharedDom.window,
@@ -83,6 +89,8 @@ const installSharedDom = () => {
     Event: sharedDom.window.Event,
     MouseEvent: sharedDom.window.MouseEvent,
     CustomEvent: sharedDom.window.CustomEvent,
+    StorageEvent: sharedDom.window.StorageEvent,
+    navigator: sharedDom.window.navigator,
     getComputedStyle: sharedDom.window.getComputedStyle,
     MutationObserver: sharedDom.window.MutationObserver,
     IS_REACT_ACT_ENVIRONMENT: true,
@@ -95,6 +103,7 @@ const { CalendarSubscriptionLinkList, default: CalendarSubscriptionLinks } =
 
 const withDom = () => {
   sharedDom.window.document.body.innerHTML = "";
+  sharedDom.window.localStorage.clear();
   installSharedDom();
   return sharedDom;
 };
@@ -177,6 +186,179 @@ describe("calendar subscription links markup", () => {
     expect(feedRotate).toHaveBeenCalledTimes(0);
 
     await act(async () => root.unmount());
+  });
+
+  test("rebuilds all subscription URLs when an include checkbox changes", async () => {
+    authState.isAuthenticated = true;
+    authState.user = { access_token: "include-token" };
+    feedGet.mockReset();
+    feedGet.mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          webcalUrl: "webcal://auth.example.test/live-token",
+        }),
+        { status: 200 },
+      ),
+    );
+    const dom = withDom();
+    let copiedUrl = "";
+    Object.defineProperty(dom.window.navigator, "clipboard", {
+      configurable: true,
+      value: { writeText: async (value: string) => (copiedUrl = value) },
+    });
+    const { container, root } = await renderComponent(
+      "webcal://api.nthumods.com/timetable/calendar.ics?semester=11510",
+    );
+
+    const checkboxes = container.querySelectorAll('[role="checkbox"]');
+    expect(checkboxes).toHaveLength(3);
+    await act(async () => {
+      (checkboxes[1] as HTMLElement).click();
+      await Promise.resolve();
+    });
+
+    const anchors = [...container.querySelectorAll("a")];
+    expect(anchors).toHaveLength(3);
+    expect(anchors[0]?.getAttribute("href")).toContain(
+      encodeURIComponent("include=classes%2Cacademic"),
+    );
+    expect(anchors[1]?.getAttribute("href")).toContain(
+      "include=classes%2Cacademic",
+    );
+    expect(anchors[2]?.getAttribute("href")).toContain(
+      "include%3Dclasses%252Cacademic",
+    );
+    const copy = [...container.querySelectorAll("button")].find((button) =>
+      button.textContent?.includes(labels.copy_link),
+    );
+    await act(async () => {
+      copy?.click();
+      await Promise.resolve();
+    });
+    expect(copiedUrl).toContain("include=classes%2Cacademic");
+
+    await act(async () => root.unmount());
+    void dom;
+  });
+
+  test("disables subscription buttons when every include is off", async () => {
+    authState.isAuthenticated = true;
+    authState.user = { access_token: "all-off-token" };
+    feedGet.mockReset();
+    feedGet.mockResolvedValue(
+      new Response(
+        JSON.stringify({ webcalUrl: "webcal://auth.example.test/live-token" }),
+        { status: 200 },
+      ),
+    );
+    const dom = withDom();
+    const { container, root } = await renderComponent(
+      "webcal://api.nthumods.com/timetable/calendar.ics?semester=11510",
+    );
+    const checkboxes = container.querySelectorAll('[role="checkbox"]');
+
+    await act(async () => {
+      checkboxes.forEach((checkbox) => (checkbox as HTMLElement).click());
+      await Promise.resolve();
+    });
+
+    expect(container.querySelectorAll("button:disabled")).toHaveLength(4);
+    await act(async () => root.unmount());
+    void dom;
+  });
+
+  test("restores the persisted include choice", async () => {
+    authState.isAuthenticated = true;
+    authState.user = { access_token: "persisted-token" };
+    feedGet.mockReset();
+    feedGet.mockResolvedValue(
+      new Response(
+        JSON.stringify({ webcalUrl: "webcal://auth.example.test/live-token" }),
+        { status: 200 },
+      ),
+    );
+    const dom = withDom();
+    dom.window.localStorage.setItem(
+      "calendar_subscription_includes",
+      JSON.stringify({ classes: false, events: true, academic: false }),
+    );
+    const { container, root } = await renderComponent(
+      "webcal://api.nthumods.com/timetable/calendar.ics?semester=11510",
+    );
+
+    const checkboxes = [...container.querySelectorAll('[role="checkbox"]')];
+    expect(
+      checkboxes.map((checkbox) => checkbox.getAttribute("data-state")),
+    ).toEqual(["unchecked", "checked", "unchecked"]);
+    await act(async () => root.unmount());
+    void dom;
+  });
+
+  test.each(["null", "[]", '{"classes":"x"}', "invalid-json"])(
+    "uses default includes for malformed persisted value %s",
+    async (value) => {
+      authState.isAuthenticated = true;
+      authState.user = { access_token: "invalid-persisted-token" };
+      feedGet.mockReset();
+      feedGet.mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            webcalUrl: "webcal://auth.example.test/live-token",
+          }),
+          { status: 200 },
+        ),
+      );
+      const dom = withDom();
+      dom.window.localStorage.setItem("calendar_subscription_includes", value);
+      const { container, root } = await renderComponent(
+        "webcal://api.nthumods.com/timetable/calendar.ics?semester=11510",
+      );
+
+      expect(
+        [...container.querySelectorAll('[role="checkbox"]')].map((checkbox) =>
+          checkbox.getAttribute("data-state"),
+        ),
+      ).toEqual(["checked", "checked", "checked"]);
+      await act(async () => root.unmount());
+      void dom;
+    },
+  );
+
+  test("uses default includes when localStorage throws while reading", async () => {
+    authState.isAuthenticated = true;
+    authState.user = { access_token: "throwing-storage-token" };
+    feedGet.mockReset();
+    feedGet.mockResolvedValue(
+      new Response(
+        JSON.stringify({ webcalUrl: "webcal://auth.example.test/live-token" }),
+        { status: 200 },
+      ),
+    );
+    const dom = withDom();
+    const storage = dom.window.localStorage;
+    Object.defineProperty(dom.window, "localStorage", {
+      configurable: true,
+      get: () => {
+        throw new Error("storage unavailable");
+      },
+    });
+
+    try {
+      const { container, root } = await renderComponent(
+        "webcal://api.nthumods.com/timetable/calendar.ics?semester=11510",
+      );
+      expect(
+        [...container.querySelectorAll('[role="checkbox"]')].map((checkbox) =>
+          checkbox.getAttribute("data-state"),
+        ),
+      ).toEqual(["checked", "checked", "checked"]);
+      await act(async () => root.unmount());
+    } finally {
+      Object.defineProperty(dom.window, "localStorage", {
+        configurable: true,
+        value: storage,
+      });
+    }
   });
 
   test("labels a failed live-feed request as static and offers retry", async () => {
