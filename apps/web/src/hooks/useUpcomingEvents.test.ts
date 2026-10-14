@@ -1,4 +1,4 @@
-import { afterAll, describe, expect, mock, test } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import { fromZonedTime } from "date-fns-tz";
 import type { CalendarEventInternal } from "@/components/Calendar/calendar.types";
 import type { MinimalCourse } from "@/types/courses";
@@ -7,18 +7,8 @@ import type { CourseDate } from "@/hooks/useCourseDates";
 process.env.VITE_COURSEWEB_API_URL ??= "https://api.example.test";
 process.env.VITE_NTHUMODS_AUTH_URL ??= "https://auth.example.test";
 
-const actualApi = await import("@/config/api");
-const actualAuth = await import("@/config/auth");
-mock.module("@/config/api", () => ({ default: {} }));
-mock.module("@/config/auth", () => ({ default: {} }));
-
 const { expandCalendarEvent, getTaipeiDayStart, groupConsecutiveEmptyDays } =
   await import("./useUpcomingEvents");
-
-afterAll(() => {
-  mock.module("@/config/api", () => actualApi);
-  mock.module("@/config/auth", () => actualAuth);
-});
 
 const TAIPEI_TIME_ZONE = "Asia/Taipei";
 

@@ -1,9 +1,43 @@
-import { act, createElement } from "react";
+import {
+  act,
+  cloneElement,
+  createElement,
+  isValidElement,
+  useCallback,
+  useRef,
+  useState,
+} from "react";
 import { createRoot } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
 import { JSDOM } from "jsdom";
-import { describe, expect, jest, mock, test } from "bun:test";
+import * as actualUi from "@courseweb/ui";
+import * as actualUsehooksTs from "usehooks-ts";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  jest,
+  mock,
+  test,
+} from "bun:test";
 import { buildCalendarSubscriptionLinks } from "@/lib/calendar-subscription";
+import { captureGlobalState } from "@/test-utils/global-state";
+const restoreGlobals = captureGlobalState([
+  "window",
+  "document",
+  "HTMLElement",
+  "Node",
+  "Element",
+  "Event",
+  "MouseEvent",
+  "CustomEvent",
+  "StorageEvent",
+  "navigator",
+  "getComputedStyle",
+  "MutationObserver",
+  "IS_REACT_ACT_ENVIRONMENT",
+]);
 
 const authState: {
   isAuthenticated: boolean;
@@ -96,10 +130,6 @@ const installSharedDom = () => {
     IS_REACT_ACT_ENVIRONMENT: true,
   });
 };
-installSharedDom();
-
-const { CalendarSubscriptionLinkList, default: CalendarSubscriptionLinks } =
-  await import("./CalendarSubscriptionLinks");
 
 const withDom = () => {
   sharedDom.window.document.body.innerHTML = "";
@@ -119,7 +149,164 @@ const renderComponent = async (feedUrl: string) => {
   return { container, root };
 };
 
+const useTestLocalStorage = <T,>(
+  key: string,
+  initialValue: T,
+  options?: { deserializer?: (value: string) => T },
+): [T, (next: T | ((previous: T) => T)) => void] => {
+  const initialValueRef = useRef(initialValue);
+  initialValueRef.current = initialValue;
+  const read = useCallback(() => {
+    try {
+      const raw = window.localStorage.getItem(key);
+      if (!raw) return initialValueRef.current;
+      return options?.deserializer
+        ? options.deserializer(raw)
+        : (JSON.parse(raw) as T);
+    } catch {
+      return initialValueRef.current;
+    }
+  }, [key, options?.deserializer]);
+  const [value, setValue] = useState(read);
+  const update = useCallback(
+    (next: T | ((previous: T) => T)) => {
+      setValue((previous) => {
+        const nextValue =
+          typeof next === "function"
+            ? (next as (previous: T) => T)(previous)
+            : next;
+        try {
+          window.localStorage.setItem(key, JSON.stringify(nextValue));
+        } catch {
+          // The component should keep working when storage is unavailable.
+        }
+        return nextValue;
+      });
+    },
+    [key],
+  );
+  return [value, update];
+};
+
+installSharedDom();
+
+mock.module("usehooks-ts", () => ({
+  useLocalStorage: useTestLocalStorage,
+}));
+const testButton = ({ asChild, children, ...props }: Record<string, any>) =>
+  asChild && isValidElement(children)
+    ? cloneElement(children, props)
+    : createElement("button", props, children);
+const testCheckbox = ({
+  checked,
+  onCheckedChange,
+  ...props
+}: Record<string, any>) =>
+  createElement("button", {
+    ...props,
+    role: "checkbox",
+    type: "button",
+    "data-state": checked ? "checked" : "unchecked",
+    onClick: () => onCheckedChange?.(!checked),
+  });
+const testContainer = ({ children, ...props }: Record<string, any>) =>
+  createElement("div", props, children);
+const testDialog = ({ open, children }: Record<string, any>) =>
+  open ? testContainer({ children }) : null;
+mock.module("@courseweb/ui", () => ({
+  AlertDialog: testDialog,
+  AlertDialogAction: testButton,
+  AlertDialogCancel: testButton,
+  AlertDialogContent: testContainer,
+  AlertDialogDescription: testContainer,
+  AlertDialogFooter: testContainer,
+  AlertDialogHeader: testContainer,
+  AlertDialogTitle: testContainer,
+  Button: testButton,
+  Checkbox: testCheckbox,
+  toast: () => undefined,
+}));
+const { CalendarSubscriptionLinkList, default: CalendarSubscriptionLinks } =
+  await import("./CalendarSubscriptionLinks");
+mock.module("@courseweb/ui", () => actualUi);
+mock.module("usehooks-ts", () => actualUsehooksTs);
+
 describe("calendar subscription links markup", () => {
+  beforeEach(() => {
+    mock.module("react-oidc-context", () => ({
+      useAuth: () => authState,
+    }));
+    mock.module("@/config/auth", () => ({
+      default: {
+        api: {
+          calendar: {
+            feed: { $get: feedGet, rotate: { $post: feedRotate } },
+          },
+        },
+      },
+    }));
+    mock.module("@/dictionaries/useDictionary", () => ({
+      default: () => ({
+        dialogs: { ShareSyncTimetableDialog: { links: labels } },
+      }),
+    }));
+    mock.module("usehooks-ts", () => ({
+      useLocalStorage: useTestLocalStorage,
+    }));
+    mock.module("@courseweb/ui", () => ({
+      AlertDialog: testDialog,
+      AlertDialogAction: testButton,
+      AlertDialogCancel: testButton,
+      AlertDialogContent: testContainer,
+      AlertDialogDescription: testContainer,
+      AlertDialogFooter: testContainer,
+      AlertDialogHeader: testContainer,
+      AlertDialogTitle: testContainer,
+      Button: testButton,
+      Checkbox: testCheckbox,
+      toast: () => undefined,
+    }));
+  });
+
+  afterEach(() => {
+    authState.isAuthenticated = false;
+    delete authState.user;
+    feedGet.mockReset();
+    feedGet.mockImplementation(
+      async () =>
+        new Response(
+          JSON.stringify({
+            url: "https://auth.example.test/api/calendar/ics/user?token=live-token",
+            webcalUrl:
+              "webcal://auth.example.test/api/calendar/ics/user?token=live-token",
+            createdAt: "2026-10-14T00:00:00.000Z",
+          }),
+          { status: 200 },
+        ),
+    );
+    feedRotate.mockReset();
+    feedRotate.mockImplementation(
+      async () =>
+        new Response(
+          JSON.stringify({
+            url: "https://auth.example.test/api/calendar/ics/user?token=rotated-token",
+            webcalUrl:
+              "webcal://auth.example.test/api/calendar/ics/user?token=rotated-token",
+            createdAt: "2026-10-14T00:00:00.000Z",
+          }),
+          { status: 200 },
+        ),
+    );
+    jest.useRealTimers();
+    sharedDom.window.document.body.innerHTML = "";
+    try {
+      sharedDom.window.localStorage.clear();
+    } catch {
+      // The throwing-storage test restores localStorage in its own finally block.
+    }
+    restoreGlobals();
+  });
+
   test("keeps provider links in the existing left-aligned button contract", () => {
     const feedUrl =
       "webcal://api.nthumods.com/timetable/calendar.ics?semester=11510";
@@ -473,13 +660,7 @@ describe("calendar subscription links markup", () => {
       button.textContent?.includes(labels.reset_link),
     );
     await act(async () => {
-      reset?.dispatchEvent(
-        new dom.window.MouseEvent("click", {
-          bubbles: true,
-          cancelable: true,
-          view: dom.window,
-        }),
-      );
+      reset?.click();
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
     const action = [...document.body.querySelectorAll("button")]
@@ -490,7 +671,9 @@ describe("calendar subscription links markup", () => {
     expect(action).toBeTruthy();
     await act(async () => {
       action?.click();
+      await Promise.resolve();
       action?.click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
     });
 
     expect(feedRotate).toHaveBeenCalledTimes(1);
