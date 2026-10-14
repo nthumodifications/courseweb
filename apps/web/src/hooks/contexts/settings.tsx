@@ -9,12 +9,14 @@ import {
 } from "react";
 import { useLocalStorage } from "usehooks-ts";
 import { useCookies } from "react-cookie";
-import { Language } from "@/types/settings";
+import { Language, ZhScript } from "@/types/settings";
 import { apps } from "@/const/apps";
 import { updateThemeColor } from "@/lib/theme-color";
 
 const settingsContext = createContext<ReturnType<typeof useSettingsProvider>>({
   language: "zh",
+  zhScript: "hant",
+  setZhScript: () => {},
   darkMode: false,
   pinnedApps: [],
   showAcademicCalendar: true,
@@ -57,6 +59,10 @@ const useSettingsProvider = () => {
   const [analytics, setAnalytics] = useLocalStorage<boolean>("analytics", true);
   const [showAcademicCalendar, setShowAcademicCalendar] =
     useLocalStorage<boolean>("show_academic_calendar", true);
+  const [zhScript, setZhScript] = useLocalStorage<ZhScript>(
+    "zh_script",
+    "hant",
+  );
 
   const setLanguage = (newLang: Language) => {
     //set cookie of 'locale'
@@ -146,6 +152,8 @@ const useSettingsProvider = () => {
 
   return {
     language,
+    zhScript,
+    setZhScript,
     darkMode,
     pinnedApps,
     showAcademicCalendar,

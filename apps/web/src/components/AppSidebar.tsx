@@ -53,7 +53,7 @@ const AppSidebar = ({ lang }: { lang: Language }) => {
           </Suspense>
         </div>
         <div className="pl-2">
-          <CurrentSemesterLabel language={lang} />
+          <CurrentSemesterLabel language={lang} dictionary={dict} />
         </div>
         <div className="border-t border-border pt-2">
           <Suspense fallback={null}>

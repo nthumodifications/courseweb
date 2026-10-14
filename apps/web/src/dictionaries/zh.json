@@ -950,6 +950,10 @@
       "language": {
         "title": "語言"
       },
+      "zh_script": {
+        "title": "簡體中文顯示",
+        "description": "使用簡體字與中國大陸常用詞彙。"
+      },
       "compact_header": {
         "title": "精簡標頭"
       },

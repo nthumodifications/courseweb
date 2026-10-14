@@ -1,10 +1,17 @@
 import { currentSemester } from "@courseweb/shared";
 import { useMemo } from "react";
-import en from "@/dictionaries/en.json";
-import zh from "@/dictionaries/zh.json";
+import type useDictionary from "@/dictionaries/useDictionary";
 
-const CurrentSemesterLabel = ({ language }: { language: "en" | "zh" }) => {
-  const dict = language === "en" ? en : zh;
+type Dictionary = ReturnType<typeof useDictionary>;
+
+const CurrentSemesterLabel = ({
+  language,
+  dictionary,
+}: {
+  language: "en" | "zh";
+  dictionary: Dictionary;
+}) => {
+  const dict = dictionary;
   let semesterYear: number | null = null;
   if (currentSemester) {
     semesterYear =

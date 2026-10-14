@@ -3,6 +3,8 @@ import { matchRoutes } from "react-router-dom";
 import { router } from "@/router";
 import { usePageLocation } from "@/hooks/usePageLocation";
 import { serializeJsonLd } from "@/lib/seo";
+import { useSettings } from "@/hooks/contexts/settings";
+import useDictionary from "@/dictionaries/useDictionary";
 
 interface RouteHandle {
   title?: string;
@@ -10,6 +12,7 @@ interface RouteHandle {
   description?: string;
   descriptionZh?: string;
   noindex?: boolean;
+  titleZhKey?: "course.instructor.title";
 }
 
 const BASE_URL = "https://nthumods.com";
@@ -89,6 +92,8 @@ const shouldNoindexPath = (pathname: string): boolean => {
 };
 
 const TitleUpdater = () => {
+  const { zhScript } = useSettings();
+  const dict = useDictionary();
   const location = usePageLocation();
   const matches = matchRoutes(router.routes, location) ?? [];
 
@@ -97,7 +102,13 @@ const TitleUpdater = () => {
   const pathLang = getLangFromPath(location.pathname);
   const isZh = pathLang === "zh";
 
-  const pageTitle = isZh ? (handle?.titleZh ?? handle?.title) : handle?.title;
+  const dictionaryTitle =
+    handle?.titleZhKey === "course.instructor.title"
+      ? dict.course.instructor.title
+      : undefined;
+  const pageTitle = isZh
+    ? (dictionaryTitle ?? handle?.titleZh ?? handle?.title)
+    : handle?.title;
   const description = isZh
     ? (handle?.descriptionZh ?? handle?.description ?? DEFAULT_DESCRIPTION_ZH)
     : (handle?.description ?? handle?.descriptionZh ?? DEFAULT_DESCRIPTION_EN);
@@ -128,7 +139,7 @@ const TitleUpdater = () => {
     name: fullTitle,
     url: canonicalUrl,
     description,
-    inLanguage: isZh ? "zh-TW" : "en",
+    inLanguage: isZh ? (zhScript === "hans" ? "zh-Hans" : "zh-Hant") : "en",
     isPartOf: {
       "@type": "WebSite",
       url: BASE_URL,
@@ -138,7 +149,9 @@ const TitleUpdater = () => {
 
   return (
     <Helmet>
-      <html lang={isZh ? "zh-TW" : "en"} />
+      <html
+        lang={isZh ? (zhScript === "hans" ? "zh-Hans" : "zh-Hant") : "en"}
+      />
       <title>{fullTitle}</title>
       <meta name="description" content={description} />
       <meta name="robots" content={robots} />
@@ -158,7 +171,12 @@ const TitleUpdater = () => {
       <meta property="og:url" content={canonicalUrl} />
       <meta property="og:image" content={DEFAULT_OG_IMAGE} />
       <meta property="og:site_name" content="NTHUMods" />
-      <meta property="og:locale" content={isZh ? "zh_TW" : "en_US"} />
+      <meta
+        property="og:locale"
+        content={
+          isZh && zhScript === "hans" ? "zh_CN" : isZh ? "zh_TW" : "en_US"
+        }
+      />
 
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={fullTitle} />
