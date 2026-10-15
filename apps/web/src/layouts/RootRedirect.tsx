@@ -1,6 +1,5 @@
 import { Navigate } from "react-router-dom";
-
-const locales = new Set(["en", "zh"]);
+import { isLocale, localeFromBrowserLanguage } from "@/types/locale";
 
 function getLocale(): string {
   // Check cookie first
@@ -8,17 +7,12 @@ function getLocale(): string {
     .split("; ")
     .find((c) => c.startsWith("locale="))
     ?.split("=")[1];
-  if (cookieLocale && locales.has(cookieLocale)) {
+  if (cookieLocale && isLocale(cookieLocale)) {
     return cookieLocale;
   }
 
   // Check browser language
-  const browserLang = navigator.language.split("-")[0];
-  if (locales.has(browserLang)) {
-    return browserLang;
-  }
-
-  return "zh";
+  return localeFromBrowserLanguage(navigator.language);
 }
 
 const RootRedirect = () => {

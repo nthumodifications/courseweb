@@ -1,5 +1,6 @@
 import { cn } from "@courseweb/ui";
 import type { CityBusCategory } from "@/libs/citybus";
+import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
 
 type CityBusLineBadgeProps = {
   nameZh: string;
@@ -71,7 +72,8 @@ export function CityBusLineBadge({
   category,
   className,
 }: CityBusLineBadgeProps) {
-  const { mark, colour } = getCityBusLineMark(nameZh, category);
+  const localizeData = useLocalizedZhData();
+  const { mark, colour } = getCityBusLineMark(localizeData(nameZh), category);
 
   return (
     <span

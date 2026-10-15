@@ -107,6 +107,7 @@ const stableFeedTimestamp = (now: Date) =>
  * @param context Context object for Firebase initialization
  * @param prismaOverride Optional Prisma client override for testing
  * @param firebaseOverride Optional Firebase admin override for testing
+ * @param includeEvents Whether to include the user's Firestore events
  * @returns iCalendar string
  */
 export async function createICalendar(
@@ -116,6 +117,7 @@ export async function createICalendar(
   prismaOverride?: any,
   firebaseOverride?: any,
   now = new Date(),
+  includeEvents = true,
 ): Promise<string> {
   try {
     // Use the provided prisma client or get the default one
@@ -127,7 +129,7 @@ export async function createICalendar(
     });
 
     if (!user) {
-      console.error(`User with ID ${userId} not found when creating iCalendar`);
+      console.error("User not found when creating iCalendar");
       throw new Error(`User with ID ${userId} not found`);
     }
 
@@ -148,37 +150,45 @@ export async function createICalendar(
       currentDate.getTime() + 180 * 24 * 60 * 60 * 1000,
     );
 
-    // Initialize Firebase admin with override for testing if provided
-    const { adminFirestore } = firebaseOverride || getFirebaseAdmin(context);
-    const eventsRef = adminFirestore
-      .collection("users")
-      .doc(userId)
-      .collection("events");
+    const events = includeEvents
+      ? await (async () => {
+          // Initialize Firebase admin with override for testing if provided
+          const { adminFirestore } =
+            firebaseOverride || getFirebaseAdmin(context);
+          const eventsRef = adminFirestore
+            .collection("users")
+            .doc(userId)
+            .collection("events");
 
-    // Optimize Firebase query with proper indexing. actualEnd is the last
-    // materialized occurrence for repeated events (and the event end for
-    // one-off events), so querying end would drop long-running series whose
-    // root occurrence is already in the past.
-    let eventsSnapshot;
-    try {
-      eventsSnapshot = await eventsRef
-        .where("start", "<=", sixMonthsFromNow.toISOString())
-        .where("actualEnd", ">=", currentDate.toISOString())
-        .orderBy("start", "asc")
-        .limit(100) // Reasonable limit for calendar exports
-        .get();
-    } catch (firebaseError) {
-      console.error(`Firebase query error for user ${userId}:`, firebaseError);
-      // Continue with empty events to serve at least a basic calendar
-      eventsSnapshot = { docs: [], empty: true };
-    } // Convert Firebase documents to event objects
-    const events = eventsSnapshot.docs.map((doc: any) => {
-      const data = doc.data();
-      return {
-        ...data,
-        id: doc.id,
-      };
-    });
+          // Optimize Firebase query with proper indexing. actualEnd is the last
+          // materialized occurrence for repeated events (and the event end for
+          // one-off events), so querying end would drop long-running series whose
+          // root occurrence is already in the past.
+          let eventsSnapshot;
+          try {
+            eventsSnapshot = await eventsRef
+              .where("start", "<=", sixMonthsFromNow.toISOString())
+              .where("actualEnd", ">=", currentDate.toISOString())
+              .orderBy("start", "asc")
+              .limit(100) // Reasonable limit for calendar exports
+              .get();
+          } catch (firebaseError) {
+            console.error(
+              "Firebase query error while creating iCalendar events:",
+              firebaseError,
+            );
+            // Continue with empty events to serve at least a basic calendar
+            eventsSnapshot = { docs: [], empty: true };
+          }
+          return eventsSnapshot.docs.map((doc: any) => {
+            const data = doc.data();
+            return {
+              ...data,
+              id: doc.id,
+            };
+          });
+        })()
+      : [];
 
     // Process all events (if any)
     if (events.length > 0) {
@@ -230,7 +240,7 @@ export async function createICalendar(
             }),
           });
         } catch (err) {
-          console.error("Error processing event:", event.id, err);
+          console.error("Error processing iCalendar event:", err);
           // Skip this event but continue with others
         }
       }

@@ -175,6 +175,22 @@ export const searchableFields = (record: SearchProjectionRecord) =>
 export const searchableText = (record: SearchProjectionRecord) =>
   searchableFields(record).join(" ");
 
+export const transformSearchableRecord = (
+  record: SearchProjectionRecord,
+  transform: (value: string) => string,
+): SearchProjectionRecord => {
+  const transformed = { ...record } as SearchProjectionRecord;
+  for (const field of SEARCHABLE_FIELDS) {
+    const value = record[field];
+    transformed[field] = (
+      Array.isArray(value)
+        ? value.map((item) => transform(String(item)))
+        : transform(String(value ?? ""))
+    ) as never;
+  }
+  return transformed;
+};
+
 export { timeMaskForRecord as recordTimeMask };
 
 const facetValuesCache = new WeakMap<

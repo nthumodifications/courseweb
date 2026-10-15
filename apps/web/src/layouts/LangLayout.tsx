@@ -1,8 +1,15 @@
 import { Navigate, Outlet, useLocation, useParams } from "react-router-dom";
 import { Suspense } from "react";
 import LoadingPage from "@/components/Pages/LoadingPage";
+import { useCachedDictionary } from "@/dictionaries/dictionary-cache";
+import {
+  SUPPORTED_LOCALES,
+  isLocale,
+  localeFromBrowserLanguage,
+  normalizeLocaleSegment,
+} from "@/types/locale";
 
-const locales = new Set(["en", "zh"]);
+const locales = new Set<string>(SUPPORTED_LOCALES);
 
 function getLocale(): string {
   const cookieLocale = document.cookie
@@ -12,11 +19,7 @@ function getLocale(): string {
   if (cookieLocale && locales.has(cookieLocale)) {
     return cookieLocale;
   }
-  const browserLang = navigator.language.split("-")[0];
-  if (locales.has(browserLang)) {
-    return browserLang;
-  }
-  return "zh";
+  return localeFromBrowserLanguage(navigator.language);
 }
 
 // Looks like a language tag (fr, zh-TW, en_us), as opposed to a page name.
@@ -32,19 +35,21 @@ export function localizedRedirectPath(
   preferredLang: string,
 ): string {
   const firstSegment = pathname.split("/")[1] ?? "";
-  const nestedPath = languageTagPattern.test(firstSegment)
-    ? pathname.replace(/^\/[^/]+/, "")
-    : pathname;
+  const explicitLocale = normalizeLocaleSegment(firstSegment);
+  const nestedPath =
+    explicitLocale || languageTagPattern.test(firstSegment)
+      ? pathname.replace(/^\/[^/]+/, "")
+      : pathname;
   const target =
     nestedPath === "" || nestedPath === "/" ? "/today" : nestedPath;
-  return `/${preferredLang}${target}`;
+  return `/${explicitLocale ?? preferredLang}${target}`;
 }
 
 const LangLayout = () => {
   const { lang } = useParams<{ lang: string }>();
   const location = useLocation();
 
-  if (!lang || !locales.has(lang)) {
+  if (!lang || !isLocale(lang) || !locales.has(lang)) {
     return (
       <Navigate
         to={`${localizedRedirectPath(location.pathname, getLocale())}${location.search}${location.hash}`}
@@ -55,9 +60,14 @@ const LangLayout = () => {
 
   return (
     <Suspense fallback={<LoadingPage />}>
-      <Outlet />
+      <LocaleDictionaryGate lang={lang} />
     </Suspense>
   );
+};
+
+const LocaleDictionaryGate = ({ lang }: { lang: string }) => {
+  useCachedDictionary(lang);
+  return <Outlet />;
 };
 
 export default LangLayout;

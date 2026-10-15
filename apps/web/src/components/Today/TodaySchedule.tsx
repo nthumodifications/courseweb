@@ -2,6 +2,7 @@ import { FC, useMemo, useState, useEffect } from "react";
 import { useSettings } from "@/hooks/contexts/settings";
 import useDictionary from "@/dictionaries/useDictionary";
 import { getLocale } from "@/helpers/dateLocale";
+import { contentLanguage } from "@/helpers/contentLanguage";
 import { Cloud, MapPin, Clock } from "lucide-react";
 import { apps } from "@/const/apps";
 import useTime from "@/hooks/useTime";
@@ -285,7 +286,7 @@ const TodaySchedule: FC = () => {
     const firstDay = group.days[0];
     const lastDay = group.days.at(-1)!;
     const rangeCount =
-      language === "zh"
+      contentLanguage(language) === "zh"
         ? (["", "一", "二", "三", "四", "五"][group.days.length] ??
           String(group.days.length))
         : String(group.days.length);

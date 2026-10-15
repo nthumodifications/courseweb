@@ -6,6 +6,7 @@ import { Route2LineIcon } from "@/components/BusIcons/Route2LineIcon";
 import useDictionary from "@/dictionaries/useDictionary";
 import { getTimeOnDate } from "@/helpers/bus";
 import { useSettings } from "@/hooks/contexts/settings";
+import { contentLanguage } from "@/helpers/contentLanguage";
 import useTime from "@/hooks/useTime";
 import {
   addMinutes,
@@ -227,6 +228,7 @@ const CampusLineDisplayPage = () => {
   const isNandaCombined = line === "nanda";
 
   const { language } = useSettings();
+  const contentLang = contentLanguage(language);
   const dict = useDictionary();
   const { pinned, toggle } = useBusPins();
   const returnUrl = searchParams.get("return_url") ?? `/${language}/bus`;
@@ -537,77 +539,77 @@ const CampusLineDisplayPage = () => {
       bus?: (typeof busOfInterest)[number];
     }[]
   >(() => {
-    return (language == "zh" ? lineData.stations_zh : lineData.stations_en).map(
-      (station, i) => {
-        // const stationDepTime = addMinutes(startDate, lineData.timings.slice(0, i).reduce((a, b) => a + b, 0));
-        // if (time < stationDepTime) return { state: BusStationState.UNAVAILABLE, station, time: formatDate(stationDepTime, 'HH:mm') };
-        // if (isSameMinute(time, stationDepTime)) return { state: BusStationState.AT_STATION, station, time: dict.bus.departing };
-        // if (time > stationDepTime) return { state: BusStationState.LEFT, station, time: formatDate(stationDepTime, 'HH:mm') };
-        // return { state: BusStationState.UNAVAILABLE, station, time: formatDate(stationDepTime, 'HH:mm') };
+    return (
+      contentLang == "zh" ? lineData.stations_zh : lineData.stations_en
+    ).map((station, i) => {
+      // const stationDepTime = addMinutes(startDate, lineData.timings.slice(0, i).reduce((a, b) => a + b, 0));
+      // if (time < stationDepTime) return { state: BusStationState.UNAVAILABLE, station, time: formatDate(stationDepTime, 'HH:mm') };
+      // if (isSameMinute(time, stationDepTime)) return { state: BusStationState.AT_STATION, station, time: dict.bus.departing };
+      // if (time > stationDepTime) return { state: BusStationState.LEFT, station, time: formatDate(stationDepTime, 'HH:mm') };
+      // return { state: BusStationState.UNAVAILABLE, station, time: formatDate(stationDepTime, 'HH:mm') };
 
-        // get nearest coming bus
-        const bus = busOfInterest.find((bus) => bus.stationIndex == i);
-        if (!bus) {
-          // find the next bus that will arrive (offset by timing)
-          const nextBus = busOfInterest.find((bus) => bus.stationIndex < i);
-          if (nextBus) {
-            const startTime = nextBus.stationDepTime;
-            const stationDepTime = addMinutes(
-              startTime,
-              lineData.timings
-                .slice(0, i - nextBus.stationIndex)
-                .reduce((a, b) => a + b, 0),
-            );
-            const diffMin = differenceInMinutes(stationDepTime, time);
+      // get nearest coming bus
+      const bus = busOfInterest.find((bus) => bus.stationIndex == i);
+      if (!bus) {
+        // find the next bus that will arrive (offset by timing)
+        const nextBus = busOfInterest.find((bus) => bus.stationIndex < i);
+        if (nextBus) {
+          const startTime = nextBus.stationDepTime;
+          const stationDepTime = addMinutes(
+            startTime,
+            lineData.timings
+              .slice(0, i - nextBus.stationIndex)
+              .reduce((a, b) => a + b, 0),
+          );
+          const diffMin = differenceInMinutes(stationDepTime, time);
+          return {
+            state: BusStationState.UNAVAILABLE,
+            station,
+            time:
+              diffMin < 8
+                ? `${diffMin} min`
+                : formatDate(stationDepTime, "HH:mm"),
+            bus: bus,
+          };
+        }
+      } else {
+        if (bus.stationIndex == i) {
+          const diffMin = differenceInMinutes(bus.stationDepTime, time);
+
+          if (isSameMinute(time, bus.stationDepTime))
             return {
-              state: BusStationState.UNAVAILABLE,
+              state: BusStationState.AT_STATION,
+              station,
+              time: dict.bus.departing,
+              bus: bus,
+            };
+          if (time < bus.stationDepTime)
+            return {
+              state: BusStationState.ARRIVING,
               station,
               time:
                 diffMin < 8
                   ? `${diffMin} min`
-                  : formatDate(stationDepTime, "HH:mm"),
+                  : formatDate(bus.stationDepTime, "HH:mm"),
               bus: bus,
             };
-          }
-        } else {
-          if (bus.stationIndex == i) {
-            const diffMin = differenceInMinutes(bus.stationDepTime, time);
-
-            if (isSameMinute(time, bus.stationDepTime))
-              return {
-                state: BusStationState.AT_STATION,
-                station,
-                time: dict.bus.departing,
-                bus: bus,
-              };
-            if (time < bus.stationDepTime)
-              return {
-                state: BusStationState.ARRIVING,
-                station,
-                time:
-                  diffMin < 8
-                    ? `${diffMin} min`
-                    : formatDate(bus.stationDepTime, "HH:mm"),
-                bus: bus,
-              };
-            if (time > bus.stationDepTime)
-              return {
-                state: BusStationState.LEFT,
-                station,
-                time: format(bus.stationDepTime, "HH:mm"),
-                bus: bus,
-              };
-          }
+          if (time > bus.stationDepTime)
+            return {
+              state: BusStationState.LEFT,
+              station,
+              time: format(bus.stationDepTime, "HH:mm"),
+              bus: bus,
+            };
         }
-        return {
-          state: BusStationState.UNAVAILABLE,
-          station,
-          time: bus?.time ?? "",
-          bus,
-        };
-      },
-    );
-  }, [time, busOfInterest]);
+      }
+      return {
+        state: BusStationState.UNAVAILABLE,
+        station,
+        time: bus?.time ?? "",
+        bus,
+      };
+    });
+  }, [time, busOfInterest, contentLang]);
 
   if (!(line in linesDict) && !isNandaCombined) {
     return <div>{dict.bus.invalid_line}</div>;
@@ -618,10 +620,10 @@ const CampusLineDisplayPage = () => {
         returnUrl={returnUrl}
         title={
           isNandaCombined
-            ? language == "zh"
+            ? contentLang == "zh"
               ? "南大校車 經台積館 & 經教育學院"
               : "Nanda Via TSMC & COE"
-            : language == "zh"
+            : contentLang == "zh"
               ? lineData.title_zh
               : lineData.title_en
         }

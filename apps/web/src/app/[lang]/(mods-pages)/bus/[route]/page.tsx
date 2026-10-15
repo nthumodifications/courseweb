@@ -12,6 +12,7 @@ import { Route1LineIcon } from "@/components/BusIcons/Route1LineIcon";
 import { Route2LineIcon } from "@/components/BusIcons/Route2LineIcon";
 import { useParams, useNavigate } from "react-router-dom";
 import useDictionary from "@/dictionaries/useDictionary";
+import { intlLocale } from "@/helpers/contentLanguage";
 import { useEffect } from "react";
 import { Language } from "@/types/settings";
 import { Helmet } from "react-helmet-async";
@@ -68,7 +69,7 @@ const BusRouteDetailsPage = () => {
         routeName,
       ),
       url: `https://nthumods.com/${lang}/bus/${route}`,
-      inLanguage: lang === "en" ? "en-US" : "zh-TW",
+      inLanguage: intlLocale(lang),
       isPartOf: { "@type": "WebSite", url: "https://nthumods.com" },
     },
   ];

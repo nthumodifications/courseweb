@@ -12,6 +12,7 @@ import { useCookies } from "react-cookie";
 import { Language } from "@/types/settings";
 import { apps } from "@/const/apps";
 import { updateThemeColor } from "@/lib/theme-color";
+import { localizedLocation } from "@/types/locale";
 
 const settingsContext = createContext<ReturnType<typeof useSettingsProvider>>({
   language: "zh",
@@ -37,7 +38,9 @@ type HeadlessAISStorage =
       lastUpdated: number;
     };
 const useSettingsProvider = () => {
-  const language: Language = useParams().lang === "en" ? "en" : "zh";
+  const routeLanguage = useParams().lang;
+  const language: Language =
+    routeLanguage === "en" || routeLanguage === "zh-cn" ? routeLanguage : "zh";
   const navigate = useNavigate();
   const location = useLocation();
   const pathname = location.pathname;
@@ -58,13 +61,26 @@ const useSettingsProvider = () => {
   const [showAcademicCalendar, setShowAcademicCalendar] =
     useLocalStorage<boolean>("show_academic_calendar", true);
 
+  useEffect(() => {
+    if (
+      typeof window !== "undefined" &&
+      language === "zh" &&
+      (window.localStorage.getItem("zh_script") === '"hans"' ||
+        window.localStorage.getItem("zh_script") === "hans")
+    ) {
+      window.localStorage.removeItem("zh_script");
+    }
+  }, [language]);
+
   const setLanguage = (newLang: Language) => {
     //set cookie of 'locale'
     setCookie("locale", newLang, {
       path: "/",
       expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
     });
-    navigate(`/${newLang}/` + pathname.split("/").slice(2).join("/"));
+    navigate(
+      localizedLocation(pathname, newLang, location.search, location.hash),
+    );
   };
 
   //check if cookies 'locale' exists, else set it

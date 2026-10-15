@@ -3,8 +3,10 @@ import { CalendarDays } from "lucide-react";
 import { useParams } from "react-router-dom";
 import Footer from "@/components/Footer";
 import useDictionary from "@/dictionaries/useDictionary";
+import { contentLanguage, intlLocale } from "@/helpers/contentLanguage";
 import { CHANGELOG } from "@/const/changelog";
 import { ChangelogVisual } from "@/components/Changelog/ChangelogVisual";
+import { useLocalizedZh } from "@/hooks/useLocalizedZh";
 
 const formatReleaseDate = (date: string, locale: string) =>
   new Intl.DateTimeFormat(locale, {
@@ -16,8 +18,10 @@ const formatReleaseDate = (date: string, locale: string) =>
 const ChangelogPage = () => {
   const dict = useDictionary();
   const { lang } = useParams<{ lang: string }>();
-  const language = lang === "en" ? "en" : "zh";
-  const locale = language === "en" ? "en-US" : "zh-TW";
+  const language = lang === "en" || lang === "zh-cn" ? lang : "zh";
+  const contentLang = contentLanguage(language);
+  const locale = intlLocale(language);
+  const localize = useLocalizedZh();
 
   return (
     <div className="flex flex-col gap-4 px-4">
@@ -37,7 +41,11 @@ const ChangelogPage = () => {
             </div>
 
             {release.title && (
-              <h2 className="text-base font-bold">{release.title[language]}</h2>
+              <h2 className="text-base font-bold">
+                {contentLang === "en"
+                  ? release.title.en
+                  : localize(release.title.zh)}
+              </h2>
             )}
 
             <ul className="flex flex-col divide-y divide-border">
@@ -47,7 +55,10 @@ const ChangelogPage = () => {
                   className="flex flex-col gap-2 py-4"
                 >
                   {item.visual && (
-                    <ChangelogVisual visual={item.visual} language={language} />
+                    <ChangelogVisual
+                      visual={item.visual}
+                      language={contentLang}
+                    />
                   )}
                   <div className="flex items-start gap-2">
                     <Badge variant="outline" className="mt-0.5 shrink-0">
@@ -55,11 +66,15 @@ const ChangelogPage = () => {
                     </Badge>
                     <div className="min-w-0 flex flex-col gap-1">
                       <h3 className="font-bold leading-snug">
-                        {item.title[language]}
+                        {contentLang === "en"
+                          ? item.title.en
+                          : localize(item.title.zh)}
                       </h3>
                       {item.description && (
                         <p className="text-sm leading-relaxed text-muted-foreground">
-                          {item.description[language]}
+                          {contentLang === "en"
+                            ? item.description.en
+                            : localize(item.description.zh)}
                         </p>
                       )}
                     </div>

@@ -16,6 +16,7 @@ import { useSettings } from "@/hooks/contexts/settings";
 import { timetableEvents } from "@/lib/trackingEvents";
 import { filterHiddenCourses } from "@/helpers/timetableVisibility";
 import useDictionary from "@/dictionaries/useDictionary";
+import { intlLocale } from "@/helpers/contentLanguage";
 
 const TimetablePage = () => {
   const {
@@ -99,7 +100,7 @@ const TimetablePage = () => {
       "@context": "https://schema.org",
       "@type": "WebApplication",
       name: dict.timetable.seo.application_name,
-      url: "https://nthumods.com/zh/timetable",
+      url: `https://nthumods.com/${language}/timetable`,
       applicationCategory: "EducationalApplication",
       operatingSystem: "Web Browser",
       offers: { "@type": "Offer", price: "0", priceCurrency: "TWD" },
@@ -110,7 +111,7 @@ const TimetablePage = () => {
       name: dict.timetable.seo.page_title,
       description: dict.timetable.seo.page_description,
       url: `https://nthumods.com/${language}/timetable`,
-      inLanguage: language === "en" ? "en-US" : "zh-TW",
+      inLanguage: intlLocale(language),
       isPartOf: { "@type": "WebSite", url: "https://nthumods.com" },
     },
   ];

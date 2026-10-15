@@ -9,7 +9,7 @@ import {
 import { createRoot } from "react-dom/client";
 import { JSDOM } from "jsdom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { afterAll, afterEach, describe, expect, mock, test } from "bun:test";
+import { afterEach, describe, expect, mock, test } from "bun:test";
 import { captureGlobalState } from "@/test-utils/global-state";
 import {
   nextStorageValue,
@@ -119,17 +119,6 @@ const cleanupSyncedStorage = async ({
   queryClient.clear();
 };
 
-const readLocalValue = <T,>(key: string, fallback: () => T): T => {
-  if (typeof window === "undefined") return fallback();
-  const raw = window.localStorage.getItem(key);
-  if (!raw) return fallback();
-  try {
-    return JSON.parse(raw) as T;
-  } catch {
-    return fallback();
-  }
-};
-
 mock.module("react-oidc-context", () => ({
   useAuth: () => authState,
 }));
@@ -137,13 +126,35 @@ mock.module("@/config/auth", () => ({
   default: { api: { kv: { ":key": { $get: get, $post: post } } } },
 }));
 
+const readLocalValue = <T,>(
+  key: string,
+  fallback: () => T,
+  deserialize: (value: string) => T = JSON.parse,
+): T => {
+  if (typeof window === "undefined") return fallback();
+  let raw: string | null;
+  try {
+    raw = window.localStorage.getItem(key);
+  } catch {
+    return fallback();
+  }
+  if (!raw) return fallback();
+  try {
+    return deserialize(raw);
+  } catch {
+    return fallback();
+  }
+};
+
 const useTestLocalStorage = <T,>(
   key: string,
   initialValue: T,
+  options?: { deserializer?: (value: string) => T },
 ): [T, (next: T | ((previous: T) => T)) => void] => {
   const initialValueRef = useRef(initialValue);
   initialValueRef.current = initialValue;
-  const read = () => readLocalValue(key, () => initialValueRef.current);
+  const read = () =>
+    readLocalValue(key, () => initialValueRef.current, options?.deserializer);
   const [value, setValue] = useState(read);
   const update = useCallback(
     (next: T | ((previous: T) => T)) => {
@@ -165,13 +176,10 @@ mock.module("usehooks-ts", () => ({
 
 const { default: useSyncedStorage } = await import("./useSyncedStorage");
 mock.module("usehooks-ts", () => actualUsehooksTs);
+mock.module("react-oidc-context", () => actualOidcContext);
+mock.module("@/config/auth", () => actualAuth);
 
 describe("useSyncedStorage remote read states", () => {
-  afterAll(() => {
-    mock.module("react-oidc-context", () => actualOidcContext);
-    mock.module("@/config/auth", () => actualAuth);
-  });
-
   afterEach(() => {
     authState.isAuthenticated = true;
     authState.user = user;

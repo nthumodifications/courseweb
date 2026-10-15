@@ -7,6 +7,8 @@ import { Button, EmptyState, ErrorState, Input } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
 import { ModuleTermAvailability } from "@/components/Courses/ModuleTermAvailability";
 import { searchModules, type ModuleSearchResult } from "@/lib/modules";
+import { contentLanguage } from "@/helpers/contentLanguage";
+import type { Language } from "@/types/settings";
 
 const MODULE_SEARCH_DEBOUNCE_MS = 250;
 
@@ -21,17 +23,19 @@ const ModuleSearchResultRow = ({
   lang,
 }: {
   result: ModuleSearchResult;
-  lang: "zh" | "en";
+  lang: Language;
 }) => {
   const dict = useDictionary();
-  const title = lang === "en" ? result.nameEn || result.nameZh : result.nameZh;
+  const contentLang = contentLanguage(lang);
+  const title =
+    contentLang === "en" ? result.nameEn || result.nameZh : result.nameZh;
   const instructors = result.instructors
     .map((instructor) =>
-      lang === "en"
+      contentLang === "en"
         ? instructor.nameEn || instructor.nameZh
         : instructor.nameZh,
     )
-    .join(lang === "en" ? ", " : "、");
+    .join(contentLang === "en" ? ", " : "、");
   return (
     <Link
       to={`/${lang}/courses/module/${encodeURIComponent(result.key)}?title=${encodeURIComponent(result.nameZh)}`}
@@ -82,7 +86,7 @@ const ModuleSearchSkeleton = () => (
 const ModulesSearchPage = () => {
   const dict = useDictionary();
   const { lang: rawLang } = useParams<{ lang: string }>();
-  const lang = rawLang === "en" ? "en" : "zh";
+  const lang = rawLang === "en" || rawLang === "zh-cn" ? rawLang : "zh";
   const [searchParams, setSearchParams] = useSearchParams();
   const queryFromUrl = searchParams.get("q") ?? "";
   const [inputValue, setInputValue] = useState(queryFromUrl);

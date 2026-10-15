@@ -23,6 +23,7 @@ import {
   type BusPin,
   type CityBusPin,
 } from "./busPins";
+import { contentLanguage } from "@/helpers/contentLanguage";
 
 const SUGGESTED_ROUTES = new Set([
   "blue",
@@ -39,7 +40,7 @@ function localized(
   language: string,
   value: { nameZh: string; nameEn: string },
 ) {
-  return language === "zh" ? value.nameZh : value.nameEn;
+  return contentLanguage(language) === "zh" ? value.nameZh : value.nameEn;
 }
 
 function destinationSummary(
@@ -50,7 +51,9 @@ function destinationSummary(
   const destinations = [
     ...new Set(
       route.directions.map((direction) =>
-        language === "zh" ? direction.destinationZh : direction.destinationEn,
+        contentLanguage(language) === "zh"
+          ? direction.destinationZh
+          : direction.destinationEn,
       ),
     ),
   ];
@@ -116,6 +119,7 @@ function CatalogueRouteRow({
   pins: BusPin[];
   togglePin: (pin: BusPin) => void;
 }) {
+  const contentLang = contentLanguage(language);
   const navigate = useNavigate();
   const selection = defaultSelection(route);
   const pin = selection
@@ -142,7 +146,7 @@ function CatalogueRouteRow({
             nameZh={route.nameZh}
             nameEn={route.nameEn}
             category={route.category}
-            language={language as "zh" | "en"}
+            language={contentLang}
           />
           <h3 className="min-w-0 break-words font-bold text-foreground">
             <span>{routeName}</span>
@@ -256,6 +260,7 @@ function getPinnedDetails(
 
 export function CityBusSelectedLines({ refTime }: { refTime: Date }) {
   const { language } = useSettings();
+  const contentLang = contentLanguage(language);
   const dict = useDictionary();
   const { pins, toggle: togglePin } = useBusPins();
   const cityPins = pins.filter(
@@ -300,7 +305,7 @@ export function CityBusSelectedLines({ refTime }: { refTime: Date }) {
         const liveDisplay = liveStop
           ? getCityBusRealtimeDisplay(liveStop)
           : undefined;
-        const locale = language as "zh" | "en";
+        const locale = contentLang;
         const liveText = formatCityBusRealtimeDisplay(liveDisplay, locale, {
           arriving: dict.bus.realtime_arriving,
           lastBus: dict.bus.realtime_last_bus,
@@ -338,7 +343,7 @@ export function CityBusSelectedLines({ refTime }: { refTime: Date }) {
             direction={direction.id}
             title={localized(language, route)}
             destination={
-              language === "zh"
+              contentLang === "zh"
                 ? direction.destinationZh
                 : direction.destinationEn
             }

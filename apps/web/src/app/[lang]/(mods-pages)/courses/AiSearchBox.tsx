@@ -11,8 +11,12 @@ import type { IndexUiState } from "instantsearch.js";
 import { Loader2, Sparkles, Undo, X } from "lucide-react";
 import { Badge, Button, Input } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
+import { contentLanguage } from "@/helpers/contentLanguage";
 
-const API_BASE = (import.meta.env.VITE_COURSEWEB_API_URL ?? "").replace(/\/$/, "");
+const API_BASE = (import.meta.env.VITE_COURSEWEB_API_URL ?? "").replace(
+  /\/$/,
+  "",
+);
 const AI_FILTER_ATTRIBUTES = [
   "department",
   "courseLevel",
@@ -77,7 +81,8 @@ const AiSearchBox = ({
   useEffect(() => {
     if (explanation === null || appliedQuery === null) return;
     const hasAppliedFacet = AI_FILTER_ATTRIBUTES.some(
-      (attribute) => (indexUiState.refinementList?.[attribute]?.length ?? 0) > 0,
+      (attribute) =>
+        (indexUiState.refinementList?.[attribute]?.length ?? 0) > 0,
     );
     const hasAppliedCredits =
       typeof indexUiState.configure?.filters === "string" &&
@@ -97,7 +102,8 @@ const AiSearchBox = ({
     setIndexUiState((previous) => {
       previousUiState.current = previous;
       const refinementList = { ...(previous.refinementList ?? {}) };
-      for (const attribute of AI_FILTER_ATTRIBUTES) delete refinementList[attribute];
+      for (const attribute of AI_FILTER_ATTRIBUTES)
+        delete refinementList[attribute];
 
       for (const attribute of AI_FILTER_ATTRIBUTES) {
         const values = asArray(filters[attribute]).filter(
@@ -112,7 +118,9 @@ const AiSearchBox = ({
       );
       const configure = { ...(previous.configure ?? {}) };
       if (credits.length) {
-        configure.filters = credits.map((value) => `credits = ${value}`).join(" OR ");
+        configure.filters = credits
+          .map((value) => `credits = ${value}`)
+          .join(" OR ");
       } else {
         delete configure.filters;
       }
@@ -168,11 +176,14 @@ const AiSearchBox = ({
         body: JSON.stringify({
           query: request,
           semester,
-          lang: lang === "en" ? "en" : "zh",
+          lang: contentLanguage(lang),
         }),
       });
-      const body = (await response.json().catch(() => ({}))) as SearchIntentResponse;
-      if (!response.ok) throw new Error(errorMessage(body, response.status, dict));
+      const body = (await response
+        .json()
+        .catch(() => ({}))) as SearchIntentResponse;
+      if (!response.ok)
+        throw new Error(errorMessage(body, response.status, dict));
       if (typeof body.explanation !== "string") {
         throw new Error(dict.course.search.ai_search.error);
       }
@@ -180,7 +191,11 @@ const AiSearchBox = ({
       setExplanation(body.explanation);
       setAppliedQuery(typeof body.query === "string" ? body.query : "");
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : dict.course.search.ai_search.error);
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : dict.course.search.ai_search.error,
+      );
     } finally {
       setLoading(false);
     }
@@ -191,7 +206,10 @@ const AiSearchBox = ({
       <div className="flex min-w-0 basis-full flex-[1_1_15rem] flex-wrap items-center gap-1 sm:basis-auto">
         <div className="min-w-0 flex-1">
           {enabled ? (
-            <form onSubmit={onSubmit} className="relative flex w-full items-center gap-1">
+            <form
+              onSubmit={onSubmit}
+              className="relative flex w-full items-center gap-1"
+            >
               <Input
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
@@ -210,7 +228,11 @@ const AiSearchBox = ({
                 title={dict.course.search.ai_search.submit}
                 disabled={loading}
               >
-                {loading ? <Loader2 className="animate-spin" size="16" /> : <Sparkles size="16" />}
+                {loading ? (
+                  <Loader2 className="animate-spin" size="16" />
+                ) : (
+                  <Sparkles size="16" />
+                )}
               </Button>
             </form>
           ) : (
@@ -222,8 +244,16 @@ const AiSearchBox = ({
             type="button"
             variant={enabled ? "secondary" : "ghost"}
             size="icon"
-            title={enabled ? dict.course.search.ai_search.toggle_off : dict.course.search.ai_search.toggle}
-            aria-label={enabled ? dict.course.search.ai_search.toggle_off : dict.course.search.ai_search.toggle}
+            title={
+              enabled
+                ? dict.course.search.ai_search.toggle_off
+                : dict.course.search.ai_search.toggle
+            }
+            aria-label={
+              enabled
+                ? dict.course.search.ai_search.toggle_off
+                : dict.course.search.ai_search.toggle
+            }
             aria-pressed={enabled}
             onClick={() => {
               setError(null);
@@ -233,12 +263,14 @@ const AiSearchBox = ({
             <Sparkles size="16" />
           </Button>
           <Link
-            to={`/${lang === "en" ? "en" : "zh"}/chat`}
+            to={`/${lang}/chat`}
             className="inline-flex h-9 items-center gap-1 rounded-md px-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
             title={dict.course.search.ai_search.assistant}
           >
             <span aria-hidden="true">↗</span>
-            <span className="hidden sm:inline">{dict.course.search.ai_search.assistant}</span>
+            <span className="hidden sm:inline">
+              {dict.course.search.ai_search.assistant}
+            </span>
           </Link>
         </div>
       </div>

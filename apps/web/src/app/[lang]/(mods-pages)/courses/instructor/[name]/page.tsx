@@ -26,6 +26,7 @@ import {
   CoursePageContent,
   CoursePageState,
 } from "@/components/Courses/CoursePageFrame";
+import type { Language } from "@/types/settings";
 
 const STALE_TIME = 24 * 60 * 60 * 1000;
 
@@ -115,7 +116,7 @@ export const InstructorPageContent = ({
   name,
   inDialog = false,
 }: {
-  lang: "en" | "zh";
+  lang: Language;
   name: string;
   inDialog?: boolean;
 }) => {
@@ -259,7 +260,7 @@ const InstructorPage = () => {
   }>();
   return (
     <InstructorPageContent
-      lang={rawLang === "en" ? "en" : "zh"}
+      lang={rawLang === "en" ? "en" : rawLang === "zh-cn" ? "zh-cn" : "zh"}
       name={decodeInstructorRouteParam(rawName)}
     />
   );

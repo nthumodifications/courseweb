@@ -56,10 +56,11 @@ import client from "@/config/api";
 import { CourseDefinition } from "@/config/supabase";
 import { useNavigate, useParams } from "react-router-dom";
 import useDictionary from "@/dictionaries/useDictionary";
+import { localizedRoutePath } from "@/types/locale";
 
 function useLang() {
   const { lang } = useParams<{ lang: string }>();
-  return lang === "en" ? "en" : "zh";
+  return lang;
 }
 
 type Visibility = "link_only" | "public";
@@ -79,7 +80,7 @@ function ShareListItem({
   const [showQr, setShowQr] = useState(false);
   const [copied, setCopied] = useState(false);
   const lang = useLang();
-  const url = `${window.location.origin}/${lang}/timetable/share/${share.id}`;
+  const url = `${window.location.origin}${localizedRoutePath(lang, `/timetable/share/${share.id}`)}`;
 
   const copy = () => {
     void navigator.clipboard

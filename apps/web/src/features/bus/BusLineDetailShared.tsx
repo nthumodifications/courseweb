@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 
 import useDictionary from "@/dictionaries/useDictionary";
+import { useLocalizedZh, useLocalizedZhData } from "@/hooks/useLocalizedZh";
 
 export enum BusStationState {
   UNAVAILABLE,
@@ -44,6 +45,7 @@ export function BusLineHeader({
   onTogglePin,
 }: BusLineHeaderProps) {
   const dict = useDictionary();
+  const localize = useLocalizedZh();
 
   return (
     <div className="flex flex-row items-center px-2 gap-4">
@@ -56,13 +58,13 @@ export function BusLineHeader({
         {icon}
         {subtitle ? (
           <div className="min-w-0">
-            <h3 className="text-foreground font-bold">{title}</h3>
+            <h3 className="text-foreground font-bold">{localize(title)}</h3>
             <p className="text-sm font-medium leading-relaxed text-muted-foreground">
-              {subtitle}
+              {localize(subtitle)}
             </p>
           </div>
         ) : (
-          <h3 className="text-foreground font-bold">{title}</h3>
+          <h3 className="text-foreground font-bold">{localize(title)}</h3>
         )}
       </div>
       {onTogglePin && (
@@ -123,6 +125,7 @@ export function BusStopTimeline({
   items: BusTimelineItem[];
   activeId?: string;
 }) {
+  const localizeData = useLocalizedZhData();
   const activeRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -165,7 +168,7 @@ export function BusStopTimeline({
                 )}
               >
                 <div className="text-foreground text-base font-bold">
-                  {m.station}
+                  {localizeData(m.station)}
                 </div>
                 {m.lineIcon ? (
                   <div className="flex-1 text-right flex items-center justify-end gap-2">

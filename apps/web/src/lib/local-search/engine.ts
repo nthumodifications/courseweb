@@ -12,6 +12,7 @@ import {
   LOCAL_FACETS,
   prepareSearchRecord,
   searchableText,
+  transformSearchableRecord,
   type SearchProjectionRecord,
   type UnknownRecord,
 } from "./projection";
@@ -105,10 +106,13 @@ export type LocalSearchEngineOptions = {
   cache?: SearchChunkCache;
   workerFactory?: () => SearchWorker | undefined;
   defaultSemester?: string;
+  queryTransform?: (query: string) => string;
+  searchTextTransform?: (text: string) => string;
 };
 
 type LoadedChunk = {
   records: SearchProjectionRecord[];
+  searchRecords: SearchProjectionRecord[];
   index: LocalIndex;
   ids: number[];
   facetValues: string[][][];
@@ -493,6 +497,8 @@ export class LocalSearchEngine {
   private readonly listeners = new Set<() => void>();
   private status: LocalSearchStatus = "idle";
   private readonly defaultSemester?: string;
+  private readonly queryTransform: (query: string) => string;
+  private readonly searchTextTransform: (text: string) => string;
 
   constructor(options: LocalSearchEngineOptions = {}) {
     const env = getEnv();
@@ -507,6 +513,8 @@ export class LocalSearchEngine {
     this.cache = options.cache ?? createIndexedDbSearchChunkCache();
     this.workerFactory = options.workerFactory ?? defaultWorkerFactory;
     this.defaultSemester = options.defaultSemester;
+    this.queryTransform = options.queryTransform ?? ((query) => query);
+    this.searchTextTransform = options.searchTextTransform ?? ((text) => text);
   }
 
   getStatus = () => this.status;
@@ -638,12 +646,17 @@ export class LocalSearchEngine {
     manifest: SearchManifestEntry;
   }): Promise<LoadedChunk> {
     const { records, manifest } = source;
-    const index = workerIndexFor(records, this.workerFactory, (failedIndex) =>
-      this.invalidateChunk(manifest.id, failedIndex),
+    const searchRecords = records.map((record) =>
+      transformSearchableRecord(record, this.searchTextTransform),
+    );
+    const index = workerIndexFor(
+      searchRecords,
+      this.workerFactory,
+      (failedIndex) => this.invalidateChunk(manifest.id, failedIndex),
     );
     try {
       await index.build(
-        records.map((record, id) => ({
+        searchRecords.map((record, id) => ({
           id: String(id),
           text: searchableText(record),
         })),
@@ -655,9 +668,10 @@ export class LocalSearchEngine {
     // Pay the Latin matcher cache cost during chunk load, not the first
     // broad query (where it would look like search latency).
     const facetValueRows = buildFacetValueRows(records);
-    const shortLatinPrefixes = buildShortLatinPrefixIndex(records);
+    const shortLatinPrefixes = buildShortLatinPrefixIndex(searchRecords);
     return {
       records,
+      searchRecords,
       index,
       ids: records.map((_, id) => id),
       facetValues: facetValueRows,
@@ -857,7 +871,8 @@ export class LocalSearchEngine {
     const started = performance.now();
     const chunk = await this.getChunk(semester);
     const params = request.params ?? {};
-    const query = String(params.query ?? request.query ?? "");
+    const originalQuery = String(params.query ?? request.query ?? "");
+    const query = this.queryTransform(originalQuery);
     const page = Math.max(
       0,
       Number.isFinite(Number(params.page))
@@ -914,14 +929,14 @@ export class LocalSearchEngine {
         if (
           (shortLatinPrefix
             ? shortLatinPrefix.has(id)
-            : matchesLocalQueryTerms(chunk.records[id], terms)) &&
+            : matchesLocalQueryTerms(chunk.searchRecords[id], terms)) &&
           refinementMatcher(chunk.records[id])
         ) {
           ids.push(id);
         }
       }
     }
-    const rankedIds = rankLocalIdsByTerms(chunk.records, ids, terms);
+    const rankedIds = rankLocalIdsByTerms(chunk.searchRecords, ids, terms);
     const start = page * hitsPerPage;
     const selected =
       hitsPerPage === 0 ? [] : rankedIds.slice(start, start + hitsPerPage);
@@ -942,7 +957,7 @@ export class LocalSearchEngine {
       hitsPerPage,
       processingTimeMS: Math.max(0, Math.round(performance.now() - started)),
       exhaustiveNbHits: true,
-      query,
+      query: originalQuery,
       params: serializeParams(params),
       facets,
     };
@@ -956,7 +971,9 @@ export class LocalSearchEngine {
     const chunk = await this.getChunk(semester);
     const params = request.params ?? {};
     const facetName = String(params.facetName ?? "");
-    const query = String(params.facetQuery ?? "").toLocaleLowerCase("zh-TW");
+    const query = this.queryTransform(
+      String(params.facetQuery ?? ""),
+    ).toLocaleLowerCase("zh-TW");
     const refinementMatcher = compileRefinements(params, facetName);
     const ids = chunk.records
       .map((_, id) => id)
@@ -969,7 +986,11 @@ export class LocalSearchEngine {
           ? new Set(facetValues(chunk.records[id], facetName))
           : (chunk.facetValues[id]?.[localIndex] ?? []);
       for (const value of values) {
-        if (value.toLocaleLowerCase("zh-TW").includes(query)) {
+        if (
+          this.searchTextTransform(value)
+            .toLocaleLowerCase("zh-TW")
+            .includes(query)
+        ) {
           counts.set(value, (counts.get(value) ?? 0) + 1);
         }
       }

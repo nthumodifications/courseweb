@@ -15,7 +15,7 @@ const useLaunchApp = (app: (typeof apps)[number]) => {
     if (app.href.startsWith("http")) {
       window.open(app.href, "_blank");
     } else {
-      navigate(`/${lang === "en" ? "en" : "zh"}${app.href}`);
+      navigate(`/${lang}${app.href}`);
     }
   }, [navigate, app, lang]);
 

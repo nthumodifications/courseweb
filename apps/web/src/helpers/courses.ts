@@ -1,5 +1,6 @@
 import { MinimalCourse, RawCourseID } from "@courseweb/shared";
 import { createTimetableFromCourses } from "./timetable";
+import { contentLanguage } from "./contentLanguage";
 
 export const getGECType = (ge_type: string) => {
   //核心通識Core GE courses 1, 核心通識Core GE courses 2  <- return this number
@@ -87,6 +88,7 @@ export const getFormattedClassCode = (
   semester: string,
   lang: string,
 ) => {
+  const contentLang = contentLanguage(lang);
   // Parse the input string
   const match = /(^[^\d]+)(\d+)([BMDP])([A-D]?)/.exec(class_code.toUpperCase());
   if (!match) {
@@ -100,14 +102,15 @@ export const getFormattedClassCode = (
 
   // Translate components
   const yearNumber = sem - Number.parseInt(year) + 1;
-  const readableYear = lang === "zh" ? `${yearNumber}年級` : ` Y${yearNumber} `;
+  const readableYear =
+    contentLang === "zh" ? `${yearNumber}年級` : ` Y${yearNumber} `;
 
-  const readableDegreeType = degreeTypes[lang][degreeType] || "";
-  const readableClassLetter = classLetters[lang][classLetter] || "";
+  const readableDegreeType = degreeTypes[contentLang][degreeType] || "";
+  const readableClassLetter = classLetters[contentLang][classLetter] || "";
 
   // exception for EECS-GS
   if (deptName == "電資院學士班" && degreeType == "B" && classLetter == "A") {
-    return lang === "zh"
+    return contentLang === "zh"
       ? `電資院學士班${readableYear}國際學程`
       : `EECS-GS ${readableYear}`;
   }

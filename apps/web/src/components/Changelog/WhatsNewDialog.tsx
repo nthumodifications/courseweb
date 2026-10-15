@@ -13,6 +13,9 @@ import {
   cn,
 } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
+import { contentLanguage } from "@/helpers/contentLanguage";
+import { localizedRoutePath } from "@/types/locale";
+import { useLocalizedZh } from "@/hooks/useLocalizedZh";
 import { CHANGELOG } from "@/const/changelog";
 import { ChangelogVisualContent } from "./ChangelogVisual";
 import {
@@ -30,7 +33,8 @@ const OPEN_DIALOG_SELECTOR =
 const WhatsNewDialog = () => {
   const dict = useDictionary();
   const { lang } = useParams<{ lang: string }>();
-  const language = lang === "en" ? "en" : "zh";
+  const language = contentLanguage(lang);
+  const localize = useLocalizedZh();
   const [lastSeenVersion, setLastSeenVersion] = useLocalStorage<string | null>(
     LAST_SEEN_VERSION_KEY,
     null,
@@ -144,7 +148,9 @@ const WhatsNewDialog = () => {
               <div className="min-w-0">
                 <DialogTitle>{dict.changelog.whats_new}</DialogTitle>
                 <DialogDescription className="leading-relaxed">
-                  {release.title?.[language] ?? release.version}
+                  {language === "en"
+                    ? (release.title?.en ?? release.version)
+                    : localize(release.title?.zh ?? release.version)}
                 </DialogDescription>
               </div>
               <Link
@@ -159,7 +165,9 @@ const WhatsNewDialog = () => {
             <>
               <DialogTitle>{dict.changelog.whats_new}</DialogTitle>
               <DialogDescription className="leading-relaxed">
-                {release.title?.[language] ?? release.version}
+                {language === "en"
+                  ? (release.title?.en ?? release.version)
+                  : localize(release.title?.zh ?? release.version)}
               </DialogDescription>
             </>
           )}
@@ -205,11 +213,15 @@ const WhatsNewDialog = () => {
                 </span>
               </div>
               <h3 className="font-bold leading-snug">
-                {currentItem.title[language]}
+                {language === "en"
+                  ? currentItem.title.en
+                  : localize(currentItem.title.zh)}
               </h3>
               {currentItem.description && (
                 <p className="min-h-12 text-sm leading-relaxed text-muted-foreground">
-                  {currentItem.description[language]}
+                  {language === "en"
+                    ? currentItem.description.en
+                    : localize(currentItem.description.zh)}
                 </p>
               )}
             </div>
@@ -217,7 +229,7 @@ const WhatsNewDialog = () => {
             {currentItem.action && (
               <Button asChild className="w-full">
                 <Link
-                  to={`/${language}${currentItem.action.href}`}
+                  to={localizedRoutePath(lang, currentItem.action.href)}
                   onClick={markAsSeen}
                 >
                   {dict.changelog.actions[currentItem.action.key]}
@@ -283,11 +295,15 @@ const WhatsNewDialog = () => {
                 </Badge>
                 <div className="min-w-0 flex flex-col gap-1">
                   <h3 className="font-medium leading-relaxed">
-                    {item.title[language]}
+                    {language === "en"
+                      ? item.title.en
+                      : localize(item.title.zh)}
                   </h3>
                   {item.description && (
                     <p className="min-h-12 text-sm leading-relaxed text-muted-foreground">
-                      {item.description[language]}
+                      {language === "en"
+                        ? item.description.en
+                        : localize(item.description.zh)}
                     </p>
                   )}
                 </div>

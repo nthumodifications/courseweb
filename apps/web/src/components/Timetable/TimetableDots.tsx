@@ -4,6 +4,8 @@ import { scheduleTimeSlots } from "@courseweb/shared";
 import { useSettings } from "@/hooks/contexts/settings";
 import { cn } from "@/lib/utils";
 import useDictionary from "@/dictionaries/useDictionary";
+import { contentLanguage } from "@/helpers/contentLanguage";
+import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
 
 interface TimetableDotsProps {
   timetableData: CourseTimeslotData[];
@@ -19,6 +21,7 @@ const TimetableDots: FC<TimetableDotsProps> = ({
 }) => {
   const { language } = useSettings();
   const dict = useDictionary();
+  const localizeData = useLocalizedZhData();
 
   if (timetableData.length === 0) {
     return (
@@ -60,7 +63,9 @@ const TimetableDots: FC<TimetableDotsProps> = ({
               key={d}
               className="w-16 text-center text-[10px] font-medium text-muted-foreground tracking-wide pb-1"
             >
-              {language === "zh" ? DAY_LABELS_ZH[d] : DAY_LABELS[d]}
+              {contentLanguage(language) === "zh"
+                ? DAY_LABELS_ZH[d]
+                : DAY_LABELS[d]}
             </div>
           ))}
         </div>
@@ -92,8 +97,8 @@ const TimetableDots: FC<TimetableDotsProps> = ({
                     }
                     title={
                       slot
-                        ? language === "zh"
-                          ? slot.course.name_zh
+                        ? contentLanguage(language) === "zh"
+                          ? localizeData(slot.course.name_zh)
                           : slot.course.name_en || slot.course.name_zh
                         : undefined
                     }

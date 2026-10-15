@@ -18,6 +18,7 @@ import {
   type LaundrySummary,
 } from "@/lib/laundry-selectors";
 import useDictionary from "@/dictionaries/useDictionary";
+import { contentLanguage } from "@/helpers/contentLanguage";
 import {
   Select,
   SelectContent,
@@ -63,8 +64,9 @@ const LaundryWidget: FC<LaundryWidgetProps> = ({
   dragHandleProps,
   isDragging,
 }) => {
-  const dict = useDictionary();
   const { language } = useSettings();
+  const dict = useDictionary();
+  const contentLang = contentLanguage(language);
   const now = useTime(60_000);
   const [storedDorm, setStoredDorm] = useLocalStorage<WidgetDorm>(
     "widget_laundry_dorm",
@@ -128,7 +130,7 @@ const LaundryWidget: FC<LaundryWidgetProps> = ({
             <SelectItem value="all">{dict.laundry.all_dorms}</SelectItem>
             {(Object.keys(LAUNDRY_DORMS) as LaundryDorm[]).map((value) => (
               <SelectItem key={value} value={value}>
-                {LAUNDRY_DORMS[value][language]}
+                {LAUNDRY_DORMS[value][contentLang]}
               </SelectItem>
             ))}
           </SelectContent>

@@ -11,6 +11,10 @@ import {
   searchCampusBuildingIdentities,
   type CampusBuildingIdentity,
 } from "@courseweb/shared";
+import {
+  useLocalizedZhData,
+  useLocalizedZhQuery,
+} from "@/hooks/useLocalizedZh";
 
 type MapSearchProps = Readonly<{
   availableIdentityIds: Set<string>;
@@ -29,15 +33,19 @@ export default function MapSearch({
   labels,
   onSelect,
 }: MapSearchProps) {
+  const localizeData = useLocalizedZhData();
+  const localizeQuery = useLocalizedZhQuery();
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [resultsOpen, setResultsOpen] = useState(false);
   const results = useMemo(
     () =>
-      searchCampusBuildingIdentities(query).filter((identity) =>
-        availableIdentityIds.has(identity.id),
-      ),
-    [availableIdentityIds, query],
+      searchCampusBuildingIdentities(
+        localizeQuery(query),
+        8,
+        localizeQuery,
+      ).filter((identity) => availableIdentityIds.has(identity.id)),
+    [availableIdentityIds, localizeQuery, query],
   );
   const hasQuery = query.trim().length > 0;
 
@@ -47,7 +55,7 @@ export default function MapSearch({
     setQuery(
       language === "en"
         ? (identity.names.en ?? identity.names.zh)
-        : identity.names.zh,
+        : localizeData(identity.names.zh),
     );
     onSelect(identity.id);
   };
@@ -128,7 +136,7 @@ export default function MapSearch({
                           <span className="block truncate text-sm font-medium text-foreground">
                             {language === "en"
                               ? (identity.names.en ?? identity.names.zh)
-                              : identity.names.zh}
+                              : localizeData(identity.names.zh)}
                           </span>
                           {language === "zh" && identity.names.en && (
                             <span className="block truncate text-xs text-muted-foreground">

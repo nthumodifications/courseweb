@@ -1,5 +1,7 @@
 import {
   buildCalendarSubscriptionLinks,
+  DEFAULT_CALENDAR_FEED_INCLUDES,
+  parseCalendarFeedIncludeSelection,
   toHttpsCalendarFeedUrl,
   toWebcalCalendarFeedUrl,
 } from "./calendar-subscription";
@@ -8,6 +10,18 @@ const feedUrl =
   "webcal://api.nthumods.com/timetable/calendar.ics?semester=11510&semester_11510=11510CS%20135700,11510EE%20230100";
 
 describe("calendar subscription URL builders", () => {
+  test.each([
+    "null",
+    "[]",
+    '{"classes":"x"}',
+    '{"classes":true,"events":false}',
+    "not-json",
+  ])("falls back for invalid stored include value %s", (value) => {
+    expect(parseCalendarFeedIncludeSelection(value)).toEqual(
+      DEFAULT_CALENDAR_FEED_INCLUDES,
+    );
+  });
+
   it("normalizes the feed protocol for Apple calendar links", () => {
     expect(toWebcalCalendarFeedUrl("https://api.nthumods.com/feed.ics")).toBe(
       "webcal://api.nthumods.com/feed.ics",

@@ -7,6 +7,7 @@ import {
   getCampusFeatureNames,
   isCampusBuilding,
 } from "./sceneLogic";
+import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
 
 type BuildingInfoPanelProps = Readonly<{
   feature: CampusMapFeature;
@@ -29,8 +30,10 @@ export default function BuildingInfoPanel({
   labels,
   onClose,
 }: BuildingInfoPanelProps) {
+  const localizeData = useLocalizedZhData();
   const names = getCampusFeatureNames(feature);
-  const title = language === "en" ? (names.en ?? names.zh) : names.zh;
+  const title =
+    language === "en" ? (names.en ?? names.zh) : localizeData(names.zh);
   const googleMapsUrl = getCampusFeatureGoogleMapsUrl(feature);
   const building = isCampusBuilding(feature) ? feature : undefined;
   const venue = building?.venue;
@@ -51,7 +54,7 @@ export default function BuildingInfoPanel({
           </h2>
           <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 text-sm">
             <dt className="text-muted-foreground">{labels.chineseName}</dt>
-            <dd className="text-foreground">{names.zh}</dd>
+            <dd className="text-foreground">{localizeData(names.zh)}</dd>
             <dt className="text-muted-foreground">{labels.englishName}</dt>
             <dd className="text-foreground">{names.en ?? "—"}</dd>
           </dl>

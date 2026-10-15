@@ -4,6 +4,7 @@ import { Link, useParams } from "react-router-dom";
 import { useLocalStorage } from "usehooks-ts";
 import { cn } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
+import { contentLanguage } from "@/helpers/contentLanguage";
 import supabase, { AlertDefinition } from "@/config/supabase";
 
 type AlertSeverity = "info" | "warning" | "error";
@@ -69,7 +70,7 @@ const AnnouncementBar = () => {
     return null;
   }
 
-  const isEnglish = lang === "en";
+  const isEnglish = contentLanguage(lang) === "en";
   const title = isEnglish
     ? (announcement.title_en ?? announcement.title)
     : announcement.title;
@@ -84,9 +85,7 @@ const AnnouncementBar = () => {
   // new tab. Anything absolute stays an external link.
   const rawLink = announcement.link_url;
   const isInternalLink = !!rawLink && rawLink.startsWith("/");
-  const internalHref = isInternalLink
-    ? `/${lang === "en" ? "en" : "zh"}${rawLink}`
-    : null;
+  const internalHref = isInternalLink ? `/${lang}${rawLink}` : null;
 
   const severity = announcement.severity as AlertSeverity;
   const style = severityStyles[severity] ?? severityStyles.info;

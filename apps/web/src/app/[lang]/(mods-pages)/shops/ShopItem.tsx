@@ -6,6 +6,7 @@ import { getDiningMapHref } from "@/features/dining/locations";
 import type { DiningShop } from "./types";
 import { checkOpen, getTodayKey } from "./shop-hours";
 import useDictionary from "@/dictionaries/useDictionary";
+import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
 
 interface ShopItemProps {
   shop: DiningShop;
@@ -18,6 +19,7 @@ interface ShopItemProps {
 
 const ShopItem: React.FC<ShopItemProps> = ({ shop, filter }) => {
   const dict = useDictionary();
+  const localizeData = useLocalizedZhData();
   const { lang } = useParams<{ lang: string }>();
   const mapHref = getDiningMapHref(lang, shop.area);
   const today = getTodayKey();
@@ -64,10 +66,12 @@ const ShopItem: React.FC<ShopItemProps> = ({ shop, filter }) => {
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex flex-col">
-          <span className="font-bold">{shop.name}</span>
+          <span className="font-bold">{localizeData(shop.name)}</span>
           <div className="flex items-center gap-1">
             <MapPin size="14" />
-            <span className="text-muted-foreground text-sm">{shop.area}</span>
+            <span className="text-muted-foreground text-sm">
+              {localizeData(shop.area)}
+            </span>
           </div>
           <div className="flex items-center gap-1 mt-2">
             <div className="flex gap-2 flex-col sm:items-center sm:flex-row">
@@ -78,7 +82,7 @@ const ShopItem: React.FC<ShopItemProps> = ({ shop, filter }) => {
                 {statusLabel}
               </Badge>
               <span className="text-muted-foreground text-sm">
-                {messageLabel}
+                {messageLabel ? localizeData(messageLabel) : messageLabel}
               </span>
             </div>
           </div>
@@ -107,13 +111,17 @@ const ShopItem: React.FC<ShopItemProps> = ({ shop, filter }) => {
           <div className="grid grid-cols-[1.5rem_auto]">
             <Clock size="14" className="self-center" />
             <span className="text-muted-foreground text-sm">
-              {shop.schedule[today] || dict.shops.closed_today}
+              {shop.schedule[today]
+                ? localizeData(shop.schedule[today])
+                : dict.shops.closed_today}
             </span>
           </div>
           {shop.note && (
             <div className="grid grid-cols-[1.5rem_auto]">
               <Info size="14" className="mt-1" />
-              <span className="text-muted-foreground text-sm">{shop.note}</span>
+              <span className="text-muted-foreground text-sm">
+                {localizeData(shop.note)}
+              </span>
             </div>
           )}
         </div>

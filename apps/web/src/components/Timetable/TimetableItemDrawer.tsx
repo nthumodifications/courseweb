@@ -42,6 +42,7 @@ import {
 } from "@/types/timetable";
 import { useNavigate, useParams } from "react-router-dom";
 import { getCampusMapHref } from "@/features/campusMap/navigation";
+import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
 
 const ImportantDates = ({ raw_id }: { raw_id: RawCourseID }) => {
   const { data: dates } = useQuery({
@@ -98,6 +99,7 @@ const TimetableCourseQuickAccess = ({ course }: { course: MinimalCourse }) => {
     useUserTimetable();
   const { openCourse } = useCourseLink();
   const dict = useDictionary();
+  const localizeData = useLocalizedZhData();
   const navigate = useNavigate();
   const { lang } = useParams<{ lang: string }>();
   const campusMapHref = getCampusMapHref(lang, course.venues);
@@ -137,7 +139,8 @@ const TimetableCourseQuickAccess = ({ course }: { course: MinimalCourse }) => {
                 </p>
               </div>
               <div className="font-medium">
-                {course.name_zh} - {course.teacher_zh.join(",")}
+                {localizeData(course.name_zh)} -{" "}
+                {course.teacher_zh.map(localizeData).join(",")}
               </div>
               <div className="text-sm mt-0 break-words">
                 {course.name_en} - {course.teacher_en.join(",")}
@@ -147,7 +150,7 @@ const TimetableCourseQuickAccess = ({ course }: { course: MinimalCourse }) => {
                   const time = course.times![index];
                   return (
                     <div key={index} className="text-muted-foreground text-xs">
-                      {venue} /{" "}
+                      {localizeData(venue)} /{" "}
                       {hasTimes(course as MinimalCourse)
                         ? time
                         : dict.course.details.missing_time}
@@ -208,6 +211,7 @@ export const TimetableItemDrawer = ({
   children,
 }: PropsWithChildren<{ course: MinimalCourse }>) => {
   const isDesktop = useMediaQuery("(min-width: 768px)");
+  const localizeData = useLocalizedZhData();
 
   if (isDesktop)
     return (
@@ -215,7 +219,8 @@ export const TimetableItemDrawer = ({
         <DialogTrigger asChild>{children}</DialogTrigger>
         <DialogContent className="sm:max-w-[425px]">
           <DialogTitle className="sr-only">
-            {course.name_zh} - {course.teacher_zh.join(",")}
+            {localizeData(course.name_zh)} -{" "}
+            {course.teacher_zh.map(localizeData).join(",")}
           </DialogTitle>
           <TimetableCourseQuickAccess course={course} />
         </DialogContent>
@@ -226,7 +231,8 @@ export const TimetableItemDrawer = ({
       <DrawerTrigger asChild>{children}</DrawerTrigger>
       <DrawerContent>
         <DrawerTitle className="sr-only">
-          {course.name_zh} - {course.teacher_zh.join(",")}
+          {localizeData(course.name_zh)} -{" "}
+          {course.teacher_zh.map(localizeData).join(",")}
         </DrawerTitle>
         <TimetableCourseQuickAccess course={course} />
       </DrawerContent>

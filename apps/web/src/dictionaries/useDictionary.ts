@@ -1,11 +1,9 @@
 import { useParams } from "react-router-dom";
-import en from "./en.json";
-import zh from "./zh.json";
+import { useCachedDictionary } from "./dictionary-cache";
 
 const useDictionary = () => {
   const { lang } = useParams();
-
-  return lang == "en" ? en : zh;
+  return useCachedDictionary(lang);
 };
 
 export default useDictionary;

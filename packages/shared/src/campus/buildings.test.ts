@@ -36,4 +36,11 @@ describe("campus building identity", () => {
     expect(resolveVenueToCampusIdentity("UNKNOWN999")).toBeUndefined();
     expect(searchCampusBuildingIdentities("UNKNOWN999")).toEqual([]);
   });
+
+  test("supports locale-normalized aliases", () => {
+    const simplify = (value: string) => value.replaceAll("達", "达");
+    expect(searchCampusBuildingIdentities("台达", 8, simplify)[0]?.id).toBe(
+      "delta",
+    );
+  });
 });

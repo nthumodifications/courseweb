@@ -14,6 +14,7 @@ import { MinimalCourse } from "@/types/courses";
 import { useCourseLink } from "@/components/Courses/CourseDialog";
 import { sanitizeCourseHtml } from "@/lib/sanitizeHtml";
 import { cleanSyllabusFields } from "@/lib/syllabus-text";
+import { contentLanguage } from "@/helpers/contentLanguage";
 
 type PlannerCourseListItemProps = {
   course: CourseSyllabusView;
@@ -30,7 +31,7 @@ const PlannerCourseListItem: FC<PlannerCourseListItemProps> = memo(
     const syllabus = cleanSyllabusFields(course);
 
     const courseTitle =
-      language === "zh"
+      contentLanguage(language) === "zh"
         ? `${course.name_zh} - ${course.teacher_zh.join(",")}`
         : `${course.name_en} - ${course.teacher_en?.join(",")}`;
 
@@ -86,12 +87,14 @@ const PlannerCourseListItem: FC<PlannerCourseListItemProps> = memo(
               </p>
               {course.restrictions && course.restrictions.length > 0 && (
                 <p className="text-xs whitespace-pre-line text-muted-foreground">
-                  {dict.course.details.restriction_prefix}{course.restrictions}
+                  {dict.course.details.restriction_prefix}
+                  {course.restrictions}
                 </p>
               )}
               {course.note && course.note.length > 0 && (
                 <p className="text-xs whitespace-pre-line text-muted-foreground">
-                  {dict.course.details.note_prefix}{course.note}
+                  {dict.course.details.note_prefix}
+                  {course.note}
                 </p>
               )}
               {course.prerequisites && (

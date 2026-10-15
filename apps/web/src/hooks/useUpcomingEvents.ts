@@ -20,6 +20,7 @@ import useCourseDates, { CourseDate } from "@/hooks/useCourseDates";
 import useTime from "@/hooks/useTime";
 import useDictionary from "@/dictionaries/useDictionary";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
+import { contentLanguage } from "@/helpers/contentLanguage";
 import { useSettings } from "@/hooks/contexts/settings";
 import {
   addTaipeiDays,
@@ -370,7 +371,9 @@ const useUpcomingEvents = (
         seenCourseDates.add(id);
         const title = courseDate.title || courseDate.type;
         const courseName =
-          language === "zh" ? slot.course.name_zh : slot.course.name_en;
+          contentLanguage(language) === "zh"
+            ? slot.course.name_zh
+            : slot.course.name_en;
         courseDateEvents.push({
           id,
           source: "course-date",

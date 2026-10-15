@@ -214,12 +214,13 @@ export function resolveVenueToCampusIdentity(
 export function searchCampusBuildingIdentities(
   queryValue: string,
   limit = 8,
+  normalize: (value: string) => string = compactSearchText,
 ): CampusBuildingIdentity[] {
-  const query = compactSearchText(queryValue);
+  const query = normalize(queryValue);
   if (!query) return [];
 
   return CAMPUS_BUILDING_IDENTITIES.map((identity) => {
-    const aliases = identity.venue.aliases.map(compactSearchText);
+    const aliases = identity.venue.aliases.map(normalize);
     const exact = aliases.includes(query);
     const startsWith = aliases.some(
       (alias) => alias.startsWith(query) || query.startsWith(alias),

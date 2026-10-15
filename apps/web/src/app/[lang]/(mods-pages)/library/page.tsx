@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Button, cn, ErrorState, Skeleton } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
+import { intlLocale } from "@/helpers/contentLanguage";
 import { useSettings } from "@/hooks/contexts/settings";
 import useTime from "@/hooks/useTime";
 import UsageForecast from "@/components/Venue/UsageForecast";
@@ -175,7 +176,7 @@ const LibraryPage = () => {
     "@type": "WebPage",
     name: `${title} | NTHUMods`,
     url: `https://nthumods.com/${language}/library`,
-    inLanguage: language === "en" ? "en-US" : "zh-TW",
+    inLanguage: intlLocale(language),
     isPartOf: { "@type": "WebSite", url: "https://nthumods.com" },
   };
 
@@ -230,7 +231,7 @@ const LibraryPage = () => {
               <span className="text-xs text-muted-foreground whitespace-nowrap">
                 {dict.library.updated_at}{" "}
                 {new Date(dataUpdatedAt).toLocaleTimeString(
-                  language === "en" ? "en-US" : "zh-TW",
+                  intlLocale(language),
                   {
                     hour: "2-digit",
                     minute: "2-digit",
