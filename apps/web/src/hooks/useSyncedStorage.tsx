@@ -5,6 +5,7 @@ import { useAuth } from "react-oidc-context";
 import authClient from "@/config/auth";
 import {
   getSyncedStorageKey,
+  getSyncedStorageNamespace,
   hasSyncedMetadata,
   migrateLegacySyncedData,
   nextUpdatedAt,
@@ -13,6 +14,7 @@ import {
   type MergeData,
   type SyncedData,
   valuesEqual,
+  saveCourseBackup,
   writeSyncedStorageBackup,
 } from "./syncedStorage";
 
@@ -152,6 +154,16 @@ const useSyncedStorage = <T = unknown,>(
     [postData],
   );
 
+  const persistLocalData = useCallback(
+    (nextData: SyncedData<T>) => {
+      setLocalData(nextData);
+      if (key === "courses") {
+        saveCourseBackup(getSyncedStorageNamespace(userId), nextData.value);
+      }
+    },
+    [key, setLocalData, userId],
+  );
+
   useEffect(() => {
     if (storageKeyRef.current === storageKey) return;
 
@@ -178,8 +190,8 @@ const useSyncedStorage = <T = unknown,>(
 
     // Keep the old unscoped record as a recoverable legacy copy. The new
     // anonymous namespace is the only record read by this hook going forward.
-    setLocalData(migrated);
-  }, [deviceId, key, setLocalData, storageKey, storageKeyChanged, userId]);
+    persistLocalData(migrated);
+  }, [deviceId, key, persistLocalData, storageKey, storageKeyChanged, userId]);
 
   // Upgrade old local records without ever treating this as proof that the remote read succeeded.
   useEffect(() => {
@@ -188,9 +200,9 @@ const useSyncedStorage = <T = unknown,>(
     const normalizedLocalData = normalizeSyncedData<T>(localData, deviceId);
     setDataState(normalizedLocalData);
     if (!hasSyncedMetadata(localData)) {
-      setLocalData(normalizedLocalData);
+      persistLocalData(normalizedLocalData);
     }
-  }, [deviceId, localData, setLocalData]);
+  }, [deviceId, localData, persistLocalData]);
 
   useEffect(() => {
     if (storageKeyChanged) return;
@@ -244,7 +256,7 @@ const useSyncedStorage = <T = unknown,>(
       valuesEqual(current, reconciliation.data) ? current : reconciliation.data,
     );
     if (reconciliation.persistLocal) {
-      setLocalData(reconciliation.data);
+      persistLocalData(reconciliation.data);
     }
     if (reconciliation.backupLocal) {
       writeSyncedStorageBackup(storageKey, local);
@@ -264,7 +276,7 @@ const useSyncedStorage = <T = unknown,>(
     localData,
     mergeData,
     remoteData,
-    setLocalData,
+    persistLocalData,
     storageKeyChanged,
     upload,
     userId,
@@ -286,11 +298,11 @@ const useSyncedStorage = <T = unknown,>(
           lastModified: updatedAt,
           deviceId,
         };
-        setLocalData(updatedData);
+        persistLocalData(updatedData);
         return updatedData;
       });
     },
-    [deviceId, setLocalData, storageKeyChanged],
+    [deviceId, persistLocalData, storageKeyChanged],
   );
 
   const isSettled =

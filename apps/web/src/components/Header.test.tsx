@@ -4,8 +4,10 @@ import { JSDOM } from "jsdom";
 import { afterEach, describe, expect, mock, test } from "bun:test";
 import { captureGlobalState } from "@/test-utils/global-state";
 import {
+  getCourseBackupKey,
   getSyncedStorageBackupKey,
   getSyncedStorageKey,
+  getSyncedStorageNamespace,
 } from "@/hooks/syncedStorage";
 import en from "@/dictionaries/en.json";
 
@@ -188,6 +190,12 @@ describe("Header local-data logout", () => {
         "backup",
       );
     });
+    for (const namespace of [
+      getSyncedStorageNamespace(user.profile.sub),
+      getSyncedStorageNamespace(),
+    ]) {
+      window.localStorage.setItem(getCourseBackupKey(namespace), "backup");
+    }
 
     const container = document.createElement("div");
     document.body.appendChild(container);
@@ -214,6 +222,14 @@ describe("Header local-data logout", () => {
         window.localStorage.getItem(getSyncedStorageBackupKey(storageKey)),
       ).toBeNull();
     });
+    for (const namespace of [
+      getSyncedStorageNamespace(user.profile.sub),
+      getSyncedStorageNamespace(),
+    ]) {
+      expect(
+        window.localStorage.getItem(getCourseBackupKey(namespace)),
+      ).toBeNull();
+    }
 
     await act(async () => root.unmount());
   });

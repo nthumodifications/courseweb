@@ -17,6 +17,11 @@ import {
   subscribeToStorageEvents,
 } from "@/test-utils/storage-events";
 import {
+  getCourseBackupKey,
+  getSyncedStorageNamespace,
+  listCourseBackups,
+  restoreCourseBackup,
+  saveCourseBackup,
   getSyncedStorageBackupKey,
   getSyncedStorageKey,
   mergeCourseStorage,
@@ -197,7 +202,7 @@ describe("useSyncedStorage remote read states", () => {
     post.mockImplementation(async () => new Response(null, { status: 200 }));
   });
 
-  test("upgrades a raw anonymous timetable while retaining all semesters", async () => {
+  test("upgrades a raw anonymous courses record while retaining all semesters", async () => {
     setupDom();
     authState.isAuthenticated = false;
     authState.user = undefined;
@@ -224,6 +229,122 @@ describe("useSyncedStorage remote read states", () => {
     );
 
     await cleanupSyncedStorage(rendered);
+  });
+
+  test("upgrades a raw anonymous favourites record without deleting it", async () => {
+    setupDom();
+    authState.isAuthenticated = false;
+    authState.user = undefined;
+    const legacyFavourites = ["COURSE-A", "COURSE-B"];
+    window.localStorage.setItem(
+      "course_favourites",
+      JSON.stringify(legacyFavourites),
+    );
+
+    const rendered = await renderSyncedStorage(() =>
+      useSyncedStorage("course_favourites", [], mergeStringArray),
+    );
+    await waitForResult(
+      rendered.getResult,
+      (result) => (result?.[0] as string[] | undefined)?.length === 2,
+    );
+
+    expect(rendered.getResult()?.[0]).toEqual(legacyFavourites);
+    expect(window.localStorage.getItem("course_favourites")).toBe(
+      JSON.stringify(legacyFavourites),
+    );
+
+    await cleanupSyncedStorage(rendered);
+  });
+
+  test("does not adopt a raw record while signed in, but retains it for recovery", async () => {
+    setupDom();
+    const legacyCourses = { "11410": ["LEGACY-COURSE"] };
+    window.localStorage.setItem("courses", JSON.stringify(legacyCourses));
+
+    const rendered = await renderSyncedStorage(() =>
+      useSyncedStorage("courses", {}, mergeCourseStorage),
+    );
+    await waitForResult(rendered.getResult);
+
+    expect(rendered.getResult()?.[0]).toEqual({});
+    expect(window.localStorage.getItem("courses")).toBe(
+      JSON.stringify(legacyCourses),
+    );
+    expect(
+      window.localStorage.getItem(
+        getSyncedStorageKey("courses", user.profile.sub),
+      ),
+    ).toBeNull();
+
+    await cleanupSyncedStorage(rendered);
+  });
+
+  test("does not adopt a raw favourites record while signed in", async () => {
+    setupDom();
+    const legacyFavourites = ["LEGACY-COURSE"];
+    window.localStorage.setItem(
+      "course_favourites",
+      JSON.stringify(legacyFavourites),
+    );
+
+    const rendered = await renderSyncedStorage(() =>
+      useSyncedStorage("course_favourites", [], mergeStringArray),
+    );
+    await waitForResult(rendered.getResult);
+
+    expect(rendered.getResult()?.[0]).toEqual([]);
+    expect(window.localStorage.getItem("course_favourites")).toBe(
+      JSON.stringify(legacyFavourites),
+    );
+    expect(
+      window.localStorage.getItem(
+        getSyncedStorageKey("course_favourites", user.profile.sub),
+      ),
+    ).toBeNull();
+
+    await cleanupSyncedStorage(rendered);
+  });
+
+  test("writes only distinct non-empty course backups and restores by listed index", () => {
+    setupDom();
+    const namespace = "nthumods-storage-anonymous";
+    const values = [
+      { "11410": ["COURSE-C"] },
+      { "11410": ["COURSE-B"] },
+      { "11410": ["COURSE-A"] },
+      { "11410": ["COURSE-OLD"] },
+    ];
+
+    saveCourseBackup(namespace, values[0]);
+    saveCourseBackup(namespace, values[0]);
+    saveCourseBackup(namespace, values[1]);
+    saveCourseBackup(namespace, values[2]);
+    saveCourseBackup(namespace, values[3]);
+
+    const backups = listCourseBackups(namespace);
+    expect(backups).toHaveLength(3);
+    expect(backups.map((backup) => backup.value)).toEqual([
+      values[3],
+      values[2],
+      values[1],
+    ]);
+    expect(restoreCourseBackup(namespace, 0)).toEqual(values[3]);
+    expect(restoreCourseBackup(namespace, 3)).toBeUndefined();
+    expect(
+      window.localStorage.getItem(getCourseBackupKey(namespace)),
+    ).toBeTruthy();
+  });
+
+  test("skips empty and over-sized course backups", () => {
+    setupDom();
+    const namespace = "nthumods-storage-anonymous";
+
+    saveCourseBackup(namespace, {});
+    expect(listCourseBackups(namespace)).toEqual([]);
+
+    saveCourseBackup(namespace, { "11410": ["x".repeat(210 * 1024)] });
+    expect(listCourseBackups(namespace)).toEqual([]);
   });
 
   test("keeps local courses render-ready after a persistent 401 without publishing", async () => {
@@ -293,8 +414,9 @@ describe("useSyncedStorage remote read states", () => {
     await waitForResult(
       rendered.getResult,
       (result) =>
-        (result?.[0] as Record<string, string[]> | undefined)?.["11410"]
-          ?.includes("FIRST-REMOTE-COURSE") ?? false,
+        (result?.[0] as Record<string, string[]> | undefined)?.[
+          "11410"
+        ]?.includes("FIRST-REMOTE-COURSE") ?? false,
     );
 
     get.mockImplementationOnce(
@@ -325,8 +447,9 @@ describe("useSyncedStorage remote read states", () => {
     await waitForResult(
       rendered.getResult,
       (result) =>
-        (result?.[0] as Record<string, string[]> | undefined)?.["11510"]
-          ?.includes("RECOVERED-REMOTE-COURSE") ?? false,
+        (result?.[0] as Record<string, string[]> | undefined)?.[
+          "11510"
+        ]?.includes("RECOVERED-REMOTE-COURSE") ?? false,
     );
 
     expect(rendered.getResult()?.[0]).toEqual({
@@ -525,6 +648,9 @@ describe("useSyncedStorage remote read states", () => {
       value: { "11410": ["ACCOUNT-COURSE"] },
     });
     expect(storedAccountData.updatedAt).toBeGreaterThan(-1);
+    expect(
+      listCourseBackups(getSyncedStorageNamespace(user.profile.sub))[0]?.value,
+    ).toEqual({ "11410": ["ACCOUNT-COURSE"] });
     expect(post).toHaveBeenCalledWith(
       expect.objectContaining({ param: { key: "courses" } }),
       expect.anything(),

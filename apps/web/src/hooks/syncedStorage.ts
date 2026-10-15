@@ -63,6 +63,95 @@ export const getSyncedStorageKey = (key: string, subject?: string | null) =>
 export const getSyncedStorageBackupKey = (storageKey: string) =>
   `${storageKey}__backup`;
 
+export interface CourseBackup<T = Record<string, string[]>> {
+  savedAt: number;
+  value: T;
+}
+
+const COURSE_BACKUP_LIMIT = 3;
+const COURSE_BACKUP_MAX_JSON_BYTES = 200 * 1024;
+
+export const getCourseBackupKey = (namespace: string) =>
+  `nthumods-backup-${namespace}-courses`;
+
+const hasCourses = (value: unknown) =>
+  isRecord(value) &&
+  Object.values(value).some(
+    (semesterCourses) =>
+      Array.isArray(semesterCourses) && semesterCourses.length > 0,
+  );
+
+const isCourseBackup = (value: unknown): value is CourseBackup =>
+  isRecord(value) &&
+  isFiniteNumber(value.savedAt) &&
+  isRecord(value.value) &&
+  hasCourses(value.value);
+
+export const listCourseBackups = <T = Record<string, string[]>>(
+  namespace: string,
+): CourseBackup<T>[] => {
+  if (typeof window === "undefined") return [];
+
+  try {
+    const raw = window.localStorage.getItem(getCourseBackupKey(namespace));
+    if (!raw) return [];
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed)
+      ? (parsed.filter(isCourseBackup) as CourseBackup<T>[])
+      : [];
+  } catch {
+    return [];
+  }
+};
+
+/**
+ * Support can inspect `listCourseBackups(namespace)` in devtools and call
+ * `restoreCourseBackup(namespace, 0)` to retrieve the newest value. This
+ * helper only returns data; support must explicitly write the returned value.
+ */
+export const restoreCourseBackup = <T = Record<string, string[]>>(
+  namespace: string,
+  index: number,
+): T | undefined => {
+  if (!Number.isInteger(index) || index < 0) return undefined;
+  return listCourseBackups<T>(namespace)[index]?.value;
+};
+
+export const saveCourseBackup = <T>(namespace: string, value: T) => {
+  if (typeof window === "undefined" || !hasCourses(value)) return;
+
+  try {
+    const previous = listCourseBackups<T>(namespace);
+    if (
+      previous[0] &&
+      JSON.stringify(previous[0].value) === JSON.stringify(value)
+    ) {
+      return;
+    }
+
+    const next = [{ savedAt: Date.now(), value }, ...previous].slice(
+      0,
+      COURSE_BACKUP_LIMIT,
+    );
+    const serialized = JSON.stringify(next);
+    if (serialized.length > COURSE_BACKUP_MAX_JSON_BYTES) return;
+    window.localStorage.setItem(getCourseBackupKey(namespace), serialized);
+  } catch {
+    // Backups are best effort; unavailable, malformed, or full storage must
+    // never prevent the normal local or remote timetable write.
+  }
+};
+
+export const deleteCourseBackups = (namespace: string) => {
+  if (typeof window === "undefined") return;
+
+  try {
+    window.localStorage.removeItem(getCourseBackupKey(namespace));
+  } catch {
+    // Best effort cleanup when localStorage is unavailable.
+  }
+};
+
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
 

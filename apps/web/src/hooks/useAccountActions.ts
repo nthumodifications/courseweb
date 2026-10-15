@@ -2,8 +2,10 @@ import { useState } from "react";
 import { useAuth } from "react-oidc-context";
 import { useRxCollection } from "rxdb-hooks";
 import {
+  deleteCourseBackups,
   getSyncedStorageBackupKey,
   getSyncedStorageKey,
+  getSyncedStorageNamespace,
 } from "./syncedStorage";
 import {
   clearCredentialStorage,
@@ -74,6 +76,8 @@ export const useAccountActions = () => {
           localStorage.removeItem(getSyncedStorageBackupKey(storageKey));
         });
       });
+      deleteCourseBackups(getSyncedStorageNamespace(user?.profile.sub));
+      deleteCourseBackups(getSyncedStorageNamespace());
 
       // Remove the whole identity-scoped database so its event data,
       // timetable checkpoints, and replication metadata are all cleared.
