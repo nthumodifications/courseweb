@@ -18,6 +18,70 @@ const page = {
   nextCursor: undefined,
 };
 
+const documentFor = (userId: string) => ({
+  path: `users/${userId}/storage/courses`,
+  record,
+});
+
+test("uses bounded concurrency for apply writes", async () => {
+  let active = 0;
+  let maximumActive = 0;
+  const documents = Array.from({ length: 8 }, (_, index) =>
+    documentFor(`user-${index}`),
+  );
+
+  const counts = await runBackfill({
+    firestore: {
+      listAllPage: async () => ({ documents, nextCursor: undefined }),
+    },
+    postgres: {
+      get: async () => {
+        throw new Error("apply mode must not pre-read");
+      },
+      put: async () => {
+        active += 1;
+        maximumActive = Math.max(maximumActive, active);
+        await new Promise((resolve) => setTimeout(resolve, 5));
+        active -= 1;
+        return true;
+      },
+    },
+    dryRun: false,
+    concurrency: 3,
+  });
+
+  expect(maximumActive).toBe(3);
+  expect(counts.copied).toBe(8);
+  expect(counts.errors).toBe(0);
+});
+
+test("keeps the dry-run read and does not write", async () => {
+  let reads = 0;
+  let writes = 0;
+  const counts = await runBackfill({
+    firestore: {
+      listAllPage: async () => page,
+    },
+    postgres: {
+      get: async () => {
+        reads += 1;
+        return undefined;
+      },
+      put: async () => {
+        writes += 1;
+        return true;
+      },
+    },
+    dryRun: true,
+  });
+
+  expect(reads).toBe(1);
+  expect(writes).toBe(0);
+  expect(counts.missing).toBe(1);
+  expect(counts.copied).toBe(0);
+  expect(counts.errors).toBe(0);
+});
+
 describe("user storage backfill failures", () => {
   test.each([
     [
@@ -56,7 +120,7 @@ describe("user storage backfill failures", () => {
       const counts = await runBackfill({
         firestore: stores,
         postgres: stores,
-        dryRun: false,
+        dryRun: _kind === "row reads",
       });
 
       expect(counts.errors).toBe(1);

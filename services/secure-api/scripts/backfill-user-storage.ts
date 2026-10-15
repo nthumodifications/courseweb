@@ -28,7 +28,11 @@ export type BackfillOptions = {
   postgres: BackfillPostgres;
   dryRun: boolean;
   batchSize?: number;
+  concurrency?: number;
 };
+
+const DEFAULT_CONCURRENCY = 16;
+const MAX_CONCURRENCY = 64;
 
 const parseStoragePath = (path: string) => {
   const parts = path.split("/");
@@ -51,7 +55,14 @@ export async function runBackfill({
   postgres,
   dryRun,
   batchSize = 500,
+  concurrency = DEFAULT_CONCURRENCY,
 }: BackfillOptions): Promise<BackfillCounts> {
+  if (!Number.isInteger(concurrency) || concurrency < 1 || concurrency > MAX_CONCURRENCY) {
+    throw new Error(
+      `concurrency must be an integer between 1 and ${MAX_CONCURRENCY}`,
+    );
+  }
+
   const users = new Set<string>();
   const counts = {
     users: 0,
@@ -65,6 +76,7 @@ export async function runBackfill({
     errors: 0,
   } satisfies BackfillCounts;
 
+  const startedAt = performance.now();
   let cursor: string | undefined;
   do {
     let page;
@@ -76,39 +88,61 @@ export async function runBackfill({
       break;
     }
 
-    for (const { path, record } of page.documents) {
-      counts.firestoreRows += 1;
-      const location = parseStoragePath(path);
-      if (!location || !record) {
-        counts.invalidRows += 1;
-        console.error(`Skipping invalid Firestore storage document: ${path}`);
-        continue;
-      }
-
-      const { userId, key } = location;
-      users.add(userId);
-      try {
-        const existing = await postgres.get(userId, key);
-        if (existing && compareUserStorageRecords(record, existing) < 0) {
-          counts.unchanged += 1;
+    let nextIndex = 0;
+    const worker = async () => {
+      while (nextIndex < page.documents.length) {
+        const document = page.documents[nextIndex++];
+        counts.firestoreRows += 1;
+        const { path, record } = document;
+        const location = parseStoragePath(path);
+        if (!location || !record) {
+          counts.invalidRows += 1;
+          console.error(`Skipping invalid Firestore storage document: ${path}`);
           continue;
         }
 
-        if (existing) counts.newer += 1;
-        else counts.missing += 1;
+        const { userId, key } = location;
+        users.add(userId);
+        try {
+          if (dryRun) {
+            const existing = await postgres.get(userId, key);
+            if (existing && compareUserStorageRecords(record, existing) < 0) {
+              counts.unchanged += 1;
+              continue;
+            }
 
-        if (!dryRun) {
-          const copied = await postgres.put(userId, key, record, {
-            merge: false,
-          });
-          if (copied) counts.copied += 1;
-          else counts.notCopied += 1;
+            if (existing) counts.newer += 1;
+            else counts.missing += 1;
+          } else {
+            const copied = await postgres.put(userId, key, record, {
+              merge: false,
+            });
+            if (copied) counts.copied += 1;
+            else counts.notCopied += 1;
+          }
+        } catch (error) {
+          counts.errors += 1;
+          console.error(`Failed to backfill ${userId}/${key}:`, error);
         }
-      } catch (error) {
-        counts.errors += 1;
-        console.error(`Failed to backfill ${userId}/${key}:`, error);
       }
-    }
+    };
+
+    await Promise.all(
+      Array.from(
+        { length: Math.min(concurrency, page.documents.length) },
+        () => worker(),
+      ),
+    );
+
+    const elapsedMinutes = (performance.now() - startedAt) / 60_000;
+    const rowsPerMinute =
+      elapsedMinutes > 0 ? counts.firestoreRows / elapsedMinutes : 0;
+    const skipped = counts.invalidRows + counts.unchanged + counts.notCopied;
+    console.log(
+      `Backfill progress: processed=${counts.firestoreRows} ` +
+        `copied=${counts.copied} skipped=${skipped} errors=${counts.errors} ` +
+        `rows/min=${rowsPerMinute.toFixed(1)}`,
+    );
 
     cursor = page.nextCursor;
   } while (cursor);
@@ -123,6 +157,12 @@ export const setBackfillExitCode = (counts: BackfillCounts) => {
 
 const runCommand = async () => {
   const dryRun = !process.argv.includes("--apply");
+  const concurrencyArgument = process.argv.find((argument) =>
+    argument.startsWith("--concurrency="),
+  );
+  const concurrency = concurrencyArgument
+    ? Number(concurrencyArgument.slice("--concurrency=".length))
+    : DEFAULT_CONCURRENCY;
   const serviceAccountValue = process.env["FIREBASE_SERVICE_ACCOUNT"];
 
   if (!serviceAccountValue) {
@@ -143,13 +183,13 @@ const runCommand = async () => {
 
   let counts: BackfillCounts;
   try {
-    counts = await runBackfill({ firestore, postgres, dryRun });
+    counts = await runBackfill({ firestore, postgres, dryRun, concurrency });
   } finally {
     await prisma.$disconnect();
   }
 
   console.log(
-    JSON.stringify({ dryRun, batchSize: 500, ...counts }, null, 2),
+    JSON.stringify({ dryRun, batchSize: 500, concurrency, ...counts }, null, 2),
   );
   setBackfillExitCode(counts);
 };
