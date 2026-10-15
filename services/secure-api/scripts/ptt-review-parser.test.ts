@@ -91,6 +91,30 @@ describe("PTT review importer parser", () => {
     });
   });
 
+  test("accepts only contract numeric ratings and agrees with the web parser", () => {
+    const parsed = (value: string) =>
+      parsePttReviewText({
+        text: `課名: 測試\n科號: 11020MATH104005\n老師: 王小明\n涼度: ${value}\n甜度: ${value}\n\nbody`,
+      });
+
+    expect(parsed("4/5")).toMatchObject({ coolness: 4, sweetness: 4 });
+    expect(parsed("4")).toMatchObject({ coolness: 4, sweetness: 4 });
+    expect(parsed("4/10")).toMatchObject({ coolness: null, sweetness: null });
+    expect(parsed("涼度: 4")).toMatchObject({
+      coolness: null,
+      sweetness: null,
+    });
+    expect(parsed("★★★★☆")).toMatchObject({ coolness: 4, sweetness: 4 });
+  });
+
+  test("splits CJK teacher names on spaces without splitting Latin full names", () => {
+    expect(
+      parsePttReviewText({
+        text: "課名: 測試\n科號: 11020MATH104005\n老師: 王小明 李小華 Jerry Chou\n\nbody",
+      }).instructors,
+    ).toEqual(["王小明", "李小華", "Jerry Chou"]);
+  });
+
   test("skips a copied post without a parseable course code", async () => {
     const parsed = parsePttReviewText({
       text: await fixture("missing-fields.txt"),

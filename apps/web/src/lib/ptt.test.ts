@@ -3,6 +3,7 @@ import {
   getPttRenderedTextFragments,
   getPttToggleLabel,
   normalizePttReview,
+  parsePttRating,
   parsePttReview,
   parsePttResponse,
 } from "./ptt";
@@ -44,7 +45,7 @@ describe("PTT review parsing", () => {
       parsed: false,
       body: "legacy review text",
       content: "legacy review text",
-      date: "old date",
+      date: null,
     });
   });
 
@@ -56,6 +57,49 @@ describe("PTT review parsing", () => {
 
     expect(review.parsed).toBe(true);
     expect(review.body).toContain("課名: 測試課程");
+  });
+
+  test("parses the live PTT date into an ISO timestamp and keeps URL metadata", () => {
+    expect(
+      parsePttResponse({
+        content: "課名: 測試課程\n老師: 測試教師",
+        date: "Mon Jul  4 22:14:50 2022",
+        sourceUrl: "/bbs/NTHU_Course/M.1656944090.A.123.html",
+        sourceAuthor: "tester",
+      }),
+    ).toMatchObject({
+      date: "2022-07-04T14:14:50.000Z",
+      sourceUrl: "https://www.ptt.cc/bbs/NTHU_Course/M.1656944090.A.123.html",
+      sourceAuthor: "tester",
+    });
+  });
+
+  test("takes the instructor from the real template header only", async () => {
+    const review = parsePttReview({
+      text: await fixture("standard-review.txt"),
+    });
+
+    expect(review.instructor).toBe("顏東勇");
+    expect(review.instructor).not.toContain("建議先修課程");
+  });
+
+  test("drops an unparseable posted date instead of preserving raw text", () => {
+    expect(
+      parsePttResponse({
+        content: "課名: 測試課程\n老師: 測試教師",
+        date: "not a date",
+      }).date,
+    ).toBeNull();
+  });
+
+  test.each([
+    ["4/5", 4],
+    ["4", 4],
+    ["4/10", null],
+    ["涼度: 4", null],
+    ["★★★★☆", 4],
+  ] as const)("parses the contract rating form %s", (value, expected) => {
+    expect(parsePttRating(value)).toBe(expected);
   });
 
   test("preserves every non-whitespace body character in rendered fragments", async () => {

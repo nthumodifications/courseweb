@@ -1,7 +1,7 @@
 import { useAuth } from "react-oidc-context";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { useMyReviews } from "@/lib/reviews";
-import { deriveReviewLock } from "@/lib/review-lock";
+import { deriveReviewLock, isReviewTextLocked } from "@/lib/review-lock";
 
 export const useReviewUnlock = () => {
   const auth = useAuth();
@@ -14,6 +14,11 @@ export const useReviewUnlock = () => {
 
   return {
     ...derived,
+    textLocked: isReviewTextLocked(
+      derived.locked,
+      timetable.timetableDataReady,
+      !mine.isPending,
+    ),
     isAuthenticated:
       auth.isAuthenticated &&
       !auth.user?.expired &&

@@ -1,6 +1,7 @@
 import { useRef, useEffect, useMemo, useState } from "react";
 import { useAuth } from "react-oidc-context";
 import { Link } from "react-router-dom";
+import { format } from "date-fns";
 import {
   Alert,
   AlertDescription,
@@ -25,8 +26,20 @@ import { toPrettySemester } from "@/helpers/semester";
 import { ModuleStat } from "@/components/Courses/ModuleInsights";
 import { normaliseInstructorName } from "@/lib/instructors";
 import { parseModuleKey } from "@/lib/modules";
-import { parsePttRating, type PttReview } from "@/lib/ptt";
+import { normalizePttUrl, parsePttRating, type PttReview } from "@/lib/ptt";
 import { useReviewUnlock } from "@/hooks/useReviewUnlock";
+export { isReviewTextLocked } from "@/lib/review-lock";
+
+export const shouldShowPastReviewsLink = (unlock: {
+  hasPastCourses: boolean;
+  locked: boolean;
+  timetableReady: boolean;
+  reviewsReady: boolean;
+}) =>
+  unlock.hasPastCourses &&
+  !unlock.locked &&
+  unlock.timetableReady &&
+  unlock.reviewsReady;
 import {
   type Attendance,
   type ExamStyle,
@@ -35,7 +48,6 @@ import {
   type ReviewApiError,
   type ReviewInput,
   type ReviewRating,
-  reviewSummaryHasAverages,
   useCreateReview,
   useDeleteReview,
   useMyReviews,
@@ -45,6 +57,65 @@ import {
 } from "@/lib/reviews";
 
 type Dictionary = ReturnType<typeof useDictionary>;
+
+export const getReviewSummaryState = (summary: {
+  count: number;
+  coolness?: number | null;
+  sweetness?: number | null;
+  learning?: number | null;
+  workload?: number | null;
+  grading?: number | null;
+}) => {
+  if (
+    (summary.coolness ?? summary.workload ?? null) === null &&
+    (summary.sweetness ?? summary.grading ?? null) === null &&
+    (summary.learning ?? null) === null
+  )
+    return "insufficient" as const;
+  if (summary.count === 0) return "empty" as const;
+  return "averages" as const;
+};
+
+export const getReviewMetadata = (
+  review: Pick<
+    Review,
+    | "source"
+    | "sourcePostedAt"
+    | "updatedAt"
+    | "edited"
+    | "semester"
+    | "instructor"
+  >,
+  showInstructor: boolean,
+  lang: "zh" | "en" | "zh-cn",
+  editedLabel = "edited",
+) => {
+  const metadata = [
+    ...(review.semester ? [toPrettySemester(review.semester)] : []),
+    ...(showInstructor && review.instructor ? [review.instructor] : []),
+  ];
+  if (review.source === "ptt") {
+    return [
+      ...metadata,
+      ...(review.sourcePostedAt
+        ? [formatReviewDate(review.sourcePostedAt, lang)]
+        : []),
+    ];
+  }
+  return [
+    ...metadata,
+    relativeDate(review.updatedAt, lang),
+    ...(review.edited ? [editedLabel] : []),
+  ];
+};
+
+export const formatReviewDate = (
+  value: string,
+  _lang: "zh" | "en" | "zh-cn",
+) => {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : format(date, "yyyy-MM-dd");
+};
 
 export const sortReviews = <
   T extends Pick<Review, "instructor" | "createdAt"> &
@@ -56,8 +127,8 @@ export const sortReviews = <
 ): T[] => {
   const values = [...reviews];
   if (!prioritizeInstructors) {
-    return values.sort((left, right) =>
-      reviewDate(right).localeCompare(reviewDate(left)),
+    return values.sort(
+      (left, right) => reviewTimestamp(right) - reviewTimestamp(left),
     );
   }
 
@@ -71,7 +142,7 @@ export const sortReviews = <
       instructors.length;
     return (
       leftPriority - rightPriority ||
-      reviewDate(right).localeCompare(reviewDate(left))
+      reviewTimestamp(right) - reviewTimestamp(left)
     );
   });
 };
@@ -107,9 +178,12 @@ const ratingFields = [
 
 export type LivePttReview = PttReview;
 
-const reviewDate = (
+const reviewTimestamp = (
   review: Pick<Review, "createdAt"> & Partial<Pick<Review, "sourcePostedAt">>,
-) => review.sourcePostedAt ?? review.createdAt;
+) => {
+  const timestamp = Date.parse(review.sourcePostedAt ?? review.createdAt);
+  return Number.isNaN(timestamp) ? 0 : timestamp;
+};
 
 export const mergeReviewRows = (
   apiReviews: readonly Review[],
@@ -121,24 +195,26 @@ export const mergeReviewRows = (
   const urls = new Set(
     apiReviews
       .map((review) => review.sourceUrl)
+      .map((url) => normalizePttUrl(url))
       .filter((url): url is string => Boolean(url)),
   );
   livePttReviews.forEach((review, index) => {
-    if (review.sourceUrl && urls.has(review.sourceUrl)) return;
+    const sourceUrl = normalizePttUrl(review.sourceUrl);
+    if (sourceUrl && urls.has(sourceUrl)) return;
     const postedAt = review.date;
     rows.push({
-      id: `ptt-live:${review.sourceUrl ?? `${postedAt ?? "unknown"}:${index}`}`,
+      id: `ptt-live:${sourceUrl ?? `${postedAt ?? "unknown"}:${index}`}`,
       moduleKey,
       instructor: review.instructor ?? fallbackInstructor,
       semester: review.semester,
       coolness: parsePttRating(review.coolness),
       sweetness: parsePttRating(review.sweetness),
       learning: null,
-      attendance: "none",
+      attendance: null,
       examStyle: [],
       body: review.body,
       source: "ptt",
-      sourceUrl: review.sourceUrl,
+      sourceUrl,
       sourceAuthor: review.sourceAuthor,
       sourcePostedAt: postedAt,
       createdAt: postedAt ?? "1970-01-01T00:00:00.000Z",
@@ -147,26 +223,44 @@ export const mergeReviewRows = (
       mine: false,
     });
   });
-  return rows.sort((left, right) =>
-    reviewDate(right).localeCompare(reviewDate(left)),
+  return rows.sort(
+    (left, right) => reviewTimestamp(right) - reviewTimestamp(left),
   );
 };
+
+export const shouldRenderAttendance = (review: Pick<Review, "source">) =>
+  review.source === "native";
 
 export const ReviewRatingControls = ({
   values,
   onChange,
+  desktopInline = false,
 }: {
   values: Partial<Record<(typeof ratingFields)[number]["field"], number>>;
   onChange: (
     field: (typeof ratingFields)[number]["field"],
     value: number,
   ) => void;
+  desktopInline?: boolean;
 }) => {
   const dict = useDictionary();
   return (
-    <div className="flex flex-col gap-4">
+    <div
+      className={
+        desktopInline
+          ? "flex flex-col gap-2 md:flex-row md:gap-4"
+          : "flex flex-col gap-4"
+      }
+    >
       {ratingFields.map(({ field, label, lowLabel, highLabel }) => (
-        <fieldset className="flex flex-col gap-2" key={field}>
+        <fieldset
+          className={
+            desktopInline
+              ? "flex flex-col gap-2 md:flex-1"
+              : "flex flex-col gap-2"
+          }
+          key={field}
+        >
           <legend className="text-sm font-medium">
             {dict.course.details.native_reviews[label]}
           </legend>
@@ -889,7 +983,7 @@ export const ReviewsSection = ({
           )}
         </h3>
         <div className="flex flex-wrap items-center gap-2">
-          {isReviewAuthenticated && unlock.hasPastCourses && (
+          {isReviewAuthenticated && shouldShowPastReviewsLink(unlock) && (
             <Button variant="ghost" size="sm" asChild>
               <Link to={`/${lang}/reviews/past`}>
                 {dict.course.details.native_reviews.review_past}
@@ -906,7 +1000,9 @@ export const ReviewsSection = ({
             <Button size="sm" onClick={openCreate}>
               {dict.course.details.native_reviews.write}
             </Button>
-          ) : !isReviewAuthenticated && normalizedInstructors.length > 0 ? (
+          ) : !isReviewAuthenticated &&
+            normalizedInstructors.length > 0 &&
+            (!unlock.locked || sortedReviews.length === 0) ? (
             <Button variant="outline" size="sm" onClick={signIn}>
               {dict.course.details.native_reviews.sign_in_prompt}
             </Button>
@@ -940,27 +1036,26 @@ export const ReviewsSection = ({
           </Select>
         </div>
       )}
-      {summary &&
-        (reviewSummaryHasAverages(summary) || summary.count > 0 ? (
-          <dl className="grid grid-cols-3 gap-4 py-2">
-            <ModuleStat
-              value={(summary.coolness ?? summary.workload)?.toFixed(1) ?? "—"}
-              label={dict.course.details.native_reviews.average_coolness}
-            />
-            <ModuleStat
-              value={(summary.sweetness ?? summary.grading)?.toFixed(1) ?? "—"}
-              label={dict.course.details.native_reviews.average_sweetness}
-            />
-            <ModuleStat
-              value={summary.learning?.toFixed(1) ?? "—"}
-              label={dict.course.details.native_reviews.average_learning}
-            />
-          </dl>
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            {dict.course.details.native_reviews.not_enough_for_average}
-          </p>
-        ))}
+      {summary && getReviewSummaryState(summary) === "averages" ? (
+        <dl className="grid grid-cols-3 gap-4 py-2">
+          <ModuleStat
+            value={(summary.coolness ?? summary.workload)?.toFixed(1) ?? "—"}
+            label={dict.course.details.native_reviews.average_coolness}
+          />
+          <ModuleStat
+            value={(summary.sweetness ?? summary.grading)?.toFixed(1) ?? "—"}
+            label={dict.course.details.native_reviews.average_sweetness}
+          />
+          <ModuleStat
+            value={summary.learning?.toFixed(1) ?? "—"}
+            label={dict.course.details.native_reviews.average_learning}
+          />
+        </dl>
+      ) : summary && getReviewSummaryState(summary) === "insufficient" ? (
+        <p className="text-sm text-muted-foreground">
+          {dict.course.details.native_reviews.not_enough_for_average}
+        </p>
+      ) : null}
       {formMode &&
         (moduleKey || formMode !== "create") &&
         isReviewAuthenticated && (
@@ -1017,16 +1112,12 @@ export const ReviewsSection = ({
                     ? `${parsedModule.department} ${parsedModule.course}`
                     : review.moduleKey))
                 : undefined;
-              const metadata = [
-                ...(review.semester ? [toPrettySemester(review.semester)] : []),
-                ...(showInstructor && review.instructor
-                  ? [review.instructor]
-                  : []),
-                relativeDate(review.updatedAt, lang),
-                ...(review.edited
-                  ? [dict.course.details.native_reviews.edited]
-                  : []),
-              ];
+              const metadata = getReviewMetadata(
+                review,
+                showInstructor,
+                lang,
+                dict.course.details.native_reviews.edited,
+              );
               const ratings = [
                 review.coolness !== null && review.coolness !== undefined
                   ? `${dict.course.details.native_reviews.coolness} ${review.coolness}`
@@ -1062,9 +1153,6 @@ export const ReviewsSection = ({
                     {review.source === "ptt" && review.sourceAuthor && (
                       <span> · {review.sourceAuthor}</span>
                     )}
-                    {review.source === "ptt" && review.sourcePostedAt && (
-                      <span> · {review.sourcePostedAt.slice(0, 10)}</span>
-                    )}
                     {review.source === "ptt" && review.sourceUrl && (
                       <a
                         href={review.sourceUrl}
@@ -1081,7 +1169,7 @@ export const ReviewsSection = ({
                       {ratings.join(" · ")}
                     </div>
                   )}
-                  {review.source === "native" && (
+                  {shouldRenderAttendance(review) && review.attendance && (
                     <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
                       <span>
                         {
@@ -1103,7 +1191,7 @@ export const ReviewsSection = ({
                       </span>
                     </div>
                   )}
-                  {!unlock.locked && review.body && (
+                  {!unlock.textLocked && review.body && (
                     <p className="whitespace-pre-line leading-relaxed">
                       {review.body}
                     </p>

@@ -1,3 +1,8 @@
+import {
+  parsePttPostedAt,
+  parsePttRating as parseSharedPttRating,
+} from "@courseweb/shared";
+
 export type ParsedPttPost = {
   courseName: string | null;
   courseCode: string | null;
@@ -65,33 +70,44 @@ const fieldLine = (line: string) => {
   };
 };
 
-const parseRating = (value: string) => {
-  const filled = (value.match(/★/gu) ?? []).length;
-  const empty = (value.match(/☆/gu) ?? []).length;
-  const total = filled + empty;
-  if (total >= 3)
-    return Math.max(1, Math.min(5, Math.round((filled / total) * 5)));
-  if (filled > 0 && empty === 0 && filled <= 5) return filled;
+const parseRating = (value: string) => parseSharedPttRating(value);
 
-  const numeric = /\b([1-5])(?:\s*\/\s*5)?\b/u.exec(value);
-  return numeric ? Number(numeric[1]) : null;
+const splitInstructors = (value: string | null) => {
+  const chunks = (value ?? "")
+    .split(/(?:、|,|，|\/|／|;|；|\s+and\s+)/iu)
+    .map(normalizePart)
+    .filter(Boolean);
+  const instructors: string[] = [];
+  for (const chunk of chunks) {
+    const words = chunk.split(/\s+/u).filter(Boolean);
+    if (words.length <= 1 || !words.some(hasCjkCharacters)) {
+      instructors.push(chunk);
+      continue;
+    }
+    let latinName = "";
+    for (const word of words) {
+      if (hasCjkCharacters(word)) {
+        if (latinName) {
+          instructors.push(latinName);
+          latinName = "";
+        }
+        instructors.push(word);
+      } else {
+        latinName = latinName ? `${latinName} ${word}` : word;
+      }
+    }
+    if (latinName) instructors.push(latinName);
+  }
+  return [...new Set(instructors.map(normalizePart).filter(Boolean))];
 };
-
-const splitInstructors = (value: string | null) => [
-  ...new Set(
-    (value ?? "")
-      .split(/(?:、|,|，|\/|／|;|；|\s+and\s+)/iu)
-      .map(normalizePart)
-      .filter(Boolean),
-  ),
-];
 
 export type ModuleOfferingTeachers = {
   teacher_zh?: readonly string[] | null;
   teacher_en?: readonly string[] | null;
 };
 
-export const hasCjkCharacters = (value: string) => /\p{Script=Han}/u.test(value);
+export const hasCjkCharacters = (value: string) =>
+  /\p{Script=Han}/u.test(value);
 
 const instructorLookupKeys = (value: string) => {
   const normalized = normalizePart(value).toLocaleLowerCase();
@@ -99,7 +115,12 @@ const instructorLookupKeys = (value: string) => {
   const keys = new Set([compact]);
   const commaParts = normalized.split(",").map((part) => part.trim());
   if (commaParts.length === 2 && commaParts.every(Boolean)) {
-    keys.add(commaParts.reverse().join("").replace(/[\s-]+/gu, ""));
+    keys.add(
+      commaParts
+        .reverse()
+        .join("")
+        .replace(/[\s-]+/gu, ""),
+    );
   }
   return keys;
 };
@@ -116,7 +137,11 @@ export const resolveInstructorName = (
   for (const offering of offerings) {
     const teacherZh = offering.teacher_zh ?? [];
     const teacherEn = offering.teacher_en ?? [];
-    for (let index = 0; index < Math.min(teacherZh.length, teacherEn.length); index += 1) {
+    for (
+      let index = 0;
+      index < Math.min(teacherZh.length, teacherEn.length);
+      index += 1
+    ) {
       const teacherZhName = normalizePart(teacherZh[index] ?? "");
       if (
         teacherZhName &&
@@ -163,12 +188,6 @@ const parseHeader = (text: string) => {
   };
 };
 
-const parsePostedAt = (value: string | null) => {
-  if (!value) return null;
-  const parsed = new Date(`${value} GMT+0800`);
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
-};
-
 export const parsePttReviewText = (input: {
   text: string;
   sourceAuthor?: string | null;
@@ -191,7 +210,10 @@ export const parsePttReviewText = (input: {
     sweetness: parseRating(header.fields.get("sweetness") ?? ""),
     body: header.body.slice(0, 20_000),
     sourceAuthor: input.sourceAuthor?.trim() || null,
-    sourcePostedAt: parsePostedAt(input.sourcePostedAt ?? null),
+    sourcePostedAt: (() => {
+      const parsed = parsePttPostedAt(input.sourcePostedAt ?? null);
+      return parsed ? new Date(parsed) : null;
+    })(),
   } satisfies ParsedPttPost;
 };
 

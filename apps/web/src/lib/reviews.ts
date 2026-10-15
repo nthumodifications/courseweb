@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "react-oidc-context";
+import { parsePttPostedAt } from "@courseweb/shared";
 
 export type Attendance = "none" | "sometimes" | "every_class";
 export type ExamStyle = "written" | "oral" | "project" | "report" | "none";
@@ -13,7 +14,7 @@ export type Review = {
   coolness: ReviewRating | null;
   sweetness: ReviewRating | null;
   learning: ReviewRating | null;
-  attendance: Attendance;
+  attendance: Attendance | null;
   examStyle: readonly ExamStyle[];
   body: string;
   source: "native" | "ptt";
@@ -172,39 +173,49 @@ export const listMine = async (token: string) => {
 
 export const normalizeReview = (
   review: Partial<Review> & Record<string, unknown>,
-): Review => ({
-  ...review,
-  id: String(review.id ?? ""),
-  moduleKey: String(review.moduleKey ?? ""),
-  instructor: String(review.instructor ?? ""),
-  semester: typeof review.semester === "string" ? review.semester : null,
-  coolness: (review.coolness ?? review.workload ?? null) as Review["coolness"],
-  sweetness: (review.sweetness ??
-    review.grading ??
-    null) as Review["sweetness"],
-  learning: (review.learning ?? null) as Review["learning"],
-  attendance: (review.attendance ?? "none") as Attendance,
-  examStyle: Array.isArray(review.examStyle)
-    ? (review.examStyle as ExamStyle[])
-    : [],
-  body: typeof review.body === "string" ? review.body : "",
-  source: review.source === "ptt" ? "ptt" : "native",
-  sourceUrl: typeof review.sourceUrl === "string" ? review.sourceUrl : null,
-  sourceAuthor:
-    typeof review.sourceAuthor === "string" ? review.sourceAuthor : null,
-  sourcePostedAt:
-    typeof review.sourcePostedAt === "string" ? review.sourcePostedAt : null,
-  createdAt:
-    typeof review.createdAt === "string"
-      ? review.createdAt
-      : "1970-01-01T00:00:00.000Z",
-  updatedAt:
-    typeof review.updatedAt === "string"
-      ? review.updatedAt
-      : "1970-01-01T00:00:00.000Z",
-  edited: review.edited === true,
-  mine: review.mine === true,
-});
+): Review => {
+  const source = review.source === "ptt" ? "ptt" : "native";
+  return {
+    ...review,
+    id: String(review.id ?? ""),
+    moduleKey: String(review.moduleKey ?? ""),
+    instructor: String(review.instructor ?? ""),
+    semester: typeof review.semester === "string" ? review.semester : null,
+    coolness: (review.coolness ??
+      review.workload ??
+      null) as Review["coolness"],
+    sweetness: (review.sweetness ??
+      review.grading ??
+      null) as Review["sweetness"],
+    learning: (review.learning ?? null) as Review["learning"],
+    attendance:
+      source === "ptt"
+        ? ((review.attendance ?? null) as Attendance | null)
+        : ((review.attendance ?? "none") as Attendance),
+    examStyle: Array.isArray(review.examStyle)
+      ? (review.examStyle as ExamStyle[])
+      : [],
+    body: typeof review.body === "string" ? review.body : "",
+    source,
+    sourceUrl: typeof review.sourceUrl === "string" ? review.sourceUrl : null,
+    sourceAuthor:
+      typeof review.sourceAuthor === "string" ? review.sourceAuthor : null,
+    sourcePostedAt:
+      source === "ptt" && typeof review.sourcePostedAt === "string"
+        ? parsePttPostedAt(review.sourcePostedAt)
+        : null,
+    createdAt:
+      typeof review.createdAt === "string"
+        ? review.createdAt
+        : "1970-01-01T00:00:00.000Z",
+    updatedAt:
+      typeof review.updatedAt === "string"
+        ? review.updatedAt
+        : "1970-01-01T00:00:00.000Z",
+    edited: review.edited === true,
+    mine: review.mine === true,
+  };
+};
 
 export const createReview = (values: ReviewInput, token: string) =>
   request<{ review: Review }>(

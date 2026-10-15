@@ -1,9 +1,25 @@
 import { describe, expect, test } from "bun:test";
-import { deriveReviewLock } from "./review-lock";
+import {
+  deriveReviewLock,
+  getCurrentReviewSemesterId,
+  isPastReviewSemester,
+} from "./review-lock";
 
 const currentSemester = "11510";
 
 describe("review soft-lock derivation", () => {
+  test("uses the semester containing the fixed date instead of the latest data row", () => {
+    expect(getCurrentReviewSemesterId(new Date("2026-10-15T12:00:00Z"))).toBe(
+      "11510",
+    );
+    expect(
+      isPastReviewSemester(
+        "11510",
+        undefined,
+        new Date("2026-10-15T12:00:00Z"),
+      ),
+    ).toBe(false);
+  });
   test("does not lock a new student without past courses", () => {
     expect(
       deriveReviewLock({

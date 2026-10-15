@@ -1,3 +1,15 @@
+import {
+  normalizePttUrl,
+  parsePttPostedAt,
+  parsePttRating,
+} from "@courseweb/shared";
+
+export {
+  normalizePttUrl,
+  parsePttPostedAt,
+  parsePttRating,
+} from "@courseweb/shared";
+
 export type PttReviewFields = {
   courseName: string | null;
   instructor: string | null;
@@ -187,7 +199,7 @@ function plainReview(
     parsed: false,
     body,
     content: body,
-    date,
+    date: parsePttPostedAt(date),
     sourceUrl,
     sourceAuthor,
     blocks: [{ kind: "text", text: body }],
@@ -214,8 +226,8 @@ export function parsePttReview(input: {
     parsed,
     body,
     content: body,
-    date: input.date?.trim() || null,
-    sourceUrl: input.sourceUrl?.trim() || null,
+    date: parsePttPostedAt(input.date ?? null),
+    sourceUrl: normalizePttUrl(input.sourceUrl ?? null),
     sourceAuthor: input.sourceAuthor?.trim() || null,
     blocks,
   };
@@ -260,34 +272,6 @@ export function normalizePttReview(input: unknown): PttReview {
     typeof record.sourceAuthor === "string" ? record.sourceAuthor : null,
   );
 }
-
-/** Convert the importer/browser's star or numeric text into the v2 1..5 scale. */
-export const parsePttRating = (
-  value: string | null,
-): 1 | 2 | 3 | 4 | 5 | null => {
-  if (!value) return null;
-  const normalized = value.trim();
-  const numeric = normalized.match(/^(\d)(?:\s*\/\s*5)?$/);
-  if (numeric) {
-    const rating = Number(numeric[1]);
-    return rating >= 1 && rating <= 5 ? (rating as 1 | 2 | 3 | 4 | 5) : null;
-  }
-  const filled = (normalized.match(/★/g) ?? []).length;
-  const empty = (normalized.match(/☆/g) ?? []).length;
-  const total = filled + empty;
-  if (total >= 3) {
-    return Math.min(5, Math.max(1, Math.round((filled / total) * 5))) as
-      | 1
-      | 2
-      | 3
-      | 4
-      | 5;
-  }
-  if (filled > 0 && empty === 0 && filled <= 5) {
-    return filled as 1 | 2 | 3 | 4 | 5;
-  }
-  return null;
-};
 
 export function getPttRenderedTextFragments(review: PttReview) {
   return review.blocks.map((block) => block.text);

@@ -4,6 +4,7 @@ import { JSDOM } from "jsdom";
 import { afterEach, describe, expect, mock, test } from "bun:test";
 import zh from "@/dictionaries/zh.json";
 import { captureGlobalState } from "@/test-utils/global-state";
+import { parsePttResponse } from "@/lib/ptt";
 
 const actualAuth = await import("react-oidc-context");
 const actualDictionary = await import("@/dictionaries/useDictionary");
@@ -51,6 +52,12 @@ const {
   getDefaultReviewInstructor,
   getDefaultReviewSemester,
   getReviewSemesterOptions,
+  getReviewMetadata,
+  getReviewSummaryState,
+  isReviewTextLocked,
+  mergeReviewRows,
+  shouldRenderAttendance,
+  shouldShowPastReviewsLink,
   shouldShowCreateReviewAction,
   sortReviews,
   toggleExamStyles,
@@ -137,18 +144,10 @@ describe("review form validation", () => {
 describe("review form defaults", () => {
   test("uses the active instructor filter before the first unreviewed instructor", () => {
     expect(
-      getDefaultReviewInstructor(
-        ["胡敏君", "陳煥宗"],
-        "陳煥宗",
-        ["胡敏君"],
-      ),
+      getDefaultReviewInstructor(["胡敏君", "陳煥宗"], "陳煥宗", ["胡敏君"]),
     ).toBe("陳煥宗");
     expect(
-      getDefaultReviewInstructor(
-        ["胡敏君", "陳煥宗"],
-        "",
-        ["胡敏君"],
-      ),
+      getDefaultReviewInstructor(["胡敏君", "陳煥宗"], "", ["胡敏君"]),
     ).toBe("陳煥宗");
   });
 
@@ -198,6 +197,174 @@ describe("review ordering", () => {
       reviews[0],
       reviews[1],
     ]);
+  });
+
+  test("de-duplicates a live PTT copy against an imported row after URL normalization", () => {
+    const rows = mergeReviewRows(
+      [
+        {
+          id: "imported",
+          moduleKey: "CS:1355",
+          instructor: "林教授",
+          semester: "11410",
+          coolness: null,
+          sweetness: null,
+          learning: null,
+          attendance: "none",
+          examStyle: [],
+          body: "imported",
+          source: "ptt",
+          sourceUrl:
+            "https://www.ptt.cc/bbs/NTHU_Course/M.1656944090.A.123.html",
+          sourceAuthor: "tester",
+          sourcePostedAt: "2022-07-04T14:14:50.000Z",
+          createdAt: "2022-07-04T14:14:50.000Z",
+          updatedAt: "2022-07-04T14:14:50.000Z",
+          edited: false,
+          mine: false,
+        },
+      ],
+      [
+        parsePttResponse({
+          content: "課名: 測試課程\n老師: 測試教師",
+          date: "Mon Jul  4 22:14:50 2022",
+          sourceUrl: "/bbs/NTHU_Course/M.1656944090.A.123.html",
+          sourceAuthor: "tester",
+        }),
+      ],
+      "CS:1355",
+      "林教授",
+    );
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.id).toBe("imported");
+  });
+
+  test("sorts merged rows by real source or creation timestamps", () => {
+    const rows = mergeReviewRows(
+      [
+        {
+          ...review("native", "林教授", "2024-01-01T00:00:00.000Z"),
+          source: "native" as const,
+        },
+      ],
+      [
+        parsePttResponse({
+          content: "課名: 測試課程\n老師: 測試教師",
+          date: "Mon Jul  4 22:14:50 2022",
+          sourceUrl: "/bbs/NTHU_Course/M.1656944090.A.124.html",
+        }),
+      ],
+      "CS:1355",
+    );
+
+    expect(rows.map((row) => row.source)).toEqual(["native", "ptt"]);
+  });
+
+  test("sorts ISO, legacy, and garbage dates numerically with garbage last", () => {
+    const rows = mergeReviewRows(
+      [
+        {
+          ...review("garbage", "林教授", "2026-01-01T00:00:00.000Z"),
+          source: "native" as const,
+          sourcePostedAt: "not a date",
+        },
+        {
+          ...review("legacy", "林教授", "2020-01-01T00:00:00.000Z"),
+          source: "native" as const,
+          sourcePostedAt: "Mon Jul  4 22:14:50 2022",
+        },
+        {
+          ...review("iso", "林教授", "2024-01-01T00:00:00.000Z"),
+          source: "native" as const,
+          sourcePostedAt: "2026-01-01T00:00:00.000Z",
+        },
+      ],
+      [],
+      "CS:1355",
+    );
+
+    expect(rows.map((row) => row.id)).toEqual(["iso", "legacy", "garbage"]);
+  });
+
+  test("keeps unknown live PTT attendance null", () => {
+    const [row] = mergeReviewRows(
+      [],
+      [
+        parsePttResponse({
+          content: "課名: 測試課程\n老師: 測試教師",
+          date: "2026-01-02T00:00:00.000Z",
+        }),
+      ],
+      "CS:1355",
+    );
+
+    expect(row?.attendance).toBeNull();
+    expect(shouldRenderAttendance(row!)).toBe(false);
+  });
+
+  test("does not retain an unparseable imported PTT source date", async () => {
+    const { normalizeReview } = await import("@/lib/reviews");
+    expect(
+      normalizeReview({
+        source: "ptt",
+        sourcePostedAt: "garbage",
+      }).sourcePostedAt,
+    ).toBeNull();
+  });
+
+  test("shows only the post date as PTT metadata", () => {
+    expect(
+      getReviewMetadata(
+        {
+          source: "ptt",
+          sourcePostedAt: "2022-07-04T14:14:50.000Z",
+          updatedAt: "2026-10-15T00:00:00.000Z",
+          edited: false,
+          semester: null,
+          instructor: "",
+        } as never,
+        false,
+        "zh",
+      ),
+    ).toEqual(["2022-07-04"]);
+  });
+});
+
+describe("review render guards and summary", () => {
+  test("hides the past-review header CTA while the lock card is shown", () => {
+    expect(
+      shouldShowPastReviewsLink({
+        hasPastCourses: true,
+        locked: true,
+        timetableReady: true,
+        reviewsReady: true,
+      }),
+    ).toBe(false);
+  });
+
+  test.each([
+    [false, false, true],
+    [true, false, true],
+    [true, true, false],
+  ])(
+    "keeps review text locked until timetable and mine are ready",
+    (timetableReady, reviewsReady, expected) => {
+      expect(isReviewTextLocked(false, timetableReady, reviewsReady)).toBe(
+        expected,
+      );
+    },
+  );
+
+  test("uses the fairness note when every average is unavailable", () => {
+    expect(
+      getReviewSummaryState({
+        count: 2,
+        coolness: null,
+        sweetness: null,
+        learning: null,
+      }),
+    ).toBe("insufficient");
   });
 });
 
