@@ -8,7 +8,7 @@ export const COURSE_DETAIL_SECTION_REGISTRY = [
   { id: "syllabus-brief" },
   { id: "syllabus-description" },
   { id: "prerequisites" },
-  { id: "ptt-reviews" },
+  { id: "native-reviews" },
   { id: "current-scores" },
   { id: "historical-grade-statistics" },
   { id: "same-code-courses" },

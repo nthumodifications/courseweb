@@ -5,6 +5,7 @@ import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { env } from "hono/adapter";
 import { parseHTML } from "linkedom/worker";
+import { parsePttPostedAt } from "./ptt";
 
 const getContribDates = async (c: Context, courseId: string) => {
   const { data, error } = await supabase_server(c)
@@ -198,9 +199,19 @@ const app = new Hono()
             "",
           );
 
-          const date = post!.querySelectorAll(".article-meta-value")[3]
-            ?.textContent;
-          const review = { content: contentWithoutExcessiveText, date };
+          const metaValues = root.querySelectorAll(".article-meta-value");
+          const date = metaValues[3]?.textContent?.trim() ?? null;
+          const author = metaValues[0]?.textContent?.trim() ?? null;
+          const href = link!.getAttribute("href");
+          const sourceUrl = href
+            ? new URL(href, "https://www.ptt.cc").toString()
+            : null;
+          const review = {
+            content: contentWithoutExcessiveText,
+            date: parsePttPostedAt(date),
+            sourceUrl,
+            sourceAuthor: author?.split(/\s+/u)[0] ?? null,
+          };
           reviews.push(review);
         } catch (error) {
           console.error(error);

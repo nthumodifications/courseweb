@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   KeyRound,
   Megaphone,
+  MessageSquareWarning,
   ScrollText,
   ShieldAlert,
   UserPlus,
@@ -27,6 +28,12 @@ const NAV = [
   { to: "users", label: "Users", icon: Users, end: false },
   { to: "announcements", label: "Announcements", icon: Megaphone, end: false },
   { to: "recruitment", label: "Recruitment", icon: UserPlus, end: false },
+  {
+    to: "reviews",
+    label: "Course Reviews",
+    icon: MessageSquareWarning,
+    end: false,
+  },
   { to: "clients", label: "OAuth Clients", icon: KeyRound, superuser: true },
   { to: "audit", label: "Audit Log", icon: ScrollText, end: false },
 ] as const;
