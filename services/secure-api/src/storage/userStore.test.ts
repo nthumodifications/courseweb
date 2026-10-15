@@ -47,6 +47,7 @@ const createFirestoreFake = () => {
 
 const createPrismaFake = () => {
   const records = new Map<string, any>();
+  const rawCalls: Array<{ method: string; query: any }> = [];
   const id = (userId: string, key: string) => `${userId}\0${key}`;
   const userStorage = {
     findUnique: async ({ where }: any) =>
@@ -67,15 +68,18 @@ const createPrismaFake = () => {
     $transaction: async (callback: (transaction: any) => unknown) =>
       callback({
         userStorage,
-        $executeRaw: async () => undefined,
+        $executeRaw: async (query: any) => {
+          rawCalls.push({ method: "$executeRaw", query });
+        },
         $queryRaw: async (query: any) => {
+          rawCalls.push({ method: "$queryRaw", query });
           const values = query.values as string[];
           const record = records.get(id(values[0]!, values[1]!));
           return record ? [record] : [];
         },
       }),
   };
-  return { db, records };
+  return { db, records, rawCalls };
 };
 
 const makeRecord = (value: unknown, updatedAt: number, deviceId = "device-a") =>
@@ -162,6 +166,32 @@ describe("user storage implementations", () => {
       });
     });
   }
+
+  test("Postgres put uses only the NUL-free advisory lock raw SQL", async () => {
+    const postgres = createPrismaFake();
+    const store = new PostgresUserStore(postgres.db);
+
+    await store.put("user-1", "courses", makeRecord({ ok: true }, 10), {
+      merge: false,
+    });
+
+    expect(postgres.rawCalls).toHaveLength(1);
+    expect(
+      postgres.rawCalls.some(({ query }) =>
+        String(query.sql ?? "").includes("user_storage"),
+      ),
+    ).toBe(false);
+    expect(
+      postgres.rawCalls.flatMap(({ query }) => query.values as unknown[]),
+    ).not.toContainEqual(expect.stringContaining("\u0000"));
+    const lockCall = postgres.rawCalls.find(
+      ({ method }) => method === "$executeRaw",
+    );
+    expect(lockCall?.query.sql).toBe(
+      "SELECT pg_advisory_xact_lock(hashtext(?), hashtext(?))",
+    );
+    expect(lockCall?.query.values).toEqual(["user-1", "courses"]);
+  });
 });
 
 describe("user storage mode switch", () => {
