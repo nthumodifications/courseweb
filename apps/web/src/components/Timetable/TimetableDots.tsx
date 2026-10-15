@@ -61,7 +61,7 @@ const TimetableDots: FC<TimetableDotsProps> = ({
           {usedDays.map((d) => (
             <div
               key={d}
-              className="w-16 text-center text-[10px] font-semibold text-muted-foreground uppercase tracking-wide pb-1"
+              className="w-16 text-center text-[10px] font-medium text-muted-foreground tracking-wide pb-1"
             >
               {contentLanguage(language) === "zh"
                 ? DAY_LABELS_ZH[d]

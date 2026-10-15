@@ -259,7 +259,7 @@ export const CalendarMonthContainer = ({
             <button
               type="button"
               className={cn(
-                "border-0 bg-transparent text-sm font-semibold cursor-pointer p-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                "border-0 bg-transparent text-sm font-medium cursor-pointer p-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                 isTaipeiToday(day)
                   ? "w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center"
                   : "",
@@ -294,7 +294,7 @@ export const CalendarMonthContainer = ({
           {displayMonth.slice(0, 7).map((day, index) => (
             <div
               key={index}
-              className="text-muted-foreground text-sm font-semibold text-center"
+              className="text-muted-foreground text-sm font-medium text-center"
             >
               {formatTaipei(day, "EEE", { locale: getLocale(language) })}
             </div>

@@ -46,7 +46,7 @@ export default function AuthCallback() {
         <DialogTitle className="sr-only">{dict.auth.logging_in}</DialogTitle>
         <div className="flex flex-col items-center justify-center p-6 space-y-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <h2 className="text-xl font-semibold tracking-tight">
+          <h2 className="text-xl font-bold">
             {dict.auth.logging_in}
           </h2>
           <p className="text-sm text-muted-foreground">

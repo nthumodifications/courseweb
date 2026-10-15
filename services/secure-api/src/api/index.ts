@@ -1,12 +1,15 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 
-import kvHandler from "./kv_storage";
 import replicationHandler from "./replication";
 import apiKeysHandler from "./apikeys";
-import calendarHandler from "./calendar";
 import courseDatesHandler from "./course-dates";
 import adminHandler from "./admin";
+import { createKvStorageApp } from "./kv_storage";
+import { createCalendarApp } from "./calendar";
+import { resolveUserStorageMode } from "../storage/userStore";
+
+const userStorageMode = resolveUserStorageMode();
 
 /**
  * Origins allowed to call the authenticated API with credentials.
@@ -30,10 +33,10 @@ const app = new Hono()
       credentials: true,
     }),
   )
-  .route("/kv", kvHandler)
+  .route("/kv", createKvStorageApp({ mode: userStorageMode }))
   .route("/replication", replicationHandler)
   .route("/apikeys", apiKeysHandler)
-  .route("/calendar", calendarHandler)
+  .route("/calendar", createCalendarApp(undefined, userStorageMode))
   .route("/course-dates", courseDatesHandler)
   .route("/admin", adminHandler);
 

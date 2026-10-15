@@ -129,7 +129,7 @@ function SavedTimetableItem({
             )}
           </div>
           {!share && (
-            <span className="text-xs text-muted-foreground italic">
+            <span className="text-xs text-muted-foreground">
               {dict.calendar.others.owner_removed}
             </span>
           )}

@@ -26,11 +26,11 @@ const ComponentSkeleton = () => {
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="flex flex-col">
-          <Skeleton className="text-lg font-semibold w-[150px] h-[24px]" />
+          <Skeleton className="text-lg font-medium w-[150px] h-[24px]" />
           <Skeleton className="p-2 bg-card rounded-md w-[100px] h-[100px]" />
         </div>
         <div className="flex flex-col space-y-2">
-          <Skeleton className="text-lg font-semibold w-[150px] h-[24px]" />
+          <Skeleton className="text-lg font-medium w-[150px] h-[24px]" />
           <Button variant="outline" className="w-full justify-start" disabled>
             <Skeleton className="w-[200px] h-[40px]" />
           </Button>
@@ -134,7 +134,7 @@ const ShareSyncTimetableDialog = ({
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="flex flex-col">
-                <h3 className="text-lg font-semibold">
+                <h3 className="text-lg font-bold">
                   {dict.dialogs.ShareSyncTimetableDialog["category:qr"]}
                 </h3>
                 <div className="p-2 bg-card  rounded-md w-min">
@@ -142,7 +142,7 @@ const ShareSyncTimetableDialog = ({
                 </div>
               </div>
               <div className="flex flex-col space-y-2">
-                <h3 className="text-lg font-semibold">
+                <h3 className="text-lg font-bold">
                   {dict.dialogs.ShareSyncTimetableDialog["category:links"]}
                 </h3>
                 <Button

@@ -40,6 +40,19 @@ model User {
   adminActions        AdminAuditLog[]
 }
 
+model UserStorage {
+  userId       String
+  key          String
+  value        Json
+  updatedAt    Float?
+  lastModified Float
+  deviceId     String?
+
+  @@id([userId, key])
+  @@index([userId])
+  @@map("user_storage")
+}
+
 // Every write an admin makes through the admin center lands here. Role changes
 // and bans are the kind of action that has to be attributable after the fact,
 // and the acting admin cannot edit or delete their own trail through the API.

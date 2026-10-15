@@ -81,7 +81,7 @@ export function CityBusLineBadge({
       title={nameEn}
       style={{ backgroundColor: colour }}
       className={cn(
-        "grid h-7 w-7 shrink-0 place-items-center rounded-full font-bold leading-none tracking-tight text-white",
+        "grid h-7 w-7 shrink-0 place-items-center rounded-full font-bold leading-none text-white",
         MARK_SIZE[Math.min(mark.length, 4)],
         className,
       )}

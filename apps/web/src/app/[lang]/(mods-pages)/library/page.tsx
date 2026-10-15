@@ -221,7 +221,7 @@ const LibraryPage = () => {
         <div className="flex flex-wrap items-center justify-between gap-2 py-4 border-b border-border">
           <div className="flex items-center gap-2">
             <h1 className="text-base font-bold text-foreground">{title}</h1>
-            <span className="rounded bg-primary/10 px-1.5 py-0.5 text-xs font-semibold text-primary">
+            <span className="rounded bg-primary/10 px-1.5 py-0.5 text-xs font-medium text-primary">
               {dict.applist.beta}
             </span>
           </div>

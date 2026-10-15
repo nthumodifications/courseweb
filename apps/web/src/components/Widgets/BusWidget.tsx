@@ -262,7 +262,7 @@ const BusWidget: FC<BusWidgetProps> = ({
                     </span>
                   )}
                   <span className="flex flex-col items-end">
-                    <span className="text-xs font-mono font-semibold text-primary">
+                    <span className="text-xs font-mono font-medium text-primary">
                       {dep.time}
                     </span>
                     {dep.countdown && (

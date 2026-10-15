@@ -14,6 +14,11 @@ import { getFirebaseAdmin } from "../config/firebase_admin";
 import { sha256hash } from "../utils/sha256";
 import prisma from "../client";
 import { env } from "hono/adapter";
+import {
+  createUserStorageStore,
+  resolveUserStorageMode,
+  type UserStorageMode,
+} from "../storage/userStore";
 
 const TIMETABLE_FEED_NAME = "__timetable_feed__";
 const DEFAULT_TIMETABLE_API_URL = "https://api.nthumods.com";
@@ -328,18 +333,15 @@ const normalizeStoredCourses = (value: unknown): StoredCourses => {
 const readStoredCourses = async (
   c: any,
   userId: string,
+  mode: UserStorageMode,
 ): Promise<StoredCourses> => {
   try {
-    const { adminFirestore } = getFirebaseAdmin(c);
-    const snapshot = await adminFirestore
-      .collection("users")
-      .doc(userId)
-      .collection("storage")
-      .doc("courses")
-      .get();
-    if (!snapshot.exists) return {};
-    const data = snapshot.data();
-    return normalizeStoredCourses(data?.["value"] ?? data);
+    const store = createUserStorageStore({
+      mode,
+      getFirestore: () => getFirebaseAdmin(c).adminFirestore,
+    });
+    const data = await store.get(userId, "courses");
+    return normalizeStoredCourses(data?.value ?? data);
   } catch (error) {
     console.error("Error reading timetable storage:", error);
     return {};
@@ -773,6 +775,7 @@ const buildSharedCalendar = async (
   includeFullDetails: boolean,
   isTimetableFeed: boolean,
   includes: Set<CalendarFeedInclude>,
+  mode: UserStorageMode,
 ) => {
   const baseCalendar = await createICalendar(
     userId,
@@ -785,7 +788,10 @@ const buildSharedCalendar = async (
   );
   const timetableCalendars =
     isTimetableFeed && includes.has("classes")
-      ? await fetchTimetableCalendars(c, await readStoredCourses(c, userId))
+      ? await fetchTimetableCalendars(
+          c,
+          await readStoredCourses(c, userId, mode),
+        )
       : [];
   const academicCalendars: string[] = [];
   if (includes.has("academic")) {
@@ -801,6 +807,7 @@ const buildSharedCalendar = async (
 
 export const createCalendarApp = (
   authFactory: (scopes: string[]) => MiddlewareHandler = lazyRequireAuth,
+  mode: UserStorageMode = resolveUserStorageMode(),
 ) => {
   const auth = (scopes: string[]) => authFactory(scopes);
   return (
@@ -973,6 +980,7 @@ export const createCalendarApp = (
               includeFullDetails,
               isTimetableFeed,
               includes,
+              mode,
             );
             const includeKey = CALENDAR_FEED_INCLUDES.filter((include) =>
               includes.has(include),
@@ -1058,7 +1066,3 @@ export const createCalendarApp = (
       })
   );
 };
-
-const app = createCalendarApp();
-
-export default app;
