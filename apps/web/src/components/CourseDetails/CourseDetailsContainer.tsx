@@ -79,6 +79,16 @@ import {
   CourseDetailSection,
   type CourseDetailSectionId,
 } from "./courseDetailSections";
+import ReviewsSection from "@/components/Reviews/ReviewsSection";
+import { normaliseInstructorName } from "@/lib/instructors";
+
+const safeCreateModuleKey = (department: string, course: string) => {
+  try {
+    return createModuleKey(department, course);
+  } catch {
+    return "";
+  }
+};
 
 const PDFViewerDynamic = lazyWithRetry(
   () => import("@/components/CourseDetails/PDFViewer"),
@@ -369,12 +379,12 @@ const CourseDetailContainer = ({
 
   // Which terms this course runs in, across every semester on record.
   const moduleKey = course
-    ? createModuleKey(course.department, course.course)
+    ? safeCreateModuleKey(course.department, course.course)
     : "";
   const { data: moduleHistory } = useQuery({
     queryKey: ["module-history", moduleKey],
     queryFn: () => getModuleHistory(moduleKey),
-    enabled: !!course,
+    enabled: Boolean(moduleKey),
     staleTime: 7 * 24 * 60 * 60 * 1000,
     retry: false,
   });
@@ -979,6 +989,30 @@ const CourseDetailContainer = ({
                   )
                 )}
               </CourseDetailSection>
+              {moduleKey && (
+                <CourseDetailSection id="native-reviews">
+                  <ReviewsSection
+                    lang={lang}
+                    moduleKey={moduleKey}
+                    instructors={(course.teacher_zh ?? []).map(
+                      normaliseInstructorName,
+                    )}
+                    semesterOptions={
+                      [course, ...otherClasses]
+                        .filter((offering) =>
+                          (offering.teacher_zh ?? []).some((teacher) =>
+                            course.teacher_zh?.some(
+                              (courseTeacher) =>
+                                normaliseInstructorName(courseTeacher) ===
+                                normaliseInstructorName(teacher),
+                            ),
+                          ),
+                        )
+                        .map((offering) => offering.semester) ?? []
+                    }
+                  />
+                </CourseDetailSection>
+              )}
               <CourseDetailSection id="current-scores">
                 {course.course_scores && (
                   <div className="flex flex-col gap-2">
