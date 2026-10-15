@@ -147,6 +147,34 @@ export type RecruitmentApplication = {
   updated_at: string;
 };
 
+export type ReviewModerationStatus = "reported" | "hidden" | "removed" | "all";
+export type ReviewModerationAction = "restore" | "hide" | "remove";
+export type AdminCourseReview = {
+  id: string;
+  moduleKey: string;
+  instructor: string;
+  semester: string;
+  workload: number;
+  grading: number;
+  learning: number;
+  attendance: "none" | "sometimes" | "every_class";
+  examStyle: ("written" | "oral" | "project" | "report" | "none")[];
+  body: string;
+  createdAt: string;
+  updatedAt: string;
+  edited: boolean;
+  mine: boolean;
+  status: "visible" | "hidden" | "removed";
+  authorId: string;
+  reports: {
+    id: string;
+    reason: "personal_attack" | "exam_leak" | "spam" | "off_topic" | "other";
+    note: string | null;
+    createdAt: string;
+    resolvedAt: string | null;
+  }[];
+};
+
 export type AdminAuditEntry = {
   id: string;
   actorId: string;
@@ -172,6 +200,40 @@ export const useAdminToken = () => {
 const authHeaders = (token: string) => ({
   Authorization: `Bearer ${token}`,
 });
+
+// The checked-in api-types package predates the review routes. Keep this
+// narrow local shape until that generated package is refreshed, without
+// weakening the types for the rest of the admin client.
+type ReviewsClient = {
+  $get: (
+    input: { query: { status: ReviewModerationStatus } },
+    options: { headers: ReturnType<typeof authHeaders> },
+  ) => Promise<unknown>;
+  ":id": {
+    moderate: {
+      $post: (
+        input: {
+          param: { id: string };
+          json: { action: ReviewModerationAction; reason: string };
+        },
+        options: { headers: ReturnType<typeof authHeaders> },
+      ) => Promise<unknown>;
+    };
+  };
+  reports: {
+    ":reportId": {
+      dismiss: {
+        $post: (
+          input: { param: { reportId: string } },
+          options: { headers: ReturnType<typeof authHeaders> },
+        ) => Promise<unknown>;
+      };
+    };
+  };
+};
+
+const reviewsClient = () =>
+  (authClient.api.admin as unknown as { reviews: ReviewsClient }).reviews;
 
 /**
  * Turn a non-2xx admin response into an Error carrying the server's own
@@ -206,6 +268,8 @@ export const adminKeys = {
   oauthClients: ["admin", "clients"] as const,
   audit: (params: unknown) => ["admin", "audit", params] as const,
   recruitment: (params: unknown) => ["admin", "recruitment", params] as const,
+  reviews: (status: ReviewModerationStatus) =>
+    ["admin", "reviews", status] as const,
 };
 
 /**
@@ -719,6 +783,64 @@ export const useSetRecruitmentStatus = () => {
         { headers: authHeaders(requireToken(token)) },
       );
       return unwrap<RecruitmentApplication>(response as unknown as Response);
+    },
+    onSuccess: invalidate,
+  });
+};
+
+export const useAdminReviews = (status: ReviewModerationStatus) => {
+  const token = useAdminToken();
+  return useQuery<{ reviews: AdminCourseReview[] }>({
+    queryKey: adminKeys.reviews(status),
+    enabled: Boolean(token),
+    queryFn: async () => {
+      const response = await reviewsClient().$get(
+        { query: { status } },
+        { headers: authHeaders(requireToken(token)) },
+      );
+      return unwrap<{ reviews: AdminCourseReview[] }>(
+        response as unknown as Response,
+      );
+    },
+  });
+};
+
+export const useModerateReview = () => {
+  const token = useAdminToken();
+  const invalidate = useInvalidateAdmin();
+
+  return useMutation({
+    mutationFn: async (values: {
+      id: string;
+      action: ReviewModerationAction;
+      reason: string;
+    }) => {
+      const response = await reviewsClient()[":id"].moderate.$post(
+        {
+          param: { id: values.id },
+          json: { action: values.action, reason: values.reason },
+        },
+        { headers: authHeaders(requireToken(token)) },
+      );
+      return unwrap<{ review: AdminCourseReview }>(
+        response as unknown as Response,
+      );
+    },
+    onSuccess: invalidate,
+  });
+};
+
+export const useDismissReviewReport = () => {
+  const token = useAdminToken();
+  const invalidate = useInvalidateAdmin();
+
+  return useMutation({
+    mutationFn: async (reportId: string) => {
+      const response = await reviewsClient().reports[":reportId"].dismiss.$post(
+        { param: { reportId } },
+        { headers: authHeaders(requireToken(token)) },
+      );
+      return unwrap<{ ok: true }>(response as unknown as Response);
     },
     onSuccess: invalidate,
   });

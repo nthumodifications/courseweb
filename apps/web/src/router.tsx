@@ -159,6 +159,9 @@ const AdminAuditPage = lazyWithRetry(
 const AdminRecruitmentPage = lazyWithRetry(
   () => import("@/app/[lang]/admin/recruitment/page"),
 );
+const AdminReviewsPage = lazyWithRetry(
+  () => import("@/app/[lang]/admin/reviews/page"),
+);
 
 // Separate layout page
 const WaitlistPage = lazyWithRetry(() => import("@/app/[lang]/waitlist/page"));
@@ -628,6 +631,7 @@ export const appRoutes = [
               { path: "users/:userId", element: <AdminUserDetailPage /> },
               { path: "announcements", element: <AdminAnnouncementsPage /> },
               { path: "recruitment", element: <AdminRecruitmentPage /> },
+              { path: "reviews", element: <AdminReviewsPage /> },
               { path: "clients", element: <AdminClientsPage /> },
               { path: "audit", element: <AdminAuditPage /> },
             ],

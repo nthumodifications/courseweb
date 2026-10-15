@@ -18,26 +18,29 @@ enum AdminRole {
 }
 
 model User {
-  id                  String               @id @default(uuid())
-  userId              String               @unique
-  name                String
-  nameEn              String               @map("name_en")
-  email               String
-  inschool            Boolean
-  cid                 String?
-  lmsid               String?
-  role                AdminRole            @default(USER)
-  banned              Boolean              @default(false)
-  bannedReason        String?
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
-  authSessions        AuthSessions[]
-  tokens              Token[]
-  authCodes           AuthCode[]
-  apiKeys             ApiKey[]
-  calendarShareTokens CalendarShareToken[]
-  clientConsents      ClientConsent[]
-  adminActions        AdminAuditLog[]
+  id                    String               @id @default(uuid())
+  userId                String               @unique
+  name                  String
+  nameEn                String               @map("name_en")
+  email                 String
+  inschool              Boolean
+  cid                   String?
+  lmsid                 String?
+  role                  AdminRole            @default(USER)
+  banned                Boolean              @default(false)
+  bannedReason          String?
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+  authSessions          AuthSessions[]
+  tokens                Token[]
+  authCodes             AuthCode[]
+  apiKeys               ApiKey[]
+  calendarShareTokens   CalendarShareToken[]
+  clientConsents        ClientConsent[]
+  adminActions          AdminAuditLog[]
+  courseReviews         CourseReview[]
+  reviewReports         CourseReviewReport[] @relation("CourseReviewReportReporter")
+  resolvedReviewReports CourseReviewReport[] @relation("CourseReviewReportResolver")
 }
 
 model UserStorage {
@@ -195,4 +198,59 @@ model CalendarShareToken {
   revokedAt          DateTime?
   createdAt          DateTime  @default(now())
   lastUsedAt         DateTime?
+}
+
+enum CourseReviewStatus {
+  VISIBLE
+  HIDDEN
+  REMOVED
+}
+
+enum CourseReviewReportReason {
+  PERSONAL_ATTACK
+  EXAM_LEAK
+  SPAM
+  OFF_TOPIC
+  OTHER
+}
+
+model CourseReview {
+  id         String               @id @default(uuid())
+  userId     String
+  moduleKey  String
+  instructor String
+  semester   String
+  workload   Int
+  grading    Int
+  learning   Int
+  attendance String
+  examStyle  String[]
+  body       String
+  status     CourseReviewStatus   @default(VISIBLE)
+  createdAt  DateTime             @default(now())
+  updatedAt  DateTime             @updatedAt
+  user       User                 @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  reports    CourseReviewReport[]
+
+  @@unique([userId, moduleKey, instructor])
+  @@index([moduleKey])
+  @@index([instructor])
+}
+
+model CourseReviewReport {
+  id           String                   @id @default(uuid())
+  reviewId     String
+  reason       CourseReviewReportReason
+  note         String?
+  reporterId   String
+  createdAt    DateTime                 @default(now())
+  resolvedAt   DateTime?
+  resolvedById String?
+  review       CourseReview             @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  reporter     User                     @relation("CourseReviewReportReporter", fields: [reporterId], references: [userId], onDelete: Cascade)
+  resolvedBy   User?                    @relation("CourseReviewReportResolver", fields: [resolvedById], references: [userId], onDelete: SetNull)
+
+  @@unique([reviewId, reporterId])
+  @@index([reviewId])
+  @@index([resolvedAt])
 }
