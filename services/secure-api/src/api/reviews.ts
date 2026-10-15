@@ -5,6 +5,7 @@ import type { MiddlewareHandler } from "hono";
 import { z } from "zod";
 import type {
   CourseReviewReportReason,
+  CourseReviewSource,
   CourseReviewStatus,
   User,
 } from "@prisma/client";
@@ -57,12 +58,17 @@ const reviewInput = z.object({
   moduleKey: moduleKeySchema,
   instructor: instructorSchema,
   semester: semesterSchema,
-  workload: ratingSchema,
-  grading: ratingSchema,
+  coolness: ratingSchema,
+  sweetness: ratingSchema,
   learning: ratingSchema,
   attendance: attendanceSchema,
   examStyle: examStyleSchema,
-  body: z.string().trim().min(30).max(3000),
+  body: z
+    .string()
+    .trim()
+    .refine(
+      (value) => value === "" || (value.length >= 30 && value.length <= 3000),
+    ),
 });
 
 const patchInput = reviewInput
@@ -101,13 +107,17 @@ export const toPublicReview = (
     id: string;
     moduleKey: string;
     instructor: string;
-    semester: string;
-    workload: number;
-    grading: number;
-    learning: number;
-    attendance: string;
+    semester: string | null;
+    coolness: number | null;
+    sweetness: number | null;
+    learning: number | null;
+    attendance: string | null;
     examStyle: string[];
     body: string;
+    source: CourseReviewSource | string;
+    sourceUrl: string | null;
+    sourceAuthor: string | null;
+    sourcePostedAt: Date | null;
     createdAt: Date;
     updatedAt: Date;
   },
@@ -117,21 +127,25 @@ export const toPublicReview = (
   moduleKey: review.moduleKey,
   instructor: review.instructor,
   semester: review.semester,
-  workload: review.workload,
-  grading: review.grading,
+  coolness: review.coolness,
+  sweetness: review.sweetness,
   learning: review.learning,
   attendance: review.attendance,
   examStyle: review.examStyle,
   body: review.body,
+  source: review.source.toLowerCase(),
+  sourceUrl: review.sourceUrl,
+  sourceAuthor: review.sourceAuthor,
+  sourcePostedAt: review.sourcePostedAt ? iso(review.sourcePostedAt) : null,
   createdAt: iso(review.createdAt),
   updatedAt: iso(review.updatedAt),
   edited: edited(review.createdAt, review.updatedAt),
-  mine,
+  mine: review.source === "NATIVE" && mine,
 });
 
 const toMineReview = (
   review: Parameters<typeof toPublicReview>[0] & {
-    userId: string;
+    userId: string | null;
     status: string;
   },
 ) => ({
@@ -150,20 +164,41 @@ const isUniqueViolation = (error: unknown) =>
 
 type LockedReview = {
   id: string;
-  userId: string;
+  userId: string | null;
   moduleKey: string;
   instructor: string;
-  semester: string;
-  workload: number;
-  grading: number;
-  learning: number;
-  attendance: string;
+  semester: string | null;
+  coolness: number | null;
+  sweetness: number | null;
+  learning: number | null;
+  attendance: string | null;
   examStyle: string[];
   body: string;
+  source: CourseReviewSource;
+  sourceUrl: string | null;
+  sourceAuthor: string | null;
+  sourcePostedAt: Date | null;
   status: CourseReviewStatus;
   createdAt: Date;
   updatedAt: Date;
 };
+
+export const reviewSortTimestamp = (review: {
+  sourcePostedAt: Date | null;
+  createdAt: Date;
+}) => (review.sourcePostedAt ?? review.createdAt).getTime();
+
+export const sortReviewsNewestFirst = <
+  T extends {
+    sourcePostedAt: Date | null;
+    createdAt: Date;
+  },
+>(
+  reviews: T[],
+) =>
+  reviews.sort(
+    (left, right) => reviewSortTimestamp(right) - reviewSortTimestamp(left),
+  );
 
 const rejectBanned = (c: {
   get: (key: "user") => { banned: boolean };
@@ -219,24 +254,37 @@ export const createReviewsApp = ({
         prisma.courseReview.findMany({
           where,
           orderBy: { createdAt: "desc" },
-          take: 100,
         }),
         prisma.courseReview.count({ where }),
         prisma.courseReview.aggregate({
           where,
-          _avg: { workload: true, grading: true, learning: true },
+          _avg: { coolness: true, sweetness: true, learning: true },
+          _count: { coolness: true, sweetness: true, learning: true },
         }),
       ]);
 
+      sortReviewsNewestFirst(reviews);
+
       return c.json({
-        reviews: reviews.map((review) =>
-          toPublicReview(review, user?.userId === review.userId),
-        ),
+        reviews: reviews
+          .slice(0, 100)
+          .map((review) =>
+            toPublicReview(review, user?.userId === review.userId),
+          ),
         summary: {
           count,
-          workload: count < 3 ? null : roundAverage(averages._avg.workload),
-          grading: count < 3 ? null : roundAverage(averages._avg.grading),
-          learning: count < 3 ? null : roundAverage(averages._avg.learning),
+          coolness:
+            averages._count.coolness < 3
+              ? null
+              : roundAverage(averages._avg.coolness),
+          sweetness:
+            averages._count.sweetness < 3
+              ? null
+              : roundAverage(averages._avg.sweetness),
+          learning:
+            averages._count.learning < 3
+              ? null
+              : roundAverage(averages._avg.learning),
         },
       });
     })
@@ -324,8 +372,9 @@ export const createReviewsApp = ({
         const result = await prisma.$transaction(async (tx) => {
           const lockedReviews = await tx.$queryRaw<LockedReview[]>`
             SELECT "id", "userId", "moduleKey", "instructor", "semester",
-                   "workload", "grading", "learning", "attendance", "examStyle",
-                   "body", "status", "createdAt", "updatedAt"
+                   "coolness", "sweetness", "learning", "attendance", "examStyle",
+                   "body", "source", "sourceUrl", "sourceAuthor", "sourcePostedAt",
+                   "status", "createdAt", "updatedAt"
             FROM "CourseReview"
             WHERE "id" = ${existing.id}
             FOR UPDATE
@@ -333,8 +382,7 @@ export const createReviewsApp = ({
           const review = lockedReviews[0];
           if (!review || review.userId !== user.userId)
             return { kind: "not_found" as const };
-          if (review.status === "REMOVED")
-            return { kind: "removed" as const };
+          if (review.status === "REMOVED") return { kind: "removed" as const };
 
           return {
             kind: "updated" as const,
@@ -346,8 +394,7 @@ export const createReviewsApp = ({
         });
         if (result.kind === "not_found")
           return c.json({ error: "not_found" }, 404);
-        if (result.kind === "removed")
-          return c.json({ error: "removed" }, 409);
+        if (result.kind === "removed") return c.json({ error: "removed" }, 409);
         return c.json({ review: toPublicReview(result.review, true) });
       },
     )
@@ -376,8 +423,9 @@ export const createReviewsApp = ({
 
             const lockedReviews = await tx.$queryRaw<LockedReview[]>`
               SELECT "id", "userId", "moduleKey", "instructor", "semester",
-                     "workload", "grading", "learning", "attendance", "examStyle",
-                     "body", "status", "createdAt", "updatedAt"
+                     "coolness", "sweetness", "learning", "attendance", "examStyle",
+                     "body", "source", "sourceUrl", "sourceAuthor", "sourcePostedAt",
+                     "status", "createdAt", "updatedAt"
               FROM "CourseReview"
               WHERE "id" = ${reviewId}
               FOR UPDATE

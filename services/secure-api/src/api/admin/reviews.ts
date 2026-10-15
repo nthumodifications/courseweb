@@ -3,7 +3,7 @@ import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import prisma from "../../client";
 import { recordAdminAction } from "../../utils/adminAudit";
-import { toPublicReview } from "../reviews";
+import { sortReviewsNewestFirst, toPublicReview } from "../reviews";
 import type { AdminEnv } from "./env";
 
 const statusQuery = z.object({
@@ -19,16 +19,20 @@ const adminReviewStatus = (status: string) => status.toLowerCase();
 
 const toAdminReview = (review: {
   id: string;
-  userId: string;
+  userId: string | null;
   moduleKey: string;
   instructor: string;
-  semester: string;
-  workload: number;
-  grading: number;
-  learning: number;
-  attendance: string;
+  semester: string | null;
+  coolness: number | null;
+  sweetness: number | null;
+  learning: number | null;
+  attendance: string | null;
   examStyle: string[];
   body: string;
+  source: string;
+  sourceUrl: string | null;
+  sourceAuthor: string | null;
+  sourcePostedAt: Date | null;
   status: string;
   createdAt: Date;
   updatedAt: Date;
@@ -84,6 +88,7 @@ const app = new Hono<AdminEnv>()
         },
       },
     });
+    sortReviewsNewestFirst(reviews);
     return c.json({ reviews: reviews.map(toAdminReview) });
   })
   .post(

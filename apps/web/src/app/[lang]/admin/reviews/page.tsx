@@ -101,17 +101,39 @@ const ReviewCard = ({ review }: { review: AdminCourseReview }) => {
               </Badge>
             </div>
             <div className="text-xs text-muted-foreground">
-              <Mono>{review.authorId}</Mono> · semester {review.semester} ·
-              submitted {formatDateTime(review.createdAt)}
+              {review.source === "ptt" ? (
+                <>
+                  PTT · <Mono>{review.sourceAuthor ?? "unknown author"}</Mono>
+                  {review.sourceUrl && (
+                    <>
+                      {" · "}
+                      <a
+                        href={review.sourceUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="underline underline-offset-2"
+                      >
+                        source post
+                      </a>
+                    </>
+                  )}
+                </>
+              ) : (
+                <>
+                  native · <Mono>{review.authorId}</Mono>
+                </>
+              )}
+              {" · "}semester {review.semester ?? "—"} · submitted{" "}
+              {formatDateTime(review.sourcePostedAt ?? review.createdAt)}
             </div>
           </div>
           <div className="text-right text-xs text-muted-foreground">
             <div>
-              Workload {review.workload} · grading {review.grading} · learning{" "}
-              {review.learning}
+              Chill {review.coolness ?? "—"} · sweetness{" "}
+              {review.sweetness ?? "—"} · learned {review.learning ?? "—"}
             </div>
             <div>
-              {review.attendance} · {review.examStyle.join(", ")}
+              {review.attendance ?? "—"} · {review.examStyle.join(", ") || "—"}
             </div>
           </div>
         </div>
@@ -213,7 +235,7 @@ const AdminReviewsPage = () => {
     <>
       <PageHeader
         title="Course Reviews"
-        description="Review reports and moderate native course reviews. Author identity is visible here for staff moderation."
+        description="Review reports and moderate native and imported PTT course reviews."
       />
 
       <div className="mb-4 flex flex-wrap items-center gap-2">

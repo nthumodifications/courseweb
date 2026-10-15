@@ -74,12 +74,16 @@ const makeReview = (overrides: Record<string, unknown> = {}) => ({
   moduleKey: "CS:2104",
   instructor: "王老師",
   semester: "11310",
-  workload: 3,
-  grading: 4,
+  coolness: 3,
+  sweetness: 4,
   learning: 5,
   attendance: "every_class",
   examStyle: ["written"],
   body: "這是一段足夠長的課程心得，描述課程內容與學習收穫。".repeat(3),
+  source: "NATIVE",
+  sourceUrl: null,
+  sourceAuthor: null,
+  sourcePostedAt: null,
   status: "VISIBLE",
   createdAt: new Date("2026-10-01T00:00:00.000Z"),
   updatedAt: new Date("2026-10-01T00:00:00.000Z"),
@@ -109,8 +113,8 @@ const validInput = {
   moduleKey: "CS:2104",
   instructor: "王老師",
   semester: "11310",
-  workload: 3,
-  grading: 4,
+  coolness: 3,
+  sweetness: 4,
   learning: 5,
   attendance: "every_class",
   examStyle: ["written"],
@@ -143,7 +147,8 @@ describe("native course reviews", () => {
     reviewFindMany.mockResolvedValue([makeReview()]);
     reviewCount.mockResolvedValue(1);
     reviewAggregate.mockResolvedValue({
-      _avg: { workload: 3, grading: 4, learning: 5 },
+      _avg: { coolness: 3, sweetness: 4, learning: 5 },
+      _count: { coolness: 1, sweetness: 1, learning: 1 },
     });
     reportCount.mockResolvedValue(0);
     queryRaw.mockResolvedValue([]);
@@ -164,8 +169,8 @@ describe("native course reviews", () => {
     expect(body.reviews[0].mine).toBe(false);
     expect(body.summary).toEqual({
       count: 1,
-      workload: null,
-      grading: null,
+      coolness: null,
+      sweetness: null,
       learning: null,
     });
   });
@@ -186,8 +191,80 @@ describe("native course reviews", () => {
   test("supports instructor-only public queries", async () => {
     await request("/?instructor=王老師");
     expect(reviewFindMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { status: "VISIBLE", instructor: "王老師" } }),
+      expect.objectContaining({
+        where: { status: "VISIBLE", instructor: "王老師" },
+      }),
     );
+  });
+
+  test("accepts a ratings-only review but rejects other short bodies", async () => {
+    reviewFindFirst.mockResolvedValue(null);
+    reviewCount.mockResolvedValue(0);
+    reviewCreate.mockResolvedValue(
+      makeReview({ userId: authUser.userId, body: "" }),
+    );
+
+    const empty = await authRequest("/", json({ ...validInput, body: "   " }));
+    expect(empty.status).toBe(201);
+
+    const short = await authRequest(
+      "/",
+      json({ ...validInput, body: "a".repeat(29) }),
+    );
+    expect(short.status).toBe(400);
+  });
+
+  test("serializes PTT provenance and counts each rating independently", async () => {
+    reviewFindMany.mockResolvedValue([
+      makeReview({
+        id: "ptt-1",
+        userId: null,
+        source: "PTT",
+        sourceUrl: "https://www.ptt.cc/bbs/NTHU_Course/M.1.html",
+        sourceAuthor: "ptt-user",
+        sourcePostedAt: new Date("2026-10-15T00:00:00.000Z"),
+        coolness: null,
+        sweetness: 4,
+        learning: null,
+        attendance: null,
+        examStyle: [],
+      }),
+    ]);
+    reviewCount.mockResolvedValue(3);
+    reviewAggregate.mockResolvedValue({
+      _avg: { coolness: null, sweetness: 4, learning: null },
+      _count: { coolness: 2, sweetness: 3, learning: 1 },
+    });
+
+    const response = await request("/?moduleKey=CS:2104");
+    const body = await response.json();
+    expect(body.reviews[0]).toMatchObject({
+      source: "ptt",
+      sourceUrl: "https://www.ptt.cc/bbs/NTHU_Course/M.1.html",
+      sourceAuthor: "ptt-user",
+      coolness: null,
+      sweetness: 4,
+      attendance: null,
+      examStyle: [],
+      mine: false,
+    });
+    expect(body.summary).toEqual({
+      count: 3,
+      coolness: null,
+      sweetness: 4,
+      learning: null,
+    });
+  });
+
+  test("does not expose PTT rows to user edit or delete routes", async () => {
+    reviewFindFirst.mockResolvedValue(null);
+    const patch = await authRequest("/ptt-1", {
+      method: "PATCH",
+      body: JSON.stringify({ body: validInput.body }),
+    });
+    const deletion = await authRequest("/ptt-1", { method: "DELETE" });
+    expect(patch.status).toBe(404);
+    expect(deletion.status).toBe(404);
   });
 
   test("returns all review statuses from mine", async () => {
@@ -198,11 +275,9 @@ describe("native course reviews", () => {
     ]);
     const response = await authRequest("/mine", { method: "GET" });
     expect(response.status).toBe(200);
-    expect((await response.json()).reviews.map((review: any) => review.status)).toEqual([
-      "visible",
-      "hidden",
-      "removed",
-    ]);
+    expect(
+      (await response.json()).reviews.map((review: any) => review.status),
+    ).toEqual(["visible", "hidden", "removed"]);
   });
 
   test("requires at least one public target", async () => {
@@ -279,7 +354,9 @@ describe("native course reviews", () => {
     });
     expect(immutable.status).toBe(400);
 
-    reviewFindFirst.mockResolvedValue(makeReview({ userId: authUser.userId, status: "REMOVED" }));
+    reviewFindFirst.mockResolvedValue(
+      makeReview({ userId: authUser.userId, status: "REMOVED" }),
+    );
     queryRaw.mockResolvedValue([
       makeReview({ userId: authUser.userId, status: "REMOVED" }),
     ]);
@@ -298,7 +375,10 @@ describe("native course reviews", () => {
     expect(create.status).toBe(403);
     expect(await create.json()).toEqual({ error: "banned" });
 
-    const report = await authRequest("/review-1/report", json({ reason: "spam" }));
+    const report = await authRequest(
+      "/review-1/report",
+      json({ reason: "spam" }),
+    );
     expect(report.status).toBe(403);
     expect(await report.json()).toEqual({ error: "banned" });
 
@@ -376,16 +456,12 @@ describe("native course reviews", () => {
   });
 
   test("rejects own reports and makes duplicate reports idempotent", async () => {
-    queryRaw.mockResolvedValueOnce([
-      makeReview({ userId: authUser.userId }),
-    ]);
+    queryRaw.mockResolvedValueOnce([makeReview({ userId: authUser.userId })]);
     const own = await authRequest("/review-1/report", json({ reason: "spam" }));
     expect(own.status).toBe(400);
     expect(await own.json()).toEqual({ error: "own_review" });
 
-    queryRaw.mockResolvedValueOnce([
-      makeReview({ userId: "author-2" }),
-    ]);
+    queryRaw.mockResolvedValueOnce([makeReview({ userId: "author-2" })]);
     reportFindUnique.mockResolvedValue({ id: "existing-report" });
     const duplicate = await authRequest(
       "/review-1/report",
@@ -397,9 +473,7 @@ describe("native course reviews", () => {
   });
 
   test("auto-hides after three distinct open reports transactionally", async () => {
-    queryRaw.mockResolvedValueOnce([
-      makeReview({ userId: "author-2" }),
-    ]);
+    queryRaw.mockResolvedValueOnce([makeReview({ userId: "author-2" })]);
     reportFindUnique.mockResolvedValue(null);
     reportCount.mockResolvedValue(3);
 
@@ -473,11 +547,22 @@ describe("native course reviews", () => {
     async (action) => {
       queryRaw.mockResolvedValue([makeReview({ status: "VISIBLE" })]);
       reviewUpdate.mockResolvedValue(
-        makeReview({ status: action === "hide" ? "HIDDEN" : action === "remove" ? "REMOVED" : "VISIBLE" }),
+        makeReview({
+          status:
+            action === "hide"
+              ? "HIDDEN"
+              : action === "remove"
+                ? "REMOVED"
+                : "VISIBLE",
+        }),
       );
       const app = new Hono();
       app.use("*", async (c, next) => {
-        c.set("user", { ...authUser, userId: "admin-1", role: "ADMIN" } as User);
+        c.set("user", {
+          ...authUser,
+          userId: "admin-1",
+          role: "ADMIN",
+        } as User);
         await next();
       });
       app.route("/", adminReviewsApp);
@@ -489,7 +574,9 @@ describe("native course reviews", () => {
       });
       expect(response.status).toBe(200);
       expect(audit).toHaveBeenCalledWith(
-        expect.objectContaining({ metadata: { action, reason: "Reviewed by staff" } }),
+        expect.objectContaining({
+          metadata: { action, reason: "Reviewed by staff" },
+        }),
       );
     },
   );

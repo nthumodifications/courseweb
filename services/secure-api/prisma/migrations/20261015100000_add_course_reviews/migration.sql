@@ -1,4 +1,5 @@
 CREATE TYPE "CourseReviewStatus" AS ENUM ('VISIBLE', 'HIDDEN', 'REMOVED');
+CREATE TYPE "CourseReviewSource" AS ENUM ('NATIVE', 'PTT');
 CREATE TYPE "CourseReviewReportReason" AS ENUM (
     'PERSONAL_ATTACK',
     'EXAM_LEAK',
@@ -9,16 +10,20 @@ CREATE TYPE "CourseReviewReportReason" AS ENUM (
 
 CREATE TABLE "CourseReview" (
     "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
+    "userId" TEXT,
     "moduleKey" TEXT NOT NULL,
     "instructor" TEXT NOT NULL,
-    "semester" TEXT NOT NULL,
-    "workload" INTEGER NOT NULL,
-    "grading" INTEGER NOT NULL,
-    "learning" INTEGER NOT NULL,
-    "attendance" TEXT NOT NULL,
+    "semester" TEXT,
+    "coolness" INTEGER,
+    "sweetness" INTEGER,
+    "learning" INTEGER,
+    "attendance" TEXT,
     "examStyle" TEXT[] NOT NULL,
     "body" TEXT NOT NULL,
+    "source" "CourseReviewSource" NOT NULL DEFAULT 'NATIVE',
+    "sourceUrl" TEXT,
+    "sourceAuthor" TEXT,
+    "sourcePostedAt" TIMESTAMP(3),
     "status" "CourseReviewStatus" NOT NULL DEFAULT 'VISIBLE',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -41,8 +46,11 @@ CREATE TABLE "CourseReviewReport" (
 
 CREATE UNIQUE INDEX "CourseReview_userId_moduleKey_instructor_key"
     ON "CourseReview"("userId", "moduleKey", "instructor");
+CREATE UNIQUE INDEX "CourseReview_sourceUrl_instructor_key"
+    ON "CourseReview"("sourceUrl", "instructor");
 CREATE INDEX "CourseReview_moduleKey_idx" ON "CourseReview"("moduleKey");
 CREATE INDEX "CourseReview_instructor_idx" ON "CourseReview"("instructor");
+CREATE INDEX "CourseReview_source_idx" ON "CourseReview"("source");
 CREATE UNIQUE INDEX "CourseReviewReport_reviewId_reporterId_key"
     ON "CourseReviewReport"("reviewId", "reporterId");
 CREATE INDEX "CourseReviewReport_reviewId_idx" ON "CourseReviewReport"("reviewId");

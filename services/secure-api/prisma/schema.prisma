@@ -206,6 +206,11 @@ enum CourseReviewStatus {
   REMOVED
 }
 
+enum CourseReviewSource {
+  NATIVE
+  PTT
+}
+
 enum CourseReviewReportReason {
   PERSONAL_ATTACK
   EXAM_LEAK
@@ -215,26 +220,32 @@ enum CourseReviewReportReason {
 }
 
 model CourseReview {
-  id         String               @id @default(uuid())
-  userId     String
-  moduleKey  String
-  instructor String
-  semester   String
-  workload   Int
-  grading    Int
-  learning   Int
-  attendance String
-  examStyle  String[]
-  body       String
-  status     CourseReviewStatus   @default(VISIBLE)
-  createdAt  DateTime             @default(now())
-  updatedAt  DateTime             @updatedAt
-  user       User                 @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  id            String               @id @default(uuid())
+  userId        String?
+  moduleKey     String
+  instructor    String
+  semester      String?
+  coolness      Int?
+  sweetness     Int?
+  learning      Int?
+  attendance    String?
+  examStyle     String[]
+  body          String
+  source        CourseReviewSource   @default(NATIVE)
+  sourceUrl     String?
+  sourceAuthor  String?
+  sourcePostedAt DateTime?
+  status        CourseReviewStatus   @default(VISIBLE)
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  user          User?                @relation(fields: [userId], references: [userId], onDelete: Cascade)
   reports    CourseReviewReport[]
 
   @@unique([userId, moduleKey, instructor])
+  @@unique([sourceUrl, instructor])
   @@index([moduleKey])
   @@index([instructor])
+  @@index([source])
 }
 
 model CourseReviewReport {
