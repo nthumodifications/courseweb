@@ -34,11 +34,14 @@ import type { Language } from "@/types/settings";
 import {
   getModuleOfferings,
   getModuleVariant,
+  getModuleInstructorSummaries,
   parseModuleKey,
   type ModuleAggregate,
   type ModuleHistory,
   type ModuleVariant,
 } from "@/lib/modules";
+import { normaliseInstructorName } from "@/lib/instructors";
+import ReviewsSection from "@/components/Reviews/ReviewsSection";
 
 const MODULE_STALE_TIME = 24 * 60 * 60 * 1000;
 
@@ -331,6 +334,13 @@ export const ModulePageContent = ({
     contentLanguage(lang) === "en"
       ? latestOffering.name_en
       : latestOffering.name_zh;
+  const reviewInstructors = [
+    ...new Set(
+      getModuleInstructorSummaries(selectedVariant)
+        .map((entry) => normaliseInstructorName(entry.nameZh))
+        .filter(Boolean),
+    ),
+  ];
 
   return (
     <CoursePageState
@@ -437,6 +447,13 @@ export const ModulePageContent = ({
                 lang={lang}
                 dict={dict}
                 selectedInstructor={selectedInstructor}
+              />
+              <ReviewsSection
+                lang={lang}
+                moduleKey={moduleKey}
+                instructors={reviewInstructors}
+                semesterOptions={selectedVariant.semesters}
+                allowInstructorFilter
               />
             </div>
           </div>
