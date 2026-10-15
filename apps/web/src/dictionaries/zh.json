@@ -472,6 +472,12 @@
         "error_delete_not_found": "這則評價已不存在。",
         "error_delete_generic": "評價刪除失敗，請稍後再試。",
         "delete_confirm": "確定要刪除這則評價嗎？",
+        "prompt": {
+          "title": "這學期修的課還記得嗎？",
+          "description": "花幾分鐘幫學弟妹評價（{count} 門尚未評價）",
+          "cta": "去評價",
+          "snooze": "稍後"
+        },
         "past_page": {
           "title": "評價以前的課",
           "sign_in": "登入後評價以前修過的課。",

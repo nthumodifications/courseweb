@@ -28,6 +28,7 @@ import { normaliseInstructorName } from "@/lib/instructors";
 import { parseModuleKey } from "@/lib/modules";
 import { normalizePttUrl, parsePttRating, type PttReview } from "@/lib/ptt";
 import { useReviewUnlock } from "@/hooks/useReviewUnlock";
+import { getVisibleReviewRows } from "@/lib/review-lock";
 export { isReviewTextLocked } from "@/lib/review-lock";
 
 export const shouldShowPastReviewsLink = (unlock: {
@@ -882,6 +883,7 @@ export const ReviewsSection = ({
     normalizedInstructors,
     prioritizeInstructors,
   ]);
+  const visibleReviews = getVisibleReviewRows(sortedReviews, unlock.locked);
 
   const signIn = () => void auth.signinRedirect();
   const openCreate = () => setFormMode("create");
@@ -983,14 +985,17 @@ export const ReviewsSection = ({
           )}
         </h3>
         <div className="flex flex-wrap items-center gap-2">
-          {isReviewAuthenticated && shouldShowPastReviewsLink(unlock) && (
-            <Button variant="ghost" size="sm" asChild>
-              <Link to={`/${lang}/reviews/past`}>
-                {dict.course.details.native_reviews.review_past}
-              </Link>
-            </Button>
-          )}
-          {shouldShowCreateReviewAction({
+          {!unlock.locked &&
+            isReviewAuthenticated &&
+            shouldShowPastReviewsLink(unlock) && (
+              <Button variant="ghost" size="sm" asChild>
+                <Link to={`/${lang}/reviews/past`}>
+                  {dict.course.details.native_reviews.review_past}
+                </Link>
+              </Button>
+            )}
+          {!unlock.locked &&
+          shouldShowCreateReviewAction({
             isAuthenticated: isReviewAuthenticated,
             hasModuleKey: Boolean(moduleKey),
             instructorCount: normalizedInstructors.length,
@@ -1000,7 +1005,7 @@ export const ReviewsSection = ({
             <Button size="sm" onClick={openCreate}>
               {dict.course.details.native_reviews.write}
             </Button>
-          ) : !isReviewAuthenticated &&
+          ) : !unlock.locked &&
             normalizedInstructors.length > 0 &&
             (!unlock.locked || sortedReviews.length === 0) ? (
             <Button variant="outline" size="sm" onClick={signIn}>
@@ -1009,33 +1014,35 @@ export const ReviewsSection = ({
           ) : null}
         </div>
       </div>
-      {allowInstructorFilter && normalizedInstructors.length > 0 && (
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="reviews-instructor-filter">
-            {dict.course.details.native_reviews.instructor}
-          </Label>
-          <Select
-            value={selectedInstructor || "all"}
-            onValueChange={(value) =>
-              setSelectedInstructor(value === "all" ? "" : value)
-            }
-          >
-            <SelectTrigger id="reviews-instructor-filter">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">
-                {dict.course.details.native_reviews.all_instructors}
-              </SelectItem>
-              {normalizedInstructors.map((value) => (
-                <SelectItem key={value} value={value}>
-                  {value}
+      {!unlock.locked &&
+        allowInstructorFilter &&
+        normalizedInstructors.length > 0 && (
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="reviews-instructor-filter">
+              {dict.course.details.native_reviews.instructor}
+            </Label>
+            <Select
+              value={selectedInstructor || "all"}
+              onValueChange={(value) =>
+                setSelectedInstructor(value === "all" ? "" : value)
+              }
+            >
+              <SelectTrigger id="reviews-instructor-filter">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">
+                  {dict.course.details.native_reviews.all_instructors}
                 </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
+                {normalizedInstructors.map((value) => (
+                  <SelectItem key={value} value={value}>
+                    {value}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       {summary && getReviewSummaryState(summary) === "averages" ? (
         <dl className="grid grid-cols-3 gap-4 py-2">
           <ModuleStat
@@ -1058,7 +1065,8 @@ export const ReviewsSection = ({
       ) : null}
       {formMode &&
         (moduleKey || formMode !== "create") &&
-        isReviewAuthenticated && (
+        isReviewAuthenticated &&
+        !unlock.locked && (
           <ReviewForm
             moduleKey={
               moduleKey ?? (formMode === "create" ? "" : formMode.moduleKey)
@@ -1103,155 +1111,166 @@ export const ReviewsSection = ({
               </AlertDescription>
             </Alert>
           )}
-          <div className="divide-y divide-border">
-            {sortedReviews.map((review) => {
-              const parsedModule = parseModuleKey(review.moduleKey);
-              const reviewCourseLabel = courseLabels
-                ? (courseLabels[review.moduleKey] ??
-                  (parsedModule
-                    ? `${parsedModule.department} ${parsedModule.course}`
-                    : review.moduleKey))
-                : undefined;
-              const metadata = getReviewMetadata(
-                review,
-                showInstructor,
-                lang,
-                dict.course.details.native_reviews.edited,
-              );
-              const ratings = [
-                review.coolness !== null && review.coolness !== undefined
-                  ? `${dict.course.details.native_reviews.coolness} ${review.coolness}`
-                  : null,
-                review.sweetness !== null && review.sweetness !== undefined
-                  ? `${dict.course.details.native_reviews.sweetness} ${review.sweetness}`
-                  : null,
-                review.learning !== null && review.learning !== undefined
-                  ? `${dict.course.details.native_reviews.learning} ${review.learning}`
-                  : null,
-              ].filter((value): value is string => Boolean(value));
-              const examSeparator =
-                contentLanguage(lang) === "en" ? ", " : "、";
+          {!unlock.locked && (
+            <div className="divide-y divide-border">
+              {visibleReviews.map((review) => {
+                const parsedModule = parseModuleKey(review.moduleKey);
+                const reviewCourseLabel = courseLabels
+                  ? (courseLabels[review.moduleKey] ??
+                    (parsedModule
+                      ? `${parsedModule.department} ${parsedModule.course}`
+                      : review.moduleKey))
+                  : undefined;
+                const metadata = getReviewMetadata(
+                  review,
+                  showInstructor,
+                  lang,
+                  dict.course.details.native_reviews.edited,
+                );
+                const ratings = [
+                  review.coolness !== null && review.coolness !== undefined
+                    ? `${dict.course.details.native_reviews.coolness} ${review.coolness}`
+                    : null,
+                  review.sweetness !== null && review.sweetness !== undefined
+                    ? `${dict.course.details.native_reviews.sweetness} ${review.sweetness}`
+                    : null,
+                  review.learning !== null && review.learning !== undefined
+                    ? `${dict.course.details.native_reviews.learning} ${review.learning}`
+                    : null,
+                ].filter((value): value is string => Boolean(value));
+                const examSeparator =
+                  contentLanguage(lang) === "en" ? ", " : "、";
 
-              return (
-                <article
-                  className="flex min-w-0 flex-col gap-2 py-4"
-                  key={review.id}
-                >
-                  {reviewCourseLabel && (
-                    <h4 className="font-medium">{reviewCourseLabel}</h4>
-                  )}
-                  <div className="flex flex-wrap items-baseline gap-2 text-sm text-muted-foreground">
-                    {review.source === "ptt" && (
-                      <span className="text-xs font-medium">PTT</span>
+                return (
+                  <article
+                    className="flex min-w-0 flex-col gap-2 py-4"
+                    key={review.id}
+                  >
+                    {reviewCourseLabel && (
+                      <h4 className="font-medium text-foreground">
+                        {reviewCourseLabel}
+                      </h4>
                     )}
-                    {metadata.map((value, index) => (
-                      <span key={`${review.id}-metadata-${index}`}>
-                        {index > 0 && " · "}
-                        {value}
-                      </span>
-                    ))}
-                    {review.source === "ptt" && review.sourceAuthor && (
-                      <span> · {review.sourceAuthor}</span>
-                    )}
-                    {review.source === "ptt" && review.sourceUrl && (
-                      <a
-                        href={review.sourceUrl}
-                        target="_blank"
-                        rel="noopener"
-                        className="underline"
-                      >
-                        {dict.course.details.native_reviews.source_link}
-                      </a>
-                    )}
-                  </div>
-                  {ratings.length > 0 && (
-                    <div className="text-sm text-muted-foreground">
-                      {ratings.join(" · ")}
+                    <div className="flex flex-wrap items-baseline gap-2 text-sm text-muted-foreground">
+                      {review.source === "ptt" && (
+                        <span className="text-xs font-medium">PTT</span>
+                      )}
+                      {metadata.map((value, index) => (
+                        <span key={`${review.id}-metadata-${index}`}>
+                          {index > 0 && " · "}
+                          {value}
+                        </span>
+                      ))}
+                      {review.source === "ptt" && review.sourceAuthor && (
+                        <span> · {review.sourceAuthor}</span>
+                      )}
+                      {review.source === "ptt" && review.sourceUrl && (
+                        <a
+                          href={review.sourceUrl}
+                          target="_blank"
+                          rel="noopener"
+                          className="underline"
+                        >
+                          {dict.course.details.native_reviews.source_link}
+                        </a>
+                      )}
                     </div>
-                  )}
-                  {shouldRenderAttendance(review) && review.attendance && (
-                    <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-                      <span>
-                        {
-                          dict.course.details.native_reviews[
-                            `attendance_${review.attendance}`
-                          ]
-                        }
-                      </span>
-                      <span>·</span>
-                      <span>
-                        {review.examStyle
-                          .map(
-                            (style) =>
-                              dict.course.details.native_reviews[
-                                `exam_${style}`
-                              ],
-                          )
-                          .join(examSeparator)}
-                      </span>
-                    </div>
-                  )}
-                  {!unlock.textLocked && review.body && (
-                    <p className="whitespace-pre-line leading-relaxed">
-                      {review.body}
-                    </p>
-                  )}
-                  {((review.mine && isReviewAuthenticated) ||
-                    (isReviewAuthenticated && !review.mine)) && (
-                    <div className="flex flex-wrap justify-end gap-1">
-                      {review.mine && isReviewAuthenticated && (
-                        <>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-auto px-2 py-1"
-                            onClick={() => setFormMode(review)}
-                          >
-                            {dict.course.details.native_reviews.edit}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-auto px-2 py-1"
-                            onClick={() => {
-                              if (
-                                window.confirm(
-                                  dict.course.details.native_reviews
-                                    .delete_confirm,
+                    {ratings.length > 0 && (
+                      <div className="flex flex-wrap gap-2 text-sm font-medium text-foreground">
+                        {ratings.map((rating, index) => (
+                          <span key={`${review.id}-rating-${index}`}>
+                            <span className="font-normal text-muted-foreground">
+                              {rating.split(" ")[0]}
+                            </span>{" "}
+                            {rating.split(" ").slice(1).join(" ")}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {shouldRenderAttendance(review) && review.attendance && (
+                      <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                        <span>
+                          {
+                            dict.course.details.native_reviews[
+                              `attendance_${review.attendance}`
+                            ]
+                          }
+                        </span>
+                        <span>·</span>
+                        <span>
+                          {review.examStyle
+                            .map(
+                              (style) =>
+                                dict.course.details.native_reviews[
+                                  `exam_${style}`
+                                ],
+                            )
+                            .join(examSeparator)}
+                        </span>
+                      </div>
+                    )}
+                    {!unlock.textLocked && review.body && (
+                      <p className="whitespace-pre-line text-sm leading-relaxed text-foreground">
+                        {review.body}
+                      </p>
+                    )}
+                    {((review.mine && isReviewAuthenticated) ||
+                      (isReviewAuthenticated && !review.mine)) && (
+                      <div className="flex flex-wrap justify-end gap-1">
+                        {review.mine && isReviewAuthenticated && (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-auto px-2 py-1"
+                              onClick={() => setFormMode(review)}
+                            >
+                              {dict.course.details.native_reviews.edit}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-auto px-2 py-1"
+                              onClick={() => {
+                                if (
+                                  window.confirm(
+                                    dict.course.details.native_reviews
+                                      .delete_confirm,
+                                  )
                                 )
-                              )
-                                deleteMutation.mutate(review.id);
+                                  deleteMutation.mutate(review.id);
+                              }}
+                            >
+                              {dict.course.details.native_reviews.delete}
+                            </Button>
+                          </>
+                        )}
+                        {!review.mine && isReviewAuthenticated && (
+                          <Button
+                            ref={(node) => {
+                              if (reportingId === review.id)
+                                reportTriggerRef.current = node;
+                            }}
+                            variant="ghost"
+                            size="sm"
+                            className="h-auto px-2 py-1"
+                            onClick={(event) => {
+                              reportTriggerRef.current = event.currentTarget;
+                              setReportMessage(null);
+                              setReportingId(review.id);
                             }}
                           >
-                            {dict.course.details.native_reviews.delete}
+                            {dict.course.details.native_reviews.report}
                           </Button>
-                        </>
-                      )}
-                      {!review.mine && isReviewAuthenticated && (
-                        <Button
-                          ref={(node) => {
-                            if (reportingId === review.id)
-                              reportTriggerRef.current = node;
-                          }}
-                          variant="ghost"
-                          size="sm"
-                          className="h-auto px-2 py-1"
-                          onClick={(event) => {
-                            reportTriggerRef.current = event.currentTarget;
-                            setReportMessage(null);
-                            setReportingId(review.id);
-                          }}
-                        >
-                          {dict.course.details.native_reviews.report}
-                        </Button>
-                      )}
-                    </div>
-                  )}
-                </article>
-              );
-            })}
-          </div>
-          {sortedReviews.some((review) => review.source === "ptt") && (
+                        )}
+                      </div>
+                    )}
+                  </article>
+                );
+              })}
+            </div>
+          )}
+          {visibleReviews.some((review) => review.source === "ptt") && (
             <p className="text-sm text-muted-foreground">
               {dict.course.details.ptt_disclaimer}
             </p>

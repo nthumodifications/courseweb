@@ -472,6 +472,12 @@
         "error_delete_not_found": "这则评价已不存在。",
         "error_delete_generic": "评价删除失败，请稍后再试。",
         "delete_confirm": "确定要删除这则评价吗？",
+        "prompt": {
+          "title": "这学期修的课还记得吗？",
+          "description": "花几分钟帮学弟妹评价（{count} 门尚未评价）",
+          "cta": "去评价",
+          "snooze": "稍后"
+        },
         "past_page": {
           "title": "评价以前的课",
           "sign_in": "登录后评价以前修过的课。",

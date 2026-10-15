@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
   deriveReviewLock,
+  getVisibleReviewRows,
   getCurrentReviewSemesterId,
   isPastReviewSemester,
 } from "./review-lock";
@@ -8,6 +9,16 @@ import {
 const currentSemester = "11510";
 
 describe("review soft-lock derivation", () => {
+  test("hides native and PTT rows while locked", () => {
+    const rows = [
+      { id: "native", source: "native" as const },
+      { id: "ptt", source: "ptt" as const },
+    ];
+
+    expect(getVisibleReviewRows(rows, true)).toEqual([]);
+    expect(getVisibleReviewRows(rows, false)).toEqual(rows);
+  });
+
   test("uses the semester containing the fixed date instead of the latest data row", () => {
     expect(getCurrentReviewSemesterId(new Date("2026-10-15T12:00:00Z"))).toBe(
       "11510",

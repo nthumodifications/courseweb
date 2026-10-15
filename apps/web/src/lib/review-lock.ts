@@ -11,6 +11,11 @@ export const isReviewTextLocked = (
   reviewsReady: boolean,
 ) => locked || !timetableReady || !reviewsReady;
 
+export const getVisibleReviewRows = <T>(
+  reviews: readonly T[],
+  locked: boolean,
+): T[] => (locked ? [] : [...reviews]);
+
 export const isPastReviewSemester = (
   semester: string,
   currentSemester?: string,

@@ -18,6 +18,7 @@ import CommandPalette from "@/components/CommandPalette/CommandPalette";
 import CustomCSSInjector from "@/components/CustomCSS/CustomCSSInjector";
 import AnnouncementBar from "@/components/Alerts/AnnouncementBar";
 import CourseSelectionBar from "@/components/Alerts/CourseSelectionBar";
+import ReviewPromptBar from "@/components/Alerts/ReviewPromptBar";
 import useDictionary from "@/dictionaries/useDictionary";
 import { lazyWithRetry } from "@/lib/chunk-recovery";
 import { router } from "@/router";
@@ -91,6 +92,7 @@ const MainLayout = () => {
                 <Header />
                 <AnnouncementBar />
                 <CourseSelectionBar />
+                <ReviewPromptBar />
                 <div className="pt-4 pb-[calc(var(--bottom-nav-height)+env(safe-area-inset-bottom))] md:pb-0 md:pl-2">
                   <ErrorBoundary FallbackComponent={ModsError}>
                     <Suspense

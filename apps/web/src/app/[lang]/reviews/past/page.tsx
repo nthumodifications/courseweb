@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import { Button, Checkbox, Label, Textarea } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
@@ -74,6 +74,7 @@ const initialDraft = (review?: Review): Draft => ({
 const PastReviewPage = () => {
   const dict = useDictionary();
   const auth = useAuth();
+  const location = useLocation();
   const { lang: rawLang } = useParams<{ lang: string }>();
   const lang = rawLang === "en" || rawLang === "zh-cn" ? rawLang : "zh";
   const timetable = useUserTimetable();
@@ -87,16 +88,26 @@ const PastReviewPage = () => {
     Record<string, PastReviewRowStatus>
   >({});
   const hydratedExisting = useRef(new Set<string>());
+  const requestedSemester = useMemo(
+    () => new URLSearchParams(location.search).get("semester"),
+    [location.search],
+  );
+  const currentSemester = getCurrentReviewSemesterId();
 
   const pastSemesters = useMemo(
     () =>
       Object.keys(timetable.courses)
         .filter(
           (semester) =>
-            isPastSemester(semester) && timetable.courses[semester]?.length,
+            (isPastSemester(semester) || semester === currentSemester) &&
+            timetable.courses[semester]?.length,
         )
-        .sort((left, right) => right.localeCompare(left)),
-    [timetable.courses],
+        .sort((left, right) => {
+          if (left === requestedSemester) return -1;
+          if (right === requestedSemester) return 1;
+          return right.localeCompare(left);
+        }),
+    [currentSemester, requestedSemester, timetable.courses],
   );
 
   const rows = useMemo<PastRow[]>(() => {
@@ -277,9 +288,12 @@ const PastReviewPage = () => {
                       {row.existing && !isEditing ? (
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <div className="flex flex-wrap items-baseline gap-2">
-                            <h3 className="font-medium">
-                              {row.courseCode} · {row.title} · {row.instructor}
+                            <h3 className="font-medium text-foreground">
+                              {row.courseCode} · {row.title}
                             </h3>
+                            <p className="text-sm text-muted-foreground">
+                              {row.instructor}
+                            </p>
                             <span className="text-sm text-muted-foreground">
                               {
                                 dict.course.details.native_reviews.past_page
@@ -315,7 +329,7 @@ const PastReviewPage = () => {
                       ) : (
                         <div className="flex flex-wrap items-baseline justify-between gap-2">
                           <div>
-                            <h3 className="font-medium">
+                            <h3 className="font-medium text-foreground">
                               {row.courseCode} · {row.title}
                             </h3>
                             <p className="text-sm text-muted-foreground">

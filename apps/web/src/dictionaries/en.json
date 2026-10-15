@@ -472,6 +472,12 @@
         "error_delete_not_found": "This review is no longer available.",
         "error_delete_generic": "The review could not be deleted. Try again later.",
         "delete_confirm": "Delete this review?",
+        "prompt": {
+          "title": "Remember the courses you took this semester?",
+          "description": "Take a few minutes to help other students ({count} left to review)",
+          "cta": "Review courses",
+          "snooze": "Later"
+        },
         "past_page": {
           "title": "Review past courses",
           "sign_in": "Sign in to review past courses.",
