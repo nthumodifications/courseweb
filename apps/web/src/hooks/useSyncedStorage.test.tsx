@@ -226,26 +226,32 @@ describe("useSyncedStorage remote read states", () => {
     await cleanupSyncedStorage(rendered);
   });
 
-  test("settles local data after a GET error without POST, then reconciles after success", async () => {
+  test("keeps local courses render-ready after a persistent 401 without publishing", async () => {
     setupDom();
     window.localStorage.setItem("nthumods_device_id", "device-a");
     window.localStorage.setItem(
-      getSyncedStorageKey("grades", user.profile.sub),
+      getSyncedStorageKey("courses", user.profile.sub),
       JSON.stringify({
-        value: { theme: "local" },
+        value: { "11410": ["LOCAL-COURSE"] },
         lastModified: 100,
         updatedAt: 100,
         deviceId: "device-a",
       }),
     );
 
+    get.mockImplementation(
+      async () =>
+        new Response(JSON.stringify({ error: "unauthorized" }), {
+          status: 401,
+        }),
+    );
     const rendered = await renderSyncedStorage(() =>
-      useSyncedStorage("grades", { theme: "default" }),
+      useSyncedStorage("courses", {}, mergeCourseStorage),
     );
     await waitForResult(rendered.getResult);
     const result = rendered.getResult();
 
-    expect(result?.[0]).toEqual({ theme: "local" });
+    expect(result?.[0]).toEqual({ "11410": ["LOCAL-COURSE"] });
     expect([result?.[2], result?.[3], get.mock.calls.length]).toEqual([
       true,
       true,
@@ -253,14 +259,62 @@ describe("useSyncedStorage remote read states", () => {
     ]);
     expect(post).not.toHaveBeenCalled();
 
+    await cleanupSyncedStorage(rendered);
+  });
+
+  test("treats a successful pull after a later read error as initial again", async () => {
+    setupDom();
+    window.localStorage.setItem("nthumods_device_id", "device-a");
+    window.localStorage.setItem(
+      getSyncedStorageKey("courses", user.profile.sub),
+      JSON.stringify({
+        value: { "11410": ["LOCAL-COURSE"] },
+        lastModified: 100,
+        updatedAt: 100,
+        deviceId: "device-a",
+      }),
+    );
     get.mockImplementationOnce(
       async () =>
         new Response(
           JSON.stringify({
-            value: { theme: "remote" },
+            value: { "11410": ["FIRST-REMOTE-COURSE"] },
             lastModified: 200,
             updatedAt: 200,
             deviceId: "device-b",
+          }),
+          { status: 200 },
+        ),
+    );
+
+    const rendered = await renderSyncedStorage(() =>
+      useSyncedStorage("courses", {}, mergeCourseStorage),
+    );
+    await waitForResult(
+      rendered.getResult,
+      (result) =>
+        (result?.[0] as Record<string, string[]> | undefined)?.["11410"]
+          ?.includes("FIRST-REMOTE-COURSE") ?? false,
+    );
+
+    get.mockImplementationOnce(
+      async () =>
+        new Response(JSON.stringify({ error: "failed" }), { status: 503 }),
+    );
+    await act(async () => {
+      await rendered.queryClient.refetchQueries({ queryKey: ["kv"] });
+    });
+    await waitForResult(rendered.getResult, (result) => result?.[3] === true);
+    expect(rendered.getResult()?.[2]).toBe(true);
+
+    get.mockImplementationOnce(
+      async () =>
+        new Response(
+          JSON.stringify({
+            value: { "11510": ["RECOVERED-REMOTE-COURSE"] },
+            lastModified: 300,
+            updatedAt: 300,
+            deviceId: "device-c",
           }),
           { status: 200 },
         ),
@@ -270,13 +324,15 @@ describe("useSyncedStorage remote read states", () => {
     });
     await waitForResult(
       rendered.getResult,
-      (nextResult) =>
-        (nextResult?.[0] as { theme?: string } | undefined)?.theme === "remote",
+      (result) =>
+        (result?.[0] as Record<string, string[]> | undefined)?.["11510"]
+          ?.includes("RECOVERED-REMOTE-COURSE") ?? false,
     );
 
-    expect(rendered.getResult()?.[0]).toEqual({ theme: "remote" });
-    expect(rendered.getResult()?.[2]).toBe(true);
-    expect(post).not.toHaveBeenCalled();
+    expect(rendered.getResult()?.[0]).toEqual({
+      "11410": ["LOCAL-COURSE", "FIRST-REMOTE-COURSE"],
+      "11510": ["RECOVERED-REMOTE-COURSE"],
+    });
 
     await cleanupSyncedStorage(rendered);
   });

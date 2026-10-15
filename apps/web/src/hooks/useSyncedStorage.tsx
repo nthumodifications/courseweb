@@ -216,6 +216,7 @@ const useSyncedStorage = <T = unknown,>(
     // either case, but do not upload it until a remote read succeeds.
     if (isRemoteReadError || isRemoteRefetchError || isRemotePaused) {
       localFallbackSettledRef.current = userId;
+      reconciledUserRef.current = undefined;
       setDataState(local);
       return;
     }
