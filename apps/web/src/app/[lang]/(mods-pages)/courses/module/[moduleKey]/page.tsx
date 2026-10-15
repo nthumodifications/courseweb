@@ -341,6 +341,22 @@ export const ModulePageContent = ({
         .filter(Boolean),
     ),
   ];
+  const reviewSemesterOptionsByInstructor = Object.fromEntries(
+    reviewInstructors.map((instructor) => [
+      instructor,
+      [
+        ...new Set(
+          selectedVariant.offerings
+            .filter((offering) =>
+              (offering.teacher_zh ?? []).some(
+                (teacher) => normaliseInstructorName(teacher) === instructor,
+              ),
+            )
+            .map((offering) => offering.semester),
+        ),
+      ],
+    ]),
+  );
 
   return (
     <CoursePageState
@@ -453,6 +469,7 @@ export const ModulePageContent = ({
                 moduleKey={moduleKey}
                 instructors={reviewInstructors}
                 semesterOptions={selectedVariant.semesters}
+                semesterOptionsByInstructor={reviewSemesterOptionsByInstructor}
                 allowInstructorFilter
               />
             </div>

@@ -994,6 +994,7 @@ const CourseDetailContainer = ({
                   <ReviewsSection
                     lang={lang}
                     moduleKey={moduleKey}
+                    prioritizeInstructors
                     instructors={(course.teacher_zh ?? []).map(
                       normaliseInstructorName,
                     )}

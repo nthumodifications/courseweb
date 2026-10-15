@@ -10,6 +10,9 @@ import {
 
 const originalFetch = globalThis.fetch;
 
+const reviewsOrigin = () =>
+  import.meta.env.VITE_NTHUMODS_AUTH_URL || "https://auth.nthumods.com";
+
 afterEach(() => {
   globalThis.fetch = originalFetch;
 });
@@ -33,7 +36,7 @@ test("lists by module without an Authorization header when signed out", async ()
   await listReviews({ moduleKey: "CS:2104" });
 
   expect(request?.url).toBe(
-    "https://auth.nthumods.com/api/reviews?moduleKey=CS%3A2104",
+    `${reviewsOrigin()}/api/reviews?moduleKey=CS%3A2104`,
   );
   expect(request?.headers.has("Authorization")).toBe(false);
 });
@@ -63,10 +66,10 @@ test("authenticated mutations use the contract paths and bearer token", async ()
 
   expect(requests.map((request) => `${request.method} ${request.url}`)).toEqual(
     [
-      "POST https://auth.nthumods.com/api/reviews",
-      "PATCH https://auth.nthumods.com/api/reviews/review%2F1",
-      "DELETE https://auth.nthumods.com/api/reviews/review%2F1",
-      "POST https://auth.nthumods.com/api/reviews/review%2F2/report",
+      `POST ${reviewsOrigin()}/api/reviews`,
+      `PATCH ${reviewsOrigin()}/api/reviews/review%2F1`,
+      `DELETE ${reviewsOrigin()}/api/reviews/review%2F1`,
+      `POST ${reviewsOrigin()}/api/reviews/review%2F2/report`,
     ],
   );
   expect(

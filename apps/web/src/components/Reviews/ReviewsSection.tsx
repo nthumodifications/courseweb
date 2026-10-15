@@ -42,6 +42,33 @@ import {
 
 type Dictionary = ReturnType<typeof useDictionary>;
 
+export const sortReviews = <T extends Pick<Review, "instructor" | "createdAt">>(
+  reviews: readonly T[],
+  instructors: readonly string[],
+  prioritizeInstructors: boolean,
+): T[] => {
+  const values = [...reviews];
+  if (!prioritizeInstructors) {
+    return values.sort((left, right) =>
+      right.createdAt.localeCompare(left.createdAt),
+    );
+  }
+
+  const priority = new Map(instructors.map((value, index) => [value, index]));
+  return values.sort((left, right) => {
+    const leftPriority =
+      priority.get(normaliseInstructorName(left.instructor)) ??
+      instructors.length;
+    const rightPriority =
+      priority.get(normaliseInstructorName(right.instructor)) ??
+      instructors.length;
+    return (
+      leftPriority - rightPriority ||
+      right.createdAt.localeCompare(left.createdAt)
+    );
+  });
+};
+
 const examStyles: ExamStyle[] = [
   "written",
   "oral",
@@ -75,11 +102,83 @@ export const recentReviewSemesters = () => {
   const now = new Date();
   const academicYear = now.getFullYear() - 1911 - (now.getMonth() < 8 ? 1 : 0);
   return Array.from({ length: 15 }, (_, index) => {
-    const offset = Math.floor(index / 3);
-    const term = 3 - (index % 3);
-    return `${academicYear - offset}${term}`;
+    const offset = Math.floor(index / 2);
+    const term = index % 2 === 0 ? 1 : 2;
+    return `${academicYear - offset}${term}0`;
   });
 };
+
+const reviewSemesterSortValue = (semester: string) => {
+  const match = /^(\d{3})([123])0?$/.exec(semester);
+  return match
+    ? Number(match[1]) * 3 + Number(match[2])
+    : Number.MIN_SAFE_INTEGER;
+};
+
+const sortReviewSemesters = (semesters: readonly string[]) =>
+  [...semesters].sort(
+    (left, right) =>
+      reviewSemesterSortValue(right) - reviewSemesterSortValue(left) ||
+      right.localeCompare(left),
+  );
+
+export const getDefaultReviewInstructor = (
+  instructorOptions: readonly string[],
+  selectedInstructor: string,
+  reviewedInstructors: readonly string[],
+) => {
+  const normalizedOptions = instructorOptions
+    .map(normaliseInstructorName)
+    .filter(Boolean);
+  const selected = normaliseInstructorName(selectedInstructor);
+  if (selected) return selected;
+
+  const reviewed = new Set(reviewedInstructors.map(normaliseInstructorName));
+  return (
+    normalizedOptions.find((option) => !reviewed.has(option)) ??
+    normalizedOptions[0] ??
+    ""
+  );
+};
+
+export const getReviewSemesterOptions = (
+  semesterOptions: readonly string[],
+  semesterOptionsByInstructor: Readonly<
+    Record<string, readonly string[]>
+  > = {},
+  instructor = "",
+) => {
+  const normalizedInstructor = normaliseInstructorName(instructor);
+  const instructorSemesters = normalizedInstructor
+    ? semesterOptionsByInstructor[normalizedInstructor]
+    : undefined;
+  const available =
+    instructorSemesters && instructorSemesters.length > 0
+      ? instructorSemesters
+      : semesterOptions.length > 0
+        ? semesterOptions
+        : recentReviewSemesters();
+  const uniqueAvailable = [...new Set(available)].filter(Boolean);
+  return uniqueAvailable.length > 0
+    ? sortReviewSemesters(uniqueAvailable)
+    : recentReviewSemesters();
+};
+
+export const getDefaultReviewSemester = (semesterOptions: readonly string[]) =>
+  semesterOptions[0] ?? recentReviewSemesters()[0];
+
+export const shouldShowCreateReviewAction = (values: {
+  isAuthenticated: boolean;
+  hasModuleKey: boolean;
+  instructorCount: number;
+  hasOwnReviewForTarget: boolean;
+  formMode: "create" | Review | null;
+}) =>
+  values.formMode === null &&
+  values.isAuthenticated &&
+  values.hasModuleKey &&
+  values.instructorCount > 0 &&
+  !values.hasOwnReviewForTarget;
 
 export type ReviewFormValidation =
   | "required"
@@ -195,6 +294,8 @@ type ReviewFormProps = {
   moduleKey: string;
   instructorOptions: string[];
   semesterOptions: string[];
+  semesterOptionsByInstructor?: Readonly<Record<string, readonly string[]>>;
+  defaultInstructor?: string;
   review?: Review;
   onCancel: () => void;
   onSaved: () => void;
@@ -205,6 +306,8 @@ const ReviewForm = ({
   moduleKey,
   instructorOptions,
   semesterOptions,
+  semesterOptionsByInstructor = {},
+  defaultInstructor = "",
   review,
   onCancel,
   onSaved,
@@ -214,10 +317,15 @@ const ReviewForm = ({
   const createMutation = useCreateReview();
   const updateMutation = useUpdateReview();
   const [instructor, setInstructor] = useState(
-    review?.instructor ?? instructorOptions[0] ?? "",
+    review?.instructor ?? defaultInstructor,
+  );
+  const initialSemesters = getReviewSemesterOptions(
+    semesterOptions,
+    semesterOptionsByInstructor,
+    review?.instructor ?? defaultInstructor,
   );
   const [semester, setSemester] = useState(
-    review?.semester ?? semesterOptions[0] ?? recentReviewSemesters()[0],
+    review?.semester ?? getDefaultReviewSemester(initialSemesters),
   );
   const [workload, setWorkload] = useState<number>(review?.workload ?? 0);
   const [grading, setGrading] = useState<number>(review?.grading ?? 0);
@@ -232,10 +340,10 @@ const ReviewForm = ({
   const [validationError, setValidationError] = useState<string | null>(null);
   const submissionStarted = useRef(false);
   const mutation = review ? updateMutation : createMutation;
-  const semesters = Array.from(
-    new Set(
-      semesterOptions.length > 0 ? semesterOptions : recentReviewSemesters(),
-    ),
+  const semesters = getReviewSemesterOptions(
+    semesterOptions,
+    semesterOptionsByInstructor,
+    instructor,
   );
 
   const ratingValues = { workload, grading, learning };
@@ -350,7 +458,22 @@ const ReviewForm = ({
           <Label htmlFor="review-instructor">
             {dict.course.details.native_reviews.instructor}
           </Label>
-          <Select value={instructor} onValueChange={setInstructor}>
+          <Select
+            value={instructor}
+            onValueChange={(value) => {
+              setInstructor(value);
+              const nextSemesters = getReviewSemesterOptions(
+                semesterOptions,
+                semesterOptionsByInstructor,
+                value,
+              );
+              setSemester((current) =>
+                nextSemesters.includes(current)
+                  ? current
+                  : getDefaultReviewSemester(nextSemesters),
+              );
+            }}
+          >
             <SelectTrigger id="review-instructor">
               <SelectValue
                 placeholder={
@@ -396,7 +519,7 @@ const ReviewForm = ({
                 {dict.course.details.native_reviews[lowLabel]}
               </span>
               <div
-                className="flex min-w-0 flex-1"
+                className="flex w-full min-w-0 sm:w-fit sm:flex-none"
                 role="radiogroup"
                 aria-label={dict.course.details.native_reviews[label]}
               >
@@ -408,7 +531,7 @@ const ReviewForm = ({
                     variant={
                       ratingValues[field] === value ? "default" : "outline"
                     }
-                    className="min-w-0 flex-1 rounded-none px-2 first:rounded-l-md last:rounded-r-md"
+                    className="min-w-0 flex-1 rounded-none px-2 first:rounded-l-md last:rounded-r-md sm:w-10 sm:flex-none"
                     aria-pressed={ratingValues[field] === value}
                     onClick={() => setRating(field, value)}
                   >
@@ -514,8 +637,10 @@ type ReviewsSectionProps = {
   instructor?: string;
   instructors?: string[];
   semesterOptions?: string[];
+  semesterOptionsByInstructor?: Readonly<Record<string, readonly string[]>>;
   courseLabels?: Record<string, string>;
   allowInstructorFilter?: boolean;
+  prioritizeInstructors?: boolean;
 };
 
 export const ReviewsSection = ({
@@ -524,8 +649,10 @@ export const ReviewsSection = ({
   instructor,
   instructors = [],
   semesterOptions = [],
+  semesterOptionsByInstructor = {},
   courseLabels,
   allowInstructorFilter = false,
+  prioritizeInstructors = false,
 }: ReviewsSectionProps) => {
   const dict = useDictionary();
   const auth = useAuth();
@@ -550,7 +677,7 @@ export const ReviewsSection = ({
     : allowInstructorFilter && selectedInstructor
       ? normaliseInstructorName(selectedInstructor)
       : undefined;
-  const { data, error, isLoading, refetch } = useReviews({
+  const { data, error, isPending, isSuccess, refetch } = useReviews({
     moduleKey,
     instructor: targetInstructor,
   });
@@ -570,23 +697,12 @@ export const ReviewsSection = ({
   );
 
   const sortedReviews = useMemo(() => {
-    const values = [...(data?.reviews ?? [])];
-    const priority = new Map(
-      normalizedInstructors.map((value, index) => [value, index]),
+    return sortReviews(
+      data?.reviews ?? [],
+      normalizedInstructors,
+      prioritizeInstructors,
     );
-    return values.sort((left, right) => {
-      const leftPriority =
-        priority.get(normaliseInstructorName(left.instructor)) ??
-        normalizedInstructors.length;
-      const rightPriority =
-        priority.get(normaliseInstructorName(right.instructor)) ??
-        normalizedInstructors.length;
-      return (
-        leftPriority - rightPriority ||
-        right.createdAt.localeCompare(left.createdAt)
-      );
-    });
-  }, [data?.reviews, normalizedInstructors]);
+  }, [data?.reviews, normalizedInstructors, prioritizeInstructors]);
 
   const signIn = () => void auth.signinRedirect();
   const openCreate = () => setFormMode("create");
@@ -600,6 +716,11 @@ export const ReviewsSection = ({
     : normalizedInstructors.length > 0 &&
       normalizedInstructors.every((value) => ownReviewInstructors.has(value));
   const showInstructor = !instructor;
+  const defaultInstructor = getDefaultReviewInstructor(
+    normalizedInstructors,
+    selectedInstructor,
+    [...ownReviewInstructors],
+  );
 
   const openExistingReview = async (id: string) => {
     setFormMode(null);
@@ -635,19 +756,6 @@ export const ReviewsSection = ({
     );
   };
 
-  if (isLoading) {
-    return (
-      <section aria-labelledby="native-reviews" className="flex flex-col gap-2">
-        <h3 id="native-reviews" className="font-bold">
-          {dict.course.details.native_reviews.title}
-        </h3>
-        <div className="flex flex-col gap-2">
-          <div className="h-4 w-2/3 animate-pulse bg-muted" />
-          <div className="h-4 w-full animate-pulse bg-muted" />
-        </div>
-      </section>
-    );
-  }
   if (error) {
     return (
       <section aria-labelledby="native-reviews" className="flex flex-col gap-2">
@@ -662,6 +770,19 @@ export const ReviewsSection = ({
             </Button>
           }
         />
+      </section>
+    );
+  }
+  if (isPending || !isSuccess) {
+    return (
+      <section aria-labelledby="native-reviews" className="flex flex-col gap-2">
+        <h3 id="native-reviews" className="font-bold">
+          {dict.course.details.native_reviews.title}
+        </h3>
+        <div className="flex flex-col gap-2">
+          <div className="h-4 w-2/3 animate-pulse bg-muted" />
+          <div className="h-4 w-full animate-pulse bg-muted" />
+        </div>
       </section>
     );
   }
@@ -682,10 +803,13 @@ export const ReviewsSection = ({
             </span>
           )}
         </h3>
-        {isReviewAuthenticated &&
-        moduleKey &&
-        normalizedInstructors.length > 0 &&
-        !hasOwnReviewForTarget ? (
+        {shouldShowCreateReviewAction({
+          isAuthenticated: isReviewAuthenticated,
+          hasModuleKey: Boolean(moduleKey),
+          instructorCount: normalizedInstructors.length,
+          hasOwnReviewForTarget,
+          formMode,
+        }) ? (
           <Button size="sm" onClick={openCreate}>
             {dict.course.details.native_reviews.write}
           </Button>
@@ -754,13 +878,15 @@ export const ReviewsSection = ({
               normalizedInstructors.length ? normalizedInstructors : []
             }
             semesterOptions={semesterOptions}
+            semesterOptionsByInstructor={semesterOptionsByInstructor}
+            defaultInstructor={defaultInstructor}
             review={formMode === "create" ? undefined : formMode}
             onCancel={() => setFormMode(null)}
             onSaved={() => setFormMode(null)}
             onAlreadyReviewed={(id) => void openExistingReview(id)}
           />
         )}
-      {sortedReviews.length === 0 && !formMode ? (
+      {isSuccess && sortedReviews.length === 0 && !formMode ? (
         <div className="py-4">
           <p>{dict.course.details.native_reviews.empty}</p>
         </div>
