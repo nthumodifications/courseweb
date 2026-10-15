@@ -290,7 +290,7 @@ function GroupsTab({
     return (
       <div className="flex flex-col gap-4">
         <div className="text-center py-2">
-          <p className="font-semibold">{created.name}</p>
+          <p className="font-medium">{created.name}</p>
           <p className="text-xs text-muted-foreground mt-0.5">
             {labels.group_created}
           </p>

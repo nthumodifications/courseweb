@@ -32,7 +32,7 @@ export const CurrentTimePointer = () => {
           (date.getMinutes() * HOUR_HEIGHT) / 60,
       }}
     >
-      <span className="-left-11 absolute text-nthu-600 font-semibold shadow-sm text-sm">
+      <span className="-left-11 absolute text-nthu-600 font-medium shadow-sm text-sm">
         {formatTaipei(now, "HH:mm")}
       </span>
       <div className="w-2 h-2 bg-nthu-600 rounded-full shadow-md"></div>

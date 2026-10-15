@@ -35,7 +35,7 @@ export const CalendarDateSelector = ({
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="text-lg md:text-xl font-semibold md:w-40 w-36 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          className="text-lg md:text-xl font-medium md:w-40 w-36 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
           {formatTaipei(date, "LLLL yyyy", { locale: getLocale(language) })}{" "}
           <ChevronDown className="inline size-3" aria-hidden="true" />

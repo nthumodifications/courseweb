@@ -82,7 +82,7 @@ const TimetableTimeline: FC<TimetableTimelineProps> = ({
           <div
             key={day}
             style={{ width: DAY_COL_W, minWidth: DAY_COL_W }}
-            className="text-center text-xs font-semibold py-2 text-muted-foreground uppercase border-l border-border"
+            className="text-center text-xs font-medium py-2 text-muted-foreground border-l border-border"
           >
             {format(addDays(new Date(2024, 0, 1), day), "EEE", {
               locale: getLocale(language),
@@ -171,7 +171,7 @@ const TimetableTimeline: FC<TimetableTimelineProps> = ({
                     <span
                       className={cn(
                         fontSizeClass,
-                        "font-semibold leading-tight truncate",
+                        "font-medium leading-tight truncate",
                       )}
                     >
                       {slot.customItem && (

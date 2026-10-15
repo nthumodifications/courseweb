@@ -127,7 +127,7 @@ export const Rating = ({
         )}
       </div>
       {showText && (
-        <span className="text-xs text-muted-foreground font-semibold">
+        <span className="text-xs text-muted-foreground font-medium">
           Current Rating: {`${currentRating}`}
         </span>
       )}

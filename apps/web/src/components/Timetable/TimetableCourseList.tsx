@@ -509,7 +509,7 @@ export const TimetableCourseList = ({
           )}
         {listStatus === "empty" && (
           <div className="flex flex-col items-center space-y-4">
-            <span className="text-lg font-semibold text-muted-foreground">
+            <span className="text-lg font-medium text-muted-foreground">
               {dict.timetable.no_courses}
             </span>
             <div className="flex flex-row gap-2">

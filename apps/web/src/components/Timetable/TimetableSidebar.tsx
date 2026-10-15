@@ -172,7 +172,7 @@ const TimetableSidebar = ({
 
       {semesterCustomItems.length > 0 && (
         <div className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide px-1">
+          <span className="text-xs font-medium text-muted-foreground tracking-wide px-1">
             {dict.timetable.custom_items.title}
           </span>
           {semesterCustomItems.map((item) => (
@@ -240,7 +240,7 @@ const TimetableSidebar = ({
       {isAuthenticated && (
         <div className="flex flex-col gap-1">
           <div className="flex items-center justify-between px-1">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            <span className="text-xs font-medium text-muted-foreground tracking-wide">
               {dict.timetable.sidebar.groups}
             </span>
             <ShareTimetableDialogDynamic initialTab="groups">

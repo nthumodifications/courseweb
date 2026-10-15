@@ -237,7 +237,7 @@ const Timetable: FC<{
               {days.map((dayStr, index) => (
                 <tr key={index} className="h-0.5">
                   <td className="sticky left-0 z-10 w-28 p-0.5 h-[inherit]">
-                    <div className="w-full text-xs font-semibold bg-muted rounded-md h-20 flex flex-col justify-center">
+                    <div className="w-full text-xs font-medium bg-muted rounded-md h-20 flex flex-col justify-center">
                       {dayStr}
                     </div>
                   </td>
@@ -285,41 +285,41 @@ const Timetable: FC<{
             <tr className="h-1">
               <td className="w-[40px] min-w-[40px]" ref={headerRow}></td>
               <td className="p-0.5 h-[inherit]">
-                <div className="h-full w-full text-xs font-semibold bg-muted rounded-md py-2">
+                <div className="h-full w-full text-xs font-medium bg-muted rounded-md py-2">
                   {dayLabels[0]}
                 </div>
               </td>
               <td className="p-0.5 h-[inherit]">
-                <div className="h-full w-full text-xs font-semibold bg-muted rounded-md py-2">
+                <div className="h-full w-full text-xs font-medium bg-muted rounded-md py-2">
                   {dayLabels[1]}
                 </div>
               </td>
               <td className="p-0.5 h-[inherit]">
-                <div className="h-full w-full text-xs font-semibold bg-muted rounded-md py-2">
+                <div className="h-full w-full text-xs font-medium bg-muted rounded-md py-2">
                   {dayLabels[2]}
                 </div>
               </td>
               <td className="p-0.5 h-[inherit]">
-                <div className="h-full w-full text-xs font-semibold bg-muted rounded-md py-2">
+                <div className="h-full w-full text-xs font-medium bg-muted rounded-md py-2">
                   {dayLabels[3]}
                 </div>
               </td>
               <td className="p-0.5 h-[inherit]">
-                <div className="h-full w-full text-xs font-semibold bg-muted rounded-md py-2">
+                <div className="h-full w-full text-xs font-medium bg-muted rounded-md py-2">
                   {dayLabels[4]}
                 </div>
               </td>
 
               {showSaturday && (
                 <td className="p-0.5 h-[inherit]">
-                  <div className="h-full w-full text-xs font-semibold bg-muted rounded-md py-2">
+                  <div className="h-full w-full text-xs font-medium bg-muted rounded-md py-2">
                     {dayLabels[5]}
                   </div>
                 </td>
               )}
               {showSunday && (
                 <td className="p-0.5 h-[inherit]">
-                  <div className="h-full w-full text-xs font-semibold bg-muted rounded-md py-2">
+                  <div className="h-full w-full text-xs font-medium bg-muted rounded-md py-2">
                     {dayLabels[6]}
                   </div>
                 </td>
