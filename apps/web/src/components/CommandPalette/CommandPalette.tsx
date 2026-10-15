@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Command } from "cmdk";
 import { useSettings } from "@/hooks/contexts/settings";
+import { contentLanguage } from "@/helpers/contentLanguage";
 import { useTheme } from "@/hooks/contexts/theme";
 import { THEME_PRESETS } from "@/config/themePresets";
 import { apps } from "@/const/apps";
@@ -264,7 +265,9 @@ const CommandPalette = () => {
                     <Palette className="h-4 w-4 text-muted-foreground" />
                   </div>
                   <span>
-                    {language === "zh" ? preset.labelZh : preset.label}
+                    {contentLanguage(language) === "zh"
+                      ? preset.labelZh
+                      : preset.label}
                   </span>
                 </Command.Item>
               ))}

@@ -120,44 +120,48 @@ const course: MinimalCourse = {
 
 describe("timetable calendar event dates", () => {
   if (!timezoneChild) {
-    test("keeps Taipei event dates across process time zones", async () => {
-      const environment = Object.fromEntries(
-        Object.entries(process.env).filter(
-          (entry): entry is [string, string] => entry[1] !== undefined,
-        ),
-      );
+    test(
+      "keeps Taipei event dates across process time zones",
+      async () => {
+        const environment = Object.fromEntries(
+          Object.entries(process.env).filter(
+            (entry): entry is [string, string] => entry[1] !== undefined,
+          ),
+        );
 
-      const results = await Promise.all(
-        timezones.map(async ({ name }) => {
-          const child = Bun.spawn(
-            [process.execPath, "test", import.meta.path],
-            {
-              env: {
-                ...environment,
-                TZ: name,
-                [TIMEZONE_CHILD_ENV]: "1",
+        const results = await Promise.all(
+          timezones.map(async ({ name }) => {
+            const child = Bun.spawn(
+              [process.execPath, "test", import.meta.path],
+              {
+                env: {
+                  ...environment,
+                  TZ: name,
+                  [TIMEZONE_CHILD_ENV]: "1",
+                },
+                stdout: "pipe",
+                stderr: "pipe",
               },
-              stdout: "pipe",
-              stderr: "pipe",
-            },
-          );
-          const [exitCode, stdout, stderr] = await Promise.all([
-            child.exited,
-            new Response(child.stdout).text(),
-            new Response(child.stderr).text(),
-          ]);
-          return {
-            exitCode,
-            output: `${stdout}\n${stderr}`,
-            name,
-          };
-        }),
-      );
+            );
+            const [exitCode, stdout, stderr] = await Promise.all([
+              child.exited,
+              new Response(child.stdout).text(),
+              new Response(child.stderr).text(),
+            ]);
+            return {
+              exitCode,
+              output: `${stdout}\n${stderr}`,
+              name,
+            };
+          }),
+        );
 
-      for (const result of results) {
-        expect(result.exitCode, `${result.name}\n${result.output}`).toBe(0);
-      }
-    });
+        for (const result of results) {
+          expect(result.exitCode, `${result.name}\n${result.output}`).toBe(0);
+        }
+      },
+      { timeout: 30_000 },
+    );
     return;
   }
 

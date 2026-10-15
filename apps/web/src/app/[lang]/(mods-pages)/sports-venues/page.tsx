@@ -26,7 +26,9 @@ import { useState } from "react";
 import useTime from "@/hooks/useTime";
 import { semesterInfo } from "@courseweb/shared";
 import useDictionary from "@/dictionaries/useDictionary";
+import { intlLocale } from "@/helpers/contentLanguage";
 import { useSettings } from "@/hooks/contexts/settings";
+import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
 import UsageForecast from "@/components/Venue/UsageForecast";
 import {
   getUsageSeries,
@@ -242,6 +244,7 @@ const ScheduleSheet = ({
   now: Date;
 }) => {
   const dict = useDictionary();
+  const localizeData = useLocalizedZhData();
   const currentSemesterLabel = getCurrentSemesterLabel({
     first: dict.sports.semester_first,
     second: dict.sports.semester_second,
@@ -293,7 +296,7 @@ const ScheduleSheet = ({
       <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto">
         <SheetHeader className="mb-4">
           <SheetTitle>
-            {facility.name_zh}
+            {localizeData(facility.name_zh)}
             {facility.name_en !== facility.name_zh && (
               <span className="ml-2 text-sm font-normal text-muted-foreground">
                 {facility.name_en}
@@ -416,6 +419,7 @@ const ScheduleSheet = ({
 const SportsVenuesPage = () => {
   const now = useTime(60_000); // refresh every minute for status badges
   const dict = useDictionary();
+  const localizeData = useLocalizedZhData();
   const { language } = useSettings();
   const [selectedFacility, setSelectedFacility] =
     useState<FacilitySchedule | null>(null);
@@ -581,7 +585,7 @@ const SportsVenuesPage = () => {
             <span className="text-xs text-muted-foreground">
               {dict.sports.updated_at}{" "}
               {new Date(dataUpdatedAt).toLocaleTimeString(
-                language === "en" ? "en-US" : "zh-TW",
+                intlLocale(language),
                 {
                   hour: "2-digit",
                   minute: "2-digit",
@@ -749,7 +753,7 @@ const SportsVenuesPage = () => {
                 <Users className="h-7 w-7 text-primary shrink-0" />
                 <div className="flex flex-col flex-1 min-w-0">
                   <h3 className="min-w-0 whitespace-normal text-foreground font-bold">
-                    {facility.name_zh}
+                    {localizeData(facility.name_zh)}
                   </h3>
                   {todaySlots !== null && (
                     <StatusBadge slots={todaySlots} now={now} />

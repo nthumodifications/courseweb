@@ -46,6 +46,7 @@ describe("campus bus helpers", () => {
       "校本部發車",
       "Dep. from GEN II",
     ]);
+    expect(exportNotes(bus, "zh-cn").notes).toEqual(["校本部發車", "綜二發車"]);
   });
 
   test("adds Nanda service notes from the description", () => {

@@ -1,5 +1,6 @@
 import { UnresolvedCoursesNotice } from "@/components/Timetable/UnresolvedCoursesNotice";
 import useDictionary from "@/dictionaries/useDictionary";
+import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
 import {
   TIMETABLE_PREVIEW_COURSES,
   TIMETABLE_PREVIEW_UNRESOLVED_COUNT,
@@ -15,6 +16,7 @@ const TimetablePreviewRow = ({
   color: string;
 }) => {
   const dict = useDictionary();
+  const localizeData = useLocalizedZhData();
 
   return (
     <div className="flex max-w-3xl flex-row items-center gap-2">
@@ -29,14 +31,14 @@ const TimetablePreviewRow = ({
           {course.department} {course.course}
         </div>
         <div>
-          {course.name_zh}{" "}
+          {localizeData(course.name_zh)}{" "}
           <span className="text-muted-foreground">
-            {course.teacher_zh.join(",")}
+            {course.teacher_zh.map(localizeData).join(",")}
           </span>
         </div>
         <div className="mt-1 flex flex-row flex-wrap gap-1 text-muted-foreground">
           <div className="mr-1 whitespace-nowrap rounded-md bg-foreground/10 px-2 py-0.5 text-xs">
-            {course.venues[0]} {course.times[0]}
+            {localizeData(course.venues[0])} {course.times[0]}
           </div>
           <div className="mr-1 whitespace-nowrap rounded-md bg-foreground/10 px-2 py-0.5 text-xs">
             {course.credits} {dict.course.credits}

@@ -22,6 +22,7 @@ import { Route2LineIcon } from "@/components/BusIcons/Route2LineIcon";
 import { exportNotes, getTimeOnDate } from "@/helpers/bus";
 import useDictionary from "@/dictionaries/useDictionary";
 import { getLocale } from "@/helpers/dateLocale";
+import { contentLanguage } from "@/helpers/contentLanguage";
 import { Language } from "@/types/settings";
 import {
   eachHourOfInterval,
@@ -31,6 +32,7 @@ import {
   startOfHour,
 } from "date-fns";
 import { activateOnKey } from "@/lib/activate-on-key";
+import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
 
 type BusDetailsContainerProps = {
   routes: {
@@ -63,6 +65,7 @@ const BusDetailsContainer = ({
     startOfHour(new Date()),
   );
   const dict = useDictionary();
+  const localizeData = useLocalizedZhData();
 
   const renderBusSchedule = (
     busUp: BusDepartureDetails[],
@@ -71,10 +74,10 @@ const BusDetailsContainer = ({
     //only display busses after selected hour
     const transformedBusesUp = busUp
       .filter((b) => getTimeOnDate(new Date(), b.time) >= selectedHour)
-      .map((m) => exportNotes(m, lang));
+      .map((m) => exportNotes(m, contentLanguage(lang)));
     const transformedBusesDown = busDown
       .filter((b) => getTimeOnDate(new Date(), b.time) >= selectedHour)
-      .map((m) => exportNotes(m, lang));
+      .map((m) => exportNotes(m, contentLanguage(lang)));
 
     // create a merged list of buses, each row contains both up and down buses, each row {up: BusDepartureDetails, down: BusDepartureDetails
     const maxLen = Math.max(
@@ -114,7 +117,7 @@ const BusDetailsContainer = ({
                         </div>
                         <div className="flex flex-wrap gap-2 items-center">
                           <div className="text-foreground">
-                            {bus.up.dep_stop}
+                            {localizeData(bus.up.dep_stop)}
                           </div>
                           {bus.up.description.includes("巴士") && (
                             <div className="w-max text-xs text-black bg-orange-200 px-1 rounded">
@@ -175,7 +178,7 @@ const BusDetailsContainer = ({
                         </div>
                         <div className="flex flex-wrap gap-2 items-center">
                           <div className="text-foreground">
-                            {bus.down.dep_stop}
+                            {localizeData(bus.down.dep_stop)}
                           </div>
                           {bus.down.description.includes("巴士") && (
                             <div className="text-xs text-black bg-orange-200 px-1 rounded">

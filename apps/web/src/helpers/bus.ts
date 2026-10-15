@@ -1,6 +1,7 @@
 import { set } from "date-fns";
 import { Language } from "@/types/settings";
 import { BusDepartureDetails } from "@/libs/bus";
+import { contentLanguage } from "./contentLanguage";
 
 export const getTimeOnDate = (date: Date, time: string) => {
   const [hour, minute] = time.split(":").map((n) => Number.parseInt(n));
@@ -10,15 +11,19 @@ export const getTimeOnDate = (date: Date, time: string) => {
 export const formatNandaDestination = (bus: { to_nanda: string }) =>
   bus.to_nanda;
 
-export const exportNotes = (bus: BusDepartureDetails, lang: Language) => {
+export const exportNotes = (
+  bus: BusDepartureDetails,
+  lang: Language | "zh" | "en",
+) => {
+  const contentLang = contentLanguage(lang);
   const notes = [];
   if (bus.route == "校園公車" && bus.description) notes.push(bus.description);
   if (bus.route == "校園公車" && bus.dep_stop === "綜二 ")
-    notes.push(lang == "zh" ? "綜二發車" : "Dep. from GEN II");
+    notes.push(contentLang == "zh" ? "綜二發車" : "Dep. from GEN II");
   if (bus.route == "南大區間車" && bus.description.includes("83號"))
-    notes.push(lang == "zh" ? "83號" : "Bus 83");
+    notes.push(contentLang == "zh" ? "83號" : "Bus 83");
   if (bus.route == "南大區間車" && bus.description.includes("週五停駛"))
-    notes.push(lang == "zh" ? "週五停駛" : "N/A on Fridays");
+    notes.push(contentLang == "zh" ? "週五停駛" : "N/A on Fridays");
   return {
     ...bus,
     notes,

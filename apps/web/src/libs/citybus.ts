@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { contentLanguage, intlLocale } from "@/helpers/contentLanguage";
 
 export const SERVICE_DAYS = [
   "Sunday",
@@ -189,7 +190,7 @@ export function formatDepartureCountdown(
   if (rounded < 60) return `${rounded} ${labels.underHour}`;
   const hours = Math.floor(rounded / 60);
   const remainder = rounded % 60;
-  if (language === "zh")
+  if (contentLanguage(language) === "zh")
     return `${hours} ${labels.hour}${remainder ? ` ${remainder} ${labels.minute}` : ""}`;
   return `${hours} ${labels.hour}${remainder ? ` ${remainder} ${labels.minute}` : ""}`;
 }
@@ -333,7 +334,7 @@ export function formatNextServiceDay(
 ) {
   if (dayOffset === 1) return tomorrow;
   const date = new Date(now.getTime() + dayOffset * 86_400_000);
-  return new Intl.DateTimeFormat(language === "zh" ? "zh-TW" : "en-US", {
+  return new Intl.DateTimeFormat(intlLocale(language), {
     timeZone: "Asia/Taipei",
     weekday: "long",
   }).format(date);

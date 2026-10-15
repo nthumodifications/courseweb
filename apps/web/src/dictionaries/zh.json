@@ -950,9 +950,10 @@
       "language": {
         "title": "語言"
       },
-      "zh_script": {
-        "title": "簡體中文顯示",
-        "description": "使用簡體字與中國大陸常用詞彙。"
+      "language_options": {
+        "zh": "繁體中文",
+        "en": "English",
+        "zh_cn": "简体中文"
       },
       "compact_header": {
         "title": "精簡標頭"

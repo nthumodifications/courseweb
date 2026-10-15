@@ -12,8 +12,10 @@ import {
 import { useYouBikeStations } from "@/hooks/useYouBikeStations";
 import { Bike, Zap, Star, Search, MapPin } from "lucide-react";
 import useDictionary from "@/dictionaries/useDictionary";
+import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
 import OpenCollectiveSponsorBanner from "@/components/Sponsorship/OpenCollectiveSponsorBanner";
 import { activateOnKey } from "@/lib/activate-on-key";
+import { contentLanguage } from "@/helpers/contentLanguage";
 
 export type YouBikeItemProps = {
   station: YouBikeStation;
@@ -28,10 +30,11 @@ export const YouBikeListingItem = ({
 }: YouBikeItemProps) => {
   const { language } = useSettings();
   const dict = useDictionary();
+  const localizeData = useLocalizedZhData();
 
-  const isZh = language === "zh";
-  const name = isZh ? station.nameZh : station.nameEn;
-  const address = isZh ? station.addressZh : station.addressEn;
+  const isZh = contentLanguage(language) === "zh";
+  const name = isZh ? localizeData(station.nameZh) : station.nameEn;
+  const address = isZh ? localizeData(station.addressZh) : station.addressEn;
   const isOutOfService = station.status === 2;
   const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${station.lat},${station.lng}`;
 

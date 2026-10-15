@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import Footer from "@/components/Footer";
 import useDictionary from "@/dictionaries/useDictionary";
+import { localizedRoutePath } from "@/types/locale";
 
 const useMermaid = () => {
   useEffect(() => {
@@ -23,7 +24,6 @@ const ProxyLoginExplainerPage = () => {
   useMermaid();
   const dict = useDictionary();
   const { lang } = useParams<{ lang: string }>();
-  const language = lang === "en" ? "en" : "zh";
 
   return (
     <div className="flex flex-col gap-4 px-4">
@@ -41,7 +41,7 @@ const ProxyLoginExplainerPage = () => {
           </h2>
           <p>
             {dict.proxy_login.what_is.before_link}{" "}
-            <a href={`/${language}/web-for-beginners/auth`}>
+            <a href={localizedRoutePath(lang, "/web-for-beginners/auth")}>
               {dict.proxy_login.what_is.link}
             </a>
             {dict.proxy_login.what_is.after_link}
@@ -53,7 +53,7 @@ const ProxyLoginExplainerPage = () => {
                 {dict.proxy_login.what_is.separator}
               </strong>{" "}
               {dict.proxy_login.what_is.note_before}{" "}
-              <a href={`/${language}/web-for-beginners/auth`}>
+              <a href={localizedRoutePath(lang, "/web-for-beginners/auth")}>
                 {dict.proxy_login.what_is.note_link}
               </a>{" "}
               {dict.proxy_login.what_is.note_after}
@@ -69,7 +69,7 @@ const ProxyLoginExplainerPage = () => {
           <ul className="list-disc pl-4 flex flex-col gap-2">
             {dict.proxy_login.connections.items.map((item) => (
               <li key={item.path}>
-                <a href={`/${language}${item.path}`}>{item.label}</a>{" "}
+                <a href={localizedRoutePath(lang, item.path)}>{item.label}</a>{" "}
                 {dict.proxy_login.connections.separator} {item.description}
               </li>
             ))}
@@ -111,7 +111,12 @@ const ProxyLoginExplainerPage = () => {
                     </div>
                     <p>
                       {dict.proxy_login.protection.detail_before}{" "}
-                      <a href={`/${language}/web-for-beginners/auth`}>
+                      <a
+                        href={localizedRoutePath(
+                          lang,
+                          "/web-for-beginners/auth",
+                        )}
+                      >
                         {dict.proxy_login.protection.detail_link}
                       </a>
                     </p>
@@ -130,7 +135,7 @@ const ProxyLoginExplainerPage = () => {
           <div className="mermaid">{dict.proxy_login.diagrams.login}</div>
           <p>
             {dict.proxy_login.process.detail_before}{" "}
-            <a href={`/${language}/web-for-beginners/auth`}>
+            <a href={localizedRoutePath(lang, "/web-for-beginners/auth")}>
               {dict.proxy_login.process.detail_link}
             </a>
           </p>
@@ -142,11 +147,11 @@ const ProxyLoginExplainerPage = () => {
           </h2>
           <p>
             {dict.proxy_login.reauth.before_course}{" "}
-            <a href={`/${language}/web-for-beginners/course`}>
+            <a href={localizedRoutePath(lang, "/web-for-beginners/course")}>
               {dict.proxy_login.reauth.course}
             </a>{" "}
             {dict.proxy_login.reauth.between}{" "}
-            <a href={`/${language}/web-for-beginners/grades`}>
+            <a href={localizedRoutePath(lang, "/web-for-beginners/grades")}>
               {dict.proxy_login.reauth.grades}
             </a>
             {dict.proxy_login.reauth.after}

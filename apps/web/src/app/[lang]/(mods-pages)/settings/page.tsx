@@ -48,8 +48,6 @@ const SettingsPage = () => {
     setDarkMode,
     language,
     setLanguage,
-    zhScript,
-    setZhScript,
     showAcademicCalendar,
     setShowAcademicCalendar,
     analytics,
@@ -199,30 +197,18 @@ const SettingsPage = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="zh">
-                        {dict.settings.timetable.language_options.zh}
+                        {dict.settings.display.language_options.zh}
                       </SelectItem>
                       <SelectItem value="en">
-                        {dict.settings.timetable.language_options.en}
+                        {dict.settings.display.language_options.en}
+                      </SelectItem>
+                      <SelectItem value="zh-cn">
+                        {dict.settings.display.language_options.zh_cn}
                       </SelectItem>
                     </SelectContent>
                   </Select>
                 }
               />
-
-              {language === "zh" && (
-                <SettingItem
-                  title={dict.settings.display.zh_script.title}
-                  description={dict.settings.display.zh_script.description}
-                  control={
-                    <Switch
-                      checked={zhScript === "hans"}
-                      onCheckedChange={(checked) =>
-                        setZhScript(checked ? "hans" : "hant")
-                      }
-                    />
-                  }
-                />
-              )}
 
               <SettingItem
                 title={dict.settings.display.compact_header.title}

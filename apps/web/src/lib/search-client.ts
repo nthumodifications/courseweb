@@ -68,6 +68,9 @@ const FALLBACK_TIMEOUT_MS = 15_000;
 export type ResilientSearchClientOptions = {
   /** Test/embedded override for the local chunk loader and cache. */
   localSearch?: LocalSearchClientOptions | false;
+  /** Character-normalize queries only for the local Traditional-data index. */
+  localQueryTransform?: (query: string) => string;
+  localSearchTextTransform?: (text: string) => string;
   /** Test/embedded override for the already-configured remote chain. */
   remoteClient?: AlgoliaSearchClient;
 };
@@ -355,6 +358,8 @@ export const createResilientSearchClient = (
     ? createLocalSearchClient({
         defaultSemester: lastSemester.id,
         ...(options.localSearch === false ? {} : (options.localSearch ?? {})),
+        queryTransform: options.localQueryTransform,
+        searchTextTransform: options.localSearchTextTransform,
       })
     : undefined;
   const clientByBackend = options.remoteClient

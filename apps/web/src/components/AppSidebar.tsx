@@ -14,6 +14,7 @@ import { Language } from "@/types/settings";
 import SponsorshipBanner from "./Sponsorship/SponsorshipBanner";
 import useDictionary from "@/dictionaries/useDictionary";
 import { lazyWithRetry } from "@/lib/chunk-recovery";
+import { contentLanguage } from "@/helpers/contentLanguage";
 
 const HelpDynamic = lazyWithRetry(() => import("@/components/Help/Help"));
 
@@ -53,7 +54,10 @@ const AppSidebar = ({ lang }: { lang: Language }) => {
           </Suspense>
         </div>
         <div className="pl-2">
-          <CurrentSemesterLabel language={lang} dictionary={dict} />
+          <CurrentSemesterLabel
+            language={contentLanguage(lang)}
+            dictionary={dict}
+          />
         </div>
         <div className="border-t border-border pt-2">
           <Suspense fallback={null}>

@@ -6,6 +6,7 @@ import { cn } from "@courseweb/ui";
 import { useNavigate } from "react-router-dom";
 import useDictionary from "@/dictionaries/useDictionary";
 import type { BusPin } from "./busPins";
+import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
 
 export type BusListingItemProps = {
   tab: string;
@@ -51,6 +52,7 @@ export const BusListingItem = ({
 }: BusListingItemProps) => {
   const { language } = useSettings();
   const dict = useDictionary();
+  const localizeData = useLocalizedZhData();
   const displayTime = useMemo(() => {
     if (exactArrival || !arrival.match(/\d{2}:\d{2}/)) return arrival;
     const time = set(new Date(), {
@@ -118,8 +120,8 @@ export const BusListingItem = ({
           {leading ?? (Icon ? <Icon className="h-7 w-7" /> : null)}
         </div>
         <h3 className="min-w-0 break-words font-bold text-foreground">
-          <span>{title}</span>
-          {destination && <span>-{destination}</span>}
+          <span>{localizeData(title)}</span>
+          {destination && <span>-{localizeData(destination)}</span>}
         </h3>
         <div className="flex flex-1 flex-col items-end text-right">
           <div
@@ -171,13 +173,15 @@ export const BusListingItem = ({
             className="inline-flex items-center justify-center gap-2"
             key={note}
           >
-            <div className="text-center text-sm font-medium">・{note}</div>
+            <div className="text-center text-sm font-medium">
+              ・{localizeData(note)}
+            </div>
           </div>
         ))}
         {sourceLabel && (
           <div className="inline-flex items-center justify-center gap-2">
             <div className="text-center text-sm font-medium text-muted-foreground">
-              ・{sourceLabel}
+              ・{localizeData(sourceLabel)}
             </div>
           </div>
         )}

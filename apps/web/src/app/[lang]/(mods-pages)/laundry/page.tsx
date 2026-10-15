@@ -4,6 +4,7 @@ import { Button, cn, ErrorState, Skeleton } from "@courseweb/ui";
 import { Helmet } from "react-helmet-async";
 import { serializeJsonLd } from "@/lib/seo";
 import useDictionary from "@/dictionaries/useDictionary";
+import { intlLocale } from "@/helpers/contentLanguage";
 import { useSettings } from "@/hooks/contexts/settings";
 import useTime from "@/hooks/useTime";
 import { useLaundryStatus } from "@/hooks/useLaundryStatus";
@@ -418,9 +419,7 @@ const LaundryPage = () => {
   const title = dict.laundry.title;
   const lastUpdated = lastMessageAt
     ? replaceTemplate(dict.laundry.last_updated, {
-        time: new Date(lastMessageAt).toLocaleTimeString(
-          language === "en" ? "en-US" : "zh-TW",
-        ),
+        time: new Date(lastMessageAt).toLocaleTimeString(intlLocale(language)),
       })
     : null;
   const pageJsonLd = {
@@ -428,7 +427,7 @@ const LaundryPage = () => {
     "@type": "WebPage",
     name: `${title} | NTHUMods`,
     url: `https://nthumods.com/${language}/laundry`,
-    inLanguage: language === "en" ? "en-US" : "zh-TW",
+    inLanguage: intlLocale(language),
     isPartOf: { "@type": "WebSite", url: "https://nthumods.com" },
   };
   if (connectionState === "error" && Object.keys(statuses).length === 0) {

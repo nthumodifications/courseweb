@@ -15,6 +15,7 @@ import BuildingInfoPanel from "./BuildingInfoPanel";
 import CampusScene from "./CampusScene";
 import MapLegend from "./MapLegend";
 import MapSearch from "./MapSearch";
+import { contentLanguage } from "@/helpers/contentLanguage";
 import { CAMPUS_MAP_DATA_CACHE_VERSION, loadCampusMapData } from "./data";
 import {
   createCampusFeatureLabelNumbers,
@@ -72,7 +73,7 @@ export default function CampusMapPage() {
   const dictionary = useDictionary();
   const dict = dictionary.campus_map;
   const { lang } = useParams<{ lang: string }>();
-  const language = lang === "en" ? "en" : "zh";
+  const language = contentLanguage(lang);
   const [searchParams, setSearchParams] = useSearchParams();
   const [resetNonce, setResetNonce] = useState(0);
   const webglAvailable = useMemo(supportsWebGL, []);

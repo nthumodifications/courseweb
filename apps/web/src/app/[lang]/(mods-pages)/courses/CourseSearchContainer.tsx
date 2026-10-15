@@ -10,21 +10,35 @@ import { useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useSettings } from "@/hooks/contexts/settings";
+import {
+  useLocalizedZhData,
+  useLocalizedZhQuery,
+} from "@/hooks/useLocalizedZh";
 import SearchContainer from "./SearchContainer";
 import { lastSemester } from "@courseweb/shared";
 import CourseSidePanel from "./CourseSidePanel";
 import { createResilientSearchClient } from "@/lib/search-client";
 import useDictionary from "@/dictionaries/useDictionary";
+import { intlLocale } from "@/helpers/contentLanguage";
 import { createCourseSearchRouter } from "@/components/Courses/courseSearchRouting";
 import { serializeJsonLd } from "@/lib/seo";
 
-const searchClient = createResilientSearchClient();
 const sessionStorageCache = createInfiniteHitsSessionStorageCache();
 
 const CourseSearchContainer = () => {
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const [searchParams] = useSearchParams();
   const { language } = useSettings();
+  const localizeQuery = useLocalizedZhQuery();
+  const localizeSearchText = useLocalizedZhData();
+  const searchClient = useMemo(
+    () =>
+      createResilientSearchClient({
+        localQueryTransform: localizeQuery,
+        localSearchTextTransform: localizeSearchText,
+      }),
+    [localizeQuery, localizeSearchText],
+  );
   const dict = useDictionary();
   const department = searchParams.get("department");
   const routing = useMemo(() => ({ router: createCourseSearchRouter() }), []);
@@ -90,7 +104,7 @@ const CourseSearchContainer = () => {
               department,
             ),
             url: `https://nthumods.com/${language}/courses?department=${encodeURIComponent(department)}`,
-            inLanguage: language === "en" ? "en-US" : "zh-TW",
+            inLanguage: intlLocale(language),
             isPartOf: { "@type": "WebSite", url: "https://nthumods.com" },
           },
         ])}

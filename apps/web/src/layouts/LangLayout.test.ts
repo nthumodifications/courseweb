@@ -32,6 +32,12 @@ describe("localizedRedirectPath", () => {
     expect(localizedRedirectPath("/zh-TW/timetable", "zh")).toBe(
       "/zh/timetable",
     );
+    expect(localizedRedirectPath("/zh-CN/courses", "zh")).toBe(
+      "/zh-cn/courses",
+    );
+    expect(localizedRedirectPath("/zh-cn/courses", "en")).toBe(
+      "/zh-cn/courses",
+    );
   });
 
   test("falls back to today when nothing is left", async () => {

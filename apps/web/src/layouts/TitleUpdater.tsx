@@ -3,8 +3,9 @@ import { matchRoutes } from "react-router-dom";
 import { router } from "@/router";
 import { usePageLocation } from "@/hooks/usePageLocation";
 import { serializeJsonLd } from "@/lib/seo";
-import { useSettings } from "@/hooks/contexts/settings";
 import useDictionary from "@/dictionaries/useDictionary";
+import { useLocalizedZh } from "@/hooks/useLocalizedZh";
+import type { Language } from "@/types/settings";
 
 interface RouteHandle {
   title?: string;
@@ -29,7 +30,7 @@ const websiteJsonLd = {
   alternateName: ["清大課程平臺", "NTHU Mods", "清華大學選課平臺", "清大選課"],
   url: BASE_URL,
   description: DEFAULT_DESCRIPTION_ZH,
-  inLanguage: ["zh-TW", "en"],
+  inLanguage: ["zh-TW", "en", "zh-CN"],
   potentialAction: {
     "@type": "SearchAction",
     target: {
@@ -66,17 +67,18 @@ const normalizePath = (pathname: string): string => {
   return withoutTrailing || "/";
 };
 
-const replaceLangPrefix = (path: string, lang: "zh" | "en"): string => {
+const replaceLangPrefix = (path: string, lang: Language): string => {
   const normalized = normalizePath(path);
   if (normalized === "/") return `/${lang}`;
-  if (/^\/(zh|en)(\/|$)/.test(normalized)) {
-    return normalized.replace(/^\/(zh|en)(?=\/|$)/, `/${lang}`);
+  if (/^\/(zh|zh-cn|en)(\/|$)/.test(normalized)) {
+    return normalized.replace(/^\/(zh|zh-cn|en)(?=\/|$)/, `/${lang}`);
   }
   return `/${lang}${normalized === "/" ? "" : normalized}`;
 };
 
-const getLangFromPath = (pathname: string): "zh" | "en" => {
+const getLangFromPath = (pathname: string): Language => {
   if (pathname.startsWith("/en/") || pathname === "/en") return "en";
+  if (pathname.startsWith("/zh-cn/") || pathname === "/zh-cn") return "zh-cn";
   return "zh";
 };
 
@@ -113,45 +115,47 @@ const getFullTitle = (isZh: boolean, pageTitle: string | undefined) => {
     : "NTHUMods | NTHU Course Search & Campus Tools";
 };
 
-const getPageLanguage = (isZh: boolean, zhScript: string) => {
-  if (!isZh) return "en";
-  return zhScript === "hans" ? "zh-Hans" : "zh-Hant";
+const getPageLanguage = (lang: Language) => {
+  if (lang === "en") return "en";
+  return lang === "zh-cn" ? "zh-CN" : "zh-TW";
 };
 
-const getOpenGraphLocale = (isZh: boolean, zhScript: string) => {
-  if (!isZh) return "en_US";
-  return zhScript === "hans" ? "zh_CN" : "zh_TW";
+const getOpenGraphLocale = (lang: Language) => {
+  if (lang === "en") return "en_US";
+  return lang === "zh-cn" ? "zh_CN" : "zh_TW";
 };
 
 const TitleUpdater = () => {
-  const { zhScript } = useSettings();
   const dict = useDictionary();
+  const localize = useLocalizedZh();
   const location = usePageLocation();
   const matches = matchRoutes(router.routes, location) ?? [];
 
   const handle = (matches.at(-1)?.route as { handle?: RouteHandle } | undefined)
     ?.handle;
   const pathLang = getLangFromPath(location.pathname);
-  const isZh = pathLang === "zh";
+  const isZh = pathLang !== "en";
 
   const dictionaryTitle =
     handle?.titleZhKey === "course.instructor.title"
       ? dict.course.instructor.title
       : undefined;
-  const pageTitle = getPageTitle(isZh, dictionaryTitle, handle);
-  const description = getDescription(isZh, handle);
-  const fullTitle = getFullTitle(isZh, pageTitle);
-  const pageLanguage = getPageLanguage(isZh, zhScript);
-  const openGraphLocale = getOpenGraphLocale(isZh, zhScript);
+  const pageTitle = localize(getPageTitle(isZh, dictionaryTitle, handle) ?? "");
+  const description = localize(getDescription(isZh, handle));
+  const fullTitle = localize(getFullTitle(isZh, pageTitle || undefined));
+  const pageLanguage = getPageLanguage(pathLang);
+  const openGraphLocale = getOpenGraphLocale(pathLang);
 
   const canonicalPath = normalizePath(location.pathname);
   const canonicalUrl = `${BASE_URL}${canonicalPath}`;
 
   const zhPath = replaceLangPrefix(canonicalPath, "zh");
   const enPath = replaceLangPrefix(canonicalPath, "en");
+  const zhCnPath = replaceLangPrefix(canonicalPath, "zh-cn");
 
   const zhUrl = `${BASE_URL}${zhPath}`;
   const enUrl = `${BASE_URL}${enPath}`;
+  const zhCnUrl = `${BASE_URL}${zhCnPath}`;
   const xDefaultUrl = zhUrl;
 
   const routeNoindex = Boolean(handle?.noindex);
@@ -173,6 +177,22 @@ const TitleUpdater = () => {
     },
   };
 
+  const localizedWebsiteJsonLd = {
+    ...websiteJsonLd,
+    alternateName: websiteJsonLd.alternateName.map(localize),
+    description: localize(websiteJsonLd.description),
+  };
+  const localizedOrganizationJsonLd = {
+    ...organizationJsonLd,
+    description: localize(organizationJsonLd.description),
+    parentOrganization: {
+      ...organizationJsonLd.parentOrganization,
+      alternateName: localize(
+        organizationJsonLd.parentOrganization.alternateName,
+      ),
+    },
+  };
+
   return (
     <Helmet defer={false}>
       <html lang={pageLanguage} />
@@ -181,13 +201,18 @@ const TitleUpdater = () => {
       <meta name="robots" content={robots} />
 
       <link rel="canonical" href={canonicalUrl} />
-      {!pathNoindex && (
-        <>
-          <link rel="alternate" hrefLang="zh-TW" href={zhUrl} />
-          <link rel="alternate" hrefLang="en" href={enUrl} />
-          <link rel="alternate" hrefLang="x-default" href={xDefaultUrl} />
-        </>
-      )}
+      {!routeNoindex &&
+        !pathNoindex && [
+          <link key="zh-TW" rel="alternate" hrefLang="zh-TW" href={zhUrl} />,
+          <link key="en" rel="alternate" hrefLang="en" href={enUrl} />,
+          <link key="zh-CN" rel="alternate" hrefLang="zh-CN" href={zhCnUrl} />,
+          <link
+            key="x-default"
+            rel="alternate"
+            hrefLang="x-default"
+            href={xDefaultUrl}
+          />,
+        ]}
 
       <meta property="og:type" content="website" />
       <meta property="og:title" content={fullTitle} />
@@ -203,7 +228,11 @@ const TitleUpdater = () => {
       <meta name="twitter:image" content={DEFAULT_OG_IMAGE} />
 
       <script type="application/ld+json">
-        {serializeJsonLd([websiteJsonLd, organizationJsonLd, webPageJsonLd])}
+        {serializeJsonLd([
+          localizedWebsiteJsonLd,
+          localizedOrganizationJsonLd,
+          webPageJsonLd,
+        ])}
       </script>
     </Helmet>
   );

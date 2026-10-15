@@ -1,5 +1,4 @@
-export type Language = "en" | "zh";
-export type ZhScript = "hant" | "hans";
+export type Language = "en" | "zh" | "zh-cn";
 
 export interface SettingsType {
   language: Language;

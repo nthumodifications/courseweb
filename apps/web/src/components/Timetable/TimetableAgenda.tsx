@@ -12,6 +12,8 @@ import useUserTimetable, {
 import { getLocale } from "@/helpers/dateLocale";
 import useDictionary from "@/dictionaries/useDictionary";
 import { getTimetableDataTimeRange } from "@/helpers/timetable";
+import { contentLanguage } from "@/helpers/contentLanguage";
+import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
 
 interface TimetableAgendaProps {
   timetableData: CourseTimeslotData[];
@@ -23,6 +25,7 @@ const TimetableAgenda: FC<TimetableAgendaProps> = ({
   className,
 }) => {
   const { language } = useSettings();
+  const localizeData = useLocalizedZhData();
   const dict = useDictionary();
   const { preferences } = useUserTimetable();
   const fontSizeClass =
@@ -96,13 +99,13 @@ const TimetableAgenda: FC<TimetableAgendaProps> = ({
                   "";
                 const name =
                   slot.customItem?.title ??
-                  (language === "zh"
-                    ? slot.course.name_zh
+                  (contentLanguage(language) === "zh"
+                    ? localizeData(slot.course.name_zh)
                     : slot.course.name_en || slot.course.name_zh);
                 const teacher = slot.customItem
                   ? undefined
-                  : language === "zh"
-                    ? slot.course.teacher_zh?.join(", ")
+                  : contentLanguage(language) === "zh"
+                    ? slot.course.teacher_zh?.map(localizeData).join(", ")
                     : slot.course.teacher_en?.join(", ") ||
                       slot.course.teacher_zh?.join(", ");
 
@@ -184,7 +187,7 @@ const TimetableAgenda: FC<TimetableAgendaProps> = ({
                               "text-muted-foreground/70 truncate",
                             )}
                           >
-                            @ {slot.venue}
+                            @ {localizeData(slot.venue)}
                           </span>
                         )}
                         {slot.customItem?.note && (

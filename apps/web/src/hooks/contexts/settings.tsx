@@ -9,14 +9,13 @@ import {
 } from "react";
 import { useLocalStorage } from "usehooks-ts";
 import { useCookies } from "react-cookie";
-import { Language, ZhScript } from "@/types/settings";
+import { Language } from "@/types/settings";
 import { apps } from "@/const/apps";
 import { updateThemeColor } from "@/lib/theme-color";
+import { localizedLocation } from "@/types/locale";
 
 const settingsContext = createContext<ReturnType<typeof useSettingsProvider>>({
   language: "zh",
-  zhScript: "hant",
-  setZhScript: () => {},
   darkMode: false,
   pinnedApps: [],
   showAcademicCalendar: true,
@@ -39,7 +38,9 @@ type HeadlessAISStorage =
       lastUpdated: number;
     };
 const useSettingsProvider = () => {
-  const language: Language = useParams().lang === "en" ? "en" : "zh";
+  const routeLanguage = useParams().lang;
+  const language: Language =
+    routeLanguage === "en" || routeLanguage === "zh-cn" ? routeLanguage : "zh";
   const navigate = useNavigate();
   const location = useLocation();
   const pathname = location.pathname;
@@ -59,10 +60,17 @@ const useSettingsProvider = () => {
   const [analytics, setAnalytics] = useLocalStorage<boolean>("analytics", true);
   const [showAcademicCalendar, setShowAcademicCalendar] =
     useLocalStorage<boolean>("show_academic_calendar", true);
-  const [zhScript, setZhScript] = useLocalStorage<ZhScript>(
-    "zh_script",
-    "hant",
-  );
+
+  useEffect(() => {
+    if (
+      typeof window !== "undefined" &&
+      language === "zh" &&
+      (window.localStorage.getItem("zh_script") === '"hans"' ||
+        window.localStorage.getItem("zh_script") === "hans")
+    ) {
+      window.localStorage.removeItem("zh_script");
+    }
+  }, [language]);
 
   const setLanguage = (newLang: Language) => {
     //set cookie of 'locale'
@@ -70,7 +78,9 @@ const useSettingsProvider = () => {
       path: "/",
       expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
     });
-    navigate(`/${newLang}/` + pathname.split("/").slice(2).join("/"));
+    navigate(
+      localizedLocation(pathname, newLang, location.search, location.hash),
+    );
   };
 
   //check if cookies 'locale' exists, else set it
@@ -152,8 +162,6 @@ const useSettingsProvider = () => {
 
   return {
     language,
-    zhScript,
-    setZhScript,
     darkMode,
     pinnedApps,
     showAcademicCalendar,

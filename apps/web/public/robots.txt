@@ -3,13 +3,18 @@ Disallow: /auth/
 Disallow: /api/
 Disallow: /zh/student/
 Disallow: /en/student/
+Disallow: /zh-cn/student/
 Disallow: /zh/settings
 Disallow: /en/settings
+Disallow: /zh-cn/settings
 Disallow: /zh/proxy-login
 Disallow: /en/proxy-login
+Disallow: /zh-cn/proxy-login
 Disallow: /zh/next-steps
 Disallow: /en/next-steps
+Disallow: /zh-cn/next-steps
 Disallow: /zh/waitlist
 Disallow: /en/waitlist
+Disallow: /zh-cn/waitlist
 
 Sitemap: https://nthumods.com/sitemap.xml

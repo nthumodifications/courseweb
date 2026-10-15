@@ -19,6 +19,7 @@ import { hasTimes } from "@/helpers/courses";
 import { MinimalCourse } from "@/types/courses";
 import { InstructorLink } from "./InstructorLink";
 import { pairInstructorNames } from "@/lib/instructors";
+import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
 
 // Memoize the CourseListItem component
 type CourseListItemCourse = CourseDefinition &
@@ -95,6 +96,7 @@ const CourseListItem: FC<CourseListItemProps> = memo((props) => {
   } = props;
   const dict = useDictionary();
   const { language } = useSettings();
+  const localizeData = useLocalizedZhData();
   const { openCourse } = useCourseLink();
   const courseId = course?.raw_id ?? missingCourseId;
   const syllabus = cleanSyllabusFields(course);
@@ -115,12 +117,12 @@ const CourseListItem: FC<CourseListItemProps> = memo((props) => {
   const titleName = course
     ? useEnglishTitle
       ? course.name_en
-      : course.name_zh
+      : localizeData(course.name_zh)
     : dict.course.details.favourite_unavailable;
   const titleTeachers = course
     ? useEnglishTitle
       ? (course.teacher_en ?? [])
-      : course.teacher_zh
+      : course.teacher_zh.map(localizeData)
     : [];
   const titleTeacherIdentities = useEnglishTitle
     ? bilingualNames.map(({ nameZh }) => nameZh)
@@ -209,7 +211,7 @@ const CourseListItem: FC<CourseListItemProps> = memo((props) => {
                 <div className="flex min-w-0 flex-col gap-1">
                   {course.venues.map((vn, i) => (
                     <div key={i} className="text-muted-foreground text-xs">
-                      {`${vn} / ${
+                      {`${localizeData(vn)} / ${
                         missingTimeLabel &&
                         !hasTimes(course as unknown as MinimalCourse)
                           ? missingTimeLabel
@@ -233,17 +235,19 @@ const CourseListItem: FC<CourseListItemProps> = memo((props) => {
         </div>
         {showSyllabusDetails && course && (
           <div className="flex flex-col gap-2">
-            <p className="text-xs text-muted-foreground">{syllabus.brief}</p>
+            <p className="text-xs text-muted-foreground">
+              {syllabus.brief ? localizeData(syllabus.brief) : syllabus.brief}
+            </p>
             {course.restrictions && course.restrictions.length > 0 && (
               <p className="text-xs whitespace-pre-line text-muted-foreground">
                 {dict.course.details.restriction_prefix}
-                {course.restrictions}
+                {localizeData(course.restrictions)}
               </p>
             )}
             {course.note && course.note.length > 0 && (
               <p className="text-xs whitespace-pre-line text-muted-foreground">
                 {dict.course.details.note_prefix}
-                {course.note}
+                {localizeData(course.note)}
               </p>
             )}
             {course.prerequisites && (
@@ -262,7 +266,9 @@ const CourseListItem: FC<CourseListItemProps> = memo((props) => {
                   <p
                     className="whitespace-pre-line text-sm text-muted-foreground"
                     dangerouslySetInnerHTML={{
-                      __html: sanitizeCourseHtml(course.prerequisites),
+                      __html: sanitizeCourseHtml(
+                        localizeData(course.prerequisites),
+                      ),
                     }}
                   />
                 </CollapsibleContent>

@@ -5,6 +5,7 @@ import type {
 } from "@courseweb/shared";
 import type useDictionary from "@/dictionaries/useDictionary";
 import PrerequisiteGraph from "./PrerequisiteGraph";
+import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
 
 const PrerequisiteBlock = ({
   parsed,
@@ -19,11 +20,14 @@ const PrerequisiteBlock = ({
   lang: "en" | "zh";
   dict: ReturnType<typeof useDictionary>;
 }) => {
+  const localizeData = useLocalizedZhData();
   const labels = dict.course.details;
   const audience =
     parsed.audience === "全校"
       ? labels.prerequisite_all_students
-      : parsed.audience;
+      : parsed.audience
+        ? localizeData(parsed.audience)
+        : parsed.audience;
 
   return (
     <div className="flex flex-col gap-3 text-sm">

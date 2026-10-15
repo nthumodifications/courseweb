@@ -1,5 +1,6 @@
 import { Language } from "@/types/settings";
-import { enUS, zhTW } from "date-fns/locale";
+import { contentLanguage } from "./contentLanguage";
+import { enUS, zhCN, zhTW } from "date-fns/locale";
 
 export const getLocale = (lang: Language) => {
   const enLocale: { [x: string]: string } = {
@@ -20,13 +21,18 @@ export const getLocale = (lang: Language) => {
     other: "P",
   };
 
-  return lang == "en"
+  return contentLanguage(lang) == "en"
     ? {
         ...enUS,
         formatRelative: (token: string) => enLocale[token],
       }
-    : {
-        ...zhTW,
-        formatRelative: (token: string) => zhLocale[token],
-      };
+    : lang === "zh-cn"
+      ? {
+          ...zhCN,
+          formatRelative: (token: string) => zhLocale[token],
+        }
+      : {
+          ...zhTW,
+          formatRelative: (token: string) => zhLocale[token],
+        };
 };

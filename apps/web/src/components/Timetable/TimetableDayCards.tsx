@@ -10,6 +10,8 @@ import useUserTimetable, {
   TIMETABLE_FONT_SIZE_CLASSES,
 } from "@/hooks/contexts/useUserTimetable";
 import { getLocale } from "@/helpers/dateLocale";
+import { contentLanguage } from "@/helpers/contentLanguage";
+import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
 import { getTimetableDataTimeRange } from "@/helpers/timetable";
 
 interface TimetableDayCardsProps {
@@ -22,6 +24,7 @@ const TimetableDayCards: FC<TimetableDayCardsProps> = ({
   className,
 }) => {
   const { language } = useSettings();
+  const localizeData = useLocalizedZhData();
   const { preferences } = useUserTimetable();
   const fontSizeClass =
     TIMETABLE_FONT_SIZE_CLASSES[preferences.fontSize ?? "sm"];
@@ -83,8 +86,8 @@ const TimetableDayCards: FC<TimetableDayCardsProps> = ({
                       "";
                     const name =
                       slot.customItem?.title ??
-                      (language === "zh"
-                        ? slot.course.name_zh
+                      (contentLanguage(language) === "zh"
+                        ? localizeData(slot.course.name_zh)
                         : slot.course.name_en || slot.course.name_zh);
                     return (
                       <div

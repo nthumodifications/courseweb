@@ -4,6 +4,7 @@ import * as ts from "typescript";
 import { expect, test } from "bun:test";
 import en from "./en.json";
 import zh from "./zh.json";
+import zhCn from "./zh-hans.json";
 import allowlist from "./cjk-literal-allowlist.json";
 import baseline from "./cjk-literal-allowlist.baseline.json";
 
@@ -78,10 +79,11 @@ const collectCjkLiterals = () => {
 
 test("English and Traditional Chinese dictionaries stay structurally aligned", () => {
   expect(flatten(en).sort()).toEqual(flatten(zh).sort());
+  expect(flatten(en).sort()).toEqual(flatten(zhCn).sort());
 });
 
 test("dictionaries contain no empty values", () => {
-  for (const dictionary of [en, zh]) {
+  for (const dictionary of [en, zh, zhCn]) {
     for (const key of flatten(dictionary)) {
       const value = valueAt(dictionary, key);
       if (!intentionallyEmptyDictionaryValues.has(key)) {
@@ -97,6 +99,9 @@ test("matching dictionary values keep placeholder tokens in parity", () => {
   for (const key of flatten(en)) {
     expect(placeholders(valueAt(en, key)), key).toEqual(
       placeholders(valueAt(zh, key)),
+    );
+    expect(placeholders(valueAt(en, key)), key).toEqual(
+      placeholders(valueAt(zhCn, key)),
     );
   }
 });

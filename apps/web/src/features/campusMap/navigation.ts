@@ -10,7 +10,7 @@ export function getCampusMapHref(
 
   if (!identity) return undefined;
 
-  const language = lang === "en" ? "en" : "zh";
+  const language = lang === "en" || lang === "zh-cn" ? lang : "zh";
   const searchParams = new URLSearchParams({ building: identity.id });
   return `/${language}/map?${searchParams.toString()}`;
 }

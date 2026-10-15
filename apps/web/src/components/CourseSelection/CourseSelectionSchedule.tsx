@@ -19,6 +19,7 @@ import {
   getCourseSelectionPhaseTint,
 } from "@/lib/course-selection-colors";
 import { toPrettySemester } from "@/helpers/semester";
+import { contentLanguage } from "@/helpers/contentLanguage";
 
 export type CourseSelectionDateFormats = {
   date_format_short: string;
@@ -193,7 +194,7 @@ export const CourseSelectionScheduleRows = ({
               <span className="col-start-1 row-start-2 whitespace-nowrap text-right font-bold sm:col-start-2 sm:row-start-1">
                 {formatCourseSelectionDateRange(
                   period,
-                  language,
+                  contentLanguage(language),
                   dict.course.selection_period,
                 )}
               </span>

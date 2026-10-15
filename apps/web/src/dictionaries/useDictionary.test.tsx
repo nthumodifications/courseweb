@@ -1,17 +1,29 @@
-import { createElement } from "react";
+import { createElement, Suspense } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { expect, test } from "bun:test";
-import { loadZhHans, useCachedDictionary } from "./dictionary-cache";
+import { loadZhCnAssets, useCachedDictionary } from "./dictionary-cache";
 
 test("uses the cached Simplified dictionary on a fresh first render", async () => {
-  await loadZhHans();
   const firstRenderValues: string[] = [];
   const Probe = () => {
-    firstRenderValues.push(useCachedDictionary("zh", "hans").a11y.settings);
-    return null;
+    const value = useCachedDictionary("zh-cn").a11y.settings;
+    firstRenderValues.push(value);
+    return createElement("span", null, value);
   };
 
-  renderToStaticMarkup(createElement(Probe));
+  const firstMarkup = renderToStaticMarkup(
+    createElement(
+      Suspense,
+      { fallback: createElement("span", null, "Loading") },
+      createElement(Probe),
+    ),
+  );
 
-  expect(firstRenderValues[0]).toBe("设置");
+  expect(firstMarkup).not.toContain("設定");
+  expect(
+    firstMarkup.includes("Loading") || firstRenderValues[0] === "设置",
+  ).toBe(true);
+
+  await loadZhCnAssets();
+  expect(renderToStaticMarkup(createElement(Probe))).toContain("设置");
 });

@@ -16,6 +16,7 @@ import {
   getCampusFeatureNames,
   isCampusBuilding,
 } from "./sceneLogic";
+import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
 
 type CampusLabelsProps = Readonly<{
   data: CampusMapData;
@@ -38,6 +39,7 @@ export default function CampusLabels({
   limit,
   onSelect,
 }: CampusLabelsProps) {
+  const localizeData = useLocalizedZhData();
   const nodes = useRef(new Map<number, HTMLButtonElement>());
   const projected = useMemo(() => new Vector3(), []);
   const selectedKey = selected ? getCampusFeatureLabelKey(selected) : undefined;
@@ -55,7 +57,8 @@ export default function CampusLabels({
     return Array.from(features, ([key, feature]) => {
       const world = geoToWorld(feature.location, data.origin);
       const names = getCampusFeatureNames(feature);
-      const name = language === "en" ? (names.en ?? names.zh) : names.zh;
+      const name =
+        language === "en" ? (names.en ?? names.zh) : localizeData(names.zh);
       const number = numbers.get(key);
       const text = `#${number} ${name}`;
       const building = isCampusBuilding(feature);
@@ -87,7 +90,7 @@ export default function CampusLabels({
         ),
       };
     });
-  }, [data, language]);
+  }, [data, language, localizeData]);
 
   useFrame(({ camera, size }) => {
     const candidates = labels.flatMap((label, index) => {

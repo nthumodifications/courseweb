@@ -20,18 +20,107 @@ afterEach(() => {
 });
 
 describe("TitleUpdater", () => {
-  test.each([
-    ["hans", "zh-Hans"],
-    ["hant", "zh-Hant"],
-  ] as const)(
-    "uses persisted %s for the html lang on first render",
-    async (zhScript, expectedLang) => {
-      const installed = installTestDom("/zh/settings");
-      restoreDom = installed.restore;
-      installed.dom.window.localStorage.setItem(
-        "zh_script",
-        JSON.stringify(zhScript),
+  test("renders reciprocal hreflang links for indexable paths", async () => {
+    const path = "/zh/bus/main";
+    const installed = installTestDom(path);
+    restoreDom = installed.restore;
+
+    const [
+      { default: TitleUpdater },
+      { SettingsProvider },
+      { HelmetProvider },
+      { MemoryRouter },
+    ] = await Promise.all([
+      import("@/layouts/TitleUpdater"),
+      import("@/hooks/contexts/settings"),
+      import("react-helmet-async"),
+      import("react-router-dom"),
+    ]);
+    const container = installed.dom.window.document.createElement("div");
+    installed.dom.window.document.body.appendChild(container);
+    root = createRoot(container);
+
+    await act(async () => {
+      root!.render(
+        createElement(
+          HelmetProvider,
+          null,
+          createElement(
+            MemoryRouter,
+            { initialEntries: [path] },
+            createElement(SettingsProvider, null, createElement(TitleUpdater)),
+          ),
+        ),
       );
+    });
+
+    expect(
+      [
+        ...installed.dom.window.document.head.querySelectorAll(
+          "[data-rh] link[rel=alternate]",
+        ),
+      ].map((link) => [
+        link.getAttribute("hreflang"),
+        link.getAttribute("href"),
+      ]),
+    ).toEqual([
+      ["zh-TW", "https://nthumods.com/zh/bus/main"],
+      ["en", "https://nthumods.com/en/bus/main"],
+      ["zh-CN", "https://nthumods.com/zh-cn/bus/main"],
+      ["x-default", "https://nthumods.com/zh/bus/main"],
+    ]);
+  });
+
+  test("does not render hreflang links for noindex paths", async () => {
+    const path = "/zh/settings";
+    const installed = installTestDom(path);
+    restoreDom = installed.restore;
+
+    const [
+      { default: TitleUpdater },
+      { SettingsProvider },
+      { HelmetProvider },
+      { MemoryRouter },
+    ] = await Promise.all([
+      import("@/layouts/TitleUpdater"),
+      import("@/hooks/contexts/settings"),
+      import("react-helmet-async"),
+      import("react-router-dom"),
+    ]);
+    const container = installed.dom.window.document.createElement("div");
+    installed.dom.window.document.body.appendChild(container);
+    root = createRoot(container);
+
+    await act(async () => {
+      root!.render(
+        createElement(
+          HelmetProvider,
+          null,
+          createElement(
+            MemoryRouter,
+            { initialEntries: [path] },
+            createElement(SettingsProvider, null, createElement(TitleUpdater)),
+          ),
+        ),
+      );
+    });
+
+    expect(
+      installed.dom.window.document.head.querySelectorAll(
+        "[data-rh] link[rel=alternate]",
+      ),
+    ).toHaveLength(0);
+  });
+
+  test.each([
+    ["/zh/settings", "zh-TW"],
+    ["/en/settings", "en"],
+    ["/zh-cn/settings", "zh-CN"],
+  ] as const)(
+    "uses the route locale %s for the html lang",
+    async (path, expectedLang) => {
+      const installed = installTestDom(path);
+      restoreDom = installed.restore;
       installed.dom.window.document.documentElement.lang = "zh";
 
       const [
@@ -67,7 +156,7 @@ describe("TitleUpdater", () => {
             null,
             createElement(
               MemoryRouter,
-              { initialEntries: ["/zh/settings"] },
+              { initialEntries: [path] },
               createElement(
                 SettingsProvider,
                 null,

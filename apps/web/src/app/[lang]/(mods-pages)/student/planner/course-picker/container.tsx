@@ -5,6 +5,7 @@ import {
   ResizablePanelGroup,
 } from "@courseweb/ui";
 import { useMediaQuery } from "usehooks-ts";
+import { useMemo } from "react";
 import { ScrollArea } from "@courseweb/ui";
 import { Badge } from "@courseweb/ui";
 import { InstantSearch, useCurrentRefinements } from "react-instantsearch";
@@ -31,8 +32,10 @@ import { useSettings } from "@/hooks/contexts/settings";
 import ResetFiltersButton from "../../../courses/ResetFiltersButton";
 import SearchBox from "@/components/SearchBox/SearchBox";
 import { createResilientSearchClient } from "@/lib/search-client";
-
-const searchClient = createResilientSearchClient();
+import {
+  useLocalizedZhData,
+  useLocalizedZhQuery,
+} from "@/hooks/useLocalizedZh";
 
 type CourseSearchContainerProps = {
   onAdd: (course: MinimalCourse, keepSemester?: boolean) => void;
@@ -181,6 +184,16 @@ const FilterDrawerTrigger = () => {
 const CourseSearchContainer = (props: CourseSearchContainerProps) => {
   const dict = useDictionary();
   const { language } = useSettings();
+  const localizeQuery = useLocalizedZhQuery();
+  const localizeSearchText = useLocalizedZhData();
+  const searchClient = useMemo(
+    () =>
+      createResilientSearchClient({
+        localQueryTransform: localizeQuery,
+        localSearchTextTransform: localizeSearchText,
+      }),
+    [localizeQuery, localizeSearchText],
+  );
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   return (
     <InstantSearch

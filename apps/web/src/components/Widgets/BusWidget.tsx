@@ -16,6 +16,8 @@ import {
 } from "@/libs/citybus";
 import { useBusPins, type BusPin } from "@/features/bus/busPins";
 import useDictionary from "@/dictionaries/useDictionary";
+import { contentLanguage } from "@/helpers/contentLanguage";
+import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
 
 interface BusWidgetProps {
   onRemove?: () => void;
@@ -39,6 +41,7 @@ const BusWidget: FC<BusWidgetProps> = ({
 }) => {
   const { language } = useSettings();
   const dict = useDictionary();
+  const localizeData = useLocalizedZhData();
   const { pins, pinned } = useBusPins();
 
   const { data, isLoading } = useQuery({
@@ -170,7 +173,8 @@ const BusWidget: FC<BusWidgetProps> = ({
       const liveDisplay = liveStop
         ? getCityBusRealtimeDisplay(liveStop)
         : undefined;
-      const liveText = formatCityBusRealtimeDisplay(liveDisplay, language, {
+      const contentLang = contentLanguage(language);
+      const liveText = formatCityBusRealtimeDisplay(liveDisplay, contentLang, {
         arriving: dict.bus.realtime_arriving,
         lastBus: dict.bus.realtime_last_bus,
         notOperating: dict.bus.realtime_not_operating,
@@ -179,7 +183,7 @@ const BusWidget: FC<BusWidgetProps> = ({
       if (!departure && !liveText) return;
       const countdown = liveText
         ? undefined
-        : formatDepartureCountdown(departure?.minutes, language, {
+        : formatDepartureCountdown(departure?.minutes, contentLang, {
             underHour: dict.bus.minutes,
             minute: dict.bus.countdown_minute,
             hour: dict.bus.countdown_hour,
@@ -187,14 +191,14 @@ const BusWidget: FC<BusWidgetProps> = ({
       results.push({
         time:
           liveText ??
-          formatDepartureTime(departure!, language, {
+          formatDepartureTime(departure!, contentLang, {
             tomorrow: dict.bus.tomorrow,
             daysAfter: dict.bus.days_after,
           }),
         countdown,
         lineLabel:
-          language === "zh"
-            ? `${pin.routeNameZh} · ${pin.stopNameZh}`
+          contentLang === "zh"
+            ? `${localizeData(pin.routeNameZh)} · ${localizeData(pin.stopNameZh)}`
             : `${pin.routeNameEn} · ${pin.stopNameEn}`,
         directionIcon: "",
         sourceLabel:
@@ -210,7 +214,15 @@ const BusWidget: FC<BusWidgetProps> = ({
       (a, b) => pinRank(b.pin) - pinRank(a.pin) || a.time.localeCompare(b.time),
     );
     return results.slice(0, 5);
-  }, [data, dict, language, cityPins, cityDepartureQueries, pinned]);
+  }, [
+    data,
+    dict,
+    language,
+    cityPins,
+    cityDepartureQueries,
+    localizeData,
+    pinned,
+  ]);
 
   return (
     <WidgetShell
