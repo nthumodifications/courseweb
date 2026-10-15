@@ -994,8 +994,7 @@ export const ReviewsSection = ({
                 </Link>
               </Button>
             )}
-          {!unlock.locked &&
-          shouldShowCreateReviewAction({
+          {shouldShowCreateReviewAction({
             isAuthenticated: isReviewAuthenticated,
             hasModuleKey: Boolean(moduleKey),
             instructorCount: normalizedInstructors.length,
@@ -1005,7 +1004,7 @@ export const ReviewsSection = ({
             <Button size="sm" onClick={openCreate}>
               {dict.course.details.native_reviews.write}
             </Button>
-          ) : !unlock.locked &&
+          ) : !isReviewAuthenticated &&
             normalizedInstructors.length > 0 &&
             (!unlock.locked || sortedReviews.length === 0) ? (
             <Button variant="outline" size="sm" onClick={signIn}>
@@ -1065,8 +1064,7 @@ export const ReviewsSection = ({
       ) : null}
       {formMode &&
         (moduleKey || formMode !== "create") &&
-        isReviewAuthenticated &&
-        !unlock.locked && (
+        isReviewAuthenticated && (
           <ReviewForm
             moduleKey={
               moduleKey ?? (formMode === "create" ? "" : formMode.moduleKey)
@@ -1111,7 +1109,7 @@ export const ReviewsSection = ({
               </AlertDescription>
             </Alert>
           )}
-          {!unlock.locked && (
+          {visibleReviews.length > 0 && (
             <div className="divide-y divide-border">
               {visibleReviews.map((review) => {
                 const parsedModule = parseModuleKey(review.moduleKey);
@@ -1151,7 +1149,7 @@ export const ReviewsSection = ({
                         {reviewCourseLabel}
                       </h4>
                     )}
-                    <div className="flex flex-wrap items-baseline gap-2 text-sm text-muted-foreground">
+                    <div className="flex flex-wrap items-baseline gap-2 text-xs text-muted-foreground">
                       {review.source === "ptt" && (
                         <span className="text-xs font-medium">PTT</span>
                       )}

@@ -1,7 +1,7 @@
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { JSDOM } from "jsdom";
-import { afterEach, describe, expect, mock, test } from "bun:test";
+import { afterAll, afterEach, describe, expect, mock, test } from "bun:test";
 import zh from "@/dictionaries/zh.json";
 import { captureGlobalState } from "@/test-utils/global-state";
 import { parsePttResponse } from "@/lib/ptt";
@@ -9,6 +9,7 @@ import { parsePttResponse } from "@/lib/ptt";
 const actualAuth = await import("react-oidc-context");
 const actualDictionary = await import("@/dictionaries/useDictionary");
 const actualPersister = await import("@/lib/idb_persister");
+const actualReviewUnlock = await import("@/hooks/useReviewUnlock");
 const restoreGlobals = captureGlobalState([
   "window",
   "document",
@@ -31,7 +32,13 @@ Object.assign(globalThis, {
 
 const authState = {
   isAuthenticated: false,
-  user: undefined,
+  user: undefined as
+    | {
+        expired?: boolean;
+        access_token?: string;
+        profile?: { sub?: string };
+      }
+    | undefined,
   signinRedirect: async () => {},
 };
 mock.module("react-oidc-context", () => ({ useAuth: () => authState }));
@@ -45,9 +52,21 @@ mock.module("@/lib/idb_persister", () => ({
     removeClient: async () => {},
   }),
 }));
+mock.module("@/hooks/useReviewUnlock", () => ({
+  useReviewUnlock: () => ({
+    hasPastCourses: true,
+    pastSemesters: ["11410"],
+    locked: true,
+    textLocked: true,
+    isAuthenticated: true,
+    timetableReady: true,
+    reviewsReady: true,
+  }),
+}));
 
 const { default: ReactQuery } = await import("@/components/ReactQuery");
 const { onlineManager, useQueryClient } = await import("@tanstack/react-query");
+const { MemoryRouter } = await import("react-router-dom");
 const {
   getDefaultReviewInstructor,
   getDefaultReviewSemester,
@@ -98,6 +117,12 @@ afterEach(async () => {
   mock.module("react-oidc-context", () => actualAuth);
   mock.module("@/dictionaries/useDictionary", () => actualDictionary);
   mock.module("@/lib/idb_persister", () => actualPersister);
+  authState.isAuthenticated = false;
+  authState.user = undefined;
+});
+
+afterAll(() => {
+  mock.module("@/hooks/useReviewUnlock", () => actualReviewUnlock);
 });
 
 const review = (id: string, instructor: string, createdAt: string) => ({
@@ -332,6 +357,94 @@ describe("review ordering", () => {
 });
 
 describe("review render guards and summary", () => {
+  test("keeps the compose CTA but hides review rows while locked", async () => {
+    activeDom = new JSDOM("<!doctype html><html><body></body></html>", {
+      url: "http://localhost/zh/courses/module/CS%3A1355",
+    });
+    Object.assign(globalThis, {
+      window: activeDom.window,
+      document: activeDom.window.document,
+      navigator: activeDom.window.navigator,
+      HTMLElement: activeDom.window.HTMLElement,
+      MutationObserver: activeDom.window.MutationObserver,
+      Node: activeDom.window.Node,
+      IS_REACT_ACT_ENVIRONMENT: true,
+    });
+    authState.isAuthenticated = true;
+    authState.user = {
+      access_token: "token",
+      expired: false,
+      profile: { sub: "student" },
+    };
+    globalThis.fetch = (async (input) => {
+      const url = String(input);
+      if (url.endsWith("/mine")) {
+        return new Response(JSON.stringify({ reviews: [] }), { status: 200 });
+      }
+      return new Response(
+        JSON.stringify({
+          reviews: [
+            {
+              id: "locked-review",
+              moduleKey: "CS:1355",
+              instructor: "林教授",
+              semester: "11410",
+              coolness: 4,
+              sweetness: 5,
+              learning: 4,
+              attendance: "every_class",
+              examStyle: ["written"],
+              body: "locked review body",
+              source: "native",
+              sourceUrl: null,
+              sourceAuthor: null,
+              sourcePostedAt: null,
+              createdAt: "2026-10-01T00:00:00.000Z",
+              updatedAt: "2026-10-01T00:00:00.000Z",
+              edited: false,
+              mine: false,
+            },
+          ],
+          summary: { count: 1, coolness: 4, sweetness: 5, learning: 4 },
+        }),
+        { status: 200 },
+      );
+    }) as typeof fetch;
+
+    const container = document.createElement("div");
+    activeRoot = createRoot(container);
+    await act(async () => {
+      activeRoot!.render(
+        createElement(
+          ReactQuery,
+          null,
+          createElement(QueryClientProbe),
+          createElement(
+            MemoryRouter,
+            null,
+            createElement(ReviewsSection, {
+              moduleKey: "CS:1355",
+              instructors: ["林教授"],
+            }),
+          ),
+        ),
+      );
+    });
+    await waitFor(() =>
+      Boolean(
+        container.textContent?.includes(
+          zh.course.details.native_reviews.write,
+        ),
+      ),
+    );
+
+    expect(container.textContent).toContain(
+      zh.course.details.native_reviews.write,
+    );
+    expect(container.querySelector("article")).toBeNull();
+    expect(container.textContent).not.toContain("locked review body");
+  });
+
   test("hides the past-review header CTA while the lock card is shown", () => {
     expect(
       shouldShowPastReviewsLink({
