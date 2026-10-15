@@ -100,9 +100,45 @@ async function fetchStaticAsset(request: Request, env: Env): Promise<Response> {
 
 async function fetchNavigation(request: Request, env: Env): Promise<Response> {
   const response = await env.ASSETS.fetch(request);
-  return isHtmlResponse(response)
-    ? withCacheControl(response, NO_CACHE)
-    : response;
+  if (!isHtmlResponse(response)) return response;
+
+  const url = new URL(request.url);
+  const routeMatch = /^(zh-cn|zh|en)(\/|$)/.exec(url.pathname.slice(1));
+  if (!routeMatch) return withCacheControl(response, NO_CACHE);
+
+  const lang = routeMatch[1] as WorkerLocale;
+  const suffix = stripLocale(url.pathname);
+  const canonicalUrl = `https://nthumods.com${url.pathname}`;
+  const zhUrl = `https://nthumods.com/zh${suffix === "/" ? "" : suffix}`;
+  const enUrl = `https://nthumods.com/en${suffix === "/" ? "" : suffix}`;
+  const zhCnUrl = `https://nthumods.com/zh-cn${suffix === "/" ? "" : suffix}`;
+  const ogLocale =
+    lang === "en" ? "en_US" : lang === "zh-cn" ? "zh_CN" : "zh_TW";
+
+  let rewriter = new HTMLRewriter()
+    .on("html", {
+      element(el) {
+        el.setAttribute("lang", htmlLanguage(lang));
+      },
+    })
+    .on('meta[property="og:locale"]', {
+      element(el) {
+        el.setAttribute("content", ogLocale);
+      },
+    })
+    .on('meta[property="og:url"]', {
+      element(el) {
+        el.setAttribute("content", canonicalUrl);
+      },
+    })
+    .on('link[rel="canonical"]', {
+      element(el) {
+        el.setAttribute("href", canonicalUrl);
+      },
+    });
+
+  rewriter = applyHreflang(rewriter, zhUrl, enUrl, zhCnUrl, zhUrl);
+  return withCacheControl(await rewriter.transform(response), NO_CACHE);
 }
 
 const SUPABASE_URL = "https://cmzdlrqfpuktcczvsobs.supabase.co";
@@ -147,6 +183,22 @@ function isBot(userAgent: string): boolean {
   return BOT_UA_FRAGMENTS.some((fragment) => lowerUA.includes(fragment));
 }
 
+type WorkerLocale = "zh" | "en" | "zh-cn";
+
+function localeFromPath(pathname: string): WorkerLocale {
+  if (pathname.startsWith("/en/") || pathname === "/en") return "en";
+  if (pathname.startsWith("/zh-cn/") || pathname === "/zh-cn") return "zh-cn";
+  return "zh";
+}
+
+function htmlLanguage(locale: WorkerLocale): string {
+  return locale === "en" ? "en" : locale === "zh-cn" ? "zh-CN" : "zh-TW";
+}
+
+function stripLocale(pathname: string): string {
+  return pathname.replace(/^\/(?:zh-cn|zh|en)(?=\/|$)/, "") || "/";
+}
+
 function toPrettySemester(semester: string): string {
   const year = semester.slice(0, 3);
   const term = semester[3];
@@ -161,6 +213,7 @@ interface CourseMetaData {
   canonicalUrl: string;
   zhUrl: string;
   enUrl: string;
+  zhCnUrl: string;
   ogType: string;
   jsonLd: unknown[];
 }
@@ -175,6 +228,7 @@ function escapeJsonLd(value: unknown): string {
 }
 
 function buildCourseMetaData(course: any, lang: string): CourseMetaData {
+  const isEnglish = lang === "en";
   const nameZh =
     typeof course.name_zh === "string" && course.name_zh.trim()
       ? course.name_zh.trim()
@@ -207,25 +261,23 @@ function buildCourseMetaData(course: any, lang: string): CourseMetaData {
   const displayTeachersEn = teachersEn || teachersZh || "NTHU faculty";
   const displayTeachersZh = teachersZh || "清大教師";
 
-  const title =
-    lang === "zh"
-      ? `${nameZh} ${displayTeachersZh} - ${semester} 清大${department}課程 | NTHUMods`
-      : `${nameEn} ${displayTeachersEn} - ${semester} NTHU ${department} | NTHUMods`;
+  const title = !isEnglish
+    ? `${nameZh} ${displayTeachersZh} - ${semester} 清大${department}課程 | NTHUMods`
+    : `${nameEn} ${displayTeachersEn} - ${semester} NTHU ${department} | NTHUMods`;
 
-  const description =
-    lang === "zh"
-      ? `清大 ${semester} ${nameZh}（${nameEn}），${displayTeachersZh} 授課。查看課程大綱、評分記錄與歷年開課資訊。`
-      : `NTHU ${semester} ${nameEn} (${nameZh}), taught by ${displayTeachersEn}. View syllabus, past scores, and course history.`;
+  const description = !isEnglish
+    ? `清大 ${semester} ${nameZh}（${nameEn}），${displayTeachersZh} 授課。查看課程大綱、評分記錄與歷年開課資訊。`
+    : `NTHU ${semester} ${nameEn} (${nameZh}), taught by ${displayTeachersEn}. View syllabus, past scores, and course history.`;
 
-  const ogTitle =
-    lang === "zh"
-      ? `${nameZh} - ${department} | NTHUMods`
-      : `${nameEn} - ${department} | NTHUMods`;
+  const ogTitle = !isEnglish
+    ? `${nameZh} - ${department} | NTHUMods`
+    : `${nameEn} - ${department} | NTHUMods`;
 
   const courseId = encodeURIComponent(String(course.raw_id ?? ""));
   const canonicalUrl = `https://nthumods.com/${lang}/courses/${courseId}`;
   const zhUrl = `https://nthumods.com/zh/courses/${courseId}`;
   const enUrl = `https://nthumods.com/en/courses/${courseId}`;
+  const zhCnUrl = `https://nthumods.com/zh-cn/courses/${courseId}`;
   const instructors = Array.isArray(course.teacher_zh)
     ? course.teacher_zh
         .filter(
@@ -238,8 +290,8 @@ function buildCourseMetaData(course: any, lang: string): CourseMetaData {
     {
       "@context": "https://schema.org",
       "@type": "Course",
-      name: lang === "en" ? nameEn : nameZh,
-      alternateName: lang === "en" ? nameZh : nameEn,
+      name: isEnglish ? nameEn : nameZh,
+      alternateName: isEnglish ? nameZh : nameEn,
       description,
       provider: {
         "@type": "Organization",
@@ -249,7 +301,7 @@ function buildCourseMetaData(course: any, lang: string): CourseMetaData {
       ...(instructors.length > 0 ? { instructor: instructors } : {}),
       courseCode: department,
       url: canonicalUrl,
-      inLanguage: lang === "en" ? "en" : "zh-TW",
+      inLanguage: htmlLanguage(lang as WorkerLocale),
     },
     {
       "@context": "https://schema.org",
@@ -258,19 +310,19 @@ function buildCourseMetaData(course: any, lang: string): CourseMetaData {
         {
           "@type": "ListItem",
           position: 1,
-          name: lang === "en" ? "Home" : "首頁",
+          name: isEnglish ? "Home" : "首頁",
           item: `https://nthumods.com/${lang}`,
         },
         {
           "@type": "ListItem",
           position: 2,
-          name: lang === "en" ? "Courses" : "課程",
+          name: isEnglish ? "Courses" : "課程",
           item: `https://nthumods.com/${lang}/courses`,
         },
         {
           "@type": "ListItem",
           position: 3,
-          name: lang === "en" ? nameEn : nameZh,
+          name: isEnglish ? nameEn : nameZh,
           item: canonicalUrl,
         },
       ],
@@ -285,6 +337,7 @@ function buildCourseMetaData(course: any, lang: string): CourseMetaData {
     canonicalUrl,
     zhUrl,
     enUrl,
+    zhCnUrl,
     ogType: "article",
     jsonLd,
   };
@@ -294,22 +347,33 @@ function applyHreflang(
   rewriter: HTMLRewriter,
   zhUrl: string,
   enUrl: string,
+  zhCnUrl: string,
   xDefaultUrl: string,
 ): HTMLRewriter {
-  return rewriter.on('link[rel="alternate"]', {
-    element(el) {
-      const hreflang = el.getAttribute("hreflang");
-      if (!hreflang) return;
-      if (hreflang === "zh" || hreflang === "zh-TW") {
-        el.setAttribute("hreflang", "zh-TW");
-        el.setAttribute("href", zhUrl);
-      } else if (hreflang === "en") {
-        el.setAttribute("href", enUrl);
-      } else if (hreflang === "x-default") {
-        el.setAttribute("href", xDefaultUrl);
-      }
-    },
-  });
+  return rewriter
+    .on('link[rel="alternate"]', {
+      element(el) {
+        const hreflang = el.getAttribute("hreflang");
+        if (!hreflang) return;
+        if (hreflang === "zh" || hreflang === "zh-TW") {
+          el.setAttribute("hreflang", "zh-TW");
+          el.setAttribute("href", zhUrl);
+        } else if (hreflang === "zh-CN") {
+          el.setAttribute("href", zhCnUrl);
+        } else if (hreflang === "en") {
+          el.setAttribute("href", enUrl);
+        } else if (hreflang === "x-default") {
+          el.setAttribute("href", xDefaultUrl);
+        }
+      },
+    })
+    .on("head", {
+      element(el) {
+        el.append(`<link rel="alternate" hreflang="zh-CN" href="${zhCnUrl}">`, {
+          html: true,
+        });
+      },
+    });
 }
 
 async function handleCourseDetailPage(
@@ -346,7 +410,7 @@ async function handleCourseDetailPage(
     let rewriter = new HTMLRewriter()
       .on("html", {
         element(el) {
-          el.setAttribute("lang", lang === "en" ? "en" : "zh-TW");
+          el.setAttribute("lang", htmlLanguage(lang as WorkerLocale));
         },
       })
       .on("title", {
@@ -395,7 +459,13 @@ async function handleCourseDetailPage(
         },
       });
 
-    rewriter = applyHreflang(rewriter, meta.zhUrl, meta.enUrl, meta.zhUrl);
+    rewriter = applyHreflang(
+      rewriter,
+      meta.zhUrl,
+      meta.enUrl,
+      meta.zhCnUrl,
+      meta.zhUrl,
+    );
     rewriter = rewriter.on("head", {
       element(el) {
         el.append(
@@ -407,7 +477,7 @@ async function handleCourseDetailPage(
               name: meta.title,
               description: meta.description,
               url: meta.canonicalUrl,
-              inLanguage: lang === "en" ? "en" : "zh-TW",
+              inLanguage: htmlLanguage(lang as WorkerLocale),
             },
           ])}</script>`,
           { html: true },
@@ -425,7 +495,8 @@ async function handleCourseDetailPage(
 
 async function handleDepartmentPage(url: URL, env: Env): Promise<Response> {
   const dept = url.searchParams.get("department") ?? "";
-  const lang = url.pathname.includes("/zh/") ? "zh" : "en";
+  const lang = localeFromPath(url.pathname);
+  const isEnglish = lang === "en";
   const fallback = () => handleGenericBotPage(url, env);
 
   try {
@@ -446,26 +517,25 @@ async function handleDepartmentPage(url: URL, env: Env): Promise<Response> {
     const count = courses.length;
     const first3 = courses.slice(0, 3);
 
-    const title =
-      lang === "zh"
-        ? `清華大學${dept}課程列表 - ${count}門課程 | NTHUMods`
-        : `NTHU ${dept} Courses - ${count} courses | NTHUMods`;
+    const title = !isEnglish
+      ? `清華大學${dept}課程列表 - ${count}門課程 | NTHUMods`
+      : `NTHU ${dept} Courses - ${count} courses | NTHUMods`;
 
-    const description =
-      lang === "zh"
-        ? `${first3.map((c) => c.name_zh).join("、")}...等 ${count} 門課程。`
-        : `${first3.map((c) => c.name_en ?? c.name_zh).join(", ")}... and ${count} more courses.`;
+    const description = !isEnglish
+      ? `${first3.map((c) => c.name_zh).join("、")}...等 ${count} 門課程。`
+      : `${first3.map((c) => c.name_en ?? c.name_zh).join(", ")}... and ${count} more courses.`;
 
     const canonicalUrl = `https://nthumods.com/${lang}/courses?department=${encodeURIComponent(dept)}`;
     const zhUrl = `https://nthumods.com/zh/courses?department=${encodeURIComponent(dept)}`;
     const enUrl = `https://nthumods.com/en/courses?department=${encodeURIComponent(dept)}`;
+    const zhCnUrl = `https://nthumods.com/zh-cn/courses?department=${encodeURIComponent(dept)}`;
 
     const shellRes = await fetchAppShell(env, url.origin);
 
     let rewriter = new HTMLRewriter()
       .on("html", {
         element(el) {
-          el.setAttribute("lang", lang === "en" ? "en" : "zh-TW");
+          el.setAttribute("lang", htmlLanguage(lang));
         },
       })
       .on("title", {
@@ -503,7 +573,7 @@ async function handleDepartmentPage(url: URL, env: Env): Promise<Response> {
           el.setAttribute("href", canonicalUrl);
         },
       });
-    rewriter = applyHreflang(rewriter, zhUrl, enUrl, zhUrl);
+    rewriter = applyHreflang(rewriter, zhUrl, enUrl, zhCnUrl, zhUrl);
     return rewriter.transform(shellRes);
   } catch {
     return fallback();
@@ -528,25 +598,26 @@ async function handleBusPage(
     const routeName = routeNames[mainRoute] ?? { zh: "校車", en: "Campus Bus" };
 
     const title =
-      lang === "zh"
+      lang !== "en"
         ? `清華大學校車 ${routeName.zh} - 即時時刻表與路線資訊 | NTHUMods`
         : `NTHU ${routeName.en} - Real-time Schedule | NTHUMods`;
 
     const description =
-      lang === "zh"
+      lang !== "en"
         ? `查看清華大學校車${routeName.zh}即時時刻表、路線圖與站點資訊。`
         : `View NTHU ${routeName.en} real-time schedule, route map, and stop information.`;
 
     const canonicalUrl = `https://nthumods.com/${lang}/bus/${route}`;
     const zhUrl = `https://nthumods.com/zh/bus/${route}`;
     const enUrl = `https://nthumods.com/en/bus/${route}`;
+    const zhCnUrl = `https://nthumods.com/zh-cn/bus/${route}`;
 
     const shellRes = await fetchAppShell(env, origin);
 
     let rewriter = new HTMLRewriter()
       .on("html", {
         element(el) {
-          el.setAttribute("lang", lang === "en" ? "en" : "zh-TW");
+          el.setAttribute("lang", htmlLanguage(lang as WorkerLocale));
         },
       })
       .on("title", {
@@ -584,7 +655,7 @@ async function handleBusPage(
           el.setAttribute("href", canonicalUrl);
         },
       });
-    rewriter = applyHreflang(rewriter, zhUrl, enUrl, zhUrl);
+    rewriter = applyHreflang(rewriter, zhUrl, enUrl, zhCnUrl, zhUrl);
     return rewriter.transform(shellRes);
   } catch {
     return fallback();
@@ -771,23 +842,26 @@ const STATIC_PAGE_METADATA: Record<string, { zh: PageMeta; en: PageMeta }> = {
 // Sets canonical, hreflang, title, and description for all other bot page requests.
 async function handleGenericBotPage(url: URL, env: Env): Promise<Response> {
   const pathname = url.pathname;
-  const lang = pathname.startsWith("/en/") || pathname === "/en" ? "en" : "zh";
+  const lang = localeFromPath(pathname);
 
   const canonicalUrl = `https://nthumods.com${pathname}`;
-  const zhPath = pathname.replace(/^\/(zh|en)(\/|$)/, "/zh$2");
-  const enPath = pathname.replace(/^\/(zh|en)(\/|$)/, "/en$2");
+  const suffix = stripLocale(pathname);
+  const zhPath = `/zh${suffix === "/" ? "" : suffix}`;
+  const enPath = `/en${suffix === "/" ? "" : suffix}`;
+  const zhCnPath = `/zh-cn${suffix === "/" ? "" : suffix}`;
   const zhUrl = `https://nthumods.com${zhPath}`;
   const enUrl = `https://nthumods.com${enPath}`;
+  const zhCnUrl = `https://nthumods.com${zhCnPath}`;
 
-  const pagePath = pathname.replace(/^\/(zh|en)/, "") || "/";
-  const meta = STATIC_PAGE_METADATA[pagePath]?.[lang];
+  const pagePath = suffix;
+  const meta = STATIC_PAGE_METADATA[pagePath]?.[lang === "en" ? "en" : "zh"];
 
   const shellRes = await fetchAppShell(env, url.origin);
 
   let rewriter = new HTMLRewriter()
     .on("html", {
       element(el) {
-        el.setAttribute("lang", lang === "en" ? "en" : "zh-TW");
+        el.setAttribute("lang", htmlLanguage(lang));
       },
     })
     .on('link[rel="canonical"]', {
@@ -796,7 +870,7 @@ async function handleGenericBotPage(url: URL, env: Env): Promise<Response> {
       },
     });
 
-  rewriter = applyHreflang(rewriter, zhUrl, enUrl, zhUrl);
+  rewriter = applyHreflang(rewriter, zhUrl, enUrl, zhCnUrl, zhUrl);
 
   if (meta) {
     rewriter = rewriter
@@ -840,21 +914,25 @@ async function handleGenericBotPage(url: URL, env: Env): Promise<Response> {
   return rewriter.transform(shellRes);
 }
 
-const FALLBACK_STATIC_SITEMAP = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://nthumods.com/zh/</loc><changefreq>weekly</changefreq><priority>1.00</priority></url>
-  <url><loc>https://nthumods.com/zh/courses</loc><changefreq>daily</changefreq><priority>1.00</priority></url>
-  <url><loc>https://nthumods.com/zh/courses/modules</loc><changefreq>daily</changefreq><priority>0.90</priority></url>
-  <url><loc>https://nthumods.com/zh/timetable</loc><changefreq>weekly</changefreq><priority>0.90</priority></url>
-  <url><loc>https://nthumods.com/zh/bus</loc><changefreq>daily</changefreq><priority>0.80</priority></url>
-  <url><loc>https://nthumods.com/zh/laundry</loc><changefreq>daily</changefreq><priority>0.75</priority></url>
-  <url><loc>https://nthumods.com/zh/library</loc><changefreq>daily</changefreq><priority>0.75</priority></url>
-</urlset>`;
-
 function fallbackSitemap(): Response {
-  return new Response(FALLBACK_STATIC_SITEMAP, {
+  return new Response(buildSitemapXML([]), {
     headers: { "Content-Type": "application/xml" },
   });
+}
+
+function sitemapAlternates(
+  zhUrl: string,
+  enUrl: string,
+  zhCnUrl?: string,
+): string {
+  return [
+    `    <xhtml:link rel="alternate" hreflang="zh-TW" href="${zhUrl}"/>`,
+    `    <xhtml:link rel="alternate" hreflang="en" href="${enUrl}"/>`,
+    ...(zhCnUrl
+      ? [`    <xhtml:link rel="alternate" hreflang="zh-CN" href="${zhCnUrl}"/>`]
+      : []),
+    `    <xhtml:link rel="alternate" hreflang="x-default" href="${zhUrl}"/>`,
+  ].join("\n");
 }
 
 function buildSitemapXML(courses: any[]): string {
@@ -901,57 +979,15 @@ function buildSitemapXML(courses: any[]): string {
     { path: "/en/privacy-policy", priority: "0.40", changefreq: "yearly" },
   ];
 
-  const staticUrls = staticPages
-    .map((p) => {
-      const zhPath = p.path
-        .replace(/^\/(zh|en)\//, "/zh/")
-        .replace(/^\/(zh|en)$/, "/zh");
-      const enPath = p.path
-        .replace(/^\/(zh|en)\//, "/en/")
-        .replace(/^\/(zh|en)$/, "/en");
-      const zhUrl = `https://nthumods.com${zhPath}`;
-      const enUrl = `https://nthumods.com${enPath}`;
-      const loc = `https://nthumods.com${p.path}`;
-      return `  <url>
-    <loc>${loc}</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>${p.changefreq}</changefreq>
-    <priority>${p.priority}</priority>
-    <xhtml:link rel="alternate" hreflang="zh-TW" href="${zhUrl}"/>
-    <xhtml:link rel="alternate" hreflang="en" href="${enUrl}"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="${zhUrl}"/>
-  </url>`;
-    })
-    .join("\n");
-
-  // Each course gets BOTH zh and en URL entries so Google indexes both language versions
-  const courseUrls = courses
-    .flatMap((course) => {
-      const courseId = encodeURIComponent(course.raw_id);
-      const zhUrl = `https://nthumods.com/zh/courses/${courseId}`;
-      const enUrl = `https://nthumods.com/en/courses/${courseId}`;
-      return [
-        `  <url>
-    <loc>${zhUrl}</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.75</priority>
-    <xhtml:link rel="alternate" hreflang="zh-TW" href="${zhUrl}"/>
-    <xhtml:link rel="alternate" hreflang="en" href="${enUrl}"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="${zhUrl}"/>
-  </url>`,
-        `  <url>
-    <loc>${enUrl}</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.70</priority>
-    <xhtml:link rel="alternate" hreflang="zh-TW" href="${zhUrl}"/>
-    <xhtml:link rel="alternate" hreflang="en" href="${enUrl}"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="${zhUrl}"/>
-  </url>`,
-      ];
-    })
-    .join("\n");
+  const localizedStaticPages = [
+    ...staticPages,
+    ...staticPages
+      .filter((page) => page.path.startsWith("/zh"))
+      .map((page) => ({
+        ...page,
+        path: page.path.replace(/^\/zh(?=\/|$)/, "/zh-cn"),
+      })),
+  ];
 
   const nonInstructorNames = new Set([
     "EMS境外專班",
@@ -971,32 +1007,6 @@ function buildSitemapXML(courses: any[]): string {
       name.trim().length > 0 &&
       !nonInstructorNames.has(name.trim()),
   );
-  const instructorUrls = instructorNames
-    .flatMap((name) => {
-      const routeName = encodeURIComponent(encodeURIComponent(name));
-      const zhUrl = `https://nthumods.com/zh/courses/instructor/${routeName}`;
-      const enUrl = `https://nthumods.com/en/courses/instructor/${routeName}`;
-      return [
-        `  <url>
-    <loc>${zhUrl}</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.60</priority>
-    <xhtml:link rel="alternate" hreflang="zh-TW" href="${zhUrl}"/>
-    <xhtml:link rel="alternate" hreflang="en" href="${enUrl}"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="${zhUrl}"/>
-  </url>`,
-        `  <url>
-    <loc>${enUrl}</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.55</priority>
-    <xhtml:link rel="alternate" hreflang="zh-TW" href="${zhUrl}"/>
-    <xhtml:link rel="alternate" hreflang="en" href="${enUrl}"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="${zhUrl}"/>
-  </url>`,
-      ];
-    })
-    .join("\n");
-
   const majorDepts = [
     "EE",
     "CS",
@@ -1009,6 +1019,101 @@ function buildSitemapXML(courses: any[]): string {
     "LS",
     "ECON",
   ];
+  const estimatedNonCourseUrls =
+    localizedStaticPages.length +
+    instructorNames.length * 3 +
+    majorDepts.length * 3;
+  const includeZhCnCourseUrls =
+    estimatedNonCourseUrls + courses.length * 3 <= 50_000;
+
+  const staticUrls = localizedStaticPages
+    .map((p) => {
+      const zhPath = p.path
+        .replace(/^\/(zh-cn|zh|en)\//, "/zh/")
+        .replace(/^\/(zh-cn|zh|en)$/, "/zh");
+      const enPath = p.path
+        .replace(/^\/(zh-cn|zh|en)\//, "/en/")
+        .replace(/^\/(zh-cn|zh|en)$/, "/en");
+      const zhCnPath = p.path
+        .replace(/^\/(zh-cn|zh|en)\//, "/zh-cn/")
+        .replace(/^\/(zh-cn|zh|en)$/, "/zh-cn");
+      const zhUrl = `https://nthumods.com${zhPath}`;
+      const enUrl = `https://nthumods.com${enPath}`;
+      const zhCnUrl = `https://nthumods.com${zhCnPath}`;
+      const loc = `https://nthumods.com${p.path}`;
+      return `  <url>
+    <loc>${loc}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>${p.changefreq}</changefreq>
+    <priority>${p.priority}</priority>
+${sitemapAlternates(zhUrl, enUrl, zhCnUrl)}
+  </url>`;
+    })
+    .join("\n");
+
+  // Each course gets BOTH zh and en URL entries so Google indexes both language versions
+  const courseUrls = courses
+    .flatMap((course) => {
+      const courseId = encodeURIComponent(course.raw_id);
+      const zhUrl = `https://nthumods.com/zh/courses/${courseId}`;
+      const enUrl = `https://nthumods.com/en/courses/${courseId}`;
+      const zhCnUrl = `https://nthumods.com/zh-cn/courses/${courseId}`;
+      const urls = [
+        `  <url>
+    <loc>${zhUrl}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.75</priority>
+${sitemapAlternates(zhUrl, enUrl, includeZhCnCourseUrls ? zhCnUrl : undefined)}
+  </url>`,
+        `  <url>
+    <loc>${enUrl}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.70</priority>
+${sitemapAlternates(zhUrl, enUrl, includeZhCnCourseUrls ? zhCnUrl : undefined)}
+  </url>`,
+      ];
+      if (includeZhCnCourseUrls) {
+        urls.push(`  <url>
+    <loc>${zhCnUrl}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.70</priority>
+${sitemapAlternates(zhUrl, enUrl, zhCnUrl)}
+  </url>`);
+      }
+      return urls;
+    })
+    .join("\n");
+
+  const instructorUrls = instructorNames
+    .flatMap((name) => {
+      const routeName = encodeURIComponent(encodeURIComponent(name));
+      const zhUrl = `https://nthumods.com/zh/courses/instructor/${routeName}`;
+      const enUrl = `https://nthumods.com/en/courses/instructor/${routeName}`;
+      return [
+        `  <url>
+    <loc>${zhUrl}</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.60</priority>
+${sitemapAlternates(zhUrl, enUrl, `https://nthumods.com/zh-cn/courses/instructor/${routeName}`)}
+  </url>`,
+        `  <url>
+    <loc>${enUrl}</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.55</priority>
+${sitemapAlternates(zhUrl, enUrl, `https://nthumods.com/zh-cn/courses/instructor/${routeName}`)}
+  </url>`,
+        `  <url>
+    <loc>https://nthumods.com/zh-cn/courses/instructor/${routeName}</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.55</priority>
+${sitemapAlternates(zhUrl, enUrl, `https://nthumods.com/zh-cn/courses/instructor/${routeName}`)}
+  </url>`,
+      ];
+    })
+    .join("\n");
 
   const deptUrls = majorDepts
     .flatMap((dept) => {
@@ -1019,17 +1124,19 @@ function buildSitemapXML(courses: any[]): string {
     <loc>${zhUrl}</loc>
     <changefreq>weekly</changefreq>
     <priority>0.65</priority>
-    <xhtml:link rel="alternate" hreflang="zh-TW" href="${zhUrl}"/>
-    <xhtml:link rel="alternate" hreflang="en" href="${enUrl}"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="${zhUrl}"/>
+${sitemapAlternates(zhUrl, enUrl, `https://nthumods.com/zh-cn/courses?department=${encodeURIComponent(dept)}`)}
   </url>`,
         `  <url>
     <loc>${enUrl}</loc>
     <changefreq>weekly</changefreq>
     <priority>0.60</priority>
-    <xhtml:link rel="alternate" hreflang="zh-TW" href="${zhUrl}"/>
-    <xhtml:link rel="alternate" hreflang="en" href="${enUrl}"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="${zhUrl}"/>
+${sitemapAlternates(zhUrl, enUrl, `https://nthumods.com/zh-cn/courses?department=${encodeURIComponent(dept)}`)}
+  </url>`,
+        `  <url>
+    <loc>https://nthumods.com/zh-cn/courses?department=${encodeURIComponent(dept)}</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.60</priority>
+${sitemapAlternates(zhUrl, enUrl, `https://nthumods.com/zh-cn/courses?department=${encodeURIComponent(dept)}`)}
   </url>`,
       ];
     })
@@ -1129,7 +1236,7 @@ export default {
 
     // Course detail page
     const courseMatch =
-      /^\/(zh|en)\/courses\/(?!modules(?:\/|$)|module(?:\/|$)|instructor(?:\/|$))(.+)$/.exec(
+      /^\/(zh|zh-cn|en)\/courses\/(?!modules(?:\/|$)|module(?:\/|$)|instructor(?:\/|$))(.+)$/.exec(
         url.pathname,
       );
     if (courseMatch) {
@@ -1143,21 +1250,21 @@ export default {
 
     // Department-filtered course list
     const deptMatch =
-      /^\/(zh|en)\/courses$/.exec(url.pathname) &&
+      /^\/(zh|zh-cn|en)\/courses$/.exec(url.pathname) &&
       url.searchParams.has("department");
     if (deptMatch) {
       return handleDepartmentPage(url, env);
     }
 
     // Bus route/line pages
-    const busMatch = /^\/(zh|en)\/bus\/(.+)$/.exec(url.pathname);
+    const busMatch = /^\/(zh|zh-cn|en)\/bus\/(.+)$/.exec(url.pathname);
     if (busMatch) {
       return handleBusPage(busMatch[1], busMatch[2], env, url.origin);
     }
 
     // All other bot requests to lang-prefixed pages: inject correct canonical,
     // hreflang, title, and description so Google doesn't index generic index.html metadata.
-    const langPageMatch = /^\/(zh|en)(\/|$)/.exec(url.pathname);
+    const langPageMatch = /^\/(zh|zh-cn|en)(\/|$)/.exec(url.pathname);
     if (langPageMatch) {
       return handleGenericBotPage(url, env);
     }

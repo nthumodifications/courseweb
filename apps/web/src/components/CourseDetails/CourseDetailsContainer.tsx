@@ -36,6 +36,7 @@ import { getScoreType, getFormattedClassCode } from "@/helpers/courses";
 import { CourseDefinition } from "@/config/supabase";
 import { Fragment, Suspense, useState, type ReactNode } from "react";
 import { Language } from "@/types/settings";
+import { contentLanguage, intlLocale } from "@/helpers/contentLanguage";
 import { sanitizeCourseHtml } from "@/lib/sanitizeHtml";
 import ShareCourseButton from "./ShareCourseButton";
 import client from "@/config/api";
@@ -73,6 +74,7 @@ import {
   parsePttResponse,
   type PttReview,
 } from "@/lib/ptt";
+import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
 import {
   CourseDetailSection,
   type CourseDetailSectionId,
@@ -284,6 +286,7 @@ const CourseDetailContainer = ({
   modal?: boolean;
 }) => {
   const dict = useDictionary();
+  const localizeData = useLocalizedZhData();
   const { openCourse } = useCourseLink();
   const courseStatisticsClient = client as unknown as CourseStatisticsApi;
 
@@ -383,12 +386,15 @@ const CourseDetailContainer = ({
   const seoCourseName =
     lang === "en"
       ? course?.name_en || course?.name_zh || ""
-      : course?.name_zh || "";
+      : course?.name_zh
+        ? localizeData(course.name_zh)
+        : "";
   const seoAlternateName = lang === "en" ? course?.name_zh : course?.name_en;
   const seoInstructors =
-    (lang === "en" ? course?.teacher_en : course?.teacher_zh)?.join(
-      dict.course.details.seo.instructor_separator,
-    ) ?? "";
+    (lang === "en"
+      ? course?.teacher_en
+      : course?.teacher_zh?.map(localizeData)
+    )?.join(dict.course.details.seo.instructor_separator) ?? "";
   const seoSemester = course ? toPrettySemester(course.semester) : "";
   const fillSeo = (template: string) =>
     template
@@ -420,7 +426,7 @@ const CourseDetailContainer = ({
           })),
           courseCode: `${course.department} ${course.course}-${course.class}`,
           educationalLevel: "University",
-          inLanguage: lang === "en" ? "en" : "zh-TW",
+          inLanguage: intlLocale(lang),
           url: courseCanonicalUrl,
           offers: {
             "@type": "Offer",
@@ -447,7 +453,7 @@ const CourseDetailContainer = ({
             url: `https://nthumods.com/${lang}/courses?department=${encodeURIComponent(course.department)}`,
           },
           {
-            name: course.name_zh,
+            name: localizeData(course.name_zh),
             url: courseCanonicalUrl,
           },
         ]
@@ -474,7 +480,7 @@ const CourseDetailContainer = ({
           name: `${seoCourseName} | NTHUMods`,
           description: fillSeo(dict.course.details.seo.page_description),
           url: courseCanonicalUrl,
-          inLanguage: lang === "en" ? "en-US" : "zh-TW",
+          inLanguage: intlLocale(lang),
           isPartOf: { "@type": "WebSite", url: "https://nthumods.com" },
         }
       : null;
@@ -562,6 +568,11 @@ const CourseDetailContainer = ({
           />
           <link
             rel="alternate"
+            hrefLang="zh-CN"
+            href={`https://nthumods.com/zh-cn/courses/${encodedCourseId}`}
+          />
+          <link
+            rel="alternate"
             hrefLang="x-default"
             href={`https://nthumods.com/zh/courses/${encodedCourseId}`}
           />
@@ -604,17 +615,17 @@ const CourseDetailContainer = ({
                 <div className="font-bold text-xl text-nthu-600">{`${course.department} ${course.course}-${course.class}`}</div>
                 <h1 className="flex min-w-0 flex-row flex-wrap gap-1 font-bold text-xl">
                   <span className="min-w-0 whitespace-normal">
-                    {course.name_zh}
+                    {localizeData(course.name_zh)}
                   </span>
                   <span>
                     {course.teacher_zh?.map((displayName, index) => (
                       <Fragment key={`${displayName}-${index}`}>
                         {index > 0 ? "," : ""}
                         <InstructorLink
-                          lang={lang}
+                          lang={contentLanguage(lang)}
                           name={course.teacher_zh?.[index] ?? ""}
                         >
-                          {displayName}
+                          {localizeData(displayName)}
                         </InstructorLink>
                       </Fragment>
                     ))}
@@ -629,7 +640,7 @@ const CourseDetailContainer = ({
                       <Fragment key={`${displayName}-${index}`}>
                         {index > 0 ? "," : ""}
                         <InstructorLink
-                          lang={lang}
+                          lang={contentLanguage(lang)}
                           name={
                             bilingualNamesAreAligned
                               ? (course.teacher_zh?.[index] ?? "")
@@ -648,7 +659,7 @@ const CourseDetailContainer = ({
                 {course.venues ? (
                   course.venues.map((vn, i) => (
                     <p key={vn} className="text-muted-foreground text-sm">
-                      {vn}{" "}
+                      {localizeData(vn)}{" "}
                       <span className="text-foreground">
                         {course.times![i]}
                       </span>
@@ -764,7 +775,7 @@ const CourseDetailContainer = ({
                           parsed={parsedPrerequisite}
                           course={course}
                           rows={prerequisiteRows}
-                          lang={lang}
+                          lang={contentLanguage(lang)}
                           dict={dict}
                         />
                         <details>

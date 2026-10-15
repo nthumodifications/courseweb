@@ -36,6 +36,7 @@ import {
 } from "@/libs/citybus";
 import { useBusPins, type CityBusPin } from "@/features/bus/busPins";
 import { CityBusLineBadge } from "@/features/bus/CityBusLineBadge";
+import { contentLanguage } from "@/helpers/contentLanguage";
 import {
   BusLineHeader,
   BusStationState,
@@ -88,6 +89,7 @@ function directionOptionLabel(
 
 const CityBusDetails = ({ routeId }: CityBusDetailsProps) => {
   const { language } = useSettings();
+  const contentLang = contentLanguage(language);
   const dict = useDictionary();
   const now = useTime(60_000);
   const navigate = useNavigate();
@@ -180,9 +182,9 @@ const CityBusDetails = ({ routeId }: CityBusDetailsProps) => {
     );
   }
 
-  const routeName = language === "zh" ? route.nameZh : route.nameEn;
+  const routeName = contentLang === "zh" ? route.nameZh : route.nameEn;
   const destination =
-    language === "zh" ? direction.destinationZh : direction.destinationEn;
+    contentLang === "zh" ? direction.destinationZh : direction.destinationEn;
   const selected = pinned(pin);
   const status = getScheduleStatus(route, direction.id, stop.id, now);
   const tripDay = selectedTrip
@@ -190,7 +192,7 @@ const CityBusDetails = ({ routeId }: CityBusDetailsProps) => {
       ? formatNextServiceDay(
           selectedTrip.dayOffset,
           now,
-          language as "zh" | "en",
+          contentLang,
           dict.bus.tomorrow,
         )
       : dict.bus.scheduled
@@ -235,7 +237,7 @@ const CityBusDetails = ({ routeId }: CityBusDetailsProps) => {
             nameZh={route.nameZh}
             nameEn={route.nameEn}
             category={route.category}
-            language={language as "zh" | "en"}
+            language={contentLang}
           />
         }
         pinned={selected}
@@ -254,7 +256,7 @@ const CityBusDetails = ({ routeId }: CityBusDetailsProps) => {
                 {directionOptionLabel(
                   directions,
                   item.id,
-                  language as "zh" | "en",
+                  contentLang,
                   dict.bus.head_to,
                 )}
               </TabsTrigger>
@@ -274,7 +276,7 @@ const CityBusDetails = ({ routeId }: CityBusDetailsProps) => {
                   {directionOptionLabel(
                     directions,
                     item.id,
-                    language as "zh" | "en",
+                    contentLang,
                     dict.bus.head_to,
                   )}
                 </SelectItem>
@@ -310,10 +312,7 @@ const CityBusDetails = ({ routeId }: CityBusDetailsProps) => {
                 <p className="text-sm font-medium text-muted-foreground">
                   {dict.bus.realtime_updated_at.replace(
                     "{time}",
-                    formatCityBusUpdatedAt(
-                      realtimeData.updatedAt,
-                      language as "zh" | "en",
-                    ),
+                    formatCityBusUpdatedAt(realtimeData.updatedAt, contentLang),
                   )}
                 </p>
               )}
@@ -325,7 +324,7 @@ const CityBusDetails = ({ routeId }: CityBusDetailsProps) => {
               const live = realtimeTimeline[index];
               const liveText = formatCityBusRealtimeDisplay(
                 live?.display,
-                language as "zh" | "en",
+                contentLang,
                 {
                   arriving: dict.bus.realtime_arriving,
                   lastBus: dict.bus.realtime_last_bus,
@@ -335,7 +334,7 @@ const CityBusDetails = ({ routeId }: CityBusDetailsProps) => {
               );
               return {
                 id: item.id,
-                station: language === "zh" ? item.nameZh : item.nameEn,
+                station: contentLang === "zh" ? item.nameZh : item.nameEn,
                 time: liveText ?? "",
                 state:
                   live?.state === "at_station"
@@ -404,7 +403,7 @@ const CityBusDetails = ({ routeId }: CityBusDetailsProps) => {
             activeId={stop.id}
             items={directionStops.map((item) => ({
               id: item.id,
-              station: language === "zh" ? item.nameZh : item.nameEn,
+              station: contentLang === "zh" ? item.nameZh : item.nameEn,
               time:
                 selectedTrip.kind === "frequency"
                   ? ""

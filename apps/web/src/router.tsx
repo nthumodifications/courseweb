@@ -8,7 +8,6 @@ import ShortlinkRedirect from "@/layouts/ShortlinkRedirect";
 import AppProviders from "@/layouts/AppProviders";
 import { ROUTE_PATHS } from "@/routerPaths";
 import en from "@/dictionaries/en.json";
-import zh from "@/dictionaries/zh.json";
 
 // Auth callback (outside lang layout)
 const AuthCallbackPage = lazyWithRetry(
@@ -270,7 +269,7 @@ export const appRoutes = [
                 element: <InstructorPage />,
                 handle: {
                   title: en.course.instructor.title,
-                  titleZh: zh.course.instructor.title,
+                  titleZhKey: "course.instructor.title",
                 },
               },
               {

@@ -10,6 +10,7 @@ import {
   test,
 } from "bun:test";
 import { captureGlobalState } from "@/test-utils/global-state";
+import en from "@/dictionaries/en.json";
 
 const TEST_NOW = new Date("2026-10-09T12:00:00+08:00");
 const actualShared = await import("@courseweb/shared");
@@ -55,7 +56,7 @@ describe("current semester label", () => {
 
     try {
       await act(async () => {
-        root.render(<CurrentSemesterLabel language="en" />);
+        root.render(<CurrentSemesterLabel language="en" dictionary={en} />);
       });
 
       const expected = currentSemester

@@ -1,4 +1,7 @@
-export type WeatherLanguage = "en" | "zh";
+import type { Language } from "@/types/settings";
+import { intlLocale } from "@/helpers/contentLanguage";
+
+export type WeatherLanguage = Language;
 
 export const formatWeatherWeekday = (
   date: string,
@@ -20,7 +23,7 @@ export const formatWeatherWeekday = (
     return "";
   }
 
-  return new Intl.DateTimeFormat(language === "zh" ? "zh-TW" : "en-US", {
+  return new Intl.DateTimeFormat(intlLocale(language), {
     timeZone: "UTC",
     weekday: "short",
   }).format(parsedDate);

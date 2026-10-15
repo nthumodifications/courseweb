@@ -31,6 +31,7 @@ import client from "@/config/api";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useSettings } from "@/hooks/contexts/settings";
 import { getClientErrorDiagnostics } from "@/lib/client-diagnostics";
+import { contentLanguage } from "@/helpers/contentLanguage";
 import {
   DEFAULT_ATTACH_DIAGNOSTICS,
   DIAGNOSTIC_LABEL_KEYS,
@@ -280,7 +281,7 @@ export const useIssueReport = ({
         import.meta.env.VITE_COMMIT_SHA ||
         "unknown",
       route: getRoutePatternFromPath(location.pathname),
-      language,
+      language: contentLanguage(language),
       theme: darkMode ? "dark" : "light",
       browser: getBrowserFamily(
         typeof navigator === "undefined" ? "" : navigator.userAgent,

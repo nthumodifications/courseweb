@@ -8,6 +8,7 @@ import {
   type ScoreSummary,
 } from "@/lib/module-insights";
 import type { CourseDefinition } from "@/config/supabase";
+import { contentLanguage } from "@/helpers/contentLanguage";
 
 /** The display form for an instructor name, without changing its identity. */
 export const normaliseInstructorName = (value: string) =>
@@ -218,7 +219,9 @@ export const getInstructorModuleTitle = (
 ) => {
   const latestOffering = group.offerings[0];
   if (!latestOffering) return "";
-  return lang === "en" ? latestOffering.name_en : latestOffering.name_zh;
+  return contentLanguage(lang) === "en"
+    ? latestOffering.name_en
+    : latestOffering.name_zh;
 };
 
 export const formatInstructorEnglishNames = (names: readonly string[]) =>

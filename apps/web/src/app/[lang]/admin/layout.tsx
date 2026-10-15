@@ -60,7 +60,7 @@ const AdminLayout = () => {
   // read as still checking rather than falling through to the 404 below.
   const identityPending = auth.isAuthenticated && status === "pending";
 
-  const base = `/${lang === "en" ? "en" : "zh"}/admin`;
+  const base = `/${lang}/admin`;
 
   if (auth.isLoading || identityPending) {
     return (
@@ -103,9 +103,7 @@ const AdminLayout = () => {
         description="There is nothing here."
         action={
           <Button variant="outline" asChild>
-            <NavLink to={`/${lang === "en" ? "en" : "zh"}/today`}>
-              Back to NTHUMods
-            </NavLink>
+            <NavLink to={`/${lang}/today`}>Back to NTHUMods</NavLink>
           </Button>
         }
       />
@@ -121,7 +119,7 @@ const AdminLayout = () => {
       <header className="sticky top-0 z-20 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
           <NavLink
-            to={`/${lang === "en" ? "en" : "zh"}/today`}
+            to={`/${lang}/today`}
             className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" aria-hidden />

@@ -18,6 +18,7 @@ import {
 import type useDictionary from "@/dictionaries/useDictionary";
 import { createModuleKey } from "@/lib/modules";
 import { CourseDialogLink } from "@/components/Courses/CourseDialog";
+import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
 
 type DetailsDictionary = ReturnType<typeof useDictionary>["course"]["details"];
 
@@ -68,6 +69,7 @@ const nodeClass = (node: PrerequisiteGraphNode, anchor = false) =>
 const formatAriaNode = (
   node: PrerequisiteGraphNode,
   labels: DetailsDictionary,
+  localizeData: (value: string) => string,
 ) => {
   const prefix = node.mustNotHaveTaken
     ? labels.prerequisite_aria_not_taken
@@ -75,21 +77,26 @@ const formatAriaNode = (
   const grade = node.minimumGrade
     ? ` (${node.minimumGrade} ${labels.prerequisite_grade_above})`
     : "";
-  return `${prefix ? `${prefix} ` : ""}${node.name}${grade}`;
+  return `${prefix ? `${prefix} ` : ""}${localizeData(node.name)}${grade}`;
 };
 
 const formatAriaLabel = (
   graph: PrerequisiteGraph,
   labels: DetailsDictionary,
+  localizeData: (value: string) => string,
 ) => {
   const requirements = graph.requirements.map((group) => {
     const items = group.items
-      .map((node) => formatAriaNode(node, labels))
+      .map((node) => formatAriaNode(node, labels, localizeData))
       .join(labels.prerequisite_aria_separator);
     if (group.items.every((node) => node.mustNotHaveTaken)) {
       return `${labels.prerequisite_aria_not_taken} ${group.items
         .map((node) =>
-          formatAriaNode({ ...node, mustNotHaveTaken: false }, labels),
+          formatAriaNode(
+            { ...node, mustNotHaveTaken: false },
+            labels,
+            localizeData,
+          ),
         )
         .join(labels.prerequisite_aria_separator)}`;
     }
@@ -100,7 +107,7 @@ const formatAriaLabel = (
   )}${labels.prerequisite_aria_sentence_end}`;
   if (graph.unlocks.length === 0) return requires;
   return `${requires}${labels.prerequisite_aria_unlock_separator}${labels.prerequisite_unlocks}${labels.prerequisite_aria_requires_separator}${graph.unlocks
-    .map((node) => formatAriaNode(node, labels))
+    .map((node) => formatAriaNode(node, labels, localizeData))
     .join(
       labels.prerequisite_aria_separator,
     )}${labels.prerequisite_aria_sentence_end}`;
@@ -145,6 +152,7 @@ const PrerequisiteGraph = ({
   lang: "en" | "zh";
   labels: DetailsDictionary;
 }) => {
+  const localizeData = useLocalizedZhData();
   const graph = useMemo(
     () => buildPrerequisiteGraph(course, parsed, rows),
     [course, parsed, rows],
@@ -262,7 +270,11 @@ const PrerequisiteGraph = ({
     department?: string,
   ) => {
     const className = nodeClass(node, anchor);
-    const content = nodeText(node, labels, department);
+    const content = nodeText(
+      { ...node, name: localizeData(node.name) },
+      labels,
+      department,
+    );
     const href =
       node.moduleDepartment && node.moduleCourse
         ? `/${lang}/courses/module/${encodeURIComponent(createModuleKey(node.moduleDepartment, node.moduleCourse))}`
@@ -344,7 +356,7 @@ const PrerequisiteGraph = ({
     <div
       ref={containerRef}
       role="img"
-      aria-label={formatAriaLabel(graph, labels)}
+      aria-label={formatAriaLabel(graph, labels, localizeData)}
       className="relative min-w-0"
     >
       {wide && (
@@ -407,7 +419,11 @@ const PrerequisiteGraph = ({
           renderNarrowConnector("requirements-to-anchor")}
 
         <div className="min-w-0 justify-self-center">
-          {renderNode({ name: course.name_zh }, "prerequisite-anchor", true)}
+          {renderNode(
+            { name: localizeData(course.name_zh) },
+            "prerequisite-anchor",
+            true,
+          )}
         </div>
 
         {!wide &&

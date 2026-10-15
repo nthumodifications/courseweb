@@ -84,7 +84,9 @@ const MainLayout = () => {
             <CourseDialogProvider>
               <GoogleAnalytics />
               <ConsoleLogger />
-              <AppSidebar lang={lang === "en" ? "en" : "zh"} />
+              <AppSidebar
+                lang={lang === "en" ? "en" : lang === "zh-cn" ? "zh-cn" : "zh"}
+              />
               <SidebarInset className="min-w-0 overflow-x-hidden">
                 <Header />
                 <AnnouncementBar />

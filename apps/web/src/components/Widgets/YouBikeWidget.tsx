@@ -6,6 +6,7 @@ import { useSettings } from "@/hooks/contexts/settings";
 import { useYouBikeStations } from "@/hooks/useYouBikeStations";
 import { getPinnedStationIds, togglePinnedStationId } from "@/lib/youbike";
 import useDictionary from "@/dictionaries/useDictionary";
+import { contentLanguage } from "@/helpers/contentLanguage";
 import {
   Select,
   SelectContent,
@@ -76,7 +77,9 @@ const YouBikeWidget: FC<YouBikeWidgetProps> = ({
             <SelectContent>
               {availableToAdd.map((station) => (
                 <SelectItem key={station.id} value={station.id}>
-                  {language === "zh" ? station.nameZh : station.nameEn}
+                  {contentLanguage(language) === "zh"
+                    ? station.nameZh
+                    : station.nameEn}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -104,7 +107,9 @@ const YouBikeWidget: FC<YouBikeWidgetProps> = ({
                 className="flex items-center justify-between gap-2 text-sm"
               >
                 <span className="min-w-0 truncate">
-                  {language === "zh" ? station.nameZh : station.nameEn}
+                  {contentLanguage(language) === "zh"
+                    ? station.nameZh
+                    : station.nameEn}
                 </span>
                 <div className="flex shrink-0 items-center gap-2">
                   <span className="text-xs text-muted-foreground">

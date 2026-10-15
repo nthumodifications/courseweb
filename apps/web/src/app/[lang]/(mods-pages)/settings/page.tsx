@@ -197,10 +197,13 @@ const SettingsPage = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="zh">
-                        {dict.settings.timetable.language_options.zh}
+                        {dict.settings.display.language_options.zh}
                       </SelectItem>
                       <SelectItem value="en">
-                        {dict.settings.timetable.language_options.en}
+                        {dict.settings.display.language_options.en}
+                      </SelectItem>
+                      <SelectItem value="zh-cn">
+                        {dict.settings.display.language_options.zh_cn}
                       </SelectItem>
                     </SelectContent>
                   </Select>

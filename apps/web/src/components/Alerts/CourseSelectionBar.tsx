@@ -21,6 +21,7 @@ import {
 } from "@/lib/course-selection-colors";
 import { formatCourseSelectionBarDate } from "@/components/CourseSelection/CourseSelectionSchedule";
 import CourseSelectionScheduleDialog from "@/components/CourseSelection/CourseSelectionScheduleDialog";
+import { contentLanguage } from "@/helpers/contentLanguage";
 
 const replaceDate = (template: string, date: string) =>
   template.replace("{date}", date);
@@ -35,7 +36,7 @@ const getBarAnswer = (
   const status = getCourseSelectionPhaseStatus(period, nowDateKey);
   const date = formatCourseSelectionBarDate(
     status === "in-progress" ? period.endDate : period.startDate,
-    language,
+    contentLanguage(language),
     dict.course.selection_period,
   );
 
@@ -119,10 +120,22 @@ const CourseSelectionBar = () => {
           {dict.course.selection_period.phases[period.phase]}
         </span>
         <span className="min-w-0 sm:hidden">
-          {getBarAnswer(period, nowDateKey, language, dict, true)}
+          {getBarAnswer(
+            period,
+            nowDateKey,
+            contentLanguage(language),
+            dict,
+            true,
+          )}
         </span>
         <span className="hidden min-w-0 sm:inline">
-          {getBarAnswer(period, nowDateKey, language, dict, false)}
+          {getBarAnswer(
+            period,
+            nowDateKey,
+            contentLanguage(language),
+            dict,
+            false,
+          )}
         </span>
       </div>
       <span className="hidden shrink-0 sm:inline">

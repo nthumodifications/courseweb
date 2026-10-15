@@ -14,6 +14,7 @@ import { Route2LineIcon } from "@/components/BusIcons/Route2LineIcon";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { formatNandaDestination, getTimeOnDate } from "@/helpers/bus";
 import useDictionary from "@/dictionaries/useDictionary";
+import { intlLocale } from "@/helpers/contentLanguage";
 import OpenCollectiveSponsorBanner from "@/components/Sponsorship/OpenCollectiveSponsorBanner";
 import {
   BusListingItem,
@@ -413,7 +414,7 @@ const BusPage = () => {
     name: dict.bus.page_title,
     description: dict.bus.page_description,
     url: `https://nthumods.com/${language}/bus`,
-    inLanguage: language === "en" ? "en-US" : "zh-TW",
+    inLanguage: intlLocale(language),
     isPartOf: { "@type": "WebSite", url: "https://nthumods.com" },
   };
 

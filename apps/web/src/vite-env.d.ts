@@ -19,3 +19,18 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+declare module "opencc-js/from/*" {
+  const dictionary: readonly import("opencc-js/core").DictGroup[];
+  export default dictionary;
+}
+
+declare module "opencc-js/to/*" {
+  const dictionary: readonly import("opencc-js/core").DictGroup[];
+  export default dictionary;
+}
+
+declare module "opencc-js/dict/*" {
+  const dictionary: import("opencc-js/core").DictLike;
+  export default dictionary;
+}

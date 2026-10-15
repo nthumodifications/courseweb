@@ -19,6 +19,7 @@ function shellResponse() {
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Shell title" />
     <meta property="og:description" content="Shell description" />
+    <meta property="og:locale" content="zh_TW" />
     <meta property="og:url" content="https://nthumods.com/" />
     <meta name="twitter:title" content="Shell title" />
     <meta name="twitter:description" content="Shell description" />
@@ -355,6 +356,73 @@ describe("Worker asset and shell caching", () => {
   });
 
   test.each([
+    ["/zh/today", "zh-TW", "https://nthumods.com/zh/today", "zh_TW"],
+    ["/en/today", "en", "https://nthumods.com/en/today", "en_US"],
+    ["/zh-cn/today", "zh-CN", "https://nthumods.com/zh-cn/today", "zh_CN"],
+  ] as const)(
+    "rewrites normal-browser navigation metadata for %s",
+    async (path, htmlLang, canonical, ogLocale) => {
+      const restore = installWorkerRuntime(async () => shellResponse());
+      try {
+        const response = await worker.fetch(
+          new Request(`https://example.test${path}`, {
+            headers: { "User-Agent": "Mozilla/5.0" },
+          }),
+          testEnv(async () => shellResponse()),
+        );
+        const html = await response.text();
+
+        expect(htmlAttribute(html, "html", "lang")).toBe(htmlLang);
+        expect(html).toContain(`property="og:locale" content="${ogLocale}"`);
+        expect(html).toContain(`rel="canonical" href="${canonical}"`);
+        expect(html).toContain('hreflang="zh-TW"');
+        expect(html).toContain('hreflang="zh-CN"');
+        expect(html).toContain('hreflang="en"');
+        expect(response.headers.get("Cache-Control")).toBe(
+          "no-cache, must-revalidate",
+        );
+      } finally {
+        restore();
+      }
+    },
+  );
+
+  test("dynamic sitemap includes zh-cn static and course alternates", async () => {
+    const restore = installWorkerRuntime(async (input) => {
+      const url = requestUrl(input);
+      if (url.includes("select=semester")) {
+        return new Response(JSON.stringify([{ semester: "11510" }]), {
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+      if (url.includes("semester=eq.11510")) {
+        return new Response(
+          JSON.stringify([
+            { raw_id: "CS 101", semester: "11510", teacher_zh: [] },
+          ]),
+          { headers: { "Content-Type": "application/json" } },
+        );
+      }
+      return new Response("[]", {
+        headers: { "Content-Type": "application/json" },
+      });
+    });
+    try {
+      const response = await worker.fetch(
+        new Request("https://example.test/sitemap.xml"),
+        testEnv(async () => shellResponse()),
+      );
+      const sitemap = await response.text();
+
+      expect(sitemap).toContain("https://nthumods.com/zh-cn/");
+      expect(sitemap).toContain("https://nthumods.com/zh-cn/courses/CS%20101");
+      expect(sitemap).toContain('hreflang="zh-CN"');
+    } finally {
+      restore();
+    }
+  });
+
+  test.each([
     ["GET", "/", "/"],
     ["HEAD", "/", "/"],
     [
@@ -553,9 +621,19 @@ describe("Worker asset and shell caching", () => {
           request(worker),
         ]);
 
-        expect(await responseSnapshot(newResponse)).toEqual(
-          await responseSnapshot(headResponse),
-        );
+        if (path === "/sitemap.xml") {
+          expect(newResponse.status).toBe(headResponse.status);
+          expect(newResponse.headers.get("Content-Type")).toBe(
+            headResponse.headers.get("Content-Type"),
+          );
+          expect(await newResponse.text()).toContain(
+            "https://nthumods.com/zh-cn/",
+          );
+        } else {
+          expect(await responseSnapshot(newResponse)).toEqual(
+            await responseSnapshot(headResponse),
+          );
+        }
       } finally {
         restore();
       }
@@ -698,6 +776,7 @@ describe("Worker asset and shell caching", () => {
   test.each([
     ["/zh/today", "zh-TW", "https://nthumods.com/zh/today"],
     ["/en/today", "en", "https://nthumods.com/en/today"],
+    ["/zh-cn/today", "zh-CN", "https://nthumods.com/zh-cn/today"],
     ["/zh/apps", "zh-TW", "https://nthumods.com/zh/apps"],
     ["/en/apps", "en", "https://nthumods.com/en/apps"],
     [
@@ -728,9 +807,12 @@ describe("Worker asset and shell caching", () => {
 
         expect(htmlAttribute(html, "html", "lang")).toBe(lang);
         expect(html).toContain(`rel="canonical" href="${canonical}"`);
-        const zhUrl = canonical.replace(/\/(?:zh|en)(?=\/|$)/, "/zh");
-        const enUrl = canonical.replace(/\/(?:zh|en)(?=\/|$)/, "/en");
+        const zhUrl = canonical.replace(/\/(?:zh|zh-cn|en)(?=\/|$)/, "/zh");
+        const enUrl = canonical.replace(/\/(?:zh|zh-cn|en)(?=\/|$)/, "/en");
         expect(html).toContain(`hreflang="zh-TW" href="${zhUrl}"`);
+        expect(html).toContain(
+          `hreflang="zh-CN" href="${canonical.replace(/\/(?:zh|zh-cn|en)(?=\/|$)/, "/zh-cn")}"`,
+        );
         expect(html).toContain(`hreflang="en" href="${enUrl}"`);
         expect(html).toContain(`hreflang="x-default" href="${zhUrl}"`);
       } finally {

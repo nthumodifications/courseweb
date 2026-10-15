@@ -1,11 +1,13 @@
 import useDictionary from "@/dictionaries/useDictionary";
 import { SearchResultCount } from "@/components/Search/SearchResultCount";
 import { COURSE_SEARCH_PREVIEW } from "./sampleData";
+import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
 
 // Mirrors the compact course row from CourseListItem without changing that
 // production component just to make a static changelog preview.
 const SearchPreviewCourseRow = () => {
   const dict = useDictionary();
+  const localizeData = useLocalizedZhData();
   const course = COURSE_SEARCH_PREVIEW;
 
   return (
@@ -20,13 +22,14 @@ const SearchPreviewCourseRow = () => {
           </div>
           <div className="flex min-w-0 max-w-full flex-row items-start gap-1 text-left font-bold">
             <span className="min-w-0 whitespace-normal">
-              {course.name_zh} - {course.teacher_zh.join(",")}
+              {localizeData(course.name_zh)} -{" "}
+              {course.teacher_zh.map(localizeData).join(",")}
             </span>
           </div>
           <div className="flex min-w-0 flex-col gap-1">
             {course.venues.map((venue, index) => (
               <div key={venue} className="text-muted-foreground text-xs">
-                {venue} / {course.times[index]}
+                {localizeData(venue)} / {course.times[index]}
               </div>
             ))}
           </div>

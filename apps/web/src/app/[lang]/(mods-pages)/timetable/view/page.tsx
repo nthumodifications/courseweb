@@ -23,15 +23,17 @@ import client from "@/config/api";
 import useDictionary from "@/dictionaries/useDictionary";
 import { decodeTimetableShareQuery } from "@/helpers/timetableShare";
 import { mergeTimetableImport } from "@/helpers/timetableImport";
+import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
 
 const ViewTimetablePage = () => {
   const navigate = useNavigate();
   const { lang } = useParams<{ lang: string }>();
-  const routeLang = lang === "en" ? "en" : "zh";
+  const routeLang = lang === "en" || lang === "zh-cn" ? lang : "zh";
   const [searchParams] = useSearchParams();
   const { currentColors, setCourses, setColorMap, setCustomItems } =
     useUserTimetable();
   const dict = useDictionary();
+  const localizeData = useLocalizedZhData();
   const decodedShare = useMemo(
     () => decodeTimetableShareQuery(searchParams),
     [searchParams],
@@ -173,7 +175,9 @@ const ViewTimetablePage = () => {
                   style={{ backgroundColor: colorMap[course.raw_id] }}
                 ></div>
                 <div className="flex flex-col flex-1">
-                  <span className="text-sm">{course.name_zh}</span>
+                  <span className="text-sm">
+                    {localizeData(course.name_zh)}
+                  </span>
                   <span className="text-xs">{course.name_en}</span>
                   <div className="mt-1">
                     {course.venues?.map((venue, index) => {
@@ -183,7 +187,7 @@ const ViewTimetablePage = () => {
                           key={index}
                           className="flex flex-row items-center space-x-2 font-mono text-gray-400"
                         >
-                          <span className="text-xs">{venue}</span>
+                          <span className="text-xs">{localizeData(venue)}</span>
                           <span className="text-xs">{time}</span>
                         </div>
                       );

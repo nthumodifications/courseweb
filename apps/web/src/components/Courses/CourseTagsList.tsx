@@ -7,6 +7,7 @@ import {
   HTMLAttributes,
   PropsWithChildren,
 } from "react";
+import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
 
 const HighlightItem: FC<
   PropsWithChildren<
@@ -36,11 +37,12 @@ const CourseTagList = ({
   priority?: number;
 }) => {
   const dict = useDictionary();
+  const localizeData = useLocalizedZhData();
   return (
     <div className="flex flex-row flex-wrap gap-1 text-sm">
       {showAdditionalTags && course.closed_mark && (
         <HighlightItem className="bg-destructive text-destructive-foreground">
-          {course.closed_mark}
+          {localizeData(course.closed_mark)}
         </HighlightItem>
       )}
       {showEnrollment && (
@@ -96,7 +98,8 @@ const CourseTagList = ({
       )}
       {showAdditionalTags && (course.ge_target?.trim() || "").length > 0 && (
         <HighlightItem>
-          {course.ge_target} {dict.course.tags.general_education}
+          {course.ge_target ? localizeData(course.ge_target) : null}{" "}
+          {dict.course.tags.general_education}
         </HighlightItem>
       )}
       {showAdditionalTags && getGECType(course.ge_type || "") && (

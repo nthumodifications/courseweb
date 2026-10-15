@@ -9,7 +9,7 @@ import useDictionary from "@/dictionaries/useDictionary";
 const Footer = () => {
   const { lang } = useParams<{ lang: string }>();
   const dict = useDictionary();
-  const routeLang = lang === "en" ? "en" : "zh";
+  const routeLang = lang === "en" || lang === "zh-cn" ? lang : "zh";
   return (
     <div className="py-4 flex flex-col gap-4">
       <div className="flex flex-col md:flex-row justify-between">

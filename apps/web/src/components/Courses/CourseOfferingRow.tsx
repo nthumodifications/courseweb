@@ -3,6 +3,8 @@ import useDictionary from "@/dictionaries/useDictionary";
 import { toPrettySemester } from "@/helpers/semester";
 import type { ModuleOffering } from "@/lib/modules";
 import { CourseDialogLink } from "@/components/Courses/CourseDialog";
+import { contentLanguage } from "@/helpers/contentLanguage";
+import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
 
 type Dictionary = ReturnType<typeof useDictionary>;
 
@@ -17,10 +19,12 @@ const formatInstructors = (
   lang: string,
   unavailable: string,
 ) => {
-  const names = lang === "en" ? offering.teacher_en : offering.teacher_zh;
+  const contentLang = contentLanguage(lang);
+  const names =
+    contentLang === "en" ? offering.teacher_en : offering.teacher_zh;
   return (
     (names?.length ? names : offering.teacher_zh)?.join(
-      lang === "en" ? ", " : "、",
+      contentLang === "en" ? ", " : "、",
     ) || unavailable
   );
 };
@@ -46,6 +50,7 @@ export const CourseOfferingRow = ({
   dict: Dictionary;
   showSemester: boolean;
 }) => {
+  const localizeData = useLocalizedZhData();
   const language = offering.language.trim();
   const capacity =
     offering.capacity === null
@@ -63,13 +68,17 @@ export const CourseOfferingRow = ({
       </span>
       <span className="min-w-0 flex-1">
         <span className="block truncate text-sm font-medium">
-          {formatInstructors(offering, lang, dict.course.module.not_available)}
+          {localizeData(
+            formatInstructors(offering, lang, dict.course.module.not_available),
+          )}
           <span className="ml-2 font-normal text-muted-foreground">
             {sectionLabel(dict, offering.class)}
           </span>
         </span>
         <span className="mt-1 block truncate text-sm text-muted-foreground">
-          {formatTimesAndVenues(offering, dict.course.module.not_available)}
+          {localizeData(
+            formatTimesAndVenues(offering, dict.course.module.not_available),
+          )}
         </span>
         {(language || capacity) && (
           <span className="mt-1 flex flex-wrap gap-2 text-xs text-muted-foreground">

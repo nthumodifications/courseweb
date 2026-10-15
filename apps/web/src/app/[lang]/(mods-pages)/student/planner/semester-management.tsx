@@ -30,6 +30,7 @@ import * as z from "zod";
 import { semesterInfo } from "@courseweb/shared";
 import { cn } from "@/lib/utils";
 import useDictionary from "@/dictionaries/useDictionary";
+import { intlLocale } from "@/helpers/contentLanguage";
 import { ResponsiveDialog } from "./components/responsive-dialog";
 import { useConfirm } from "./lib/use-confirm";
 import { useSettings } from "@/hooks/contexts/settings";
@@ -509,9 +510,7 @@ export function SemesterManagement({
                         <p className="mt-1">
                           {new Date(
                             selectedSemester.startDate,
-                          ).toLocaleDateString(
-                            language === "en" ? "en-US" : "zh-TW",
-                          )}
+                          ).toLocaleDateString(intlLocale(language))}
                         </p>
                       </div>
                     )}
@@ -524,9 +523,7 @@ export function SemesterManagement({
                         <p className="mt-1">
                           {new Date(
                             selectedSemester.endDate,
-                          ).toLocaleDateString(
-                            language === "en" ? "en-US" : "zh-TW",
-                          )}
+                          ).toLocaleDateString(intlLocale(language))}
                         </p>
                       </div>
                     )}

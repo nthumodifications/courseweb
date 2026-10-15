@@ -10,6 +10,7 @@ import useUserTimetable, {
   TimetableFieldKey,
 } from "@/hooks/contexts/useUserTimetable";
 import { cn } from "@courseweb/ui";
+import { resolveTimetableContentLanguage } from "@/helpers/contentLanguage";
 import { CalendarClock } from "lucide-react";
 import {
   getCustomSlotTimeRange,
@@ -18,6 +19,7 @@ import {
   timetableGridEnd,
   timetableGridStart,
 } from "@/helpers/timetable";
+import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
 
 type TimetableSlotProps = {
   course: CourseTimeslotData;
@@ -29,9 +31,12 @@ type TimetableSlotProps = {
 const TimetableSlotHorizontal = forwardRef<HTMLDivElement, TimetableSlotProps>(
   ({ course, tableDim, fraction = 1, fractionIndex = 1, ...props }, ref) => {
     const { language } = useSettings();
+    const localizeData = useLocalizedZhData();
     const { preferences } = useUserTimetable();
-    const displayLang =
-      preferences.language == "app" ? language : preferences.language;
+    const displayLang = resolveTimetableContentLanguage(
+      preferences.language,
+      language,
+    );
 
     // In horizontal layout, "align" maps to vertical axis (top/center/bottom of the row)
     // and "verticalAlign" maps to horizontal axis (left/center/right along the row)
@@ -84,7 +89,7 @@ const TimetableSlotHorizontal = forwardRef<HTMLDivElement, TimetableSlotProps>(
 
     const teacherName =
       displayLang == "zh"
-        ? course.course.teacher_zh?.join(", ")
+        ? course.course.teacher_zh?.map(localizeData).join(", ")
         : course.course.teacher_en?.join(", ");
 
     const renderField = (field: TimetableFieldKey) => {
@@ -109,7 +114,7 @@ const TimetableSlotHorizontal = forwardRef<HTMLDivElement, TimetableSlotProps>(
               )}
             >
               {displayLang == "zh"
-                ? course.course.name_zh
+                ? localizeData(course.course.name_zh)
                 : course.course.name_en}
             </span>
           ) : null;

@@ -216,6 +216,23 @@ describe("local search against the real in-process search-chunk API", () => {
     expect(cache.textEntries()).toHaveLength(1);
   });
 
+  test("searches Traditional records through a normalized Simplified index", async () => {
+    const normalize = (value: string) =>
+      value.replaceAll("環境", "环境").replaceAll("微生物學", "微生物学");
+    const engine = new LocalSearchEngine({
+      ...engineOptions(appFetch),
+      queryTransform: normalize,
+      searchTextTransform: normalize,
+    });
+
+    const result = await engine.search(
+      "11510",
+      request({ query: "环境微生物学" }),
+    );
+
+    expect(result.hits[0]?.objectID).toBe("11510AES 450100");
+  });
+
   test("fills hits InstantSearch already copied when the text tier lands", async () => {
     const resilient = createResilientSearchClient({
       remoteClient: {

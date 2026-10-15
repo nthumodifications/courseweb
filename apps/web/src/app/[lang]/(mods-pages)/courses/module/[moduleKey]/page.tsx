@@ -29,6 +29,8 @@ import {
   ModuleStats,
 } from "@/components/Courses/ModuleInsights";
 import { toPrettySemester } from "@/helpers/semester";
+import { contentLanguage } from "@/helpers/contentLanguage";
+import type { Language } from "@/types/settings";
 import {
   getModuleOfferings,
   getModuleVariant,
@@ -99,8 +101,8 @@ const VariantPicker = ({
               value={variant.titleKey}
               className="h-auto whitespace-normal"
             >
-              {lang === "en" ? variant.nameEn : variant.nameZh} ·{" "}
-              {variant.semesters.length} {dict.course.module.semesters_count}
+              {contentLanguage(lang) === "en" ? variant.nameEn : variant.nameZh}{" "}
+              · {variant.semesters.length} {dict.course.module.semesters_count}
             </SelectItem>
           ))}
         </SelectContent>
@@ -194,7 +196,7 @@ const ModuleEmptyState = ({
   pageTitle,
   errorTitle,
 }: {
-  lang: "en" | "zh";
+  lang: Language;
   dict: Dictionary;
   inDialog: boolean;
   pageTitle: string;
@@ -217,7 +219,7 @@ export const ModulePageContent = ({
   dialogSearch,
   onDialogSearchChange,
 }: {
-  lang: "en" | "zh";
+  lang: Language;
   moduleKey: string;
   inDialog?: boolean;
   dialogSearch?: string;
@@ -326,7 +328,9 @@ export const ModulePageContent = ({
 
   const latestOffering = selectedVariant.offerings.at(-1)!;
   const pageName =
-    lang === "en" ? latestOffering.name_en : latestOffering.name_zh;
+    contentLanguage(lang) === "en"
+      ? latestOffering.name_en
+      : latestOffering.name_zh;
 
   return (
     <CoursePageState
@@ -413,7 +417,7 @@ export const ModulePageContent = ({
                       parsed={parsedPrerequisite}
                       course={prerequisiteOffering}
                       rows={prerequisiteRows}
-                      lang={lang}
+                      lang={contentLanguage(lang)}
                       dict={dict}
                     />
                     {prerequisitesDiffer && (
@@ -449,7 +453,7 @@ const ModulePage = () => {
   }>();
   return (
     <ModulePageContent
-      lang={rawLang === "en" ? "en" : "zh"}
+      lang={rawLang === "en" ? "en" : rawLang === "zh-cn" ? "zh-cn" : "zh"}
       moduleKey={rawModuleKey ?? ""}
     />
   );

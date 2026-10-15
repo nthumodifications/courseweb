@@ -5,11 +5,11 @@ import useDictionary from "@/dictionaries/useDictionary";
 const NotFoundPage = () => {
   const { lang } = useParams<{ lang: string }>();
   const dict = useDictionary();
-  const isZh = lang !== "en";
+  const routeLang = lang === "en" || lang === "zh-cn" ? lang : "zh";
 
   const title = dict.common.not_found_title;
   const description = dict.common.not_found_description;
-  const canonical = `https://nthumods.com/${isZh ? "zh" : "en"}/not-found`;
+  const canonical = `https://nthumods.com/${routeLang}/not-found`;
 
   return (
     <>

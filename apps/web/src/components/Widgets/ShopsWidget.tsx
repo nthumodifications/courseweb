@@ -14,6 +14,7 @@ import {
 } from "@/app/[lang]/(mods-pages)/shops/shop-hours";
 import areas from "@/app/[lang]/(mods-pages)/shops/areas.json";
 import useDictionary from "@/dictionaries/useDictionary";
+import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
 import {
   Select,
   SelectContent,
@@ -45,6 +46,7 @@ const ShopsWidget: FC<ShopsWidgetProps> = ({
   isDragging,
 }) => {
   const dict = useDictionary();
+  const localizeData = useLocalizedZhData();
   const { language } = useSettings();
   const now = useTime(60_000);
   const [storedArea, setStoredArea] = useLocalStorage(
@@ -77,7 +79,8 @@ const ShopsWidget: FC<ShopsWidgetProps> = ({
 
   const title =
     dict.settings.calendar.widget_dashboard.widget_options.shops.title;
-  const areaLabel = area === "anywhere" ? dict.shops.area_all : area;
+  const areaLabel =
+    area === "anywhere" ? dict.shops.area_all : localizeData(area);
 
   return (
     <WidgetShell
@@ -98,7 +101,7 @@ const ShopsWidget: FC<ShopsWidgetProps> = ({
             <SelectItem value="anywhere">{dict.shops.area_all}</SelectItem>
             {areas.map((value) => (
               <SelectItem key={value} value={value}>
-                {value}
+                {localizeData(value)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -149,7 +152,9 @@ const ShopsWidget: FC<ShopsWidgetProps> = ({
                     key={`${shop.area}-${shop.name}`}
                     className="flex items-center justify-between gap-2 text-sm"
                   >
-                    <span className="min-w-0 truncate">{shop.name}</span>
+                    <span className="min-w-0 truncate">
+                      {localizeData(shop.name)}
+                    </span>
                     <span className="shrink-0 text-xs text-muted-foreground">
                       {getMessageLabel(status[2], dict)}
                     </span>

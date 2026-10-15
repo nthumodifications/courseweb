@@ -9,6 +9,8 @@ import useUserTimetable, {
   TIMETABLE_FONT_SIZE_CLASSES,
 } from "@/hooks/contexts/useUserTimetable";
 import { getLocale } from "@/helpers/dateLocale";
+import { contentLanguage } from "@/helpers/contentLanguage";
+import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
 import {
   addTimetableFractions,
   getTimetableDataTimeRange,
@@ -35,6 +37,7 @@ const TimetableTimeline: FC<TimetableTimelineProps> = ({
   className,
 }) => {
   const { language } = useSettings();
+  const localizeData = useLocalizedZhData();
   const { preferences } = useUserTimetable();
   const fontSizeClass =
     TIMETABLE_FONT_SIZE_CLASSES[preferences.fontSize ?? "sm"];
@@ -141,8 +144,8 @@ const TimetableTimeline: FC<TimetableTimelineProps> = ({
                 const height = Math.max(bottom - top, 20);
                 const name =
                   slot.customItem?.title ??
-                  (language === "zh"
-                    ? slot.course.name_zh
+                  (contentLanguage(language) === "zh"
+                    ? localizeData(slot.course.name_zh)
                     : slot.course.name_en || slot.course.name_zh);
 
                 return (
@@ -187,7 +190,7 @@ const TimetableTimeline: FC<TimetableTimelineProps> = ({
                       <span
                         className={cn(fontSizeClass, "opacity-80 truncate")}
                       >
-                        {slot.venue}
+                        {localizeData(slot.venue)}
                       </span>
                     )}
                     {height > 44 && slot.customItem?.note && (

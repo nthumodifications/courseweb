@@ -21,6 +21,7 @@ import { DialogTrigger } from "@radix-ui/react-dialog";
 import { useSettings } from "@/hooks/contexts/settings";
 import { filterHiddenCourses } from "@/helpers/timetableVisibility";
 import { setTimetableCourseCodeDisplay } from "./timetableExport";
+import { intlLocale } from "@/helpers/contentLanguage";
 
 const DownloadTimetableComponent = () => {
   const dict = useDictionary();
@@ -59,14 +60,14 @@ const DownloadTimetableComponent = () => {
         // Create a more user-friendly filename with current date
         const now = new Date();
         const dateStr = now
-          .toLocaleDateString(language === "en" ? "en-US" : "zh-TW", {
+          .toLocaleDateString(intlLocale(language), {
             year: "numeric",
             month: "2-digit",
             day: "2-digit",
           })
           .replaceAll("/", "-");
         const timeStr = now
-          .toLocaleTimeString(language === "en" ? "en-US" : "zh-TW", {
+          .toLocaleTimeString(intlLocale(language), {
             hour: "2-digit",
             minute: "2-digit",
             hour12: false,

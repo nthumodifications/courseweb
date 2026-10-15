@@ -85,5 +85,6 @@ export function getDiningMapHref(lang: string | undefined, area: string) {
   if (!match) return undefined;
   const feature = `osm-${buildings[match.location].sources[0].replace("/", "-")}-0`;
   const query = new URLSearchParams({ feature });
-  return `/${lang === "en" ? "en" : "zh"}/map?${query.toString()}`;
+  const language = lang === "en" || lang === "zh-cn" ? lang : "zh";
+  return `/${language}/map?${query.toString()}`;
 }

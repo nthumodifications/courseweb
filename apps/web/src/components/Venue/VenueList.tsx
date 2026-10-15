@@ -5,12 +5,14 @@ import { EmptyState, Input } from "@courseweb/ui";
 import { ChevronRight } from "lucide-react";
 import type Fuse from "fuse.js";
 import useDictionary from "@/dictionaries/useDictionary";
+import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
 
 const VenueList = ({ venues }: { venues: string[] }) => {
   const [filtered, setFiltered] = useState<Fuse.FuseResult<string>[]>([]);
   const [textSearch, setTextSearch] = useState<string>("");
   const { language } = useSettings();
   const dict = useDictionary();
+  const localizeData = useLocalizedZhData();
 
   useEffect(() => {
     void import("fuse.js")
@@ -62,7 +64,7 @@ const VenueList = ({ venues }: { venues: string[] }) => {
                       aria-hidden="true"
                     />
                     <span className="min-w-0 flex-1 font-bold text-foreground">
-                      {venue}
+                      {localizeData(venue)}
                     </span>
                     <span className="text-right text-sm text-muted-foreground whitespace-nowrap">
                       {dict.venues.view_courses}

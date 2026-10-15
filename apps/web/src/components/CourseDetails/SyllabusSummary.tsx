@@ -5,6 +5,7 @@ import type { RawCourseID } from "@/types/courses";
 import client from "@/config/api";
 import useDictionary from "@/dictionaries/useDictionary";
 import { readAiSettings } from "@/lib/credentialStorage";
+import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
 
 interface SyllabusSummary {
   bullets: string[];
@@ -37,6 +38,7 @@ export default function SyllabusSummary({
   readonly courseId: RawCourseID;
 }) {
   const dict = useDictionary();
+  const localizeData = useLocalizedZhData();
   const [summary, setSummary] = useState<SyllabusSummary | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -154,7 +156,7 @@ export default function SyllabusSummary({
         {summary!.bullets.map((bullet, i) => (
           <li key={i} className="flex gap-2 text-sm text-foreground">
             <span className="mt-0.5 shrink-0 text-primary">▸</span>
-            {bullet}
+            {localizeData(bullet)}
           </li>
         ))}
       </ul>
@@ -167,7 +169,7 @@ export default function SyllabusSummary({
           <span
             className={`px-2 py-0.5 rounded-full text-xs font-medium ${workloadClass}`}
           >
-            {summary!.workload}
+            {localizeData(summary!.workload)}
           </span>
         </div>
         <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -178,7 +180,9 @@ export default function SyllabusSummary({
         </div>
       </div>
 
-      <p className="text-xs text-muted-foreground">{summary!.audience}</p>
+      <p className="text-xs text-muted-foreground">
+        {localizeData(summary!.audience)}
+      </p>
     </div>
   );
 }

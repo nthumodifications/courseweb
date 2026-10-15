@@ -33,7 +33,7 @@ export const shouldShowWhatsNew = ({
 const toLocaleIndependentPath = (href: string) => {
   const pathname = new URL(href, "https://nthumods.test").pathname;
   const segments = pathname.split("/");
-  return segments[1] === "en" || segments[1] === "zh"
+  return segments[1] === "en" || segments[1] === "zh" || segments[1] === "zh-cn"
     ? `/${segments.slice(2).join("/")}`
     : pathname;
 };

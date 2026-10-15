@@ -9,14 +9,22 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   Button,
+  Checkbox,
   toast,
 } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
 import authClient from "@/config/auth";
 import { useAuth } from "react-oidc-context";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocalStorage } from "usehooks-ts";
 import {
   buildCalendarSubscriptionLinks,
+  CALENDAR_FEED_INCLUDE_STORAGE_KEY,
+  CALENDAR_FEED_INCLUDES,
+  DEFAULT_CALENDAR_FEED_INCLUDES,
+  parseCalendarFeedIncludeSelection,
+  type CalendarFeedInclude,
+  type CalendarFeedIncludeSelection,
   type CalendarSubscriptionLinks as CalendarSubscriptionLinkUrls,
   toWebcalCalendarFeedUrl,
 } from "@/lib/calendar-subscription";
@@ -42,6 +50,10 @@ export type CalendarSubscriptionLinkLabels = {
   reset_confirm_description?: string;
   reset_confirm_cancel?: string;
   reset_confirm_action?: string;
+  include?: string;
+  classes?: string;
+  events?: string;
+  academic?: string;
 };
 
 type CalendarFeedClient = {
@@ -74,6 +86,143 @@ const requestCalendarFeed = (
     },
   );
 
+const useLiveCalendarFeed = ({
+  accessToken,
+  isAuthenticated,
+  calendarFeedClient,
+  resetError,
+}: {
+  accessToken?: string;
+  isAuthenticated: boolean;
+  calendarFeedClient: CalendarFeedClient;
+  resetError?: string;
+}) => {
+  const [liveFeedUrl, setLiveFeedUrl] = useState<string | null>(null);
+  const [liveFeedError, setLiveFeedError] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
+  const [retryNonce, setRetryNonce] = useState(0);
+  const resetInFlight = useRef(false);
+  const sessionGeneration = useRef(0);
+  const previousSession = useRef<{
+    isAuthenticated: boolean;
+    accessToken?: string;
+  }>({ isAuthenticated, accessToken });
+
+  if (
+    previousSession.current.isAuthenticated !== isAuthenticated ||
+    previousSession.current.accessToken !== accessToken
+  ) {
+    previousSession.current = { isAuthenticated, accessToken };
+    sessionGeneration.current += 1;
+  }
+
+  useEffect(() => {
+    const generation = sessionGeneration.current;
+    let active = true;
+    const isCurrent = () => active && generation === sessionGeneration.current;
+    setLiveFeedUrl(null);
+    setLiveFeedError(false);
+    setIsResetting(false);
+    setIsResetConfirmOpen(false);
+    if (!isAuthenticated || !accessToken) return;
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8_000);
+
+    void requestCalendarFeed(
+      calendarFeedClient.feed.$get,
+      accessToken,
+      controller.signal,
+    )
+      .then(async (response) => {
+        if (!response.ok)
+          throw new Error(`Feed request failed: ${response.status}`);
+        const payload = (await response.json()) as { webcalUrl?: unknown };
+        if (!isCurrent()) return;
+        if (typeof payload.webcalUrl !== "string")
+          throw new Error("Missing feed URL");
+        setLiveFeedUrl(toWebcalCalendarFeedUrl(payload.webcalUrl));
+      })
+      .catch((error: unknown) => {
+        if (!isCurrent()) return;
+        console.error(error);
+        setLiveFeedError(true);
+      });
+
+    return () => {
+      active = false;
+      clearTimeout(timeoutId);
+      controller.abort();
+    };
+  }, [accessToken, calendarFeedClient, isAuthenticated, retryNonce]);
+
+  const handleReset = async () => {
+    if (!accessToken || resetInFlight.current) return;
+    resetInFlight.current = true;
+    const generation = sessionGeneration.current;
+    setIsResetting(true);
+    try {
+      const response = await requestCalendarFeed(
+        calendarFeedClient.feed.rotate.$post,
+        accessToken,
+      );
+      if (!response.ok)
+        throw new Error(`Feed rotation failed: ${response.status}`);
+      const payload = (await response.json()) as { webcalUrl?: unknown };
+      if (typeof payload.webcalUrl !== "string")
+        throw new Error("Missing feed URL");
+      if (generation !== sessionGeneration.current) return;
+      setLiveFeedUrl(toWebcalCalendarFeedUrl(payload.webcalUrl));
+      setIsResetConfirmOpen(false);
+    } catch (error) {
+      if (generation !== sessionGeneration.current) return;
+      console.error(error);
+      toast({ title: resetError });
+    } finally {
+      resetInFlight.current = false;
+      if (generation === sessionGeneration.current) setIsResetting(false);
+    }
+  };
+
+  const retry = () => {
+    setLiveFeedError(false);
+    setRetryNonce((nonce) => nonce + 1);
+  };
+
+  return {
+    liveFeedUrl,
+    liveFeedError,
+    isResetting,
+    isResetConfirmOpen,
+    setIsResetConfirmOpen,
+    handleReset,
+    retry,
+  };
+};
+
+const subscriptionHint = ({
+  labels,
+  isAuthenticated,
+  accessToken,
+  liveFeedUrl,
+  liveFeedError,
+}: {
+  labels: CalendarSubscriptionLinkLabels;
+  isAuthenticated: boolean;
+  accessToken?: string;
+  liveFeedUrl: string | null;
+  liveFeedError: boolean;
+}) => {
+  if (liveFeedError) return labels.live_feed_error ?? labels.subscription_hint;
+  if (isAuthenticated && accessToken) {
+    return liveFeedUrl
+      ? labels.subscription_hint
+      : (labels.live_feed_loading ?? labels.subscription_hint);
+  }
+  return labels.signed_out_hint ?? labels.subscription_hint;
+};
+
 export const CalendarSubscriptionLinkList = ({
   links,
   labels,
@@ -82,6 +231,8 @@ export const CalendarSubscriptionLinkList = ({
   onRetry,
   isResetting = false,
   subscriptionDisabled = false,
+  includeSelection,
+  onIncludeChange,
 }: {
   links: CalendarSubscriptionLinkUrls;
   labels: CalendarSubscriptionLinkLabels;
@@ -90,8 +241,35 @@ export const CalendarSubscriptionLinkList = ({
   onRetry?: () => void;
   isResetting?: boolean;
   subscriptionDisabled?: boolean;
+  includeSelection?: CalendarFeedIncludeSelection;
+  onIncludeChange?: (include: CalendarFeedInclude, checked: boolean) => void;
 }) => (
   <>
+    {includeSelection && onIncludeChange && labels.include && (
+      <fieldset className="flex flex-col gap-2">
+        <legend className="text-sm font-medium">{labels.include}</legend>
+        <div className="flex flex-col gap-2">
+          {CALENDAR_FEED_INCLUDES.map((include) => {
+            const label = labels[include];
+            if (!label) return null;
+            return (
+              <label
+                key={include}
+                className="flex items-center space-x-2 py-1 text-sm"
+              >
+                <Checkbox
+                  checked={includeSelection[include]}
+                  onCheckedChange={(checked) =>
+                    onIncludeChange(include, checked === true)
+                  }
+                />
+                <span>{label}</span>
+              </label>
+            );
+          })}
+        </div>
+      </fieldset>
+    )}
     {[
       [links.google, labels.google],
       [links.apple, labels.apple],
@@ -174,113 +352,49 @@ const CalendarSubscriptionLinks = ({ feedUrl }: { feedUrl: string }) => {
       ) as CalendarFeedClient,
     [],
   );
-  const [liveFeedUrl, setLiveFeedUrl] = useState<string | null>(null);
-  const [liveFeedError, setLiveFeedError] = useState(false);
-  const [isResetting, setIsResetting] = useState(false);
-  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
-  const [retryNonce, setRetryNonce] = useState(0);
-  const resetInFlight = useRef(false);
-  const sessionGeneration = useRef(0);
-  const previousSession = useRef<{
-    isAuthenticated: boolean;
-    accessToken?: string;
-  }>({ isAuthenticated, accessToken });
-  if (
-    previousSession.current.isAuthenticated !== isAuthenticated ||
-    previousSession.current.accessToken !== accessToken
-  ) {
-    previousSession.current = { isAuthenticated, accessToken };
-    sessionGeneration.current += 1;
-  }
-
-  useEffect(() => {
-    const generation = sessionGeneration.current;
-    let active = true;
-    const isCurrent = () => active && generation === sessionGeneration.current;
-    setLiveFeedUrl(null);
-    setLiveFeedError(false);
-    setIsResetting(false);
-    setIsResetConfirmOpen(false);
-    if (!isAuthenticated || !accessToken) {
-      return;
-    }
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8_000);
-
-    void requestCalendarFeed(
-      calendarFeedClient.feed.$get,
-      accessToken,
-      controller.signal,
-    )
-      .then(async (response) => {
-        if (!response.ok)
-          throw new Error(`Feed request failed: ${response.status}`);
-        const payload = (await response.json()) as { webcalUrl?: unknown };
-        if (!isCurrent()) return;
-        if (typeof payload.webcalUrl !== "string")
-          throw new Error("Missing feed URL");
-        setLiveFeedUrl(toWebcalCalendarFeedUrl(payload.webcalUrl));
-      })
-      .catch((error: unknown) => {
-        if (!isCurrent()) return;
-        console.error(error);
-        setLiveFeedError(true);
-      });
-
-    return () => {
-      active = false;
-      clearTimeout(timeoutId);
-      controller.abort();
-    };
-  }, [accessToken, calendarFeedClient, isAuthenticated, retryNonce]);
-
+  const {
+    liveFeedUrl,
+    liveFeedError,
+    isResetting,
+    isResetConfirmOpen,
+    setIsResetConfirmOpen,
+    handleReset,
+    retry,
+  } = useLiveCalendarFeed({
+    accessToken,
+    isAuthenticated,
+    calendarFeedClient,
+    resetError: labels.reset_error,
+  });
+  const [includeSelection, setIncludeSelection] =
+    useLocalStorage<CalendarFeedIncludeSelection>(
+      CALENDAR_FEED_INCLUDE_STORAGE_KEY,
+      DEFAULT_CALENDAR_FEED_INCLUDES,
+      { deserializer: parseCalendarFeedIncludeSelection },
+    );
   const activeFeedUrl = liveFeedUrl ?? feedUrl;
+  const isLiveState = Boolean(isAuthenticated && accessToken && liveFeedUrl);
   const links = buildCalendarSubscriptionLinks(
     activeFeedUrl,
     labels.calendar_name,
+    isLiveState ? includeSelection : undefined,
   );
-  let subscriptionHint = labels.signed_out_hint ?? labels.subscription_hint;
-  if (isAuthenticated && accessToken) {
-    subscriptionHint = liveFeedUrl
-      ? labels.subscription_hint
-      : (labels.live_feed_loading ?? labels.subscription_hint);
-  }
-  if (liveFeedError) {
-    subscriptionHint = labels.live_feed_error ?? labels.subscription_hint;
-  }
-  const displayLabels = { ...labels, subscription_hint: subscriptionHint };
-
-  const handleReset = async () => {
-    if (!accessToken || resetInFlight.current) return;
-    resetInFlight.current = true;
-    const generation = sessionGeneration.current;
-    setIsResetting(true);
-    try {
-      const response = await requestCalendarFeed(
-        calendarFeedClient.feed.rotate.$post,
-        accessToken,
-      );
-      if (!response.ok)
-        throw new Error(`Feed rotation failed: ${response.status}`);
-      const payload = (await response.json()) as { webcalUrl?: unknown };
-      if (typeof payload.webcalUrl !== "string")
-        throw new Error("Missing feed URL");
-      if (generation !== sessionGeneration.current) return;
-      setLiveFeedUrl(toWebcalCalendarFeedUrl(payload.webcalUrl));
-      setIsResetConfirmOpen(false);
-    } catch (error) {
-      if (generation !== sessionGeneration.current) return;
-      console.error(error);
-      toast({ title: labels.reset_error });
-    } finally {
-      resetInFlight.current = false;
-      if (generation === sessionGeneration.current) setIsResetting(false);
-    }
+  const displayLabels = {
+    ...labels,
+    subscription_hint: subscriptionHint({
+      labels,
+      isAuthenticated,
+      accessToken,
+      liveFeedUrl,
+      liveFeedError,
+    }),
   };
 
   const isLiveLoading = Boolean(
     isAuthenticated && accessToken && !liveFeedUrl && !liveFeedError,
+  );
+  const hasIncludedContent = CALENDAR_FEED_INCLUDES.some(
+    (include) => includeSelection[include],
   );
 
   const handleCopy = () => {
@@ -299,17 +413,22 @@ const CalendarSubscriptionLinks = ({ feedUrl }: { feedUrl: string }) => {
         links={links}
         labels={displayLabels}
         onCopy={handleCopy}
-        onRetry={
-          liveFeedError
-            ? () => {
-                setLiveFeedError(false);
-                setRetryNonce((nonce) => nonce + 1);
-              }
+        includeSelection={isLiveState ? includeSelection : undefined}
+        onIncludeChange={
+          isLiveState
+            ? (include, checked) =>
+                setIncludeSelection((current) => ({
+                  ...current,
+                  [include]: checked,
+                }))
             : undefined
         }
+        onRetry={liveFeedError ? retry : undefined}
         onReset={liveFeedUrl ? () => setIsResetConfirmOpen(true) : undefined}
         isResetting={isResetting}
-        subscriptionDisabled={isLiveLoading}
+        subscriptionDisabled={
+          isLiveLoading || (isLiveState && !hasIncludedContent)
+        }
       />
       {isResetConfirmOpen && (
         <AlertDialog
