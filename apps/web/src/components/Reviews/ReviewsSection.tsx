@@ -1,5 +1,6 @@
 import { useRef, useEffect, useMemo, useState } from "react";
 import { useAuth } from "react-oidc-context";
+import { Link } from "react-router-dom";
 import {
   Alert,
   AlertDescription,
@@ -24,6 +25,8 @@ import { toPrettySemester } from "@/helpers/semester";
 import { ModuleStat } from "@/components/Courses/ModuleInsights";
 import { normaliseInstructorName } from "@/lib/instructors";
 import { parseModuleKey } from "@/lib/modules";
+import { parsePttRating, type PttReview } from "@/lib/ptt";
+import { useReviewUnlock } from "@/hooks/useReviewUnlock";
 import {
   type Attendance,
   type ExamStyle,
@@ -31,6 +34,7 @@ import {
   type Review,
   type ReviewApiError,
   type ReviewInput,
+  type ReviewRating,
   reviewSummaryHasAverages,
   useCreateReview,
   useDeleteReview,
@@ -42,7 +46,10 @@ import {
 
 type Dictionary = ReturnType<typeof useDictionary>;
 
-export const sortReviews = <T extends Pick<Review, "instructor" | "createdAt">>(
+export const sortReviews = <
+  T extends Pick<Review, "instructor" | "createdAt"> &
+    Partial<Pick<Review, "sourcePostedAt">>,
+>(
   reviews: readonly T[],
   instructors: readonly string[],
   prioritizeInstructors: boolean,
@@ -50,7 +57,7 @@ export const sortReviews = <T extends Pick<Review, "instructor" | "createdAt">>(
   const values = [...reviews];
   if (!prioritizeInstructors) {
     return values.sort((left, right) =>
-      right.createdAt.localeCompare(left.createdAt),
+      reviewDate(right).localeCompare(reviewDate(left)),
     );
   }
 
@@ -64,7 +71,7 @@ export const sortReviews = <T extends Pick<Review, "instructor" | "createdAt">>(
       instructors.length;
     return (
       leftPriority - rightPriority ||
-      right.createdAt.localeCompare(left.createdAt)
+      reviewDate(right).localeCompare(reviewDate(left))
     );
   });
 };
@@ -79,16 +86,16 @@ const examStyles: ExamStyle[] = [
 const attendanceOptions: Attendance[] = ["none", "sometimes", "every_class"];
 const ratingFields = [
   {
-    field: "workload",
-    label: "workload",
-    lowLabel: "workload_low",
-    highLabel: "workload_high",
+    field: "coolness",
+    label: "coolness",
+    lowLabel: "coolness_low",
+    highLabel: "coolness_high",
   },
   {
-    field: "grading",
-    label: "grading",
-    lowLabel: "grading_low",
-    highLabel: "grading_high",
+    field: "sweetness",
+    label: "sweetness",
+    lowLabel: "sweetness_low",
+    highLabel: "sweetness_high",
   },
   {
     field: "learning",
@@ -97,6 +104,104 @@ const ratingFields = [
     highLabel: "learning_high",
   },
 ] as const;
+
+export type LivePttReview = PttReview;
+
+const reviewDate = (
+  review: Pick<Review, "createdAt"> & Partial<Pick<Review, "sourcePostedAt">>,
+) => review.sourcePostedAt ?? review.createdAt;
+
+export const mergeReviewRows = (
+  apiReviews: readonly Review[],
+  livePttReviews: readonly LivePttReview[],
+  moduleKey: string,
+  fallbackInstructor = "",
+): Review[] => {
+  const rows = [...apiReviews];
+  const urls = new Set(
+    apiReviews
+      .map((review) => review.sourceUrl)
+      .filter((url): url is string => Boolean(url)),
+  );
+  livePttReviews.forEach((review, index) => {
+    if (review.sourceUrl && urls.has(review.sourceUrl)) return;
+    const postedAt = review.date;
+    rows.push({
+      id: `ptt-live:${review.sourceUrl ?? `${postedAt ?? "unknown"}:${index}`}`,
+      moduleKey,
+      instructor: review.instructor ?? fallbackInstructor,
+      semester: review.semester,
+      coolness: parsePttRating(review.coolness),
+      sweetness: parsePttRating(review.sweetness),
+      learning: null,
+      attendance: "none",
+      examStyle: [],
+      body: review.body,
+      source: "ptt",
+      sourceUrl: review.sourceUrl,
+      sourceAuthor: review.sourceAuthor,
+      sourcePostedAt: postedAt,
+      createdAt: postedAt ?? "1970-01-01T00:00:00.000Z",
+      updatedAt: postedAt ?? "1970-01-01T00:00:00.000Z",
+      edited: false,
+      mine: false,
+    });
+  });
+  return rows.sort((left, right) =>
+    reviewDate(right).localeCompare(reviewDate(left)),
+  );
+};
+
+export const ReviewRatingControls = ({
+  values,
+  onChange,
+}: {
+  values: Partial<Record<(typeof ratingFields)[number]["field"], number>>;
+  onChange: (
+    field: (typeof ratingFields)[number]["field"],
+    value: number,
+  ) => void;
+}) => {
+  const dict = useDictionary();
+  return (
+    <div className="flex flex-col gap-4">
+      {ratingFields.map(({ field, label, lowLabel, highLabel }) => (
+        <fieldset className="flex flex-col gap-2" key={field}>
+          <legend className="text-sm font-medium">
+            {dict.course.details.native_reviews[label]}
+          </legend>
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="w-10 shrink-0 text-right text-xs text-muted-foreground">
+              {dict.course.details.native_reviews[lowLabel]}
+            </span>
+            <div
+              className="flex w-full min-w-0 sm:w-fit sm:flex-none"
+              role="radiogroup"
+              aria-label={dict.course.details.native_reviews[label]}
+            >
+              {[1, 2, 3, 4, 5].map((value) => (
+                <Button
+                  key={value}
+                  type="button"
+                  size="sm"
+                  variant={values[field] === value ? "default" : "outline"}
+                  className="min-w-0 flex-1 rounded-none px-2 first:rounded-l-md last:rounded-r-md sm:w-10 sm:flex-none"
+                  aria-pressed={values[field] === value}
+                  onClick={() => onChange(field, value)}
+                >
+                  {value}
+                </Button>
+              ))}
+            </div>
+            <span className="w-10 shrink-0 text-xs text-muted-foreground">
+              {dict.course.details.native_reviews[highLabel]}
+            </span>
+          </div>
+        </fieldset>
+      ))}
+    </div>
+  );
+};
 
 export const recentReviewSemesters = () => {
   const now = new Date();
@@ -143,9 +248,7 @@ export const getDefaultReviewInstructor = (
 
 export const getReviewSemesterOptions = (
   semesterOptions: readonly string[],
-  semesterOptionsByInstructor: Readonly<
-    Record<string, readonly string[]>
-  > = {},
+  semesterOptionsByInstructor: Readonly<Record<string, readonly string[]>> = {},
   instructor = "",
 ) => {
   const normalizedInstructor = normaliseInstructorName(instructor);
@@ -189,24 +292,28 @@ export type ReviewFormValidation =
 export const validateReviewForm = (values: {
   instructor: string;
   semester: string;
-  workload: number;
-  grading: number;
+  coolness?: number;
+  sweetness?: number;
   learning: number;
+  workload?: number;
+  grading?: number;
   examStyle: readonly ExamStyle[];
   body: string;
 }): ReviewFormValidation => {
+  const coolness = values.coolness ?? values.workload ?? 0;
+  const sweetness = values.sweetness ?? values.grading ?? 0;
   if (
     !values.instructor ||
     !values.semester ||
-    values.workload === 0 ||
-    values.grading === 0 ||
+    coolness === 0 ||
+    sweetness === 0 ||
     values.learning === 0 ||
     values.examStyle.length === 0
   ) {
     return "required";
   }
   const length = values.body.trim().length;
-  if (length < 30) return "body_too_short";
+  if (length > 0 && length < 30) return "body_too_short";
   if (length > 3000) return "body_too_long";
   return null;
 };
@@ -327,8 +434,12 @@ const ReviewForm = ({
   const [semester, setSemester] = useState(
     review?.semester ?? getDefaultReviewSemester(initialSemesters),
   );
-  const [workload, setWorkload] = useState<number>(review?.workload ?? 0);
-  const [grading, setGrading] = useState<number>(review?.grading ?? 0);
+  const [coolness, setCoolness] = useState<number>(
+    review?.coolness ?? review?.workload ?? 0,
+  );
+  const [sweetness, setSweetness] = useState<number>(
+    review?.sweetness ?? review?.grading ?? 0,
+  );
   const [learning, setLearning] = useState<number>(review?.learning ?? 0);
   const [attendance, setAttendance] = useState<Attendance>(
     review?.attendance ?? "none",
@@ -346,13 +457,13 @@ const ReviewForm = ({
     instructor,
   );
 
-  const ratingValues = { workload, grading, learning };
+  const ratingValues = { coolness, sweetness, learning };
   const setRating = (
     field: (typeof ratingFields)[number]["field"],
     value: number,
   ) => {
-    if (field === "workload") setWorkload(value);
-    if (field === "grading") setGrading(value);
+    if (field === "coolness") setCoolness(value);
+    if (field === "sweetness") setSweetness(value);
     if (field === "learning") setLearning(value);
   };
 
@@ -369,8 +480,8 @@ const ReviewForm = ({
     const validation = validateReviewForm({
       instructor,
       semester,
-      workload,
-      grading,
+      coolness,
+      sweetness,
       learning,
       examStyle: selectedExamStyles,
       body,
@@ -385,8 +496,8 @@ const ReviewForm = ({
       moduleKey,
       instructor,
       semester,
-      workload: workload as ReviewInput["workload"],
-      grading: grading as ReviewInput["grading"],
+      coolness: coolness as ReviewRating,
+      sweetness: sweetness as ReviewRating,
       learning: learning as ReviewInput["learning"],
       attendance,
       examStyle: selectedExamStyles,
@@ -398,8 +509,8 @@ const ReviewForm = ({
           id: review.id,
           values: {
             semester,
-            workload: values.workload,
-            grading: values.grading,
+            coolness: values.coolness,
+            sweetness: values.sweetness,
             learning: values.learning,
             attendance,
             examStyle: selectedExamStyles,
@@ -508,44 +619,7 @@ const ReviewForm = ({
           </SelectContent>
         </Select>
       </div>
-      <div className="flex flex-col gap-4">
-        {ratingFields.map(({ field, label, lowLabel, highLabel }) => (
-          <fieldset className="flex flex-col gap-2" key={field}>
-            <legend className="text-sm font-medium">
-              {dict.course.details.native_reviews[label]}
-            </legend>
-            <div className="flex min-w-0 items-center gap-2">
-              <span className="w-10 shrink-0 text-right text-xs text-muted-foreground">
-                {dict.course.details.native_reviews[lowLabel]}
-              </span>
-              <div
-                className="flex w-full min-w-0 sm:w-fit sm:flex-none"
-                role="radiogroup"
-                aria-label={dict.course.details.native_reviews[label]}
-              >
-                {[1, 2, 3, 4, 5].map((value) => (
-                  <Button
-                    key={value}
-                    type="button"
-                    size="sm"
-                    variant={
-                      ratingValues[field] === value ? "default" : "outline"
-                    }
-                    className="min-w-0 flex-1 rounded-none px-2 first:rounded-l-md last:rounded-r-md sm:w-10 sm:flex-none"
-                    aria-pressed={ratingValues[field] === value}
-                    onClick={() => setRating(field, value)}
-                  >
-                    {value}
-                  </Button>
-                ))}
-              </div>
-              <span className="w-10 shrink-0 text-xs text-muted-foreground">
-                {dict.course.details.native_reviews[highLabel]}
-              </span>
-            </div>
-          </fieldset>
-        ))}
-      </div>
+      <ReviewRatingControls values={ratingValues} onChange={setRating} />
       <fieldset className="flex flex-col gap-2">
         <legend className="text-sm font-medium">
           {dict.course.details.native_reviews.attendance}
@@ -641,6 +715,7 @@ type ReviewsSectionProps = {
   courseLabels?: Record<string, string>;
   allowInstructorFilter?: boolean;
   prioritizeInstructors?: boolean;
+  livePttReviews?: readonly LivePttReview[];
 };
 
 export const ReviewsSection = ({
@@ -653,6 +728,7 @@ export const ReviewsSection = ({
   courseLabels,
   allowInstructorFilter = false,
   prioritizeInstructors = false,
+  livePttReviews = [],
 }: ReviewsSectionProps) => {
   const dict = useDictionary();
   const auth = useAuth();
@@ -682,6 +758,7 @@ export const ReviewsSection = ({
     instructor: targetInstructor,
   });
   const { refetch: refetchMine } = useMyReviews();
+  const unlock = useReviewUnlock();
   const deleteMutation = useDeleteReview();
   const reportMutation = useReportReview();
   const isReviewAuthenticated =
@@ -697,12 +774,20 @@ export const ReviewsSection = ({
   );
 
   const sortedReviews = useMemo(() => {
-    return sortReviews(
+    const merged = mergeReviewRows(
       data?.reviews ?? [],
-      normalizedInstructors,
-      prioritizeInstructors,
+      livePttReviews,
+      moduleKey ?? "",
+      normalizedInstructors[0] ?? "",
     );
-  }, [data?.reviews, normalizedInstructors, prioritizeInstructors]);
+    return sortReviews(merged, normalizedInstructors, prioritizeInstructors);
+  }, [
+    data?.reviews,
+    livePttReviews,
+    moduleKey,
+    normalizedInstructors,
+    prioritizeInstructors,
+  ]);
 
   const signIn = () => void auth.signinRedirect();
   const openCreate = () => setFormMode("create");
@@ -803,21 +888,30 @@ export const ReviewsSection = ({
             </span>
           )}
         </h3>
-        {shouldShowCreateReviewAction({
-          isAuthenticated: isReviewAuthenticated,
-          hasModuleKey: Boolean(moduleKey),
-          instructorCount: normalizedInstructors.length,
-          hasOwnReviewForTarget,
-          formMode,
-        }) ? (
-          <Button size="sm" onClick={openCreate}>
-            {dict.course.details.native_reviews.write}
-          </Button>
-        ) : !isReviewAuthenticated && normalizedInstructors.length > 0 ? (
-          <Button variant="outline" size="sm" onClick={signIn}>
-            {dict.course.details.native_reviews.sign_in_prompt}
-          </Button>
-        ) : null}
+        <div className="flex flex-wrap items-center gap-2">
+          {isReviewAuthenticated && unlock.hasPastCourses && (
+            <Button variant="ghost" size="sm" asChild>
+              <Link to={`/${lang}/reviews/past`}>
+                {dict.course.details.native_reviews.review_past}
+              </Link>
+            </Button>
+          )}
+          {shouldShowCreateReviewAction({
+            isAuthenticated: isReviewAuthenticated,
+            hasModuleKey: Boolean(moduleKey),
+            instructorCount: normalizedInstructors.length,
+            hasOwnReviewForTarget,
+            formMode,
+          }) ? (
+            <Button size="sm" onClick={openCreate}>
+              {dict.course.details.native_reviews.write}
+            </Button>
+          ) : !isReviewAuthenticated && normalizedInstructors.length > 0 ? (
+            <Button variant="outline" size="sm" onClick={signIn}>
+              {dict.course.details.native_reviews.sign_in_prompt}
+            </Button>
+          ) : null}
+        </div>
       </div>
       {allowInstructorFilter && normalizedInstructors.length > 0 && (
         <div className="flex flex-col gap-2">
@@ -847,18 +941,18 @@ export const ReviewsSection = ({
         </div>
       )}
       {summary &&
-        (reviewSummaryHasAverages(summary) ? (
+        (reviewSummaryHasAverages(summary) || summary.count > 0 ? (
           <dl className="grid grid-cols-3 gap-4 py-2">
             <ModuleStat
-              value={(summary.workload ?? 0).toFixed(1)}
-              label={dict.course.details.native_reviews.average_workload}
+              value={(summary.coolness ?? summary.workload)?.toFixed(1) ?? "—"}
+              label={dict.course.details.native_reviews.average_coolness}
             />
             <ModuleStat
-              value={(summary.grading ?? 0).toFixed(1)}
-              label={dict.course.details.native_reviews.average_grading}
+              value={(summary.sweetness ?? summary.grading)?.toFixed(1) ?? "—"}
+              label={dict.course.details.native_reviews.average_sweetness}
             />
             <ModuleStat
-              value={(summary.learning ?? 0).toFixed(1)}
+              value={summary.learning?.toFixed(1) ?? "—"}
               label={dict.course.details.native_reviews.average_learning}
             />
           </dl>
@@ -891,125 +985,190 @@ export const ReviewsSection = ({
           <p>{dict.course.details.native_reviews.empty}</p>
         </div>
       ) : sortedReviews.length > 0 ? (
-        <div className="divide-y divide-border">
-          {sortedReviews.map((review) => {
-            const parsedModule = parseModuleKey(review.moduleKey);
-            const reviewCourseLabel = courseLabels
-              ? (courseLabels[review.moduleKey] ??
-                (parsedModule
-                  ? `${parsedModule.department} ${parsedModule.course}`
-                  : review.moduleKey))
-              : undefined;
-            const metadata = [
-              toPrettySemester(review.semester),
-              ...(showInstructor ? [review.instructor] : []),
-              relativeDate(review.updatedAt, lang),
-              ...(review.edited
-                ? [dict.course.details.native_reviews.edited]
-                : []),
-            ];
-            const ratings = [
-              `${dict.course.details.native_reviews.workload} ${review.workload}`,
-              `${dict.course.details.native_reviews.grading} ${review.grading}`,
-              `${dict.course.details.native_reviews.learning} ${review.learning}`,
-            ];
-            const examSeparator = contentLanguage(lang) === "en" ? ", " : "、";
-
-            return (
-              <article
-                className="flex min-w-0 flex-col gap-2 py-4"
-                key={review.id}
-              >
-                {reviewCourseLabel && (
-                  <h4 className="font-medium">{reviewCourseLabel}</h4>
+        <>
+          {unlock.locked && (
+            <Alert>
+              <AlertDescription className="flex flex-wrap items-center justify-between gap-2">
+                <span>
+                  {isReviewAuthenticated
+                    ? dict.course.details.native_reviews.unlock_prompt
+                    : dict.course.details.native_reviews.unlock_sign_in}
+                </span>
+                {isReviewAuthenticated ? (
+                  <Button size="sm" asChild>
+                    <Link to={`/${lang}/reviews/past`}>
+                      {dict.course.details.native_reviews.review_past}
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button size="sm" onClick={signIn}>
+                    {dict.course.details.native_reviews.sign_in_prompt}
+                  </Button>
                 )}
-                <div className="flex flex-wrap items-baseline gap-2 text-sm text-muted-foreground">
-                  {metadata.map((value, index) => (
-                    <span key={`${review.id}-metadata-${index}`}>
-                      {index > 0 && " · "}
-                      {value}
-                    </span>
-                  ))}
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  {ratings.join(" · ")}
-                </div>
-                <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-                  <span>
-                    {
-                      dict.course.details.native_reviews[
-                        `attendance_${review.attendance}`
-                      ]
-                    }
-                  </span>
-                  <span>·</span>
-                  <span>
-                    {review.examStyle
-                      .map(
-                        (style) =>
-                          dict.course.details.native_reviews[`exam_${style}`],
-                      )
-                      .join(examSeparator)}
-                  </span>
-                </div>
-                <p className="whitespace-pre-line leading-relaxed">
-                  {review.body}
-                </p>
-                {((review.mine && isReviewAuthenticated) ||
-                  (isReviewAuthenticated && !review.mine)) && (
-                  <div className="flex flex-wrap justify-end gap-1">
-                    {review.mine && isReviewAuthenticated && (
-                      <>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-auto px-2 py-1"
-                          onClick={() => setFormMode(review)}
-                        >
-                          {dict.course.details.native_reviews.edit}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-auto px-2 py-1"
-                          onClick={() => {
-                            if (
-                              window.confirm(
-                                dict.course.details.native_reviews
-                                  .delete_confirm,
-                              )
-                            )
-                              deleteMutation.mutate(review.id);
-                          }}
-                        >
-                          {dict.course.details.native_reviews.delete}
-                        </Button>
-                      </>
+              </AlertDescription>
+            </Alert>
+          )}
+          <div className="divide-y divide-border">
+            {sortedReviews.map((review) => {
+              const parsedModule = parseModuleKey(review.moduleKey);
+              const reviewCourseLabel = courseLabels
+                ? (courseLabels[review.moduleKey] ??
+                  (parsedModule
+                    ? `${parsedModule.department} ${parsedModule.course}`
+                    : review.moduleKey))
+                : undefined;
+              const metadata = [
+                ...(review.semester ? [toPrettySemester(review.semester)] : []),
+                ...(showInstructor && review.instructor
+                  ? [review.instructor]
+                  : []),
+                relativeDate(review.updatedAt, lang),
+                ...(review.edited
+                  ? [dict.course.details.native_reviews.edited]
+                  : []),
+              ];
+              const ratings = [
+                review.coolness !== null && review.coolness !== undefined
+                  ? `${dict.course.details.native_reviews.coolness} ${review.coolness}`
+                  : null,
+                review.sweetness !== null && review.sweetness !== undefined
+                  ? `${dict.course.details.native_reviews.sweetness} ${review.sweetness}`
+                  : null,
+                review.learning !== null && review.learning !== undefined
+                  ? `${dict.course.details.native_reviews.learning} ${review.learning}`
+                  : null,
+              ].filter((value): value is string => Boolean(value));
+              const examSeparator =
+                contentLanguage(lang) === "en" ? ", " : "、";
+
+              return (
+                <article
+                  className="flex min-w-0 flex-col gap-2 py-4"
+                  key={review.id}
+                >
+                  {reviewCourseLabel && (
+                    <h4 className="font-medium">{reviewCourseLabel}</h4>
+                  )}
+                  <div className="flex flex-wrap items-baseline gap-2 text-sm text-muted-foreground">
+                    {review.source === "ptt" && (
+                      <span className="text-xs font-medium">PTT</span>
                     )}
-                    {!review.mine && isReviewAuthenticated && (
-                      <Button
-                        ref={(node) => {
-                          if (reportingId === review.id)
-                            reportTriggerRef.current = node;
-                        }}
-                        variant="ghost"
-                        size="sm"
-                        className="h-auto px-2 py-1"
-                        onClick={(event) => {
-                          reportTriggerRef.current = event.currentTarget;
-                          setReportMessage(null);
-                          setReportingId(review.id);
-                        }}
+                    {metadata.map((value, index) => (
+                      <span key={`${review.id}-metadata-${index}`}>
+                        {index > 0 && " · "}
+                        {value}
+                      </span>
+                    ))}
+                    {review.source === "ptt" && review.sourceAuthor && (
+                      <span> · {review.sourceAuthor}</span>
+                    )}
+                    {review.source === "ptt" && review.sourcePostedAt && (
+                      <span> · {review.sourcePostedAt.slice(0, 10)}</span>
+                    )}
+                    {review.source === "ptt" && review.sourceUrl && (
+                      <a
+                        href={review.sourceUrl}
+                        target="_blank"
+                        rel="noopener"
+                        className="underline"
                       >
-                        {dict.course.details.native_reviews.report}
-                      </Button>
+                        {dict.course.details.native_reviews.source_link}
+                      </a>
                     )}
                   </div>
-                )}
-              </article>
-            );
-          })}
-        </div>
+                  {ratings.length > 0 && (
+                    <div className="text-sm text-muted-foreground">
+                      {ratings.join(" · ")}
+                    </div>
+                  )}
+                  {review.source === "native" && (
+                    <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
+                      <span>
+                        {
+                          dict.course.details.native_reviews[
+                            `attendance_${review.attendance}`
+                          ]
+                        }
+                      </span>
+                      <span>·</span>
+                      <span>
+                        {review.examStyle
+                          .map(
+                            (style) =>
+                              dict.course.details.native_reviews[
+                                `exam_${style}`
+                              ],
+                          )
+                          .join(examSeparator)}
+                      </span>
+                    </div>
+                  )}
+                  {!unlock.locked && review.body && (
+                    <p className="whitespace-pre-line leading-relaxed">
+                      {review.body}
+                    </p>
+                  )}
+                  {((review.mine && isReviewAuthenticated) ||
+                    (isReviewAuthenticated && !review.mine)) && (
+                    <div className="flex flex-wrap justify-end gap-1">
+                      {review.mine && isReviewAuthenticated && (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-auto px-2 py-1"
+                            onClick={() => setFormMode(review)}
+                          >
+                            {dict.course.details.native_reviews.edit}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-auto px-2 py-1"
+                            onClick={() => {
+                              if (
+                                window.confirm(
+                                  dict.course.details.native_reviews
+                                    .delete_confirm,
+                                )
+                              )
+                                deleteMutation.mutate(review.id);
+                            }}
+                          >
+                            {dict.course.details.native_reviews.delete}
+                          </Button>
+                        </>
+                      )}
+                      {!review.mine && isReviewAuthenticated && (
+                        <Button
+                          ref={(node) => {
+                            if (reportingId === review.id)
+                              reportTriggerRef.current = node;
+                          }}
+                          variant="ghost"
+                          size="sm"
+                          className="h-auto px-2 py-1"
+                          onClick={(event) => {
+                            reportTriggerRef.current = event.currentTarget;
+                            setReportMessage(null);
+                            setReportingId(review.id);
+                          }}
+                        >
+                          {dict.course.details.native_reviews.report}
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+          {sortedReviews.some((review) => review.source === "ptt") && (
+            <p className="text-sm text-muted-foreground">
+              {dict.course.details.ptt_disclaimer}
+            </p>
+          )}
+        </>
       ) : null}
       <Dialog
         open={Boolean(reportingId)}

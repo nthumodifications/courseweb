@@ -1,10 +1,5 @@
 import { format } from "date-fns";
-import {
-  AlertTriangle,
-  ArrowRight,
-  ChevronDown,
-  ChevronLeft,
-} from "lucide-react";
+import { ArrowRight, ChevronLeft } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import DownloadSyllabus from "./DownloadSyllabus";
 import SyllabusSummary from "./SyllabusSummary";
@@ -15,11 +10,7 @@ import {
   ErrorState,
   Separator,
   Alert,
-  AlertDescription,
   Badge,
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
   ScrollArea,
   Table,
   TableBody,
@@ -69,7 +60,6 @@ import {
   courseStatisticsKey,
 } from "./courseGradeStatisticsLogic";
 import {
-  getPttToggleLabel,
   normalizePttReview,
   parsePttResponse,
   type PttReview,
@@ -114,12 +104,6 @@ type CleanSyllabusDescription = ReturnType<
   typeof cleanSyllabusFields
 >["content"];
 
-const getPttDateLabel = (date: string | null) => {
-  if (!date) return null;
-  const parsed = new Date(date);
-  return Number.isNaN(parsed.getTime()) ? date : format(parsed, "yyyy-MM-dd");
-};
-
 export {
   COURSE_DETAIL_SECTION_IDS,
   COURSE_DETAIL_DIALOG_EXCLUDED_SECTION_IDS,
@@ -132,37 +116,6 @@ export const buildCourseProviderJsonLd = (providerAlternateName: string) => ({
   alternateName: providerAlternateName,
   url: "https://www.nthu.edu.tw",
 });
-
-const PttReviewCollapsible = ({
-  dict,
-  children,
-}: {
-  dict: ReturnType<typeof useDictionary>;
-  children: React.ReactNode;
-}) => {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <Collapsible open={open} onOpenChange={setOpen}>
-      <CollapsibleTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-6 self-start p-0 text-xs text-muted-foreground hover:text-foreground"
-        >
-          {getPttToggleLabel(open, {
-            expand: dict.course.details.ptt_expand,
-            collapse: dict.course.details.ptt_collapse,
-          })}{" "}
-          <ChevronDown className="ml-1 h-3 w-3" />
-        </Button>
-      </CollapsibleTrigger>
-      <CollapsibleContent className="flex flex-col gap-2">
-        {children}
-      </CollapsibleContent>
-    </Collapsible>
-  );
-};
 
 type MembershipSectionId = Extract<
   CourseDetailSectionId,
@@ -321,11 +274,7 @@ const CourseDetailContainer = ({
     usePrerequisiteGraphData(course);
 
   // Use React Query for reviews
-  const {
-    data: reviews = [],
-    error: reviewsError,
-    refetch: refetchReviews,
-  } = useQuery({
+  const { data: reviews = [] } = useQuery({
     queryKey: ["course", courseId, "ptt", 2],
     queryFn: async () => {
       const res = await client.course[":courseId"].ptt.$get({
@@ -811,184 +760,6 @@ const CourseDetailContainer = ({
                   </div>
                 )}
               </CourseDetailSection>
-              <CourseDetailSection id="ptt-reviews">
-                {reviewsError ? (
-                  <ErrorState
-                    title={dict.common.load_error}
-                    action={
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => void refetchReviews()}
-                      >
-                        {dict.common.try_again}
-                      </Button>
-                    }
-                  />
-                ) : (
-                  reviews.length > 0 && (
-                    <div className="flex flex-col gap-2">
-                      <h3 className="font-bold" id="ptt">
-                        {dict.course.details.ptt_title}
-                      </h3>
-                      <Alert>
-                        <AlertTriangle />
-                        <AlertDescription>
-                          {dict.course.details.ptt_disclaimer}
-                        </AlertDescription>
-                      </Alert>
-                      <div className="flex flex-col gap-4">
-                        {reviews.map((review, index) => {
-                          const dateLabel = getPttDateLabel(review.date);
-                          const preview =
-                            review.experience ??
-                            review.summary ??
-                            review.courseContent ??
-                            review.body;
-                          const instructorIsDifferent =
-                            review.instructor &&
-                            !course.teacher_zh.some((teacher: string) =>
-                              review.instructor!.includes(teacher),
-                            );
-                          const fields = [
-                            {
-                              label: dict.course.details.ptt_fields.course_name,
-                              value: review.courseName,
-                            },
-                            {
-                              label: dict.course.details.ptt_fields.instructor,
-                              value: review.instructor,
-                            },
-                            {
-                              label: dict.course.details.ptt_fields.semester,
-                              value: review.semester,
-                            },
-                            {
-                              label: dict.course.details.ptt_fields.target,
-                              value: review.target,
-                            },
-                            {
-                              label:
-                                dict.course.details.ptt_fields.course_content,
-                              value: review.courseContent,
-                            },
-                            {
-                              label: dict.course.details.ptt_fields.textbook,
-                              value: review.textbook,
-                            },
-                            {
-                              label:
-                                dict.course.details.ptt_fields.teaching_method,
-                              value: review.teachingMethod,
-                            },
-                            {
-                              label: dict.course.details.ptt_fields.grading,
-                              value: review.grading,
-                            },
-                            {
-                              label: dict.course.details.ptt_fields.notes,
-                              value: review.notes,
-                            },
-                            {
-                              label: dict.course.details.ptt_fields.experience,
-                              value: review.experience,
-                            },
-                            {
-                              label: dict.course.details.ptt_fields.summary,
-                              value: review.summary,
-                            },
-                            {
-                              label: dict.course.details.ptt_fields.workload,
-                              value: review.workload,
-                            },
-                            {
-                              label: dict.course.details.ptt_fields.sweetness,
-                              value: review.sweetness,
-                            },
-                            {
-                              label: dict.course.details.ptt_fields.coolness,
-                              value: review.coolness,
-                            },
-                          ];
-
-                          return (
-                            <article
-                              key={`${review.date ?? "review"}-${index}`}
-                              className="flex min-w-0 flex-col gap-2"
-                            >
-                              <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
-                                <h4 className="text-base font-medium">
-                                  {index + 1}. {dateLabel ?? ""}{" "}
-                                  {dict.course.details.review_suffix}
-                                </h4>
-                                {review.semester && (
-                                  <span className="text-sm text-muted-foreground">
-                                    {review.semester}
-                                  </span>
-                                )}
-                                {review.instructor && (
-                                  <span className="text-sm text-muted-foreground">
-                                    {review.instructor}
-                                  </span>
-                                )}
-                                {review.coolness && (
-                                  <span className="text-sm text-muted-foreground">
-                                    {dict.course.details.ptt_fields.coolness}:{" "}
-                                    {review.coolness}
-                                  </span>
-                                )}
-                                {review.sweetness && (
-                                  <span className="text-sm text-muted-foreground">
-                                    {dict.course.details.ptt_fields.sweetness}:{" "}
-                                    {review.sweetness}
-                                  </span>
-                                )}
-                                {instructorIsDifferent && (
-                                  <Badge variant="outline">
-                                    {
-                                      dict.course.details
-                                        .ptt_different_instructor
-                                    }
-                                  </Badge>
-                                )}
-                              </div>
-                              <p className="line-clamp-4 whitespace-pre-line text-sm">
-                                {preview}
-                              </p>
-                              <PttReviewCollapsible dict={dict}>
-                                {review.parsed ? (
-                                  <div className="flex flex-col gap-2 text-sm">
-                                    <p className="whitespace-pre-line">
-                                      {review.body}
-                                    </p>
-                                    {fields.map(
-                                      ({ label, value }) =>
-                                        value && (
-                                          <div key={label}>
-                                            <p className="font-medium">
-                                              {label}
-                                            </p>
-                                            <p className="whitespace-pre-line">
-                                              {value}
-                                            </p>
-                                          </div>
-                                        ),
-                                    )}
-                                  </div>
-                                ) : (
-                                  <p className="whitespace-pre-line text-sm">
-                                    {review.body}
-                                  </p>
-                                )}
-                              </PttReviewCollapsible>
-                            </article>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )
-                )}
-              </CourseDetailSection>
               {moduleKey && (
                 <CourseDetailSection id="native-reviews">
                   <ReviewsSection
@@ -1011,6 +782,7 @@ const CourseDetailContainer = ({
                         )
                         .map((offering) => offering.semester) ?? []
                     }
+                    livePttReviews={reviews}
                   />
                 </CourseDetailSection>
               )}
@@ -1187,12 +959,6 @@ const CourseDetailContainer = ({
                           label={dict.course.details.past_grade_statistics}
                         />
                       ) : null}
-                      {reviews.length > 0 && (
-                        <TOCNavItem
-                          href="#ptt"
-                          label={dict.course.details.ptt}
-                        />
-                      )}
                       <TOCNavItem
                         href="#other"
                         label={dict.course.details.related_courses}

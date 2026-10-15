@@ -3,22 +3,30 @@ import { useAuth } from "react-oidc-context";
 
 export type Attendance = "none" | "sometimes" | "every_class";
 export type ExamStyle = "written" | "oral" | "project" | "report" | "none";
+export type ReviewRating = 1 | 2 | 3 | 4 | 5;
 
 export type Review = {
   id: string;
   moduleKey: string;
   instructor: string;
-  semester: string;
-  workload: 1 | 2 | 3 | 4 | 5;
-  grading: 1 | 2 | 3 | 4 | 5;
-  learning: 1 | 2 | 3 | 4 | 5;
+  semester: string | null;
+  coolness: ReviewRating | null;
+  sweetness: ReviewRating | null;
+  learning: ReviewRating | null;
   attendance: Attendance;
   examStyle: readonly ExamStyle[];
   body: string;
+  source: "native" | "ptt";
+  sourceUrl: string | null;
+  sourceAuthor: string | null;
+  sourcePostedAt: string | null;
   createdAt: string;
   updatedAt: string;
   edited: boolean;
   mine: boolean;
+  /** Compatibility with v1 fixtures while the branch is being migrated. */
+  workload?: ReviewRating | null;
+  grading?: ReviewRating | null;
 };
 
 export type ReviewWithStatus = Review & {
@@ -27,30 +35,41 @@ export type ReviewWithStatus = Review & {
 
 export type ReviewSummary = {
   count: number;
-  workload: number | null;
-  grading: number | null;
+  coolness: number | null;
+  sweetness: number | null;
   learning: number | null;
+  /** Compatibility with v1 fixtures while the branch is being migrated. */
+  workload?: number | null;
+  grading?: number | null;
 };
 
 export const reviewSummaryHasAverages = (summary: ReviewSummary) =>
-  summary.workload !== null &&
-  summary.grading !== null &&
+  (summary.coolness ?? summary.workload ?? null) !== null &&
+  (summary.sweetness ?? summary.grading ?? null) !== null &&
   summary.learning !== null;
 
-export type ReviewInput = {
+type NativeReviewInput = {
   moduleKey: string;
   instructor: string;
   semester: string;
-  workload: Review["workload"];
-  grading: Review["grading"];
-  learning: Review["learning"];
+  coolness: ReviewRating;
+  sweetness: ReviewRating;
+  learning: ReviewRating;
   attendance: Attendance;
   examStyle: ExamStyle[];
   body: string;
 };
 
+export type ReviewInput =
+  | NativeReviewInput
+  | (Omit<NativeReviewInput, "coolness" | "sweetness"> & {
+      /** Compatibility with v1 callers; new UI sends coolness/sweetness. */
+      workload: ReviewRating;
+      grading: ReviewRating;
+    });
+
 export type ReviewUpdate = Partial<
-  Omit<ReviewInput, "moduleKey" | "instructor">
+  Omit<NativeReviewInput, "moduleKey" | "instructor">
 >;
 
 export type ReportReason =
@@ -125,15 +144,67 @@ export const listReviews = async (
   if (target.moduleKey) params.set("moduleKey", target.moduleKey);
   if (target.instructor) params.set("instructor", target.instructor);
   const query = params.toString();
-  return request<{ reviews: Review[]; summary: ReviewSummary }>(
+  const result = await request<{ reviews: Review[]; summary: ReviewSummary }>(
     query ? `?${query}` : "",
     undefined,
     token,
   );
+  return {
+    ...result,
+    reviews: result.reviews.map(normalizeReview),
+  };
 };
 
-export const listMine = (token: string) =>
-  request<{ reviews: ReviewWithStatus[] }>("/mine", undefined, token);
+export const listMine = async (token: string) => {
+  const result = await request<{ reviews: ReviewWithStatus[] }>(
+    "/mine",
+    undefined,
+    token,
+  );
+  return {
+    ...result,
+    reviews: result.reviews.map((review) => ({
+      ...normalizeReview(review),
+      status: review.status,
+    })),
+  };
+};
+
+export const normalizeReview = (
+  review: Partial<Review> & Record<string, unknown>,
+): Review => ({
+  ...review,
+  id: String(review.id ?? ""),
+  moduleKey: String(review.moduleKey ?? ""),
+  instructor: String(review.instructor ?? ""),
+  semester: typeof review.semester === "string" ? review.semester : null,
+  coolness: (review.coolness ?? review.workload ?? null) as Review["coolness"],
+  sweetness: (review.sweetness ??
+    review.grading ??
+    null) as Review["sweetness"],
+  learning: (review.learning ?? null) as Review["learning"],
+  attendance: (review.attendance ?? "none") as Attendance,
+  examStyle: Array.isArray(review.examStyle)
+    ? (review.examStyle as ExamStyle[])
+    : [],
+  body: typeof review.body === "string" ? review.body : "",
+  source: review.source === "ptt" ? "ptt" : "native",
+  sourceUrl: typeof review.sourceUrl === "string" ? review.sourceUrl : null,
+  sourceAuthor:
+    typeof review.sourceAuthor === "string" ? review.sourceAuthor : null,
+  sourcePostedAt:
+    typeof review.sourcePostedAt === "string" ? review.sourcePostedAt : null,
+  createdAt:
+    typeof review.createdAt === "string"
+      ? review.createdAt
+      : "1970-01-01T00:00:00.000Z",
+  updatedAt:
+    typeof review.updatedAt === "string"
+      ? review.updatedAt
+      : "1970-01-01T00:00:00.000Z",
+  edited: review.edited === true,
+  mine: review.mine === true,
+});
 
 export const createReview = (values: ReviewInput, token: string) =>
   request<{ review: Review }>(

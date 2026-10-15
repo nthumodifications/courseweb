@@ -121,7 +121,7 @@
         "apps/web/src/components/Changelog/WhatsNewDialog.tsx": 1,
         "apps/web/src/components/Chat/CourseListRenderer.tsx": 1,
         "apps/web/src/components/CommandPalette/CommandPalette.tsx": 1,
-        "apps/web/src/components/CourseDetails/CourseDetailsContainer.tsx": 9,
+        "apps/web/src/components/CourseDetails/CourseDetailsContainer.tsx": 6,
         "apps/web/src/components/CourseDetails/CourseOverallGradeSummary.tsx": 2,
         "apps/web/src/components/CourseDetails/DateContributeForm.tsx": 1,
         "apps/web/src/components/CourseDetails/PrerequisiteGraph.tsx": 4,

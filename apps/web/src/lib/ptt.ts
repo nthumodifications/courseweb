@@ -29,6 +29,8 @@ export type PttReview = PttReviewFields & {
   body: string;
   content: string;
   date: string | null;
+  sourceUrl: string | null;
+  sourceAuthor: string | null;
   blocks: PttReviewBlock[];
 };
 
@@ -174,13 +176,20 @@ const dateFrom = (input: unknown) => {
   return typeof date === "string" && date.trim() ? date.trim() : null;
 };
 
-function plainReview(body: string, date: string | null): PttReview {
+function plainReview(
+  body: string,
+  date: string | null,
+  sourceUrl: string | null = null,
+  sourceAuthor: string | null = null,
+): PttReview {
   return {
     ...emptyFields(),
     parsed: false,
     body,
     content: body,
     date,
+    sourceUrl,
+    sourceAuthor,
     blocks: [{ kind: "text", text: body }],
   };
 }
@@ -188,6 +197,8 @@ function plainReview(body: string, date: string | null): PttReview {
 export function parsePttReview(input: {
   text: string;
   date?: string | null;
+  sourceUrl?: string | null;
+  sourceAuthor?: string | null;
 }): PttReview {
   const body = input.text.replace(/\r\n?/g, "\n").trim();
   const { blocks, fields } = parseBlocks(body);
@@ -204,13 +215,30 @@ export function parsePttReview(input: {
     body,
     content: body,
     date: input.date?.trim() || null,
+    sourceUrl: input.sourceUrl?.trim() || null,
+    sourceAuthor: input.sourceAuthor?.trim() || null,
     blocks,
   };
 }
 
 /** Convert the API's current { content, date } response into the web view model. */
 export function parsePttResponse(input: unknown): PttReview {
-  return parsePttReview({ text: bodyFrom(input), date: dateFrom(input) });
+  const record =
+    input && typeof input === "object"
+      ? (input as Record<string, unknown>)
+      : {};
+  const sourceUrl = ["sourceUrl", "url", "link"].find(
+    (key) => typeof record[key] === "string" && record[key],
+  );
+  const sourceAuthor = ["sourceAuthor", "author", "authorId"].find(
+    (key) => typeof record[key] === "string" && record[key],
+  );
+  return parsePttReview({
+    text: bodyFrom(input),
+    date: dateFrom(input),
+    sourceUrl: sourceUrl ? String(record[sourceUrl]) : null,
+    sourceAuthor: sourceAuthor ? String(record[sourceAuthor]) : null,
+  });
 }
 
 /** Keep an old persisted response visible as the plain text shown by the main branch. */
@@ -224,8 +252,42 @@ export function normalizePttReview(input: unknown): PttReview {
     return input as PttReview;
   }
   const body = bodyFrom(input).replace(/\r\n?/g, "\n").trim();
-  return plainReview(body, dateFrom(input));
+  const record = input as Record<string, unknown>;
+  return plainReview(
+    body,
+    dateFrom(input),
+    typeof record.sourceUrl === "string" ? record.sourceUrl : null,
+    typeof record.sourceAuthor === "string" ? record.sourceAuthor : null,
+  );
 }
+
+/** Convert the importer/browser's star or numeric text into the v2 1..5 scale. */
+export const parsePttRating = (
+  value: string | null,
+): 1 | 2 | 3 | 4 | 5 | null => {
+  if (!value) return null;
+  const normalized = value.trim();
+  const numeric = normalized.match(/^(\d)(?:\s*\/\s*5)?$/);
+  if (numeric) {
+    const rating = Number(numeric[1]);
+    return rating >= 1 && rating <= 5 ? (rating as 1 | 2 | 3 | 4 | 5) : null;
+  }
+  const filled = (normalized.match(/★/g) ?? []).length;
+  const empty = (normalized.match(/☆/g) ?? []).length;
+  const total = filled + empty;
+  if (total >= 3) {
+    return Math.min(5, Math.max(1, Math.round((filled / total) * 5))) as
+      | 1
+      | 2
+      | 3
+      | 4
+      | 5;
+  }
+  if (filled > 0 && empty === 0 && filled <= 5) {
+    return filled as 1 | 2 | 3 | 4 | 5;
+  }
+  return null;
+};
 
 export function getPttRenderedTextFragments(review: PttReview) {
   return review.blocks.map((block) => block.text);
