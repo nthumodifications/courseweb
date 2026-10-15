@@ -34,6 +34,9 @@ const TimetablePage = lazyWithRetry(
 const TimetableViewPage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/timetable/view/page"),
 );
+const PastReviewsPage = lazyWithRetry(
+  () => import("@/app/[lang]/reviews/past/page"),
+);
 const CoursesPage = lazyWithRetry(routeLoaders.courses);
 const CourseDetailPage = lazyWithRetry(routeLoaders.courseDetail);
 const ModulePage = lazyWithRetry(routeLoaders.module);
@@ -238,6 +241,14 @@ export const appRoutes = [
                     "View your NTHU course timetable in a clean weekly layout.",
                   descriptionZh:
                     "以週檢視模式查看清大課表，清楚掌握每日上課時間。",
+                },
+              },
+              {
+                path: "reviews/past",
+                element: <PastReviewsPage />,
+                handle: {
+                  title: "Past course reviews",
+                  titleZhKey: "course.details.native_reviews.past_page.title",
                 },
               },
               {
