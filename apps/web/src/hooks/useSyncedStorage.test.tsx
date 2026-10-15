@@ -17,6 +17,11 @@ import {
   subscribeToStorageEvents,
 } from "@/test-utils/storage-events";
 import {
+  getCourseBackupKey,
+  getSyncedStorageNamespace,
+  listCourseBackups,
+  restoreCourseBackup,
+  saveCourseBackup,
   getSyncedStorageBackupKey,
   getSyncedStorageKey,
   mergeCourseStorage,
@@ -197,7 +202,7 @@ describe("useSyncedStorage remote read states", () => {
     post.mockImplementation(async () => new Response(null, { status: 200 }));
   });
 
-  test("upgrades a raw anonymous timetable while retaining all semesters", async () => {
+  test("upgrades a raw anonymous courses record while retaining all semesters", async () => {
     setupDom();
     authState.isAuthenticated = false;
     authState.user = undefined;
@@ -226,26 +231,190 @@ describe("useSyncedStorage remote read states", () => {
     await cleanupSyncedStorage(rendered);
   });
 
-  test("settles local data after a GET error without POST, then reconciles after success", async () => {
+  test("upgrades a raw anonymous favourites record without deleting it", async () => {
+    setupDom();
+    authState.isAuthenticated = false;
+    authState.user = undefined;
+    const legacyFavourites = ["COURSE-A", "COURSE-B"];
+    window.localStorage.setItem(
+      "course_favourites",
+      JSON.stringify(legacyFavourites),
+    );
+
+    const rendered = await renderSyncedStorage(() =>
+      useSyncedStorage("course_favourites", [], mergeStringArray),
+    );
+    await waitForResult(
+      rendered.getResult,
+      (result) => (result?.[0] as string[] | undefined)?.length === 2,
+    );
+
+    expect(rendered.getResult()?.[0]).toEqual(legacyFavourites);
+    expect(window.localStorage.getItem("course_favourites")).toBe(
+      JSON.stringify(legacyFavourites),
+    );
+
+    await cleanupSyncedStorage(rendered);
+  });
+
+  test("does not adopt a raw record while signed in, but retains it for recovery", async () => {
+    setupDom();
+    const legacyCourses = { "11410": ["LEGACY-COURSE"] };
+    window.localStorage.setItem("courses", JSON.stringify(legacyCourses));
+
+    const rendered = await renderSyncedStorage(() =>
+      useSyncedStorage("courses", {}, mergeCourseStorage),
+    );
+    await waitForResult(rendered.getResult);
+
+    expect(rendered.getResult()?.[0]).toEqual({});
+    expect(window.localStorage.getItem("courses")).toBe(
+      JSON.stringify(legacyCourses),
+    );
+    expect(
+      window.localStorage.getItem(
+        getSyncedStorageKey("courses", user.profile.sub),
+      ),
+    ).toBeNull();
+
+    await cleanupSyncedStorage(rendered);
+  });
+
+  test("does not adopt a raw favourites record while signed in", async () => {
+    setupDom();
+    const legacyFavourites = ["LEGACY-COURSE"];
+    window.localStorage.setItem(
+      "course_favourites",
+      JSON.stringify(legacyFavourites),
+    );
+
+    const rendered = await renderSyncedStorage(() =>
+      useSyncedStorage("course_favourites", [], mergeStringArray),
+    );
+    await waitForResult(rendered.getResult);
+
+    expect(rendered.getResult()?.[0]).toEqual([]);
+    expect(window.localStorage.getItem("course_favourites")).toBe(
+      JSON.stringify(legacyFavourites),
+    );
+    expect(
+      window.localStorage.getItem(
+        getSyncedStorageKey("course_favourites", user.profile.sub),
+      ),
+    ).toBeNull();
+
+    await cleanupSyncedStorage(rendered);
+  });
+
+  test("writes only distinct non-empty course backups and restores by listed index", () => {
+    setupDom();
+    const namespace = "nthumods-storage-anonymous";
+    const values = [
+      { "11410": ["COURSE-C"] },
+      { "11410": ["COURSE-B"] },
+      { "11410": ["COURSE-A"] },
+      { "11410": ["COURSE-OLD"] },
+    ];
+
+    saveCourseBackup(namespace, values[0]);
+    saveCourseBackup(namespace, values[0]);
+    saveCourseBackup(namespace, values[1]);
+    saveCourseBackup(namespace, values[2]);
+    saveCourseBackup(namespace, values[3]);
+
+    const backups = listCourseBackups(namespace);
+    expect(backups).toHaveLength(3);
+    expect(backups.map((backup) => backup.value)).toEqual([
+      values[3],
+      values[2],
+      values[1],
+    ]);
+    expect(restoreCourseBackup(namespace, 0)).toEqual(values[3]);
+    expect(restoreCourseBackup(namespace, 3)).toBeUndefined();
+    expect(
+      window.localStorage.getItem(getCourseBackupKey(namespace)),
+    ).toBeTruthy();
+  });
+
+  test("removes older backups with the same serialized value", () => {
+    setupDom();
+    const namespace = "nthumods-storage-anonymous";
+    const first = { "11410": ["COURSE-A"] };
+    const second = { "11410": ["COURSE-B"] };
+
+    saveCourseBackup(namespace, first);
+    saveCourseBackup(namespace, second);
+    saveCourseBackup(namespace, first);
+
+    expect(listCourseBackups(namespace).map((backup) => backup.value)).toEqual([
+      first,
+      second,
+    ]);
+  });
+
+  test("prunes oldest backups to keep the rolling array within 32 KB", () => {
+    setupDom();
+    const namespace = "nthumods-storage-anonymous";
+    const makeValue = (character: string) => ({
+      "11410": [character.repeat(12 * 1024)],
+    });
+    const first = makeValue("a");
+    const second = makeValue("b");
+    const third = makeValue("c");
+
+    saveCourseBackup(namespace, first);
+    saveCourseBackup(namespace, second);
+    saveCourseBackup(namespace, third);
+
+    expect(listCourseBackups(namespace).map((backup) => backup.value)).toEqual([
+      third,
+      second,
+    ]);
+
+    const oversizedNamespace = "nthumods-storage-oversized";
+    saveCourseBackup(oversizedNamespace, {
+      "11410": ["x".repeat(33 * 1024)],
+    });
+    expect(listCourseBackups(oversizedNamespace)).toEqual([]);
+  });
+
+  test("skips empty and over-sized course backups", () => {
+    setupDom();
+    const namespace = "nthumods-storage-anonymous";
+
+    saveCourseBackup(namespace, {});
+    expect(listCourseBackups(namespace)).toEqual([]);
+
+    saveCourseBackup(namespace, { "11410": ["x".repeat(210 * 1024)] });
+    expect(listCourseBackups(namespace)).toEqual([]);
+  });
+
+  test("keeps local courses render-ready after a persistent 401 without publishing", async () => {
     setupDom();
     window.localStorage.setItem("nthumods_device_id", "device-a");
     window.localStorage.setItem(
-      getSyncedStorageKey("grades", user.profile.sub),
+      getSyncedStorageKey("courses", user.profile.sub),
       JSON.stringify({
-        value: { theme: "local" },
+        value: { "11410": ["LOCAL-COURSE"] },
         lastModified: 100,
         updatedAt: 100,
         deviceId: "device-a",
       }),
     );
 
+    get.mockImplementation(
+      async () =>
+        new Response(JSON.stringify({ error: "unauthorized" }), {
+          status: 401,
+        }),
+    );
     const rendered = await renderSyncedStorage(() =>
-      useSyncedStorage("grades", { theme: "default" }),
+      useSyncedStorage("courses", {}, mergeCourseStorage),
     );
     await waitForResult(rendered.getResult);
     const result = rendered.getResult();
 
-    expect(result?.[0]).toEqual({ theme: "local" });
+    expect(result?.[0]).toEqual({ "11410": ["LOCAL-COURSE"] });
     expect([result?.[2], result?.[3], get.mock.calls.length]).toEqual([
       true,
       true,
@@ -253,14 +422,63 @@ describe("useSyncedStorage remote read states", () => {
     ]);
     expect(post).not.toHaveBeenCalled();
 
+    await cleanupSyncedStorage(rendered);
+  });
+
+  test("treats a successful pull after a later read error as initial again", async () => {
+    setupDom();
+    window.localStorage.setItem("nthumods_device_id", "device-a");
+    window.localStorage.setItem(
+      getSyncedStorageKey("courses", user.profile.sub),
+      JSON.stringify({
+        value: { "11410": ["LOCAL-COURSE"] },
+        lastModified: 100,
+        updatedAt: 100,
+        deviceId: "device-a",
+      }),
+    );
     get.mockImplementationOnce(
       async () =>
         new Response(
           JSON.stringify({
-            value: { theme: "remote" },
+            value: { "11410": ["FIRST-REMOTE-COURSE"] },
             lastModified: 200,
             updatedAt: 200,
             deviceId: "device-b",
+          }),
+          { status: 200 },
+        ),
+    );
+
+    const rendered = await renderSyncedStorage(() =>
+      useSyncedStorage("courses", {}, mergeCourseStorage),
+    );
+    await waitForResult(
+      rendered.getResult,
+      (result) =>
+        (result?.[0] as Record<string, string[]> | undefined)?.[
+          "11410"
+        ]?.includes("FIRST-REMOTE-COURSE") ?? false,
+    );
+
+    get.mockImplementationOnce(
+      async () =>
+        new Response(JSON.stringify({ error: "failed" }), { status: 503 }),
+    );
+    await act(async () => {
+      await rendered.queryClient.refetchQueries({ queryKey: ["kv"] });
+    });
+    await waitForResult(rendered.getResult, (result) => result?.[3] === true);
+    expect(rendered.getResult()?.[2]).toBe(true);
+
+    get.mockImplementationOnce(
+      async () =>
+        new Response(
+          JSON.stringify({
+            value: { "11510": ["RECOVERED-REMOTE-COURSE"] },
+            lastModified: 300,
+            updatedAt: 300,
+            deviceId: "device-c",
           }),
           { status: 200 },
         ),
@@ -270,13 +488,16 @@ describe("useSyncedStorage remote read states", () => {
     });
     await waitForResult(
       rendered.getResult,
-      (nextResult) =>
-        (nextResult?.[0] as { theme?: string } | undefined)?.theme === "remote",
+      (result) =>
+        (result?.[0] as Record<string, string[]> | undefined)?.[
+          "11510"
+        ]?.includes("RECOVERED-REMOTE-COURSE") ?? false,
     );
 
-    expect(rendered.getResult()?.[0]).toEqual({ theme: "remote" });
-    expect(rendered.getResult()?.[2]).toBe(true);
-    expect(post).not.toHaveBeenCalled();
+    expect(rendered.getResult()?.[0]).toEqual({
+      "11410": ["LOCAL-COURSE", "FIRST-REMOTE-COURSE"],
+      "11510": ["RECOVERED-REMOTE-COURSE"],
+    });
 
     await cleanupSyncedStorage(rendered);
   });
@@ -469,6 +690,9 @@ describe("useSyncedStorage remote read states", () => {
       value: { "11410": ["ACCOUNT-COURSE"] },
     });
     expect(storedAccountData.updatedAt).toBeGreaterThan(-1);
+    expect(
+      listCourseBackups(getSyncedStorageNamespace(user.profile.sub))[0]?.value,
+    ).toEqual({ "11410": ["ACCOUNT-COURSE"] });
     expect(post).toHaveBeenCalledWith(
       expect.objectContaining({ param: { key: "courses" } }),
       expect.anything(),

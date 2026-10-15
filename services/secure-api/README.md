@@ -41,6 +41,31 @@ bun run --cwd services/secure-api prisma:generate
 bun run dev:secure-api
 ```
 
+### Synced key-value storage
+
+`KV_STORE_MODE` controls the backend for the authenticated synced storage API.
+It defaults to `firestore`, which preserves the existing behavior. Set it to
+`dual` to keep Firestore as the only request read source and source of truth.
+Dual mode lazily shadow-copies Firestore records into Postgres with the guarded
+last-write-wins comparison; Postgres failures are logged without affecting the
+request. Set it to `postgres` only after the backfill and dual-mode verification
+are complete; this mode does not contact Firestore for key-value storage.
+
+The supported values are exactly `firestore`, `dual`, and `postgres`. Any
+other non-empty value prevents the service from serving requests. The Docker
+Compose default is also `firestore`.
+
+Run the backfill in its safe, read-only default mode with:
+
+```bash
+bun run services/secure-api/scripts/backfill-user-storage.ts --dry-run
+```
+
+Use `--apply` only after reviewing the counts. It processes bounded pages,
+validates `users/{userId}/storage/{key}` and the supported key list, and uses
+the same timestamp/device-id comparison as the API. Row errors are logged and
+counted so the remaining rows can continue.
+
 ## API Documentation
 
 ⚠️ **Security Warning**: Current API implementation has security vulnerabilities. Use with caution in development only.

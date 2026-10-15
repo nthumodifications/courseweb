@@ -2,6 +2,16 @@ import { describe, expect, test } from "bun:test";
 import { mergeSyncedValue, validKeys } from "./kv_storage_contract";
 
 describe("KV timetable custom-item contract", () => {
+  test("rejects an invalid KV store mode while constructing the app", async () => {
+    const { createKvStorageApp } = await import("./kv_storage");
+
+    expect(() =>
+      createKvStorageApp({ mode: "invalid" } as never),
+    ).toThrow(
+      "Invalid KV_STORE_MODE=invalid; expected firestore, dual, or postgres",
+    );
+  });
+
   test("allows the custom timetable storage key", () => {
     expect(validKeys).toContain("timetable_custom_items");
   });
