@@ -69,7 +69,7 @@ export interface CourseBackup<T = Record<string, string[]>> {
 }
 
 const COURSE_BACKUP_LIMIT = 3;
-const COURSE_BACKUP_MAX_JSON_BYTES = 200 * 1024;
+const COURSE_BACKUP_MAX_JSON_BYTES = 32 * 1024;
 
 export const getCourseBackupKey = (namespace: string) =>
   `nthumods-backup-${namespace}-courses`;
@@ -122,18 +122,21 @@ export const saveCourseBackup = <T>(namespace: string, value: T) => {
 
   try {
     const previous = listCourseBackups<T>(namespace);
-    if (
-      previous[0] &&
-      JSON.stringify(previous[0].value) === JSON.stringify(value)
+    const serializedValue = JSON.stringify(value);
+    const next = [
+      { savedAt: Date.now(), value },
+      ...previous.filter(
+        (backup) => JSON.stringify(backup.value) !== serializedValue,
+      ),
+    ].slice(0, COURSE_BACKUP_LIMIT);
+    let serialized = JSON.stringify(next);
+    while (
+      next.length > 1 &&
+      serialized.length > COURSE_BACKUP_MAX_JSON_BYTES
     ) {
-      return;
+      next.pop();
+      serialized = JSON.stringify(next);
     }
-
-    const next = [{ savedAt: Date.now(), value }, ...previous].slice(
-      0,
-      COURSE_BACKUP_LIMIT,
-    );
-    const serialized = JSON.stringify(next);
     if (serialized.length > COURSE_BACKUP_MAX_JSON_BYTES) return;
     window.localStorage.setItem(getCourseBackupKey(namespace), serialized);
   } catch {

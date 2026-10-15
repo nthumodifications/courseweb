@@ -336,6 +336,48 @@ describe("useSyncedStorage remote read states", () => {
     ).toBeTruthy();
   });
 
+  test("removes older backups with the same serialized value", () => {
+    setupDom();
+    const namespace = "nthumods-storage-anonymous";
+    const first = { "11410": ["COURSE-A"] };
+    const second = { "11410": ["COURSE-B"] };
+
+    saveCourseBackup(namespace, first);
+    saveCourseBackup(namespace, second);
+    saveCourseBackup(namespace, first);
+
+    expect(listCourseBackups(namespace).map((backup) => backup.value)).toEqual([
+      first,
+      second,
+    ]);
+  });
+
+  test("prunes oldest backups to keep the rolling array within 32 KB", () => {
+    setupDom();
+    const namespace = "nthumods-storage-anonymous";
+    const makeValue = (character: string) => ({
+      "11410": [character.repeat(12 * 1024)],
+    });
+    const first = makeValue("a");
+    const second = makeValue("b");
+    const third = makeValue("c");
+
+    saveCourseBackup(namespace, first);
+    saveCourseBackup(namespace, second);
+    saveCourseBackup(namespace, third);
+
+    expect(listCourseBackups(namespace).map((backup) => backup.value)).toEqual([
+      third,
+      second,
+    ]);
+
+    const oversizedNamespace = "nthumods-storage-oversized";
+    saveCourseBackup(oversizedNamespace, {
+      "11410": ["x".repeat(33 * 1024)],
+    });
+    expect(listCourseBackups(oversizedNamespace)).toEqual([]);
+  });
+
   test("skips empty and over-sized course backups", () => {
     setupDom();
     const namespace = "nthumods-storage-anonymous";
