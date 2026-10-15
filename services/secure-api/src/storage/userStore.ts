@@ -95,20 +95,6 @@ const recordFromPostgres = (row: UserStorage): UserStorageRecord => ({
   ...(row.deviceId !== null ? { deviceId: row.deviceId } : {}),
 });
 
-const recordFromLockedRow = (
-  row:
-    | Pick<UserStorage, "value" | "updatedAt" | "lastModified" | "deviceId">
-    | undefined,
-) =>
-  row
-    ? {
-        value: row.value,
-        lastModified: row.lastModified,
-        ...(row.updatedAt !== null ? { updatedAt: row.updatedAt } : {}),
-        ...(row.deviceId !== null ? { deviceId: row.deviceId } : {}),
-      }
-    : undefined;
-
 const nextRecord = (
   key: string,
   existing: UserStorageRecord | undefined,
@@ -238,18 +224,17 @@ export class PostgresUserStore implements UserStore {
     { merge }: { merge: boolean },
   ) {
     return this.db.$transaction(async (transaction) => {
-      // A missing row cannot be locked by FOR UPDATE. Serialize the initial
-      // insert too, so concurrent first writes use the same LWW calculation.
+      // A missing row cannot be serialized by a row lock. Serialize the
+      // initial insert too, so concurrent first writes use the same LWW calculation.
       await transaction.$executeRaw(
-        Prisma.sql`SELECT pg_advisory_xact_lock(hashtextextended(${`${userId}\0${key}`}, 0))`,
+        Prisma.sql`SELECT pg_advisory_xact_lock(hashtext(${userId}), hashtext(${key}))`,
       );
-      const lockedRows = await transaction.$queryRaw<UserStorage[]>(Prisma.sql`
-        SELECT "userId", "key", "value", "updatedAt", "lastModified", "deviceId"
-        FROM "user_storage"
-        WHERE "userId" = ${userId} AND "key" = ${key}
-        FOR UPDATE
-      `);
-      const existing = recordFromLockedRow(lockedRows[0]);
+      const existingRow = await transaction.userStorage.findUnique({
+        where: { userId_key: { userId, key } },
+      });
+      const existing = existingRow
+        ? recordFromPostgres(existingRow)
+        : undefined;
       const result = nextRecord(key, existing, incoming, merge);
       if (!result.write) return false;
 

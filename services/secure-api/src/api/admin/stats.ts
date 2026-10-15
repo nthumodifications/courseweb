@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
@@ -6,6 +6,17 @@ import supabase from "../../config/supabase";
 import type { AdminEnv } from "./env";
 
 const prisma = new PrismaClient();
+
+const authSchema = (() => {
+  const databaseUrl = process.env["DATABASE_URL"];
+  if (!databaseUrl) return Prisma.raw('"public"');
+  try {
+    const schema = new URL(databaseUrl).searchParams.get("schema") ?? "public";
+    return Prisma.raw(`"${schema.replaceAll('"', '""')}"`);
+  } catch {
+    return Prisma.raw('"public"');
+  }
+})();
 
 const startOfDaysAgo = (days: number) => {
   const date = new Date();
@@ -49,7 +60,7 @@ const signupSeries = async (days: number): Promise<DailyBucket[]> => {
   const since = startOfDaysAgo(days - 1);
   const rows = await prisma.$queryRaw<{ day: Date; count: bigint }[]>`
     SELECT date_trunc('day', "createdAt") AS day, COUNT(*)::bigint AS count
-    FROM "User"
+    FROM ${authSchema}."User"
     WHERE "createdAt" >= ${since}
     GROUP BY 1
     ORDER BY 1 ASC
@@ -104,20 +115,20 @@ const app = new Hono<AdminEnv>()
       }[]
     >`
       SELECT
-        (SELECT COUNT(*) FROM "User") AS total_users,
-        (SELECT COUNT(*) FROM "User" WHERE "createdAt" >= ${last7}) AS new_users_7d,
-        (SELECT COUNT(*) FROM "User" WHERE "createdAt" >= ${last30}) AS new_users_30d,
-        (SELECT COUNT(*) FROM "User" WHERE "banned" IS TRUE) AS banned_users,
-        (SELECT COUNT(*) FROM "User" WHERE "role" <> 'USER') AS admins,
-        (SELECT COUNT(*) FROM "AuthSessions" WHERE "state" = 'AUTHENTICATED' AND "expiresAt" > ${now}) AS active_sessions,
-        (SELECT COUNT(*) FROM "Token" WHERE "type" = 'ACCESS' AND "expiresAt" > ${now}) AS access_tokens,
-        (SELECT COUNT(*) FROM "Token" WHERE "type" = 'REFRESH' AND "expiresAt" > ${now}) AS refresh_tokens,
-        (SELECT COUNT(*) FROM "ApiKey" WHERE "isRevoked" IS FALSE) AS api_keys,
-        (SELECT COUNT(*) FROM "CalendarShareToken" WHERE "revokedAt" IS NULL) AS share_tokens,
-        (SELECT COUNT(*) FROM "Client") AS clients,
-        (SELECT COUNT(*) FROM "ClientConsent") AS consents,
-        (SELECT COUNT(DISTINCT "userId") FROM "Token" WHERE "createdAt" >= ${last7}) AS active_7d,
-        (SELECT COUNT(DISTINCT "userId") FROM "Token" WHERE "createdAt" >= ${last30}) AS active_30d
+        (SELECT COUNT(*) FROM ${authSchema}."User") AS total_users,
+        (SELECT COUNT(*) FROM ${authSchema}."User" WHERE "createdAt" >= ${last7}) AS new_users_7d,
+        (SELECT COUNT(*) FROM ${authSchema}."User" WHERE "createdAt" >= ${last30}) AS new_users_30d,
+        (SELECT COUNT(*) FROM ${authSchema}."User" WHERE "banned" IS TRUE) AS banned_users,
+        (SELECT COUNT(*) FROM ${authSchema}."User" WHERE "role" <> 'USER') AS admins,
+        (SELECT COUNT(*) FROM ${authSchema}."AuthSessions" WHERE "state" = 'AUTHENTICATED' AND "expiresAt" > ${now}) AS active_sessions,
+        (SELECT COUNT(*) FROM ${authSchema}."Token" WHERE "type" = 'ACCESS' AND "expiresAt" > ${now}) AS access_tokens,
+        (SELECT COUNT(*) FROM ${authSchema}."Token" WHERE "type" = 'REFRESH' AND "expiresAt" > ${now}) AS refresh_tokens,
+        (SELECT COUNT(*) FROM ${authSchema}."ApiKey" WHERE "isRevoked" IS FALSE) AS api_keys,
+        (SELECT COUNT(*) FROM ${authSchema}."CalendarShareToken" WHERE "revokedAt" IS NULL) AS share_tokens,
+        (SELECT COUNT(*) FROM ${authSchema}."Client") AS clients,
+        (SELECT COUNT(*) FROM ${authSchema}."ClientConsent") AS consents,
+        (SELECT COUNT(DISTINCT "userId") FROM ${authSchema}."Token" WHERE "createdAt" >= ${last7}) AS active_7d,
+        (SELECT COUNT(DISTINCT "userId") FROM ${authSchema}."Token" WHERE "createdAt" >= ${last30}) AS active_30d
     `;
 
     const n = (value: bigint | undefined) => Number(value ?? 0);
