@@ -76,7 +76,7 @@ const TimetableAgenda: FC<TimetableAgendaProps> = ({
             {/* Day header */}
             <div className="flex items-center gap-3">
               <div className="w-12 text-center">
-                <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                <div className="text-xs font-medium text-muted-foreground tracking-wide">
                   {dayLabel}
                 </div>
               </div>
@@ -206,7 +206,7 @@ const TimetableAgenda: FC<TimetableAgendaProps> = ({
                         <span
                           className={cn(
                             fontSizeClass,
-                            "font-semibold px-1.5 py-0.5 rounded",
+                            "font-medium px-1.5 py-0.5 rounded",
                           )}
                           style={{
                             backgroundColor: slot.color + "30",

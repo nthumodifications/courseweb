@@ -42,7 +42,7 @@ export const WidgetShell: FC<WidgetShellProps> = ({
               <GripVertical className="h-4 w-4" />
             </button>
           )}
-          <h3 className="text-sm font-semibold text-card-foreground">
+          <h3 className="text-sm font-bold text-card-foreground">
             {title}
           </h3>
         </div>

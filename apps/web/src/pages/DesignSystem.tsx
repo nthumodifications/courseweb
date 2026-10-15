@@ -278,7 +278,7 @@ const DesignSystem = () => {
                             />
                           </div>
                           <div className="flex-1">
-                            <div className="font-semibold">{color.name}</div>
+                            <div className="font-medium">{color.name}</div>
                             <div className="text-xs text-muted-foreground">
                               {color.usage}
                             </div>
@@ -372,12 +372,12 @@ const DesignSystem = () => {
                       {
                         name: "Heading 3",
                         size: "text-2xl",
-                        weight: "font-semibold",
+                        weight: "font-bold",
                       },
                       {
                         name: "Heading 4",
                         size: "text-xl",
-                        weight: "font-semibold",
+                        weight: "font-bold",
                       },
                       {
                         name: "Body Large",
@@ -427,7 +427,6 @@ const DesignSystem = () => {
                   {[
                     { name: "Normal", class: "font-normal", value: "400" },
                     { name: "Medium", class: "font-medium", value: "500" },
-                    { name: "Semibold", class: "font-semibold", value: "600" },
                     { name: "Bold", class: "font-bold", value: "700" },
                   ].map((weight) => (
                     <div key={weight.name} className="flex items-center gap-4">
@@ -545,7 +544,7 @@ const DesignSystem = () => {
                 <CardContent className="space-y-6">
                   <div className="space-y-4">
                     <div>
-                      <h4 className="font-semibold mb-3">Variants</h4>
+                      <h4 className="font-bold mb-3">Variants</h4>
                       <div className="flex flex-wrap gap-4">
                         <Button variant="default">Primary</Button>
                         <Button variant="secondary">Secondary</Button>
@@ -557,7 +556,7 @@ const DesignSystem = () => {
                     </div>
 
                     <div>
-                      <h4 className="font-semibold mb-3">Sizes</h4>
+                      <h4 className="font-bold mb-3">Sizes</h4>
                       <div className="flex flex-wrap items-center gap-4">
                         <Button size="sm">Small (h-9)</Button>
                         <Button size="default">Default (h-10)</Button>
@@ -572,7 +571,7 @@ const DesignSystem = () => {
                     </div>
 
                     <div>
-                      <h4 className="font-semibold mb-3">With Icons</h4>
+                      <h4 className="font-bold mb-3">With Icons</h4>
                       <div className="flex flex-wrap gap-4">
                         <Button>
                           <Plus className="mr-2" /> Add Event
@@ -800,7 +799,7 @@ const DesignSystem = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <h4 className="font-semibold mb-2">Responsive Grid</h4>
+                    <h4 className="font-bold mb-2">Responsive Grid</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                       {[1, 2, 3, 4].map((i) => (
                         <div
@@ -841,7 +840,7 @@ const DesignSystem = () => {
                     },
                   ].map((pattern) => (
                     <div key={pattern.name} className="space-y-2">
-                      <div className="font-semibold text-sm">
+                      <div className="font-medium text-sm">
                         {pattern.name}
                       </div>
                       <code className="block text-xs bg-muted px-2 py-1 rounded">
@@ -875,7 +874,7 @@ const DesignSystem = () => {
                     },
                   ].map((pattern) => (
                     <div key={pattern.name} className="space-y-2">
-                      <div className="font-semibold text-sm">
+                      <div className="font-medium text-sm">
                         {pattern.name}
                       </div>
                       <code className="block text-xs bg-muted px-2 py-1 rounded">
@@ -925,7 +924,7 @@ const DesignSystem = () => {
                   ].map((transition) => (
                     <div key={transition.name} className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <div className="font-semibold text-sm">
+                        <div className="font-medium text-sm">
                           {transition.name}
                         </div>
                         <code className="text-xs bg-muted px-2 py-1 rounded">
@@ -963,7 +962,7 @@ const DesignSystem = () => {
                     },
                   ].map((animation) => (
                     <div key={animation.name} className="space-y-1">
-                      <div className="font-semibold text-sm">
+                      <div className="font-medium text-sm">
                         {animation.name}
                       </div>
                       {animation.duration && (
@@ -1046,7 +1045,7 @@ const DesignSystem = () => {
                       key={bp.name}
                       className="flex items-center justify-between border-b pb-2"
                     >
-                      <code className="font-mono text-sm font-semibold">
+                      <code className="font-mono text-sm font-medium">
                         {bp.name}:
                       </code>
                       <div className="text-sm">{bp.width}</div>
@@ -1086,7 +1085,7 @@ const DesignSystem = () => {
                     },
                   ].map((item) => (
                     <div key={item.pattern} className="space-y-2">
-                      <div className="font-semibold text-sm">
+                      <div className="font-medium text-sm">
                         {item.pattern}
                       </div>
                       <code className="block text-xs bg-muted px-2 py-1 rounded">

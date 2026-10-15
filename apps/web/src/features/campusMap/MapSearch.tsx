@@ -136,7 +136,7 @@ export default function MapSearch({
                             </span>
                           )}
                         </span>
-                        <span className="shrink-0 rounded bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+                        <span className="shrink-0 rounded bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
                           {identity.venue.code}
                         </span>
                       </button>

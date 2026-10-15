@@ -270,7 +270,7 @@ export const CalendarWeekContainer = ({
                   <div className="text-xs leading-none">{event.location}</div>
                 )}
                 {isSpecialDate && (
-                  <div className="text-[9px] leading-none font-semibold uppercase opacity-90 bg-black/20 rounded px-1 py-0.5 self-start">
+                  <div className="text-[9px] leading-none font-medium opacity-90 bg-black/20 rounded px-1 py-0.5 self-start">
                     {courseDate.type}
                   </div>
                 )}
@@ -491,10 +491,10 @@ export const CalendarWeekContainer = ({
                 key={day.getTime()}
                 className="flex flex-col flex-1 items-center justify-center h-full select-none"
               >
-                <div className="md:hidden text-xs font-semibold">
+                <div className="md:hidden text-xs font-medium">
                   {formatTaipei(day, "EEEEE", { locale: getLocale(language) })}
                 </div>
-                <div className="hidden md:inline text-xs font-semibold">
+                <div className="hidden md:inline text-xs font-medium">
                   {formatTaipei(day, "E", { locale: getLocale(language) })}
                 </div>
                 <div

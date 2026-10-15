@@ -64,7 +64,7 @@ const ImportantDates = ({ raw_id }: { raw_id: RawCourseID }) => {
   return (
     <div className="flex flex-col gap-1 px-4">
       <div className="flex flex-row justify-between">
-        <h3 className="font-semibold text-base">
+        <h3 className="font-bold text-base">
           {dict.course.details.important_dates}
         </h3>
       </div>
@@ -75,7 +75,7 @@ const ImportantDates = ({ raw_id }: { raw_id: RawCourseID }) => {
               <p className="text-sm min-w-20">
                 {format(new Date(m.date), "yyyy-MM-dd")}
               </p>
-              <p className="text-sm font-semibold">
+              <p className="text-sm font-medium">
                 <Badge variant="secondary" className="mr-2">
                   {
                     dict.dialogs.DateContributeForm.types[
@@ -131,12 +131,12 @@ const TimetableCourseQuickAccess = ({ course }: { course: MinimalCourse }) => {
           <div className="flex-1">
             <div className="mb-2 space-y-1">
               <div className="flex flex-row gap-2 items-center">
-                <p className="text-nthu-500 text-sm font-semibold">
+              <p className="text-nthu-500 text-sm font-medium">
                   {course.department} {course.course}-
                   {course.class.padStart(2, "0")}
                 </p>
               </div>
-              <div className="font-semibold">
+              <div className="font-medium">
                 {course.name_zh} - {course.teacher_zh.join(",")}
               </div>
               <div className="text-sm mt-0 break-words">
@@ -326,7 +326,7 @@ const CustomTimetableItemEditor = ({
     <div className="flex flex-col gap-4 p-4">
       <div className="flex items-center gap-2">
         <CalendarClock className="h-5 w-5 text-primary" />
-        <h2 className="text-lg font-semibold">
+        <h2 className="text-lg font-bold">
           {dict.timetable.custom_items.editor_title}
         </h2>
       </div>

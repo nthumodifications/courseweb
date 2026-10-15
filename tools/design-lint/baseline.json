@@ -72,59 +72,10 @@
       "files": {}
     },
     "cjk-hostile": {
-      "files": {
-        "apps/web/src/app/auth/callback/page.tsx": 1,
-        "apps/web/src/components/Calendar/CalendarWeekContainer.tsx": 1,
-        "apps/web/src/components/Calendar/OthersTimetablePanel.tsx": 1,
-        "apps/web/src/components/Timetable/TimetableAgenda.tsx": 1,
-        "apps/web/src/components/Timetable/TimetableDayCards.tsx": 1,
-        "apps/web/src/components/Timetable/TimetableDots.tsx": 1,
-        "apps/web/src/components/Timetable/TimetableSidebar.tsx": 2,
-        "apps/web/src/components/Timetable/TimetableTimeline.tsx": 1,
-        "apps/web/src/features/bus/CityBusLineBadge.tsx": 1,
-        "packages/ui/src/components/ui/alert.tsx": 1,
-        "packages/ui/src/components/ui/card.tsx": 1,
-        "packages/ui/src/components/ui/dialog.tsx": 1,
-        "packages/ui/src/components/ui/drawer.tsx": 1
-      }
+      "files": {}
     },
     "synthetic-weight": {
-      "files": {
-        "apps/web/src/app/auth/callback/page.tsx": 1,
-        "apps/web/src/app/[lang]/(mods-pages)/bus/[route]/BusDetailsContainer.tsx": 2,
-        "apps/web/src/app/[lang]/(mods-pages)/library/page.tsx": 1,
-        "apps/web/src/app/[lang]/(mods-pages)/timetable/share/[shareId]/page.tsx": 1,
-        "apps/web/src/components/Calendar/CalendarDateSelector.tsx": 1,
-        "apps/web/src/components/Calendar/CalendarMonthContainer.tsx": 2,
-        "apps/web/src/components/Calendar/CalendarWeekContainer.tsx": 3,
-        "apps/web/src/components/Calendar/CurrentTimePointer.tsx": 1,
-        "apps/web/src/components/Calendar/EventPopover.tsx": 1,
-        "apps/web/src/components/Timetable/ShareSyncTimetableDialog.tsx": 4,
-        "apps/web/src/components/Timetable/ShareTimetableDialog.tsx": 1,
-        "apps/web/src/components/Timetable/TimeslotHeader.tsx": 1,
-        "apps/web/src/components/Timetable/Timetable.tsx": 8,
-        "apps/web/src/components/Timetable/TimetableAgenda.tsx": 2,
-        "apps/web/src/components/Timetable/TimetableCourseList.tsx": 1,
-        "apps/web/src/components/Timetable/TimetableDayCards.tsx": 1,
-        "apps/web/src/components/Timetable/TimetableDots.tsx": 1,
-        "apps/web/src/components/Timetable/TimetableItemDrawer.tsx": 5,
-        "apps/web/src/components/Timetable/TimetableTimeline.tsx": 2,
-        "apps/web/src/components/Widgets/BusWidget.tsx": 1,
-        "apps/web/src/components/Widgets/WeatherWidget.tsx": 1,
-        "apps/web/src/components/Widgets/WidgetShell.tsx": 1,
-        "apps/web/src/features/campusMap/MapSearch.tsx": 1,
-        "apps/web/src/pages/DesignSystem.tsx": 14,
-        "packages/ui/src/components/ui/alert-dialog.tsx": 1,
-        "packages/ui/src/components/ui/badge.tsx": 1,
-        "packages/ui/src/components/ui/card.tsx": 1,
-        "packages/ui/src/components/ui/dialog.tsx": 1,
-        "packages/ui/src/components/ui/drawer.tsx": 1,
-        "packages/ui/src/components/ui/dropdown-menu.tsx": 1,
-        "packages/ui/src/components/ui/rating.tsx": 1,
-        "packages/ui/src/components/ui/select.tsx": 1,
-        "packages/ui/src/components/ui/sheet.tsx": 1,
-        "packages/ui/src/components/ui/toast.tsx": 1
-      }
+      "files": {}
     },
     "spacing-vocab": {
       "files": {

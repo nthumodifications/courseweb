@@ -80,7 +80,7 @@ const WeatherWidget: FC<WeatherWidgetProps> = ({
             </div>
             {todayWeather.PoP12h !== undefined && (
               <div className="text-center">
-                <div className="text-lg font-semibold text-blue-500">
+                <div className="text-lg font-medium text-blue-500">
                   {todayWeather.PoP12h}%
                 </div>
                 <div className="text-xs text-muted-foreground">{rainLabel}</div>

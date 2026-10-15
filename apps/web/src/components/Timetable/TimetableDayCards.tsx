@@ -62,7 +62,7 @@ const TimetableDayCards: FC<TimetableDayCardsProps> = ({
               key={day}
               className="flex flex-col gap-2 rounded-xl border border-border p-3 min-h-[120px] bg-card"
             >
-              <div className="text-xs font-bold text-muted-foreground uppercase tracking-wide pb-1 border-b border-border">
+              <div className="text-xs font-bold text-muted-foreground tracking-wide pb-1 border-b border-border">
                 {dayLabel}
               </div>
 
@@ -109,7 +109,7 @@ const TimetableDayCards: FC<TimetableDayCardsProps> = ({
                           <span
                             className={cn(
                               fontSizeClass,
-                              "font-semibold leading-tight truncate",
+                              "font-medium leading-tight truncate",
                             )}
                           >
                             {slot.customItem && (

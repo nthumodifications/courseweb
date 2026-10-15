@@ -388,10 +388,10 @@ const BusDetailsContainer = ({
           <Table className="border border-border table-fixed">
             <TableHeader>
               <TableRow>
-                <TableCell className="font-semibold text-center border border-border py-2 w-1/2">
+                <TableCell className="font-medium text-center border border-border py-2 w-1/2">
                   {up.title}
                 </TableCell>
-                <TableCell className="font-semibold text-center border border-border py-2 w-1/2">
+                <TableCell className="font-medium text-center border border-border py-2 w-1/2">
                   {down.title}
                 </TableCell>
               </TableRow>
