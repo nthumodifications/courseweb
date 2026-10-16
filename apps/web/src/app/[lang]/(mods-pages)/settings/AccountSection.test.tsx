@@ -8,6 +8,7 @@ import {
   getSyncedStorageNamespace,
   listCourseBackups,
 } from "@/hooks/syncedStorage";
+import { SettingsSearchProvider } from "./settingsSearch";
 
 const user = {
   id_token: "test-id-token",
@@ -101,7 +102,7 @@ mock.module("@/dictionaries/useDictionary", () => ({
         syncDescription:
           "Sign in to sync your timetable and settings across devices.",
         signin: "Sign In",
-        signout: "Sign Out",
+        signout: settingsState.language === "zh" ? "登出" : "Sign Out",
         logoutConfimation: "Log out?",
         logoutDescription: "Are you sure you want to log out?",
         keepLocalData: "Keep data locally",
@@ -138,6 +139,7 @@ mock.module("@/dictionaries/useDictionary", () => actualDictionary);
 
 const renderAccountSection = async (
   setup?: (dom: JSDOM) => void,
+  searchQuery = "",
 ) => {
   const dom = new JSDOM("<!doctype html><html><body></body></html>", {
     url: "http://localhost/en/settings",
@@ -155,7 +157,15 @@ const renderAccountSection = async (
   document.body.appendChild(container);
   const root = createRoot(container);
   await act(async () => {
-    root.render(createElement(AccountSection));
+    root.render(
+      searchQuery
+        ? createElement(
+            SettingsSearchProvider,
+            { query: searchQuery },
+            createElement(AccountSection),
+          )
+        : createElement(AccountSection),
+    );
   });
   return { root, container };
 };
@@ -241,14 +251,26 @@ describe("AccountSection", () => {
   test("shows the sign-out row when signed in", async () => {
     authState.isAuthenticated = true;
     authState.user = user;
-    const { root, container } = await renderAccountSection();
+    const first = await renderAccountSection();
 
-    expect(container.textContent).toContain("Test User");
-    expect(container.textContent).toContain("account-a");
-    expect(container.textContent).toContain("Sign Out");
-    expect(container.textContent).not.toContain("Sign In");
+    expect(first.container.textContent).toContain("Test User");
+    expect(first.container.textContent).toContain("account-a");
+    expect(first.container.textContent).toContain("Sign Out");
+    expect(first.container.textContent).not.toContain("Sign In");
 
-    await act(async () => root.unmount());
+    await act(async () => first.root.unmount());
+
+    const searched = await renderAccountSection(undefined, "Sign Out");
+    expect(searched.container.querySelector("#account")).not.toBeNull();
+    expect(searched.container.querySelector("#setting-account")).not.toBeNull();
+    expect(
+      searched.container.querySelector("#setting-account")?.textContent,
+    ).toContain(
+      "Sign Out",
+    );
+    expect(searched.container.querySelector("#setting-sync-status")).toBeNull();
+
+    await act(async () => searched.root.unmount());
   });
 
   test("renders backup count and semester summary", async () => {
@@ -272,6 +294,7 @@ describe("AccountSection", () => {
     });
 
     expect(container.textContent).toContain("Restore from backup");
+    expect(container.querySelector("#setting-restore-backup")).not.toBeNull();
     expect(container.textContent).not.toContain("2 semesters · 3 courses");
 
     const restoreButton = [...container.querySelectorAll("button")].find(
@@ -499,6 +522,28 @@ describe("AccountSection", () => {
     const second = await renderAccountSection();
     expect(second.container.textContent).toContain("分鐘前");
     await act(async () => second.root.unmount());
+
+    const chineseSearch = await renderAccountSection(undefined, "登出");
+    expect(chineseSearch.container.querySelector("#account")).not.toBeNull();
+    expect(
+      chineseSearch.container.querySelector("#setting-account"),
+    ).not.toBeNull();
+    expect(
+      chineseSearch.container.querySelector("#setting-account")?.textContent,
+    ).toContain("登出");
+    expect(
+      chineseSearch.container.querySelector("#setting-sync-status"),
+    ).toBeNull();
+    await act(async () => chineseSearch.root.unmount());
+
+    settingsState.language = "en";
+    const syncSearch = await renderAccountSection(undefined, "sync");
+    expect(syncSearch.container.querySelector("#account")).not.toBeNull();
+    expect(
+      syncSearch.container.querySelector("#setting-sync-status"),
+    ).not.toBeNull();
+    expect(syncSearch.container.querySelector("#setting-account")).toBeNull();
+    await act(async () => syncSearch.root.unmount());
   });
 });
 

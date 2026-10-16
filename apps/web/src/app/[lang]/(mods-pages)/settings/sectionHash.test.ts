@@ -3,7 +3,11 @@ import { getSectionIdFromHash } from "./sectionHash";
 
 describe("getSectionIdFromHash", () => {
   const sectionIds = ["appearance", "account", "privacy"];
-  const settingIds = ["setting-language", "setting-dark-mode"];
+  const settingIds = [
+    "setting-language",
+    "setting-dark-mode",
+    "setting-restore-backup",
+  ];
 
   test("returns the section id for a known hash", () => {
     expect(getSectionIdFromHash("#account", sectionIds)).toBe("account");
@@ -13,6 +17,9 @@ describe("getSectionIdFromHash", () => {
     expect(
       getSectionIdFromHash("#setting-language", sectionIds, settingIds),
     ).toBe("setting-language");
+    expect(
+      getSectionIdFromHash("#setting-restore-backup", sectionIds, settingIds),
+    ).toBe("setting-restore-backup");
   });
 
   test("does not resolve unknown or empty hashes", () => {

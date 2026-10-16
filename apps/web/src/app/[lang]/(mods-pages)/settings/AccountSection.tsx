@@ -171,6 +171,12 @@ export const AccountSection = () => {
     <>
       <SettingsSection id="account" title={dict.settings.account.title}>
         <SettingItem
+          id="setting-account"
+          searchKeywords={[
+            dict.settings.account.signin,
+            dict.settings.account.signout,
+            dict.settings.account.title,
+          ]}
           title={
             signedIn ? (
               <div className="flex flex-col font-normal">
@@ -199,7 +205,16 @@ export const AccountSection = () => {
           }
         />
         <SettingItem
+          id="setting-sync-status"
           title={dict.settings.account.syncTitle}
+          searchKeywords={[
+            dict.settings.account.syncTitle,
+            dict.settings.account.syncDescription,
+            dict.settings.account.syncStatus.syncing,
+            dict.settings.account.syncStatus.synced,
+            dict.settings.account.syncStatus.syncedNoTime,
+            dict.settings.account.syncStatus.error,
+          ]}
           control={
             <div
               className={
@@ -220,7 +235,12 @@ export const AccountSection = () => {
         />
         {backups.length > 0 && (
           <SettingItem
+            id="setting-restore-backup"
             title={dict.settings.account.restoreTitle}
+            searchKeywords={[
+              dict.settings.account.restoreTitle,
+              dict.settings.account.restoreAction,
+            ]}
             description={
               signedInState && timetableSyncError
                 ? dict.settings.account.restoreSyncErrorDescription
