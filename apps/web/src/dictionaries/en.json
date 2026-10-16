@@ -847,6 +847,12 @@
     "quick_navigation": "Quick Navigation",
     "open_navigation": "Open navigation menu",
     "close_navigation": "Close navigation menu",
+    "search": {
+      "label": "Search settings",
+      "placeholder": "Search settings...",
+      "clear": "Clear settings search",
+      "no_results": "No settings match “{query}”"
+    },
     "move_item": "Move item",
     "appearance": {
       "title": "Appearance",
@@ -933,6 +939,24 @@
       "title": "Account",
       "description": "NTHU AIS Login",
       "syncDescription": "Sign in to sync your timetable and settings across devices.",
+      "syncTitle": "Timetable sync",
+      "syncStatus": {
+        "signedOut": "Saved on this device only",
+        "syncing": "Syncing",
+        "synced": "Last synced {time}",
+        "syncedNoTime": "Synced",
+        "error": "Sync failed; saved on this device"
+      },
+      "restoreTitle": "Restore timetable backup",
+      "restoreDescription": "Choose a local backup to restore.",
+      "restoreSyncErrorDescription": "Restore is available once sync works again.",
+      "restoreAction": "Restore from backup",
+      "restoreSavedAt": "Saved {time}",
+      "restoreSummary": "{semesters} semesters · {courses} courses",
+      "restoreConfirmTitle": "Restore this timetable?",
+      "restoreConfirmDescription": "This replaces your current timetable. Your current timetable will be backed up first.",
+      "restoreConfirmDescriptionEmpty": "Your current timetable is empty.",
+      "restoreConfirm": "Restore",
       "ccxp": {
         "title": "Proxy Login into your NTHU AIS Account",
         "description": "Access more features by connecting with NTHU AIS securely."

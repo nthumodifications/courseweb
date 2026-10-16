@@ -58,7 +58,13 @@ const restoreGlobals = captureGlobalState([
 ]);
 let activeDom: JSDOM | undefined;
 
-type HookResult = readonly [unknown, unknown, boolean, boolean];
+type SyncStatus = {
+  uploading: boolean;
+  uploadFailed: boolean;
+  lastSyncedAt: number | null;
+};
+
+type HookResult = readonly [unknown, unknown, boolean, boolean, SyncStatus];
 
 const setupDom = () => {
   const dom = new JSDOM("<!doctype html><html><body></body></html>", {
@@ -75,15 +81,34 @@ const setupDom = () => {
   return dom;
 };
 
-const renderSyncedStorage = async (hook: () => HookResult) => {
+const setupSignedInStorage = (key: string, value: unknown) => {
+  setupDom();
+  window.localStorage.setItem("nthumods_device_id", "device-a");
+  const storageKey = getSyncedStorageKey(key, user.profile.sub);
+  window.localStorage.setItem(storageKey, JSON.stringify(value));
+  return storageKey;
+};
+
+const renderSyncedStorage = async (
+  hook: () => HookResult,
+  options: { initialQueryData?: unknown; staleTime?: number } = {},
+) => {
   let result: HookResult | undefined;
   const Probe = () => {
     result = hook();
     return null;
   };
   const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
+    defaultOptions: {
+      queries: { retry: false, staleTime: options.staleTime ?? 0 },
+    },
   });
+  if (options.initialQueryData !== undefined) {
+    queryClient.setQueryData(
+      ["kv", user.profile.sub, user.expires_at, "courses"],
+      options.initialQueryData,
+    );
+  }
   const root = createRoot(document.createElement("div"));
 
   await act(async () => {
@@ -114,6 +139,30 @@ const waitForResult = async (
       await new Promise((resolve) => setTimeout(resolve, 10));
     });
   }
+};
+
+const renderAfterUploadFailure = async (remoteResponse: Response) => {
+  get.mockImplementationOnce(async () => remoteResponse);
+  post.mockImplementationOnce(
+    async () => new Response(null, { status: 500 }),
+  );
+
+  const rendered = await renderSyncedStorage(() =>
+    useSyncedStorage("grades", { source: "default" }),
+  );
+  await waitForResult(rendered.getResult, (result) => result?.[2] === true);
+  const updateData = rendered.getResult()?.[1] as (value: {
+    source: string;
+  }) => void;
+  await act(async () => {
+    updateData({ source: "edited" });
+  });
+  await waitForResult(
+    rendered.getResult,
+    (result) => result?.[4]?.uploadFailed === true,
+  );
+
+  return rendered;
 };
 
 const cleanupSyncedStorage = async ({
@@ -701,17 +750,137 @@ describe("useSyncedStorage remote read states", () => {
     await cleanupSyncedStorage(rendered);
   });
 
+  test("does not upload the same version again after a successful refetch", async () => {
+    const local = {
+      value: { source: "local" },
+      lastModified: 100,
+      updatedAt: 100,
+      deviceId: "device-a",
+    };
+    const remote = {
+      value: { source: "remote" },
+      lastModified: 90,
+      updatedAt: 90,
+      deviceId: "device-b",
+    };
+    const refetchedRemote = {
+      ...remote,
+      value: { source: "remote-refetched" },
+    };
+    setupSignedInStorage("grades", local);
+    get.mockImplementationOnce(
+      async () => new Response(JSON.stringify(remote), { status: 200 }),
+    );
+    get.mockImplementationOnce(
+      async () =>
+        new Response(JSON.stringify(refetchedRemote), { status: 200 }),
+    );
+
+    const rendered = await renderSyncedStorage(() =>
+      useSyncedStorage("grades", { source: "default" }),
+    );
+    await waitForResult(rendered.getResult, () => post.mock.calls.length === 1);
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 30));
+    });
+
+    await act(async () => {
+      await rendered.queryClient.refetchQueries({ queryKey: ["kv"] });
+    });
+    await waitForResult(rendered.getResult, () => get.mock.calls.length === 2);
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 30));
+    });
+
+    expect(post).toHaveBeenCalledTimes(1);
+    await cleanupSyncedStorage(rendered);
+  });
+
+  test("keeps upload failure separate from the legacy remote-read sync error", async () => {
+    setupSignedInStorage("grades", {
+      value: { source: "local" },
+      lastModified: -1,
+      updatedAt: -1,
+      deviceId: "device-a",
+    });
+    const rendered = await renderAfterUploadFailure(
+      new Response(JSON.stringify({ error: "missing" }), { status: 404 }),
+    );
+
+    expect(rendered.getResult()?.[3]).toBe(false);
+    expect(rendered.getResult()?.[4]).toMatchObject({
+      uploading: false,
+      uploadFailed: true,
+    });
+    await cleanupSyncedStorage(rendered);
+  });
+
+  test("clears upload failure after a later remote reconciliation succeeds", async () => {
+    const firstRemote = {
+      value: { source: "first-remote" },
+      lastModified: 100,
+      updatedAt: 100,
+      deviceId: "device-b",
+    };
+    const recoveredRemote = {
+      value: { source: "recovered-remote" },
+      lastModified: 200,
+      updatedAt: 200,
+      deviceId: "device-c",
+    };
+    setupSignedInStorage("grades", firstRemote);
+    const rendered = await renderAfterUploadFailure(
+      new Response(JSON.stringify(firstRemote), { status: 200 }),
+    );
+
+    get.mockImplementationOnce(
+      async () =>
+        new Response(JSON.stringify(recoveredRemote), { status: 200 }),
+    );
+    await act(async () => {
+      await rendered.queryClient.refetchQueries({ queryKey: ["kv"] });
+    });
+    await waitForResult(
+      rendered.getResult,
+      (result) =>
+        JSON.stringify(result?.[0]) === JSON.stringify(recoveredRemote.value),
+    );
+
+    expect(rendered.getResult()?.[3]).toBe(false);
+    expect(rendered.getResult()?.[4]?.uploadFailed).toBe(false);
+    await cleanupSyncedStorage(rendered);
+  });
+
+  test("does not timestamp a successful hydrated cache before this page reads the network", async () => {
+    const snapshot = {
+      value: { "11410": ["CACHED-COURSE"] },
+      lastModified: 100,
+      updatedAt: 100,
+      deviceId: "device-a",
+    };
+    setupSignedInStorage("courses", snapshot);
+
+    const rendered = await renderSyncedStorage(
+      () => useSyncedStorage("courses", {}, mergeCourseStorage),
+      { initialQueryData: snapshot, staleTime: Infinity },
+    );
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    });
+
+    expect(get).not.toHaveBeenCalled();
+    expect(rendered.getResult()?.[4]?.lastSyncedAt).toBeNull();
+    await cleanupSyncedStorage(rendered);
+  });
+
   test("does not write on an idle load with an unchanged remote snapshot", async () => {
-    setupDom();
-    window.localStorage.setItem("nthumods_device_id", "device-a");
-    const storageKey = getSyncedStorageKey("courses", user.profile.sub);
     const snapshot = {
       value: { "11410": ["UNCHANGED-COURSE"] },
       lastModified: 100,
       updatedAt: 100,
       deviceId: "device-a",
     };
-    window.localStorage.setItem(storageKey, JSON.stringify(snapshot));
+    setupSignedInStorage("courses", snapshot);
     get.mockImplementationOnce(
       async () => new Response(JSON.stringify(snapshot), { status: 200 }),
     );
@@ -733,18 +902,12 @@ describe("useSyncedStorage remote read states", () => {
   });
 
   test("persists the primary before a quota-failing backup", async () => {
-    setupDom();
-    const storageKey = getSyncedStorageKey("grades", user.profile.sub);
-    window.localStorage.setItem("nthumods_device_id", "device-a");
-    window.localStorage.setItem(
-      storageKey,
-      JSON.stringify({
-        value: { theme: "local" },
-        lastModified: 100,
-        updatedAt: 100,
-        deviceId: "device-a",
-      }),
-    );
+    const storageKey = setupSignedInStorage("grades", {
+      value: { theme: "local" },
+      lastModified: 100,
+      updatedAt: 100,
+      deviceId: "device-a",
+    });
     const originalStorage = window.localStorage;
     const calls: string[] = [];
     const throwingStorage = {

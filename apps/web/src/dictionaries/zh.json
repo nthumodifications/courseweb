@@ -847,6 +847,12 @@
     "quick_navigation": "快速導覽",
     "open_navigation": "開啟導覽選單",
     "close_navigation": "關閉導覽選單",
+    "search": {
+      "label": "搜尋設定",
+      "placeholder": "搜尋設定……",
+      "clear": "清除設定搜尋",
+      "no_results": "找不到符合「{query}」的設定"
+    },
     "move_item": "移動項目",
     "appearance": {
       "title": "外觀",
@@ -933,6 +939,24 @@
       "title": "帳號",
       "description": "校務資訊系統代理登入",
       "syncDescription": "登入後即可在不同裝置間同步課表與設定。",
+      "syncTitle": "課表同步",
+      "syncStatus": {
+        "signedOut": "僅儲存在此裝置",
+        "syncing": "正在同步",
+        "synced": "上次同步於 {time}",
+        "syncedNoTime": "已同步",
+        "error": "同步失敗，已儲存在此裝置"
+      },
+      "restoreTitle": "還原課表備份",
+      "restoreDescription": "選擇要還原的本機備份。",
+      "restoreSyncErrorDescription": "同步恢復正常後即可還原。",
+      "restoreAction": "從備份還原",
+      "restoreSavedAt": "儲存於 {time}",
+      "restoreSummary": "{semesters} 個學期・{courses} 門課程",
+      "restoreConfirmTitle": "要還原這份課表嗎？",
+      "restoreConfirmDescription": "這會取代目前的課表，系統會先備份目前的課表。",
+      "restoreConfirmDescriptionEmpty": "目前的課表是空的。",
+      "restoreConfirm": "還原",
       "ccxp": {
         "title": "代理登入校務資訊系統",
         "description": "系統會用代理登入方式，讓學生們可以在 NTHUMods 上輕鬆連結校務系統功能。"

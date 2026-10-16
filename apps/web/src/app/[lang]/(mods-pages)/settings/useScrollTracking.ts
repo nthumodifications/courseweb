@@ -1,13 +1,57 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { getSectionIdFromHash } from "./sectionHash";
 
-export const useScrollTracking = (sectionIds: string[]) => {
+export const useScrollTracking = (
+  sectionIds: string[],
+  settingIds: string[] = [],
+  searchQuery = "",
+) => {
   const [activeSection, setActiveSection] = useState<string>(
     sectionIds[0] ?? "",
   );
   const sectionKey = sectionIds.join("|");
+  const settingKey = settingIds.join("|");
+  const highlightedElementRef = useRef<HTMLElement | null>(null);
+  const highlightTimeoutRef = useRef<number | null>(null);
+
+  const highlightSetting = useCallback((id: string) => {
+    if (!id.startsWith("setting-")) return;
+    const element = document.getElementById(id);
+    if (!element) return;
+
+    highlightedElementRef.current?.classList.remove(
+      "bg-primary/10",
+      "transition-colors",
+      "duration-300",
+    );
+    if (highlightTimeoutRef.current !== null) {
+      window.clearTimeout(highlightTimeoutRef.current);
+    }
+
+    element.classList.add("bg-primary/10", "transition-colors", "duration-300");
+    highlightedElementRef.current = element;
+    highlightTimeoutRef.current = window.setTimeout(() => {
+      element.classList.remove(
+        "bg-primary/10",
+        "transition-colors",
+        "duration-300",
+      );
+      if (highlightedElementRef.current === element) {
+        highlightedElementRef.current = null;
+      }
+      highlightTimeoutRef.current = null;
+    }, 1500);
+  }, []);
 
   useEffect(() => {
+    const visibleSectionIds = sectionIds.filter((id) => {
+      const element = document.getElementById(id);
+      return Boolean(
+        element && window.getComputedStyle(element).display !== "none",
+      );
+    });
+    setActiveSection(visibleSectionIds[0] ?? "");
+
     const observer = new IntersectionObserver(
       (entries) => {
         // Find the first visible section
@@ -29,7 +73,7 @@ export const useScrollTracking = (sectionIds: string[]) => {
     );
 
     // Observe all sections
-    sectionIds.forEach((id) => {
+    visibleSectionIds.forEach((id) => {
       const element = document.getElementById(id);
       if (element) {
         observer.observe(element);
@@ -39,28 +83,44 @@ export const useScrollTracking = (sectionIds: string[]) => {
     return () => {
       observer.disconnect();
     };
-  }, [sectionKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [sectionKey, searchQuery]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const scrollToSection = useCallback((id: string) => {
-    const element = document.getElementById(id);
-    if (element) {
-      const url = new URL(window.location.href);
-      url.hash = id;
-      window.history.replaceState(window.history.state, "", url);
-      element.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }
-  }, []);
+  const scrollToSection = useCallback(
+    (id: string, behavior: ScrollBehavior = "smooth") => {
+      const element = document.getElementById(id);
+      if (element && window.getComputedStyle(element).display !== "none") {
+        const url = new URL(window.location.href);
+        url.hash = id;
+        window.history.replaceState(window.history.state, "", url);
+        element.scrollIntoView({
+          behavior,
+          block: "start",
+        });
+        highlightSetting(id);
+      }
+    },
+    [highlightSetting],
+  );
 
   useEffect(() => {
     let lastScrolledHash: string | null = null;
 
     const scrollToHashSection = () => {
       const hash = window.location.hash;
-      const id = getSectionIdFromHash(hash, sectionIds);
-      if (!id || !document.getElementById(id) || hash === lastScrolledHash) {
+      const settingIdsFromDom = Array.from(
+        document.querySelectorAll<HTMLElement>('[id^="setting-"]'),
+      ).map((element) => element.id);
+      const id = getSectionIdFromHash(hash, sectionIds, [
+        ...settingIds,
+        ...settingIdsFromDom,
+      ]);
+      const element = id ? document.getElementById(id) : null;
+      if (
+        !id ||
+        !element ||
+        window.getComputedStyle(element).display === "none" ||
+        hash === lastScrolledHash
+      ) {
         return;
       }
 
@@ -68,6 +128,9 @@ export const useScrollTracking = (sectionIds: string[]) => {
       scrollToSection(id);
     };
 
+    const retryTimeouts = [0, 50, 200, 500, 1000].map((delay) =>
+      window.setTimeout(scrollToHashSection, delay),
+    );
     const observer = new MutationObserver(scrollToHashSection);
     observer.observe(document.body, { childList: true, subtree: true });
     window.addEventListener("hashchange", scrollToHashSection);
@@ -76,8 +139,17 @@ export const useScrollTracking = (sectionIds: string[]) => {
     return () => {
       observer.disconnect();
       window.removeEventListener("hashchange", scrollToHashSection);
+      retryTimeouts.forEach((timeout) => window.clearTimeout(timeout));
+      if (highlightTimeoutRef.current !== null) {
+        window.clearTimeout(highlightTimeoutRef.current);
+      }
+      highlightedElementRef.current?.classList.remove(
+        "bg-primary/10",
+        "transition-colors",
+        "duration-300",
+      );
     };
-  }, [sectionIds, scrollToSection]);
+  }, [sectionIds, scrollToSection, searchQuery, settingKey, settingIds]);
 
   return { activeSection, scrollToSection };
 };
