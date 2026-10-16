@@ -1,5 +1,11 @@
 import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import {
+  getReactNodeText,
+  shouldShowSettingsSearchItem,
+  useSettingsSearch,
+  useSettingsSearchSectionTitleMatch,
+} from "./settingsSearch";
 
 interface SettingItemProps {
   title: string | ReactNode;
@@ -7,6 +13,8 @@ interface SettingItemProps {
   control: ReactNode;
   className?: string;
   id?: string;
+  searchText?: string;
+  searchKeywords?: readonly string[];
 }
 
 export const SettingItem = ({
@@ -15,11 +23,29 @@ export const SettingItem = ({
   control,
   className,
   id,
+  searchText,
+  searchKeywords,
 }: SettingItemProps) => {
+  const { query, isActive } = useSettingsSearch();
+  const sectionTitleMatches = useSettingsSearchSectionTitleMatch();
+  const isMatch = shouldShowSettingsSearchItem(query, sectionTitleMatches, {
+    title: getReactNodeText(title),
+    description,
+    searchText,
+    keywords: searchKeywords,
+  });
+
+  if (isActive && !isMatch) return null;
+
   return (
     <div
       id={id}
-      className={cn("flex flex-row items-center gap-4 py-4", className)}
+      data-settings-search-match={isActive ? "true" : undefined}
+      className={cn(
+        "flex flex-row items-center gap-4 py-4",
+        id && "scroll-mt-[--header-height]",
+        className,
+      )}
     >
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         {typeof title === "string" ? (

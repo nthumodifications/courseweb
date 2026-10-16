@@ -847,6 +847,12 @@
     "quick_navigation": "Quick Navigation",
     "open_navigation": "Open navigation menu",
     "close_navigation": "Close navigation menu",
+    "search": {
+      "label": "Search settings",
+      "placeholder": "Search settings...",
+      "clear": "Clear settings search",
+      "no_results": "No settings match “{query}”"
+    },
     "move_item": "Move item",
     "appearance": {
       "title": "Appearance",
