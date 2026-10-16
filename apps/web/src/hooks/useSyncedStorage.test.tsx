@@ -81,6 +81,14 @@ const setupDom = () => {
   return dom;
 };
 
+const setupSignedInStorage = (key: string, value: unknown) => {
+  setupDom();
+  window.localStorage.setItem("nthumods_device_id", "device-a");
+  const storageKey = getSyncedStorageKey(key, user.profile.sub);
+  window.localStorage.setItem(storageKey, JSON.stringify(value));
+  return storageKey;
+};
+
 const renderSyncedStorage = async (
   hook: () => HookResult,
   options: { initialQueryData?: unknown; staleTime?: number } = {},
@@ -719,9 +727,6 @@ describe("useSyncedStorage remote read states", () => {
   });
 
   test("does not upload the same version again after a successful refetch", async () => {
-    setupDom();
-    window.localStorage.setItem("nthumods_device_id", "device-a");
-    const storageKey = getSyncedStorageKey("grades", user.profile.sub);
     const local = {
       value: { source: "local" },
       lastModified: 100,
@@ -738,7 +743,7 @@ describe("useSyncedStorage remote read states", () => {
       ...remote,
       value: { source: "remote-refetched" },
     };
-    window.localStorage.setItem(storageKey, JSON.stringify(local));
+    setupSignedInStorage("grades", local);
     get.mockImplementationOnce(
       async () => new Response(JSON.stringify(remote), { status: 200 }),
     );
@@ -768,30 +773,27 @@ describe("useSyncedStorage remote read states", () => {
   });
 
   test("keeps upload failure separate from the legacy remote-read sync error", async () => {
-    setupDom();
-    window.localStorage.setItem("nthumods_device_id", "device-a");
-    const storageKey = getSyncedStorageKey("grades", user.profile.sub);
-    window.localStorage.setItem(
-      storageKey,
-      JSON.stringify({
-        value: { source: "local" },
-        lastModified: -1,
-        updatedAt: -1,
-        deviceId: "device-a",
-      }),
-    );
+    setupSignedInStorage("grades", {
+      value: { source: "local" },
+      lastModified: -1,
+      updatedAt: -1,
+      deviceId: "device-a",
+    });
     get.mockImplementationOnce(
-      async () => new Response(JSON.stringify({ error: "missing" }), { status: 404 }),
+      async () =>
+        new Response(JSON.stringify({ error: "missing" }), { status: 404 }),
     );
-    post.mockImplementationOnce(async () => new Response(null, { status: 500 }));
+    post.mockImplementationOnce(
+      async () => new Response(null, { status: 500 }),
+    );
 
     const rendered = await renderSyncedStorage(() =>
       useSyncedStorage("grades", { source: "default" }),
     );
     await waitForResult(rendered.getResult, (result) => result?.[2] === true);
-    const updateData = rendered.getResult()?.[1] as (
-      value: { source: string },
-    ) => void;
+    const updateData = rendered.getResult()?.[1] as (value: {
+      source: string;
+    }) => void;
     await act(async () => {
       updateData({ source: "edited" });
     });
@@ -809,9 +811,6 @@ describe("useSyncedStorage remote read states", () => {
   });
 
   test("clears upload failure after a later remote reconciliation succeeds", async () => {
-    setupDom();
-    window.localStorage.setItem("nthumods_device_id", "device-a");
-    const storageKey = getSyncedStorageKey("grades", user.profile.sub);
     const firstRemote = {
       value: { source: "first-remote" },
       lastModified: 100,
@@ -824,19 +823,21 @@ describe("useSyncedStorage remote read states", () => {
       updatedAt: 200,
       deviceId: "device-c",
     };
-    window.localStorage.setItem(storageKey, JSON.stringify(firstRemote));
+    setupSignedInStorage("grades", firstRemote);
     get.mockImplementationOnce(
       async () => new Response(JSON.stringify(firstRemote), { status: 200 }),
     );
-    post.mockImplementationOnce(async () => new Response(null, { status: 500 }));
+    post.mockImplementationOnce(
+      async () => new Response(null, { status: 500 }),
+    );
 
     const rendered = await renderSyncedStorage(() =>
       useSyncedStorage("grades", { source: "default" }),
     );
     await waitForResult(rendered.getResult, (result) => result?.[2] === true);
-    const updateData = rendered.getResult()?.[1] as (
-      value: { source: string },
-    ) => void;
+    const updateData = rendered.getResult()?.[1] as (value: {
+      source: string;
+    }) => void;
     await act(async () => {
       updateData({ source: "edited" });
     });
@@ -864,16 +865,13 @@ describe("useSyncedStorage remote read states", () => {
   });
 
   test("does not timestamp a successful hydrated cache before this page reads the network", async () => {
-    setupDom();
-    window.localStorage.setItem("nthumods_device_id", "device-a");
-    const storageKey = getSyncedStorageKey("courses", user.profile.sub);
     const snapshot = {
       value: { "11410": ["CACHED-COURSE"] },
       lastModified: 100,
       updatedAt: 100,
       deviceId: "device-a",
     };
-    window.localStorage.setItem(storageKey, JSON.stringify(snapshot));
+    setupSignedInStorage("courses", snapshot);
 
     const rendered = await renderSyncedStorage(
       () => useSyncedStorage("courses", {}, mergeCourseStorage),
@@ -889,16 +887,13 @@ describe("useSyncedStorage remote read states", () => {
   });
 
   test("does not write on an idle load with an unchanged remote snapshot", async () => {
-    setupDom();
-    window.localStorage.setItem("nthumods_device_id", "device-a");
-    const storageKey = getSyncedStorageKey("courses", user.profile.sub);
     const snapshot = {
       value: { "11410": ["UNCHANGED-COURSE"] },
       lastModified: 100,
       updatedAt: 100,
       deviceId: "device-a",
     };
-    window.localStorage.setItem(storageKey, JSON.stringify(snapshot));
+    setupSignedInStorage("courses", snapshot);
     get.mockImplementationOnce(
       async () => new Response(JSON.stringify(snapshot), { status: 200 }),
     );
@@ -920,18 +915,12 @@ describe("useSyncedStorage remote read states", () => {
   });
 
   test("persists the primary before a quota-failing backup", async () => {
-    setupDom();
-    const storageKey = getSyncedStorageKey("grades", user.profile.sub);
-    window.localStorage.setItem("nthumods_device_id", "device-a");
-    window.localStorage.setItem(
-      storageKey,
-      JSON.stringify({
-        value: { theme: "local" },
-        lastModified: 100,
-        updatedAt: 100,
-        deviceId: "device-a",
-      }),
-    );
+    const storageKey = setupSignedInStorage("grades", {
+      value: { theme: "local" },
+      lastModified: 100,
+      updatedAt: 100,
+      deviceId: "device-a",
+    });
     const originalStorage = window.localStorage;
     const calls: string[] = [];
     const throwingStorage = {

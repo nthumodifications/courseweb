@@ -2,6 +2,7 @@ import {
   createContext,
   isValidElement,
   useContext,
+  useMemo,
   type ReactNode,
 } from "react";
 import { Input } from "@courseweb/ui";
@@ -71,13 +72,18 @@ interface SettingsSearchProviderProps {
 export const SettingsSearchProvider = ({
   query,
   children,
-}: SettingsSearchProviderProps) => (
-  <SettingsSearchContext.Provider
-    value={{ query, isActive: Boolean(query.trim()) }}
-  >
-    {children}
-  </SettingsSearchContext.Provider>
-);
+}: SettingsSearchProviderProps) => {
+  const value = useMemo(
+    () => ({ query, isActive: Boolean(query.trim()) }),
+    [query],
+  );
+
+  return (
+    <SettingsSearchContext.Provider value={value}>
+      {children}
+    </SettingsSearchContext.Provider>
+  );
+};
 
 export const useSettingsSearch = () => useContext(SettingsSearchContext);
 

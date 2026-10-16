@@ -170,6 +170,17 @@ const renderAccountSection = async (
   return { root, container };
 };
 
+const renderAccountSectionWithBackup = (
+  namespace: string,
+  value: Record<string, string[]>,
+) =>
+  renderAccountSection((dom) => {
+    dom.window.localStorage.setItem(
+      getCourseBackupKey(namespace),
+      JSON.stringify([{ savedAt: Date.now(), value }]),
+    );
+  });
+
 describe("AccountSection", () => {
   afterEach(() => {
     timetableState.courses = {};
@@ -265,9 +276,7 @@ describe("AccountSection", () => {
     expect(searched.container.querySelector("#setting-account")).not.toBeNull();
     expect(
       searched.container.querySelector("#setting-account")?.textContent,
-    ).toContain(
-      "Sign Out",
-    );
+    ).toContain("Sign Out");
     expect(searched.container.querySelector("#setting-sync-status")).toBeNull();
 
     await act(async () => searched.root.unmount());
@@ -278,20 +287,13 @@ describe("AccountSection", () => {
     authState.user = undefined;
     timetableState.timetableDataReady = true;
     const namespace = getSyncedStorageNamespace();
-    const { root, container } = await renderAccountSection((dom) => {
-      dom.window.localStorage.setItem(
-        getCourseBackupKey(namespace),
-        JSON.stringify([
-          {
-            savedAt: Date.now(),
-            value: {
-              "11410": ["COURSE-1", "COURSE-2"],
-              "11510": ["COURSE-3"],
-            },
-          },
-        ]),
-      );
-    });
+    const { root, container } = await renderAccountSectionWithBackup(
+      namespace,
+      {
+        "11410": ["COURSE-1", "COURSE-2"],
+        "11510": ["COURSE-3"],
+      },
+    );
 
     expect(container.textContent).toContain("Restore from backup");
     expect(container.querySelector("#setting-restore-backup")).not.toBeNull();
@@ -320,12 +322,10 @@ describe("AccountSection", () => {
       "11510": ["RESTORED-SECOND-COURSE"],
     };
     timetableState.courses = currentCourses;
-    const { root, container } = await renderAccountSection((dom) => {
-      dom.window.localStorage.setItem(
-        getCourseBackupKey(namespace),
-        JSON.stringify([{ savedAt: Date.now(), value: restoredCourses }]),
-      );
-    });
+    const { root, container } = await renderAccountSectionWithBackup(
+      namespace,
+      restoredCourses,
+    );
     const restoreButton = [...container.querySelectorAll("button")].find(
       (button) => button.textContent === "Restore from backup",
     );
@@ -355,12 +355,10 @@ describe("AccountSection", () => {
     timetableState.courses = {};
     const namespace = getSyncedStorageNamespace();
     const restoredCourses = { "11410": ["RESTORED-COURSE"] };
-    const { root, container } = await renderAccountSection((dom) => {
-      dom.window.localStorage.setItem(
-        getCourseBackupKey(namespace),
-        JSON.stringify([{ savedAt: Date.now(), value: restoredCourses }]),
-      );
-    });
+    const { root, container } = await renderAccountSectionWithBackup(
+      namespace,
+      restoredCourses,
+    );
     const restoreButton = [...container.querySelectorAll("button")].find(
       (button) => button.textContent === "Restore from backup",
     );
@@ -385,12 +383,10 @@ describe("AccountSection", () => {
     timetableState.timetableSyncError = false;
     const namespace = getSyncedStorageNamespace(user.profile.sub);
     const restoredCourses = { "11410": ["RESTORED-COURSE"] };
-    const { root, container } = await renderAccountSection((dom) => {
-      dom.window.localStorage.setItem(
-        getCourseBackupKey(namespace),
-        JSON.stringify([{ savedAt: Date.now(), value: restoredCourses }]),
-      );
-    });
+    const { root, container } = await renderAccountSectionWithBackup(
+      namespace,
+      restoredCourses,
+    );
     const restoreButton = [...container.querySelectorAll("button")].find(
       (button) => button.textContent === "Restore from backup",
     );
@@ -437,12 +433,10 @@ describe("AccountSection", () => {
     timetableState.restoreCourses.mockImplementation((nextCourses) => {
       timetableState.courses = nextCourses;
     });
-    const { root, container } = await renderAccountSection((dom) => {
-      dom.window.localStorage.setItem(
-        getCourseBackupKey(namespace),
-        JSON.stringify([{ savedAt: Date.now(), value: restoredCourses }]),
-      );
-    });
+    const { root, container } = await renderAccountSectionWithBackup(
+      namespace,
+      restoredCourses,
+    );
     const restoreButton = [...container.querySelectorAll("button")].find(
       (button) => button.textContent === "Restore from backup",
     );
@@ -457,9 +451,9 @@ describe("AccountSection", () => {
     await act(async () => {
       root.render(createElement(AccountSection));
     });
-    const settledRestoreButton = [
-      ...container.querySelectorAll("button"),
-    ].find((button) => button.textContent === "Restore from backup");
+    const settledRestoreButton = [...container.querySelectorAll("button")].find(
+      (button) => button.textContent === "Restore from backup",
+    );
     await act(async () => settledRestoreButton?.click());
     const backupChoice = [...container.querySelectorAll("button")].find(
       (button) => button.textContent?.includes("1 semesters · 1 courses"),
@@ -486,9 +480,9 @@ describe("AccountSection", () => {
     await act(async () => {
       root.render(createElement(AccountSection));
     });
-    const settledConfirmButton = [
-      ...container.querySelectorAll("button"),
-    ].find((button) => button.textContent === "Restore");
+    const settledConfirmButton = [...container.querySelectorAll("button")].find(
+      (button) => button.textContent === "Restore",
+    );
     expect(settledConfirmButton?.disabled).toBe(false);
     await act(async () => settledConfirmButton?.click());
 

@@ -8,7 +8,7 @@ import {
   DialogTitle,
 } from "@courseweb/ui";
 import { LoaderCircle } from "lucide-react";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useAccountActions } from "@/hooks/useAccountActions";
 import { useSettings } from "@/hooks/contexts/settings";
@@ -16,6 +16,7 @@ import useUserTimetable, {
   type CourseLocalStorage,
 } from "@/hooks/contexts/useUserTimetable";
 import {
+  type CourseBackup,
   getSyncedStorageNamespace,
   listCourseBackups,
   restoreCourseBackup,
@@ -50,8 +51,11 @@ export const getTimetableSyncStatus = ({
   return "synced";
 };
 
-const getIntlLocale = (language: string) =>
-  language === "en" ? "en" : language === "zh-cn" ? "zh-CN" : "zh-TW";
+const getIntlLocale = (language: string) => {
+  if (language === "en") return "en";
+  if (language === "zh-cn") return "zh-CN";
+  return "zh-TW";
+};
 
 const formatRelativeTime = (timestamp: number, language: string) => {
   const elapsedSeconds = (timestamp - Date.now()) / 1000;
@@ -85,8 +89,319 @@ const getBackupSummary = (value: CourseLocalStorage) => {
   );
   return {
     semesters: semesters.length,
-    courses: semesters.reduce((total, courseIDs) => total + courseIDs.length, 0),
+    courses: semesters.reduce(
+      (total, courseIDs) => total + courseIDs.length,
+      0,
+    ),
   };
+};
+
+type AccountCopy = ReturnType<typeof useDictionary>["settings"]["account"];
+type AccountUser = NonNullable<ReturnType<typeof useAccountActions>["user"]>;
+
+const getSyncStatusText = ({
+  status,
+  lastSyncedAt,
+  language,
+  messages,
+}: {
+  status: TimetableSyncStatus;
+  lastSyncedAt: number | null;
+  language: string;
+  messages: AccountCopy["syncStatus"];
+}) => {
+  if (status === "signed-out") return messages.signedOut;
+  if (status === "syncing") return messages.syncing;
+  if (status === "error") return messages.error;
+  if (lastSyncedAt === null) return messages.syncedNoTime;
+  return messages.synced.replace(
+    "{time}",
+    formatRelativeTime(lastSyncedAt, language),
+  );
+};
+
+const getSyncStatusClassName = (status: TimetableSyncStatus) => {
+  if (status === "error") {
+    return "flex items-center gap-2 text-sm text-red-500";
+  }
+  return "flex items-center gap-2 text-sm text-muted-foreground";
+};
+
+const getRestoreDescription = ({
+  selectedBackupIndex,
+  currentTimetableEmpty,
+  copy,
+}: {
+  selectedBackupIndex: number | null;
+  currentTimetableEmpty: boolean;
+  copy: AccountCopy;
+}) => {
+  if (selectedBackupIndex === null) return copy.restoreDescription;
+  if (currentTimetableEmpty) return copy.restoreConfirmDescriptionEmpty;
+  return copy.restoreConfirmDescription;
+};
+
+interface AccountIdentitySettingProps {
+  copy: AccountCopy;
+  signedIn: boolean;
+  user: AccountUser | null | undefined;
+  onLogin: () => void;
+  onLogout: () => void;
+}
+
+const AccountIdentitySetting = ({
+  copy,
+  signedIn,
+  user,
+  onLogin,
+  onLogout,
+}: AccountIdentitySettingProps) => {
+  let title: ReactNode = copy.title;
+  let description: string | undefined = copy.syncDescription;
+  let onClick = onLogin;
+  let actionLabel = copy.signin;
+
+  if (signedIn && user) {
+    title = (
+      <div className="flex flex-col font-normal">
+        <div className="text-sm">{user.profile.name}</div>
+        <div className="text-xs text-muted-foreground">{user.profile.sub}</div>
+      </div>
+    );
+    description = undefined;
+    onClick = onLogout;
+    actionLabel = copy.signout;
+  }
+
+  return (
+    <SettingItem
+      id="setting-account"
+      searchKeywords={[copy.signin, copy.signout, copy.title]}
+      title={title}
+      description={description}
+      control={
+        <Button variant="outline" size="sm" onClick={onClick}>
+          {actionLabel}
+        </Button>
+      }
+    />
+  );
+};
+
+interface SyncStatusSettingProps {
+  copy: AccountCopy;
+  status: TimetableSyncStatus;
+  statusText: string;
+}
+
+const SyncStatusSetting = ({
+  copy,
+  status,
+  statusText,
+}: SyncStatusSettingProps) => (
+  <SettingItem
+    id="setting-sync-status"
+    title={copy.syncTitle}
+    searchKeywords={[
+      copy.syncTitle,
+      copy.syncDescription,
+      copy.syncStatus.syncing,
+      copy.syncStatus.synced,
+      copy.syncStatus.syncedNoTime,
+      copy.syncStatus.error,
+    ]}
+    control={
+      <div className={getSyncStatusClassName(status)}>
+        {status === "syncing" && (
+          <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
+        )}
+        <span>{statusText}</span>
+      </div>
+    }
+  />
+);
+
+interface RestoreSettingProps {
+  copy: AccountCopy;
+  restoreEnabled: boolean;
+  onOpen: () => void;
+  description: string;
+}
+
+const RestoreSetting = ({
+  copy,
+  restoreEnabled,
+  onOpen,
+  description,
+}: RestoreSettingProps) => (
+  <SettingItem
+    id="setting-restore-backup"
+    title={copy.restoreTitle}
+    searchKeywords={[copy.restoreTitle, copy.restoreAction]}
+    description={description}
+    control={
+      <Button
+        variant="outline"
+        size="sm"
+        disabled={!restoreEnabled}
+        onClick={onOpen}
+      >
+        {copy.restoreAction}
+      </Button>
+    }
+  />
+);
+
+interface AccountSettingsSectionProps {
+  copy: AccountCopy;
+  signedIn: boolean;
+  user: AccountUser | null | undefined;
+  syncStatus: TimetableSyncStatus;
+  syncStatusText: string;
+  restoreEnabled: boolean;
+  timetableSyncError: boolean;
+  backups: CourseBackup<CourseLocalStorage>[];
+  onLogin: () => void;
+  onLogout: () => void;
+  onOpenRestore: () => void;
+}
+
+const AccountSettingsSection = ({
+  copy,
+  signedIn,
+  user,
+  syncStatus,
+  syncStatusText,
+  restoreEnabled,
+  timetableSyncError,
+  backups,
+  onLogin,
+  onLogout,
+  onOpenRestore,
+}: AccountSettingsSectionProps) => {
+  let restoreDescription = copy.restoreDescription;
+  if (signedIn && timetableSyncError) {
+    restoreDescription = copy.restoreSyncErrorDescription;
+  }
+
+  return (
+    <SettingsSection id="account" title={copy.title}>
+      <AccountIdentitySetting
+        copy={copy}
+        signedIn={signedIn}
+        user={user}
+        onLogin={onLogin}
+        onLogout={onLogout}
+      />
+      <SyncStatusSetting
+        copy={copy}
+        status={syncStatus}
+        statusText={syncStatusText}
+      />
+      {backups.length > 0 && (
+        <RestoreSetting
+          copy={copy}
+          restoreEnabled={restoreEnabled}
+          onOpen={onOpenRestore}
+          description={restoreDescription}
+        />
+      )}
+    </SettingsSection>
+  );
+};
+
+interface AccountBackupDialogProps {
+  copy: AccountCopy;
+  cancelLabel: string;
+  language: string;
+  backups: CourseBackup<CourseLocalStorage>[];
+  selectedBackupIndex: number | null;
+  currentTimetableEmpty: boolean;
+  restoreEnabled: boolean;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSelectedBackupIndexChange: (index: number | null) => void;
+  onRestore: () => void;
+}
+
+const AccountBackupDialog = ({
+  copy,
+  cancelLabel,
+  language,
+  backups,
+  selectedBackupIndex,
+  currentTimetableEmpty,
+  restoreEnabled,
+  open,
+  onOpenChange,
+  onSelectedBackupIndexChange,
+  onRestore,
+}: AccountBackupDialogProps) => {
+  const handleCancel = () => {
+    if (selectedBackupIndex === null) {
+      onOpenChange(false);
+      return;
+    }
+    onSelectedBackupIndexChange(null);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100%-1rem)] overflow-y-auto p-4 sm:w-full">
+        <DialogHeader>
+          <DialogTitle>
+            {selectedBackupIndex === null
+              ? copy.restoreTitle
+              : copy.restoreConfirmTitle}
+          </DialogTitle>
+          <DialogDescription>
+            {getRestoreDescription({
+              selectedBackupIndex,
+              currentTimetableEmpty,
+              copy,
+            })}
+          </DialogDescription>
+        </DialogHeader>
+        {selectedBackupIndex === null && (
+          <div className="divide-y divide-border">
+            {backups.map((backup, index) => {
+              const summary = getBackupSummary(backup.value);
+              return (
+                <button
+                  key={`${backup.savedAt}-${index}`}
+                  type="button"
+                  className="flex w-full flex-col gap-1 py-4 text-left hover:bg-accent"
+                  onClick={() => onSelectedBackupIndexChange(index)}
+                >
+                  <span className="text-sm font-medium">
+                    {copy.restoreSavedAt.replace(
+                      "{time}",
+                      formatBackupDate(backup.savedAt, language),
+                    )}
+                  </span>
+                  <span className="text-sm text-muted-foreground">
+                    {copy.restoreSummary
+                      .replace("{semesters}", String(summary.semesters))
+                      .replace("{courses}", String(summary.courses))}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+        <DialogFooter className="gap-2 sm:gap-2">
+          <Button variant="outline" onClick={handleCancel}>
+            {cancelLabel}
+          </Button>
+          {selectedBackupIndex !== null && (
+            <Button disabled={!restoreEnabled} onClick={onRestore}>
+              {copy.restoreConfirm}
+            </Button>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 };
 
 export const AccountSection = () => {
@@ -132,20 +447,12 @@ export const AccountSection = () => {
   const currentTimetableEmpty = Object.values(courses).every(
     (courseIDs) => courseIDs.length === 0,
   );
-
-  const syncStatusText =
-    syncStatus === "signed-out"
-      ? dict.settings.account.syncStatus.signedOut
-      : syncStatus === "synced"
-        ? timetableSyncStatus.lastSyncedAt === null
-          ? dict.settings.account.syncStatus.syncedNoTime
-          : dict.settings.account.syncStatus.synced.replace(
-              "{time}",
-              formatRelativeTime(timetableSyncStatus.lastSyncedAt, language),
-            )
-        : syncStatus === "syncing"
-          ? dict.settings.account.syncStatus.syncing
-          : dict.settings.account.syncStatus.error;
+  const syncStatusText = getSyncStatusText({
+    status: syncStatus,
+    lastSyncedAt: timetableSyncStatus.lastSyncedAt,
+    language,
+    messages: dict.settings.account.syncStatus,
+  });
 
   const handleBackupDialogChange = (open: boolean) => {
     setBackupDialogOpen(open);
@@ -167,101 +474,26 @@ export const AccountSection = () => {
     handleBackupDialogChange(false);
   };
 
+  const handleOpenRestore = () => {
+    setSelectedBackupIndex(null);
+    setBackupDialogOpen(true);
+  };
+
   return (
     <>
-      <SettingsSection id="account" title={dict.settings.account.title}>
-        <SettingItem
-          id="setting-account"
-          searchKeywords={[
-            dict.settings.account.signin,
-            dict.settings.account.signout,
-            dict.settings.account.title,
-          ]}
-          title={
-            signedIn ? (
-              <div className="flex flex-col font-normal">
-                <div className="text-sm">{user.profile.name}</div>
-                <div className="text-xs text-muted-foreground">
-                  {user.profile.sub}
-                </div>
-              </div>
-            ) : (
-              dict.settings.account.title
-            )
-          }
-          description={
-            signedIn ? undefined : dict.settings.account.syncDescription
-          }
-          control={
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={signedIn ? openLogoutDialog : handleLogin}
-            >
-              {signedIn
-                ? dict.settings.account.signout
-                : dict.settings.account.signin}
-            </Button>
-          }
-        />
-        <SettingItem
-          id="setting-sync-status"
-          title={dict.settings.account.syncTitle}
-          searchKeywords={[
-            dict.settings.account.syncTitle,
-            dict.settings.account.syncDescription,
-            dict.settings.account.syncStatus.syncing,
-            dict.settings.account.syncStatus.synced,
-            dict.settings.account.syncStatus.syncedNoTime,
-            dict.settings.account.syncStatus.error,
-          ]}
-          control={
-            <div
-              className={
-                syncStatus === "error"
-                  ? "flex items-center gap-2 text-sm text-red-500"
-                  : "flex items-center gap-2 text-sm text-muted-foreground"
-              }
-            >
-              {syncStatus === "syncing" && (
-                <LoaderCircle
-                  className="h-4 w-4 animate-spin"
-                  aria-hidden="true"
-                />
-              )}
-              <span>{syncStatusText}</span>
-            </div>
-          }
-        />
-        {backups.length > 0 && (
-          <SettingItem
-            id="setting-restore-backup"
-            title={dict.settings.account.restoreTitle}
-            searchKeywords={[
-              dict.settings.account.restoreTitle,
-              dict.settings.account.restoreAction,
-            ]}
-            description={
-              signedInState && timetableSyncError
-                ? dict.settings.account.restoreSyncErrorDescription
-                : dict.settings.account.restoreDescription
-            }
-            control={
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={!restoreEnabled}
-                onClick={() => {
-                  setSelectedBackupIndex(null);
-                  setBackupDialogOpen(true);
-                }}
-              >
-                {dict.settings.account.restoreAction}
-              </Button>
-            }
-          />
-        )}
-      </SettingsSection>
+      <AccountSettingsSection
+        copy={dict.settings.account}
+        signedIn={signedInState}
+        user={user}
+        syncStatus={syncStatus}
+        syncStatusText={syncStatusText}
+        restoreEnabled={restoreEnabled}
+        timetableSyncError={timetableSyncError}
+        backups={backups}
+        onLogin={handleLogin}
+        onLogout={openLogoutDialog}
+        onOpenRestore={handleOpenRestore}
+      />
       <AccountLogoutDialog
         open={logoutDialogOpen}
         onOpenChange={setLogoutDialogOpen}
@@ -269,71 +501,19 @@ export const AccountSection = () => {
         onKeepLocalDataChange={setKeepLocalData}
         onConfirm={handleConfirmLogout}
       />
-      <Dialog open={backupDialogOpen} onOpenChange={handleBackupDialogChange}>
-        <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100%-1rem)] overflow-y-auto p-4 sm:w-full">
-          <DialogHeader>
-            <DialogTitle>
-              {selectedBackupIndex === null
-                ? dict.settings.account.restoreTitle
-                : dict.settings.account.restoreConfirmTitle}
-            </DialogTitle>
-            <DialogDescription>
-              {selectedBackupIndex === null
-                ? dict.settings.account.restoreDescription
-                : currentTimetableEmpty
-                  ? dict.settings.account.restoreConfirmDescriptionEmpty
-                  : dict.settings.account.restoreConfirmDescription}
-            </DialogDescription>
-          </DialogHeader>
-          {selectedBackupIndex === null ? (
-            <div className="divide-y divide-border">
-              {backups.map((backup, index) => {
-                const summary = getBackupSummary(backup.value);
-                return (
-                  <button
-                    key={`${backup.savedAt}-${index}`}
-                    type="button"
-                    className="flex w-full flex-col gap-1 py-4 text-left hover:bg-accent"
-                    onClick={() => setSelectedBackupIndex(index)}
-                  >
-                    <span className="text-sm font-medium">
-                      {dict.settings.account.restoreSavedAt.replace(
-                        "{time}",
-                        formatBackupDate(backup.savedAt, language),
-                      )}
-                    </span>
-                    <span className="text-sm text-muted-foreground">
-                      {dict.settings.account.restoreSummary
-                        .replace("{semesters}", String(summary.semesters))
-                        .replace("{courses}", String(summary.courses))}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          ) : null}
-          <DialogFooter className="gap-2 sm:gap-2">
-            <Button
-              variant="outline"
-              onClick={() =>
-                selectedBackupIndex === null
-                  ? handleBackupDialogChange(false)
-                  : setSelectedBackupIndex(null)
-              }
-            >
-              {dict.common.cancel}
-            </Button>
-            {selectedBackupIndex !== null && (
-              <Button
-                disabled={!restoreEnabled}
-                onClick={handleRestore}
-              >
-                {dict.settings.account.restoreConfirm}
-              </Button>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <AccountBackupDialog
+        copy={dict.settings.account}
+        cancelLabel={dict.common.cancel}
+        language={language}
+        backups={backups}
+        selectedBackupIndex={selectedBackupIndex}
+        currentTimetableEmpty={currentTimetableEmpty}
+        restoreEnabled={restoreEnabled}
+        open={backupDialogOpen}
+        onOpenChange={handleBackupDialogChange}
+        onSelectedBackupIndexChange={setSelectedBackupIndex}
+        onRestore={handleRestore}
+      />
     </>
   );
 };
