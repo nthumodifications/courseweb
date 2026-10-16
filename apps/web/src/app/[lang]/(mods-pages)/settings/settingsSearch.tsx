@@ -156,7 +156,7 @@ export const SettingsSearchBar = ({
           }
         }}
         placeholder={dict.settings.search.placeholder}
-        className="h-10 pl-6 pr-6"
+        className="h-10 pl-6 pr-6 [&::-webkit-search-cancel-button]:appearance-none"
       />
       {query.length > 0 && (
         <button
