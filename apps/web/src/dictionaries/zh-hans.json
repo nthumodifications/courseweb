@@ -847,6 +847,12 @@
     "quick_navigation": "快速导览",
     "open_navigation": "打开导览菜单",
     "close_navigation": "关闭导览菜单",
+    "search": {
+      "label": "搜索设置",
+      "placeholder": "搜索设置……",
+      "clear": "清除设置搜索",
+      "no_results": "找不到符合「{query}」的设置"
+    },
     "move_item": "移动项目",
     "appearance": {
       "title": "外观",

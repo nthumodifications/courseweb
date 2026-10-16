@@ -847,6 +847,12 @@
     "quick_navigation": "快速導覽",
     "open_navigation": "開啟導覽選單",
     "close_navigation": "關閉導覽選單",
+    "search": {
+      "label": "搜尋設定",
+      "placeholder": "搜尋設定……",
+      "clear": "清除設定搜尋",
+      "no_results": "找不到符合「{query}」的設定"
+    },
     "move_item": "移動項目",
     "appearance": {
       "title": "外觀",
