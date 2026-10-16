@@ -933,6 +933,22 @@
       "title": "帳號",
       "description": "校務資訊系統代理登入",
       "syncDescription": "登入後即可在不同裝置間同步課表與設定。",
+      "syncTitle": "課表同步",
+      "syncStatus": {
+        "signedOut": "僅儲存在此裝置",
+        "syncing": "正在同步",
+        "synced": "上次同步於 {time}",
+        "syncedNoTime": "已同步",
+        "error": "同步失敗，已儲存在此裝置"
+      },
+      "restoreTitle": "還原課表備份",
+      "restoreDescription": "選擇要還原的本機備份。",
+      "restoreAction": "從備份還原",
+      "restoreSavedAt": "儲存於 {time}",
+      "restoreSummary": "{semesters} 個學期・{courses} 門課程",
+      "restoreConfirmTitle": "要還原這份課表嗎？",
+      "restoreConfirmDescription": "這會取代目前的課表，系統會先備份目前的課表。",
+      "restoreConfirm": "還原",
       "ccxp": {
         "title": "代理登入校務資訊系統",
         "description": "系統會用代理登入方式，讓學生們可以在 NTHUMods 上輕鬆連結校務系統功能。"

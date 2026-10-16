@@ -155,6 +155,11 @@ const userTimetableContext = createContext<
   getSemesterUnresolvedCourseIds: () => [],
   timetableDataReady: false,
   timetableSyncError: false,
+  timetableSyncStatus: {
+    uploading: false,
+    uploadFailed: false,
+    lastSyncedAt: null,
+  },
   customItemsDataReady: false,
   semesterCourses: [],
   timetableTheme: Object.keys(timetableColors)[0],
@@ -169,6 +174,7 @@ const userTimetableContext = createContext<
   setHoverCourse: () => {},
   colorMap: {},
   setCourses: () => {},
+  restoreCourses: () => {},
   clearCourses: () => {},
   deleteCourse: () => {},
   setColorMap: () => {},
@@ -210,8 +216,13 @@ const userTimetableContext = createContext<
 });
 
 const useUserTimetableProvider = (loadCourse = true) => {
-  const [courses, setStoredCourses, coursesSyncReady, coursesSyncError] =
-    useSyncedStorage<CourseLocalStorage>("courses", {}, mergeCourseStorage);
+  const [
+    courses,
+    setStoredCourses,
+    coursesSyncReady,
+    coursesSyncError,
+    coursesSyncStatus,
+  ] = useSyncedStorage<CourseLocalStorage>("courses", {}, mergeCourseStorage);
   const [hoverCourse, setHoverCourse] = useState<CourseDefinition | null>(null);
   const [colorMap, setColorMap, colorMapSyncReady] = useSyncedStorage<{
     [courseID: string]: string;
@@ -633,6 +644,32 @@ const useUserTimetableProvider = (loadCourse = true) => {
     return colors[timetableTheme];
   }, [timetableTheme, userDefinedColors]);
 
+  const restoreCourses = useCallback(
+    (nextCourses: CourseLocalStorage) => {
+      setCourses(nextCourses);
+      setColorMap((existingColors) => {
+        const nextColors = { ...existingColors };
+        let changed = false;
+
+        Object.values(nextCourses).forEach((semesterCourses) => {
+          semesterCourses.forEach((courseID, index) => {
+            if (
+              nextColors[courseID] !== undefined ||
+              currentColors.length === 0
+            ) {
+              return;
+            }
+            nextColors[courseID] = currentColors[index % currentColors.length];
+            changed = true;
+          });
+        });
+
+        return changed ? nextColors : existingColors;
+      });
+    },
+    [currentColors, setColorMap, setCourses],
+  );
+
   const isCoursesEmpty = useMemo(() => {
     return Object.keys(courses).length == 0;
   }, [courses]);
@@ -644,6 +681,7 @@ const useUserTimetableProvider = (loadCourse = true) => {
     // True while the last read of the account's course list failed, i.e. the
     // local list may be missing courses that exist remotely.
     timetableSyncError: Boolean(coursesSyncError),
+    timetableSyncStatus: coursesSyncStatus,
     colorMap,
     semester,
     timetableTheme,
@@ -652,6 +690,7 @@ const useUserTimetableProvider = (loadCourse = true) => {
     setSemester,
     semesterCourses,
     setCourses,
+    restoreCourses,
     setColorMap,
     addCourse,
     deleteCourse,

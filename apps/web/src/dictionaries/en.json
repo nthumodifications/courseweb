@@ -933,6 +933,22 @@
       "title": "Account",
       "description": "NTHU AIS Login",
       "syncDescription": "Sign in to sync your timetable and settings across devices.",
+      "syncTitle": "Timetable sync",
+      "syncStatus": {
+        "signedOut": "Saved on this device only",
+        "syncing": "Syncing",
+        "synced": "Last synced {time}",
+        "syncedNoTime": "Synced",
+        "error": "Sync failed; saved on this device"
+      },
+      "restoreTitle": "Restore timetable backup",
+      "restoreDescription": "Choose a local backup to restore.",
+      "restoreAction": "Restore from backup",
+      "restoreSavedAt": "Saved {time}",
+      "restoreSummary": "{semesters} semesters · {courses} courses",
+      "restoreConfirmTitle": "Restore this timetable?",
+      "restoreConfirmDescription": "This replaces your current timetable. Your current timetable will be backed up first.",
+      "restoreConfirm": "Restore",
       "ccxp": {
         "title": "Proxy Login into your NTHU AIS Account",
         "description": "Access more features by connecting with NTHU AIS securely."
