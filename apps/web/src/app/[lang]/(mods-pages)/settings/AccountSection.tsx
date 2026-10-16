@@ -124,6 +124,14 @@ export const AccountSection = () => {
     timetableSyncError,
     timetableSyncStatus,
   });
+  const restoreEnabled =
+    !signedInState ||
+    (timetableDataReady &&
+      !timetableSyncError &&
+      !timetableSyncStatus.uploading);
+  const currentTimetableEmpty = Object.values(courses).every(
+    (courseIDs) => courseIDs.length === 0,
+  );
 
   const syncStatusText =
     syncStatus === "signed-out"
@@ -145,11 +153,7 @@ export const AccountSection = () => {
   };
 
   const handleRestore = () => {
-    if (
-      selectedBackupIndex === null ||
-      !timetableDataReady ||
-      timetableSyncStatus.uploading
-    ) {
+    if (selectedBackupIndex === null || !restoreEnabled) {
       return;
     }
     const restoredCourses = restoreCourseBackup<CourseLocalStorage>(
@@ -200,7 +204,7 @@ export const AccountSection = () => {
             <div
               className={
                 syncStatus === "error"
-                  ? "flex items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-2 py-1 text-sm text-destructive"
+                  ? "flex items-center gap-2 text-sm text-red-500"
                   : "flex items-center gap-2 text-sm text-muted-foreground"
               }
             >
@@ -217,12 +221,16 @@ export const AccountSection = () => {
         {backups.length > 0 && (
           <SettingItem
             title={dict.settings.account.restoreTitle}
-            description={dict.settings.account.restoreDescription}
+            description={
+              signedInState && timetableSyncError
+                ? dict.settings.account.restoreSyncErrorDescription
+                : dict.settings.account.restoreDescription
+            }
             control={
               <Button
                 variant="outline"
                 size="sm"
-                disabled={!timetableDataReady || timetableSyncStatus.uploading}
+                disabled={!restoreEnabled}
                 onClick={() => {
                   setSelectedBackupIndex(null);
                   setBackupDialogOpen(true);
@@ -252,7 +260,9 @@ export const AccountSection = () => {
             <DialogDescription>
               {selectedBackupIndex === null
                 ? dict.settings.account.restoreDescription
-                : dict.settings.account.restoreConfirmDescription}
+                : currentTimetableEmpty
+                  ? dict.settings.account.restoreConfirmDescriptionEmpty
+                  : dict.settings.account.restoreConfirmDescription}
             </DialogDescription>
           </DialogHeader>
           {selectedBackupIndex === null ? (
@@ -295,7 +305,7 @@ export const AccountSection = () => {
             </Button>
             {selectedBackupIndex !== null && (
               <Button
-                disabled={!timetableDataReady || timetableSyncStatus.uploading}
+                disabled={!restoreEnabled}
                 onClick={handleRestore}
               >
                 {dict.settings.account.restoreConfirm}

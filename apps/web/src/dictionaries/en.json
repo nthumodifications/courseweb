@@ -943,11 +943,13 @@
       },
       "restoreTitle": "Restore timetable backup",
       "restoreDescription": "Choose a local backup to restore.",
+      "restoreSyncErrorDescription": "Restore is available once sync works again.",
       "restoreAction": "Restore from backup",
       "restoreSavedAt": "Saved {time}",
       "restoreSummary": "{semesters} semesters · {courses} courses",
       "restoreConfirmTitle": "Restore this timetable?",
       "restoreConfirmDescription": "This replaces your current timetable. Your current timetable will be backed up first.",
+      "restoreConfirmDescriptionEmpty": "Your current timetable is empty.",
       "restoreConfirm": "Restore",
       "ccxp": {
         "title": "Proxy Login into your NTHU AIS Account",

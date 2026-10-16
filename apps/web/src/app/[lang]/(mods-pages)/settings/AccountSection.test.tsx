@@ -116,12 +116,15 @@ mock.module("@/dictionaries/useDictionary", () => ({
         },
         restoreTitle: "Restore timetable backup",
         restoreDescription: "Choose a local backup to restore.",
+        restoreSyncErrorDescription:
+          "Restore is available once sync works again.",
         restoreAction: "Restore from backup",
         restoreSavedAt: "Saved {time}",
         restoreSummary: "{semesters} semesters · {courses} courses",
         restoreConfirmTitle: "Restore this timetable?",
         restoreConfirmDescription:
           "This replaces your current timetable. Your current timetable will be backed up first.",
+        restoreConfirmDescriptionEmpty: "Your current timetable is empty.",
         restoreConfirm: "Restore",
       },
     },
@@ -308,6 +311,9 @@ describe("AccountSection", () => {
       (button) => button.textContent?.includes("2 semesters · 2 courses"),
     );
     await act(async () => backupChoice?.click());
+    expect(container.textContent).toContain(
+      "Your current timetable will be backed up first.",
+    );
     const confirmButton = [...container.querySelectorAll("button")].find(
       (button) => button.textContent === "Restore",
     );
@@ -319,10 +325,84 @@ describe("AccountSection", () => {
     await act(async () => root.unmount());
   });
 
-  test("gates restore until settled and replaces the current timetable", async () => {
+  test("uses empty-current copy when restoring over an empty timetable", async () => {
     authState.isAuthenticated = false;
     authState.user = undefined;
+    timetableState.timetableDataReady = true;
+    timetableState.courses = {};
     const namespace = getSyncedStorageNamespace();
+    const restoredCourses = { "11410": ["RESTORED-COURSE"] };
+    const { root, container } = await renderAccountSection((dom) => {
+      dom.window.localStorage.setItem(
+        getCourseBackupKey(namespace),
+        JSON.stringify([{ savedAt: Date.now(), value: restoredCourses }]),
+      );
+    });
+    const restoreButton = [...container.querySelectorAll("button")].find(
+      (button) => button.textContent === "Restore from backup",
+    );
+    await act(async () => restoreButton?.click());
+    const backupChoice = [...container.querySelectorAll("button")].find(
+      (button) => button.textContent?.includes("1 semesters · 1 courses"),
+    );
+    await act(async () => backupChoice?.click());
+
+    expect(container.textContent).toContain("Your current timetable is empty.");
+    expect(container.textContent).not.toContain(
+      "Your current timetable will be backed up first.",
+    );
+
+    await act(async () => root.unmount());
+  });
+
+  test("disables signed-in restore while the timetable read has failed", async () => {
+    authState.isAuthenticated = true;
+    authState.user = user;
+    timetableState.timetableDataReady = true;
+    timetableState.timetableSyncError = false;
+    const namespace = getSyncedStorageNamespace(user.profile.sub);
+    const restoredCourses = { "11410": ["RESTORED-COURSE"] };
+    const { root, container } = await renderAccountSection((dom) => {
+      dom.window.localStorage.setItem(
+        getCourseBackupKey(namespace),
+        JSON.stringify([{ savedAt: Date.now(), value: restoredCourses }]),
+      );
+    });
+    const restoreButton = [...container.querySelectorAll("button")].find(
+      (button) => button.textContent === "Restore from backup",
+    );
+    expect(restoreButton?.disabled).toBe(false);
+    await act(async () => restoreButton?.click());
+    const backupChoice = [...container.querySelectorAll("button")].find(
+      (button) => button.textContent?.includes("1 semesters · 1 courses"),
+    );
+    await act(async () => backupChoice?.click());
+    const readyConfirmButton = [...container.querySelectorAll("button")].find(
+      (button) => button.textContent === "Restore",
+    );
+    expect(readyConfirmButton?.disabled).toBe(false);
+
+    timetableState.timetableSyncError = true;
+    await act(async () => root.render(createElement(AccountSection)));
+    const failedRestoreButton = [...container.querySelectorAll("button")].find(
+      (button) => button.textContent === "Restore from backup",
+    );
+    const failedConfirmButton = [...container.querySelectorAll("button")].find(
+      (button) => button.textContent === "Restore",
+    );
+    expect(failedRestoreButton?.disabled).toBe(true);
+    expect(failedConfirmButton?.disabled).toBe(true);
+    expect(container.textContent).toContain(
+      "Restore is available once sync works again.",
+    );
+
+    await act(async () => root.unmount());
+  });
+
+  test("gates restore until settled and replaces the current timetable", async () => {
+    authState.isAuthenticated = true;
+    authState.user = user;
+    const namespace = getSyncedStorageNamespace(user.profile.sub);
     const currentCourses = { "11410": ["CURRENT-COURSE"] };
     const restoredCourses = { "11410": ["RESTORED-COURSE"] };
     timetableState.courses = currentCourses;

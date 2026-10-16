@@ -943,11 +943,13 @@
       },
       "restoreTitle": "还原课表备份",
       "restoreDescription": "选择要还原的本机备份。",
+      "restoreSyncErrorDescription": "同步恢复正常后即可还原。",
       "restoreAction": "从备份还原",
       "restoreSavedAt": "保存于 {time}",
       "restoreSummary": "{semesters} 个学期・{courses} 门课程",
       "restoreConfirmTitle": "要还原这份课表吗？",
       "restoreConfirmDescription": "这会取代目前的课表，系统会先备份目前的课表。",
+      "restoreConfirmDescriptionEmpty": "目前的课表是空的。",
       "restoreConfirm": "还原",
       "ccxp": {
         "title": "代理登录校务资讯系统",

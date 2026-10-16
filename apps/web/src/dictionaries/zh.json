@@ -943,11 +943,13 @@
       },
       "restoreTitle": "還原課表備份",
       "restoreDescription": "選擇要還原的本機備份。",
+      "restoreSyncErrorDescription": "同步恢復正常後即可還原。",
       "restoreAction": "從備份還原",
       "restoreSavedAt": "儲存於 {time}",
       "restoreSummary": "{semesters} 個學期・{courses} 門課程",
       "restoreConfirmTitle": "要還原這份課表嗎？",
       "restoreConfirmDescription": "這會取代目前的課表，系統會先備份目前的課表。",
+      "restoreConfirmDescriptionEmpty": "目前的課表是空的。",
       "restoreConfirm": "還原",
       "ccxp": {
         "title": "代理登入校務資訊系統",
