@@ -181,6 +181,26 @@ const renderAccountSectionWithBackup = (
     );
   });
 
+const renderAndSelectBackup = async (
+  namespace: string,
+  value: Record<string, string[]>,
+  summary: string,
+) => {
+  const { root, container } = await renderAccountSectionWithBackup(
+    namespace,
+    value,
+  );
+  const restoreButton = [...container.querySelectorAll("button")].find(
+    (button) => button.textContent === "Restore from backup",
+  );
+  await act(async () => restoreButton?.click());
+  const backupChoice = [...container.querySelectorAll("button")].find(
+    (button) => button.textContent?.includes(summary),
+  );
+  await act(async () => backupChoice?.click());
+  return { root, container };
+};
+
 describe("AccountSection", () => {
   afterEach(() => {
     timetableState.courses = {};
@@ -322,18 +342,11 @@ describe("AccountSection", () => {
       "11510": ["RESTORED-SECOND-COURSE"],
     };
     timetableState.courses = currentCourses;
-    const { root, container } = await renderAccountSectionWithBackup(
+    const { root, container } = await renderAndSelectBackup(
       namespace,
       restoredCourses,
+      "2 semesters · 2 courses",
     );
-    const restoreButton = [...container.querySelectorAll("button")].find(
-      (button) => button.textContent === "Restore from backup",
-    );
-    await act(async () => restoreButton?.click());
-    const backupChoice = [...container.querySelectorAll("button")].find(
-      (button) => button.textContent?.includes("2 semesters · 2 courses"),
-    );
-    await act(async () => backupChoice?.click());
     expect(container.textContent).toContain(
       "Your current timetable will be backed up first.",
     );
@@ -355,18 +368,11 @@ describe("AccountSection", () => {
     timetableState.courses = {};
     const namespace = getSyncedStorageNamespace();
     const restoredCourses = { "11410": ["RESTORED-COURSE"] };
-    const { root, container } = await renderAccountSectionWithBackup(
+    const { root, container } = await renderAndSelectBackup(
       namespace,
       restoredCourses,
+      "1 semesters · 1 courses",
     );
-    const restoreButton = [...container.querySelectorAll("button")].find(
-      (button) => button.textContent === "Restore from backup",
-    );
-    await act(async () => restoreButton?.click());
-    const backupChoice = [...container.querySelectorAll("button")].find(
-      (button) => button.textContent?.includes("1 semesters · 1 courses"),
-    );
-    await act(async () => backupChoice?.click());
 
     expect(container.textContent).toContain("Your current timetable is empty.");
     expect(container.textContent).not.toContain(

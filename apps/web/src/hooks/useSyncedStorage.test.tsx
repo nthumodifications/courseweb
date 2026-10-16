@@ -141,6 +141,30 @@ const waitForResult = async (
   }
 };
 
+const renderAfterUploadFailure = async (remoteResponse: Response) => {
+  get.mockImplementationOnce(async () => remoteResponse);
+  post.mockImplementationOnce(
+    async () => new Response(null, { status: 500 }),
+  );
+
+  const rendered = await renderSyncedStorage(() =>
+    useSyncedStorage("grades", { source: "default" }),
+  );
+  await waitForResult(rendered.getResult, (result) => result?.[2] === true);
+  const updateData = rendered.getResult()?.[1] as (value: {
+    source: string;
+  }) => void;
+  await act(async () => {
+    updateData({ source: "edited" });
+  });
+  await waitForResult(
+    rendered.getResult,
+    (result) => result?.[4]?.uploadFailed === true,
+  );
+
+  return rendered;
+};
+
 const cleanupSyncedStorage = async ({
   root,
   queryClient,
@@ -779,27 +803,8 @@ describe("useSyncedStorage remote read states", () => {
       updatedAt: -1,
       deviceId: "device-a",
     });
-    get.mockImplementationOnce(
-      async () =>
-        new Response(JSON.stringify({ error: "missing" }), { status: 404 }),
-    );
-    post.mockImplementationOnce(
-      async () => new Response(null, { status: 500 }),
-    );
-
-    const rendered = await renderSyncedStorage(() =>
-      useSyncedStorage("grades", { source: "default" }),
-    );
-    await waitForResult(rendered.getResult, (result) => result?.[2] === true);
-    const updateData = rendered.getResult()?.[1] as (value: {
-      source: string;
-    }) => void;
-    await act(async () => {
-      updateData({ source: "edited" });
-    });
-    await waitForResult(
-      rendered.getResult,
-      (result) => result?.[4]?.uploadFailed === true,
+    const rendered = await renderAfterUploadFailure(
+      new Response(JSON.stringify({ error: "missing" }), { status: 404 }),
     );
 
     expect(rendered.getResult()?.[3]).toBe(false);
@@ -824,26 +829,8 @@ describe("useSyncedStorage remote read states", () => {
       deviceId: "device-c",
     };
     setupSignedInStorage("grades", firstRemote);
-    get.mockImplementationOnce(
-      async () => new Response(JSON.stringify(firstRemote), { status: 200 }),
-    );
-    post.mockImplementationOnce(
-      async () => new Response(null, { status: 500 }),
-    );
-
-    const rendered = await renderSyncedStorage(() =>
-      useSyncedStorage("grades", { source: "default" }),
-    );
-    await waitForResult(rendered.getResult, (result) => result?.[2] === true);
-    const updateData = rendered.getResult()?.[1] as (value: {
-      source: string;
-    }) => void;
-    await act(async () => {
-      updateData({ source: "edited" });
-    });
-    await waitForResult(
-      rendered.getResult,
-      (result) => result?.[4]?.uploadFailed === true,
+    const rendered = await renderAfterUploadFailure(
+      new Response(JSON.stringify(firstRemote), { status: 200 }),
     );
 
     get.mockImplementationOnce(
