@@ -137,11 +137,10 @@
       "no_venue": "無上課地點",
       "courses_unit": "門課",
       "total_credits": "總學分",
-      "ccxp_title": "從校務資訊系統匯入",
-      "ccxp_description": "匯入本學期前，先確認 CCXP 課表會如何變更。",
-      "ccxp_added": "新增",
-      "ccxp_already_present": "已在你的課表",
-      "ccxp_removed": "取代時移除",
+      "ccxp_summary": "從 CCXP 匯入 {semester} 學期・新增 {added} 門・{already} 門已在課表",
+      "ccxp_status_new": "新增",
+      "ccxp_status_already": "已在課表",
+      "ccxp_status_removed": "取代時移除",
       "ccxp_merge": "合併到我的課表",
       "ccxp_replace": "取代本學期課表",
       "ccxp_replace_title": "取代本學期課表？",
@@ -154,8 +153,8 @@
       "ccxp_unknown_reasons": {
         "malformed": "課號格式不正確",
         "semester": "不屬於這個學期",
-        "unknown": "NTHUMods 找不到這門課",
-        "limit": "超過 60 門課的匯入上限"
+        "unknown": "找不到這門課",
+        "limit": "超過上限"
       }
     },
     "sidebar": {

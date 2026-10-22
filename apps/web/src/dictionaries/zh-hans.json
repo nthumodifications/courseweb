@@ -137,11 +137,10 @@
       "no_venue": "无上课地点",
       "courses_unit": "门课",
       "total_credits": "总学分",
-      "ccxp_title": "从校务资讯系统导入",
-      "ccxp_description": "导入本学期前，先确认 CCXP 课表会如何变更。",
-      "ccxp_added": "添加",
-      "ccxp_already_present": "已在你的课表",
-      "ccxp_removed": "取代时移除",
+      "ccxp_summary": "从 CCXP 导入 {semester} 学期・添加 {added} 门・{already} 门已在课表",
+      "ccxp_status_new": "添加",
+      "ccxp_status_already": "已在课表",
+      "ccxp_status_removed": "取代时移除",
       "ccxp_merge": "合并到我的课表",
       "ccxp_replace": "取代本学期课表",
       "ccxp_replace_title": "取代本学期课表？",
@@ -154,8 +153,8 @@
       "ccxp_unknown_reasons": {
         "malformed": "课号格式不正确",
         "semester": "不属于这个学期",
-        "unknown": "NTHUMods 找不到这门课",
-        "limit": "超过 60 门课的导入上限"
+        "unknown": "找不到这门课",
+        "limit": "超过上限"
       }
     },
     "sidebar": {

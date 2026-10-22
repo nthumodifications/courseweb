@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import {
   calculateTimetableImportDiff,
   decodeCcXpImportQuery,
+  getCcXpImportRows,
   isCcXpImportReady,
   normalizeCcxpCourseId,
 } from "./ccxpImport";
@@ -57,8 +58,9 @@ describe("CCXP timetable import parsing and diffs", () => {
   });
 
   test("bounds malformed raw input and reports omitted unknown IDs", () => {
-    const malformedIds = Array.from({ length: 10_000 }, (_, index) =>
-      `malformed-${index}`,
+    const malformedIds = Array.from(
+      { length: 10_000 },
+      (_, index) => `malformed-${index}`,
     );
     const decoded = decodeCcXpImportQuery(
       new URLSearchParams(`semester_11510=${malformedIds.join(",")}`),
@@ -115,4 +117,22 @@ describe("CCXP timetable import parsing and diffs", () => {
       expected,
     );
   });
+
+  test.each([
+    [
+      ["old", "same"],
+      ["same", "new"],
+      [
+        { id: "new", status: "new" },
+        { id: "same", status: "already" },
+        { id: "old", status: "removed" },
+      ],
+    ],
+    [["current"], [], [{ id: "current", status: "removed" }]],
+  ] as const)(
+    "sorts import rows by status: %s and %s",
+    (current, incoming, expected) => {
+      expect(getCcXpImportRows(current, incoming, [])).toMatchObject(expected);
+    },
+  );
 });

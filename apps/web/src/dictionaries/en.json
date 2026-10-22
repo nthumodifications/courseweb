@@ -137,11 +137,10 @@
       "no_venue": "No venue",
       "courses_unit": "courses",
       "total_credits": "total credits",
-      "ccxp_title": "Importing from CCXP",
-      "ccxp_description": "Review the changes from your CCXP timetable before importing this semester.",
-      "ccxp_added": "added",
-      "ccxp_already_present": "already in your timetable",
-      "ccxp_removed": "removed on replace",
+      "ccxp_summary": "From CCXP · {semester} · {added} new · {already} already in your timetable",
+      "ccxp_status_new": "New",
+      "ccxp_status_already": "Already added",
+      "ccxp_status_removed": "Removed if replaced",
       "ccxp_merge": "Merge into my timetable",
       "ccxp_replace": "Replace this semester",
       "ccxp_replace_title": "Replace this semester?",
@@ -154,8 +153,8 @@
       "ccxp_unknown_reasons": {
         "malformed": "invalid course number format",
         "semester": "does not belong to this semester",
-        "unknown": "course not found in NTHUMods",
-        "limit": "over the 60-course import limit"
+        "unknown": "course not found",
+        "limit": "over the import limit"
       }
     },
     "sidebar": {

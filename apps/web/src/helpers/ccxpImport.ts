@@ -26,6 +26,14 @@ export type TimetableImportDiff = {
   removed: string[];
 };
 
+export type CcXpImportRowStatus = "new" | "already" | "removed";
+
+export type CcXpImportRow<TCourse extends { raw_id: string }> = {
+  id: string;
+  status: CcXpImportRowStatus;
+  course: TCourse | null;
+};
+
 /** Converts the course number printed by CCXP into the NTHUMods shape. */
 export const normalizeCcxpCourseId = (value: string): string | null => {
   const match = COURSE_ID_PATTERN.exec(value.trim());
@@ -187,4 +195,54 @@ export const calculateTimetableImportDiff = (
     removed:
       mode === "replace" ? current.filter((id) => !incomingSet.has(id)) : [],
   };
+};
+
+/** Orders every course involved in the import by the answer shown to the user. */
+export const getCcXpImportRows = <TCourse extends { raw_id: string }>(
+  currentIds: readonly string[],
+  incomingIds: readonly string[],
+  courses: readonly TCourse[],
+): CcXpImportRow<TCourse>[] => {
+  const courseByCanonicalId = new Map<string, TCourse>();
+  courses.forEach((course) => {
+    courseByCanonicalId.set(course.raw_id, course);
+    courseByCanonicalId.set(
+      normalizeCcxpCourseId(course.raw_id) ?? course.raw_id,
+      course,
+    );
+  });
+
+  const canonicalCurrentIds = new Set(
+    currentIds.map((id) => normalizeCcxpCourseId(id) ?? id),
+  );
+  const seenIncomingIds = new Set<string>();
+  const rows: CcXpImportRow<TCourse>[] = [];
+
+  incomingIds.forEach((id) => {
+    const canonicalId = normalizeCcxpCourseId(id) ?? id;
+    if (seenIncomingIds.has(canonicalId)) return;
+    seenIncomingIds.add(canonicalId);
+    rows.push({
+      id: courseByCanonicalId.get(canonicalId)?.raw_id ?? id,
+      status: canonicalCurrentIds.has(canonicalId) ? "already" : "new",
+      course: courseByCanonicalId.get(canonicalId) ?? null,
+    });
+  });
+
+  currentIds.forEach((id) => {
+    const canonicalId = normalizeCcxpCourseId(id) ?? id;
+    if (seenIncomingIds.has(canonicalId)) return;
+    seenIncomingIds.add(canonicalId);
+    rows.push({
+      id,
+      status: "removed",
+      course: courseByCanonicalId.get(canonicalId) ?? null,
+    });
+  });
+
+  return rows.sort(
+    (a, b) =>
+      ["new", "already", "removed"].indexOf(a.status) -
+      ["new", "already", "removed"].indexOf(b.status),
+  );
 };
