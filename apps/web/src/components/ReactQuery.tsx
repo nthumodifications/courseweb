@@ -6,6 +6,7 @@ import {
 import {
   PersistQueryClientProvider,
   persistQueryClientSave,
+  type Persister,
 } from "@tanstack/react-query-persist-client";
 import { PropsWithChildren } from "react";
 import { createIDBPersister } from "@/lib/idb_persister";
@@ -19,8 +20,6 @@ const queryClient = new QueryClient({
   },
 });
 
-const persister = createIDBPersister("nthumods_queries");
-
 // Keep the default rule (successful queries only): a pending query carries a
 // Promise, which IndexedDB cannot clone, so the whole snapshot would fail.
 export const shouldPersistQuery = (query: Query) =>
@@ -28,18 +27,22 @@ export const shouldPersistQuery = (query: Query) =>
   query.queryKey[0] !== "issues" &&
   query.queryKey[0] !== "issue-report";
 
-const persistOptions = {
-  persister,
-  dehydrateOptions: { shouldDehydrateQuery: shouldPersistQuery },
-};
+type ReactQueryProps = PropsWithChildren<{ persister?: Persister }>;
 
-const handleRestore = async () => {
-  queryClient.removeQueries({ queryKey: ["issues"] });
-  queryClient.removeQueries({ queryKey: ["issue-report"] });
-  await persistQueryClientSave({ queryClient, ...persistOptions });
-};
+const ReactQuery = ({
+  children,
+  persister = createIDBPersister("nthumods_queries"),
+}: ReactQueryProps) => {
+  const persistOptions = {
+    persister,
+    dehydrateOptions: { shouldDehydrateQuery: shouldPersistQuery },
+  };
+  const handleRestore = async () => {
+    queryClient.removeQueries({ queryKey: ["issues"] });
+    queryClient.removeQueries({ queryKey: ["issue-report"] });
+    await persistQueryClientSave({ queryClient, ...persistOptions });
+  };
 
-const ReactQuery = ({ children }: PropsWithChildren) => {
   return (
     <PersistQueryClientProvider
       client={queryClient}
