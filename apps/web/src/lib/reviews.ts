@@ -1,0 +1,341 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "react-oidc-context";
+import { parsePttPostedAt } from "@courseweb/shared";
+
+export type Attendance = "none" | "sometimes" | "every_class";
+export type ExamStyle = "written" | "oral" | "project" | "report" | "none";
+export type ReviewRating = 1 | 2 | 3 | 4 | 5;
+
+export type Review = {
+  id: string;
+  moduleKey: string;
+  instructor: string;
+  semester: string | null;
+  coolness: ReviewRating | null;
+  sweetness: ReviewRating | null;
+  learning: ReviewRating | null;
+  attendance: Attendance | null;
+  examStyle: readonly ExamStyle[];
+  body: string;
+  source: "native" | "ptt";
+  sourceUrl: string | null;
+  sourceAuthor: string | null;
+  sourcePostedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  edited: boolean;
+  mine: boolean;
+  /** Compatibility with v1 fixtures while the branch is being migrated. */
+  workload?: ReviewRating | null;
+  grading?: ReviewRating | null;
+};
+
+export type ReviewWithStatus = Review & {
+  status: "visible" | "hidden" | "removed";
+};
+
+export type ReviewSummary = {
+  count: number;
+  coolness: number | null;
+  sweetness: number | null;
+  learning: number | null;
+  /** Compatibility with v1 fixtures while the branch is being migrated. */
+  workload?: number | null;
+  grading?: number | null;
+};
+
+export const reviewSummaryHasAverages = (summary: ReviewSummary) =>
+  (summary.coolness ?? summary.workload ?? null) !== null &&
+  (summary.sweetness ?? summary.grading ?? null) !== null &&
+  summary.learning !== null;
+
+type NativeReviewInput = {
+  moduleKey: string;
+  instructor: string;
+  semester: string;
+  coolness: ReviewRating;
+  sweetness: ReviewRating;
+  learning: ReviewRating;
+  attendance: Attendance;
+  examStyle: ExamStyle[];
+  body: string;
+};
+
+export type ReviewInput =
+  | NativeReviewInput
+  | (Omit<NativeReviewInput, "coolness" | "sweetness"> & {
+      /** Compatibility with v1 callers; new UI sends coolness/sweetness. */
+      workload: ReviewRating;
+      grading: ReviewRating;
+    });
+
+export type ReviewUpdate = Partial<
+  Omit<NativeReviewInput, "moduleKey" | "instructor">
+>;
+
+export type ReportReason =
+  | "personal_attack"
+  | "exam_leak"
+  | "spam"
+  | "off_topic"
+  | "other";
+
+export class ReviewApiError extends Error {
+  readonly status: number;
+  readonly code: string;
+  readonly details: unknown;
+
+  constructor(status: number, code: string, details?: unknown) {
+    super(code);
+    this.name = "ReviewApiError";
+    this.status = status;
+    this.code = code;
+    this.details = details;
+  }
+}
+
+const reviewsBaseUrl = () =>
+  `${import.meta.env.VITE_NTHUMODS_AUTH_URL || "https://auth.nthumods.com"}/api/reviews`;
+
+const request = async <T>(
+  path: string,
+  init: RequestInit = {},
+  token?: string | null,
+): Promise<T> => {
+  const headers = new Headers(init.headers);
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  if (init.body) headers.set("Content-Type", "application/json");
+  const response = await fetch(`${reviewsBaseUrl()}${path}`, {
+    ...init,
+    headers,
+  });
+
+  if (!response.ok) {
+    let body: { error?: string; id?: string } = {};
+    try {
+      body = (await response.json()) as typeof body;
+    } catch {
+      // Keep the HTTP status when an intermediary returns non-JSON.
+    }
+    throw new ReviewApiError(
+      response.status,
+      body.error ?? "request_failed",
+      body,
+    );
+  }
+
+  if (response.status === 204) return undefined as T;
+  return (await response.json()) as T;
+};
+
+export const reviewKeys = {
+  all: ["reviews"] as const,
+  list: (
+    target: { moduleKey?: string; instructor?: string },
+    identity = "anon",
+  ) => ["reviews", "list", identity, target] as const,
+  mine: ["reviews", "mine"] as const,
+};
+
+export const listReviews = async (
+  target: { moduleKey?: string; instructor?: string },
+  token?: string | null,
+) => {
+  const params = new URLSearchParams();
+  if (target.moduleKey) params.set("moduleKey", target.moduleKey);
+  if (target.instructor) params.set("instructor", target.instructor);
+  const query = params.toString();
+  const result = await request<{ reviews: Review[]; summary: ReviewSummary }>(
+    query ? `?${query}` : "",
+    undefined,
+    token,
+  );
+  return {
+    ...result,
+    reviews: result.reviews.map(normalizeReview),
+  };
+};
+
+export const listMine = async (token: string) => {
+  const result = await request<{ reviews: ReviewWithStatus[] }>(
+    "/mine",
+    undefined,
+    token,
+  );
+  return {
+    ...result,
+    reviews: result.reviews.map((review) => ({
+      ...normalizeReview(review),
+      status: review.status,
+    })),
+  };
+};
+
+export const normalizeReview = (
+  review: Partial<Review> & Record<string, unknown>,
+): Review => {
+  const source = review.source === "ptt" ? "ptt" : "native";
+  return {
+    ...review,
+    id: String(review.id ?? ""),
+    moduleKey: String(review.moduleKey ?? ""),
+    instructor: String(review.instructor ?? ""),
+    semester: typeof review.semester === "string" ? review.semester : null,
+    coolness: (review.coolness ??
+      review.workload ??
+      null) as Review["coolness"],
+    sweetness: (review.sweetness ??
+      review.grading ??
+      null) as Review["sweetness"],
+    learning: (review.learning ?? null) as Review["learning"],
+    attendance:
+      source === "ptt"
+        ? ((review.attendance ?? null) as Attendance | null)
+        : ((review.attendance ?? "none") as Attendance),
+    examStyle: Array.isArray(review.examStyle)
+      ? (review.examStyle as ExamStyle[])
+      : [],
+    body: typeof review.body === "string" ? review.body : "",
+    source,
+    sourceUrl: typeof review.sourceUrl === "string" ? review.sourceUrl : null,
+    sourceAuthor:
+      typeof review.sourceAuthor === "string" ? review.sourceAuthor : null,
+    sourcePostedAt:
+      source === "ptt" && typeof review.sourcePostedAt === "string"
+        ? parsePttPostedAt(review.sourcePostedAt)
+        : null,
+    createdAt:
+      typeof review.createdAt === "string"
+        ? review.createdAt
+        : "1970-01-01T00:00:00.000Z",
+    updatedAt:
+      typeof review.updatedAt === "string"
+        ? review.updatedAt
+        : "1970-01-01T00:00:00.000Z",
+    edited: review.edited === true,
+    mine: review.mine === true,
+  };
+};
+
+export const createReview = (values: ReviewInput, token: string) =>
+  request<{ review: Review }>(
+    "",
+    { method: "POST", body: JSON.stringify(values) },
+    token,
+  );
+
+export const updateReview = (id: string, values: ReviewUpdate, token: string) =>
+  request<{ review: Review }>(
+    `/${encodeURIComponent(id)}`,
+    { method: "PATCH", body: JSON.stringify(values) },
+    token,
+  );
+
+export const deleteReview = (id: string, token: string) =>
+  request<void>(`/${encodeURIComponent(id)}`, { method: "DELETE" }, token);
+
+export const reportReview = (
+  id: string,
+  values: { reason: ReportReason; note?: string },
+  token: string,
+) =>
+  request<{ ok: true }>(
+    `/${encodeURIComponent(id)}/report`,
+    { method: "POST", body: JSON.stringify(values) },
+    token,
+  );
+
+const useReviewToken = () => {
+  const auth = useAuth();
+  return auth.isAuthenticated && !auth.user?.expired
+    ? (auth.user?.access_token ?? null)
+    : null;
+};
+
+export const useReviews = (target: {
+  moduleKey?: string;
+  instructor?: string;
+}) => {
+  const auth = useAuth();
+  const token =
+    auth.isAuthenticated && !auth.user?.expired
+      ? (auth.user?.access_token ?? null)
+      : null;
+  const identity =
+    auth.isAuthenticated && !auth.user?.expired
+      ? (auth.user?.profile.sub ?? "anon")
+      : "anon";
+  return useQuery({
+    queryKey: reviewKeys.list(target, identity),
+    queryFn: () => listReviews(target, token),
+    enabled: Boolean(target.moduleKey || target.instructor),
+  });
+};
+
+export const useMyReviews = () => {
+  const token = useReviewToken();
+  return useQuery({
+    queryKey: reviewKeys.mine,
+    queryFn: () => listMine(token!),
+    enabled: Boolean(token),
+  });
+};
+
+const useInvalidateReviews = () => {
+  const queryClient = useQueryClient();
+  return () => queryClient.invalidateQueries({ queryKey: reviewKeys.all });
+};
+
+export const useCreateReview = () => {
+  const token = useReviewToken();
+  const invalidate = useInvalidateReviews();
+  return useMutation({
+    mutationFn: (values: ReviewInput) => {
+      if (!token) throw new ReviewApiError(401, "unauthorized");
+      return createReview(values, token);
+    },
+    onSuccess: invalidate,
+  });
+};
+
+export const useUpdateReview = () => {
+  const token = useReviewToken();
+  const invalidate = useInvalidateReviews();
+  return useMutation({
+    mutationFn: ({ id, values }: { id: string; values: ReviewUpdate }) => {
+      if (!token) throw new ReviewApiError(401, "unauthorized");
+      return updateReview(id, values, token);
+    },
+    onSuccess: invalidate,
+  });
+};
+
+export const useDeleteReview = () => {
+  const token = useReviewToken();
+  const invalidate = useInvalidateReviews();
+  return useMutation({
+    mutationFn: (id: string) => {
+      if (!token) throw new ReviewApiError(401, "unauthorized");
+      return deleteReview(id, token);
+    },
+    onSuccess: invalidate,
+  });
+};
+
+export const useReportReview = () => {
+  const token = useReviewToken();
+  const invalidate = useInvalidateReviews();
+  return useMutation({
+    mutationFn: ({
+      id,
+      values,
+    }: {
+      id: string;
+      values: { reason: ReportReason; note?: string };
+    }) => {
+      if (!token) throw new ReviewApiError(401, "unauthorized");
+      return reportReview(id, values, token);
+    },
+    onSuccess: invalidate,
+  });
+};

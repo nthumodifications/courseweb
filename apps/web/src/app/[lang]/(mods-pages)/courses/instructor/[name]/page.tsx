@@ -27,6 +27,7 @@ import {
   CoursePageState,
 } from "@/components/Courses/CoursePageFrame";
 import type { Language } from "@/types/settings";
+import ReviewsSection from "@/components/Reviews/ReviewsSection";
 
 const STALE_TIME = 24 * 60 * 60 * 1000;
 
@@ -149,6 +150,21 @@ export const InstructorPageContent = ({
 
   const instructorOfferings = offerings ?? [];
   const groups = groupInstructorOfferings(instructorOfferings);
+  const reviewCourseLabels = useMemo(
+    () =>
+      Object.fromEntries(
+        groups.map((group) => [
+          group.key,
+          [
+            `${group.department} ${group.course}`,
+            getInstructorModuleTitle(group, lang),
+          ]
+            .filter(Boolean)
+            .join(" · "),
+        ]),
+      ),
+    [groups, lang],
+  );
   const englishNames = getInstructorEnglishNames(instructorOfferings, name);
   const namesakeClusters = clusterEnglishNames(englishNames);
   const departments = [...new Set(groups.map((group) => group.department))];
@@ -246,6 +262,11 @@ export const InstructorPageContent = ({
                 dict={dict}
               />
             ))}
+            <ReviewsSection
+              lang={lang}
+              instructor={displayName}
+              courseLabels={reviewCourseLabels}
+            />
           </div>
         </div>
       </CoursePageContent>

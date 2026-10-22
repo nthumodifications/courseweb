@@ -44,7 +44,17 @@ const useSyncedStorage = <T = unknown,>(
   key: string,
   defaultValue: T,
   mergeData?: MergeData<T>,
-): [T, (newData: T | ((prevData: T) => T)) => void, boolean, boolean] => {
+): [
+  T,
+  (newData: T | ((prevData: T) => T)) => void,
+  boolean,
+  boolean,
+  {
+    uploading: boolean;
+    uploadFailed: boolean;
+    lastSyncedAt: number | null;
+  },
+] => {
   const { user, isAuthenticated } = useAuth();
   const [deviceId] = useState(getDeviceId);
   const userId = user?.profile.sub;
@@ -60,6 +70,9 @@ const useSyncedStorage = <T = unknown,>(
   const [data, setDataState] = useState<SyncedData<T>>(() =>
     normalizeSyncedData<T>(localData, deviceId),
   );
+  const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadFailed, setUploadFailed] = useState(false);
   const authSessionKey = user?.expires_at ?? 0;
   const reconciledUserRef = useRef<string>();
   const localFallbackSettledRef = useRef<string>();
@@ -67,6 +80,8 @@ const useSyncedStorage = <T = unknown,>(
 
   const {
     data: remoteData,
+    dataUpdatedAt,
+    isFetchedAfterMount,
     isFetching: isRemoteFetching,
     isPaused: isRemotePaused,
     isSuccess: isRemoteReadSuccessful,
@@ -143,13 +158,23 @@ const useSyncedStorage = <T = unknown,>(
       const version = `${nextData.updatedAt}:${nextData.deviceId}`;
       if (uploadedVersionRef.current === version) return;
       uploadedVersionRef.current = version;
+      setUploading(true);
+      setUploadFailed(false);
 
-      void postData(nextData, merge).catch((error: unknown) => {
-        if (uploadedVersionRef.current === version) {
+      void postData(nextData, merge)
+        .then(() => {
+          if (uploadedVersionRef.current !== version) return;
+          setUploading(false);
+          setUploadFailed(false);
+          setLastSyncedAt(Date.now());
+        })
+        .catch((error: unknown) => {
+          if (uploadedVersionRef.current !== version) return;
           uploadedVersionRef.current = undefined;
-        }
-        console.error(error);
-      });
+          setUploading(false);
+          setUploadFailed(true);
+          console.error(error);
+        });
     },
     [postData],
   );
@@ -174,7 +199,34 @@ const useSyncedStorage = <T = unknown,>(
     reconciledUserRef.current = undefined;
     localFallbackSettledRef.current = undefined;
     uploadedVersionRef.current = undefined;
+    setLastSyncedAt(null);
+    setUploading(false);
+    setUploadFailed(false);
   }, [storageKey]);
+
+  useEffect(() => {
+    if (
+      !storageKeyChanged &&
+      isRemoteReadSuccessful &&
+      isFetchedAfterMount &&
+      !isRemoteFetching &&
+      !isRemoteReadError &&
+      !isRemoteRefetchError &&
+      !isRemotePaused
+    ) {
+      setLastSyncedAt(dataUpdatedAt);
+    }
+  }, [
+    dataUpdatedAt,
+    isFetchedAfterMount,
+    isRemoteFetching,
+    isRemotePaused,
+    isRemoteReadError,
+    isRemoteReadSuccessful,
+    isRemoteRefetchError,
+    remoteData,
+    storageKeyChanged,
+  ]);
 
   useEffect(() => {
     if (userId || storageKeyChanged || typeof window === "undefined") {
@@ -263,6 +315,8 @@ const useSyncedStorage = <T = unknown,>(
     }
     if (reconciliation.upload) {
       upload(reconciliation.data, reconciliation.upload.merge);
+    } else {
+      setUploadFailed(false);
     }
   }, [
     authSessionKey,
@@ -330,6 +384,7 @@ const useSyncedStorage = <T = unknown,>(
     updateData,
     isSettled,
     syncError,
+    { uploading, uploadFailed, lastSyncedAt },
   ] as const;
 };
 

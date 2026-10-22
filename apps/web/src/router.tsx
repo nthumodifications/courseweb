@@ -35,6 +35,9 @@ const TimetablePage = lazyWithRetry(
 const TimetableViewPage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/timetable/view/page"),
 );
+const PastReviewsPage = lazyWithRetry(
+  () => import("@/app/[lang]/reviews/past/page"),
+);
 const CoursesPage = lazyWithRetry(routeLoaders.courses);
 const CourseDetailPage = lazyWithRetry(routeLoaders.courseDetail);
 const ModulePage = lazyWithRetry(routeLoaders.module);
@@ -163,6 +166,9 @@ const AdminAuditPage = lazyWithRetry(
 const AdminRecruitmentPage = lazyWithRetry(
   () => import("@/app/[lang]/admin/recruitment/page"),
 );
+const AdminReviewsPage = lazyWithRetry(
+  () => import("@/app/[lang]/admin/reviews/page"),
+);
 
 // Separate layout page
 const WaitlistPage = lazyWithRetry(() => import("@/app/[lang]/waitlist/page"));
@@ -239,6 +245,14 @@ export const appRoutes = [
                     "View your NTHU course timetable in a clean weekly layout.",
                   descriptionZh:
                     "以週檢視模式查看清大課表，清楚掌握每日上課時間。",
+                },
+              },
+              {
+                path: "reviews/past",
+                element: <PastReviewsPage />,
+                handle: {
+                  title: "Past course reviews",
+                  titleZhKey: "course.details.native_reviews.past_page.title",
                 },
               },
               {
@@ -642,6 +656,7 @@ export const appRoutes = [
               { path: "users/:userId", element: <AdminUserDetailPage /> },
               { path: "announcements", element: <AdminAnnouncementsPage /> },
               { path: "recruitment", element: <AdminRecruitmentPage /> },
+              { path: "reviews", element: <AdminReviewsPage /> },
               { path: "clients", element: <AdminClientsPage /> },
               { path: "audit", element: <AdminAuditPage /> },
             ],
