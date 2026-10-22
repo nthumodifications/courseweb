@@ -100,6 +100,7 @@ const recordCourseChanges = async (
   supabase: ReturnType<typeof createSupabaseClient>,
   semester: string,
   currentRows: Course[],
+  detectedAt: string,
 ): Promise<void> => {
   const previousRows = await readExistingCourseRows(supabase, semester);
   if (previousRows.length === 0) return;
@@ -121,7 +122,9 @@ const recordCourseChanges = async (
     { previouslyRemovedIds },
   );
   for (let offset = 0; offset < changes.length; offset += CHANGE_LOG_INSERT_CHUNK_SIZE) {
-    const chunk = changes.slice(offset, offset + CHANGE_LOG_INSERT_CHUNK_SIZE);
+    const chunk = changes
+      .slice(offset, offset + CHANGE_LOG_INSERT_CHUNK_SIZE)
+      .map((change) => ({ ...change, detected_at: detectedAt }));
     const { error } = await supabase.from("course_changes").insert(chunk);
     if (error) {
       console.error(
@@ -209,9 +212,10 @@ export const syncCourseRows = async (
   options: CourseSyncOptions = {},
 ): Promise<void> => {
   const timeoutMs = options.changeLogTimeoutMs ?? COURSE_CHANGE_LOG_TIMEOUT_MS;
+  const detectedAt = new Date().toISOString();
   try {
     await withTimeout(
-      recordCourseChanges(supabase, semester, normalizedCourses),
+      recordCourseChanges(supabase, semester, normalizedCourses, detectedAt),
       timeoutMs,
     );
   } catch (error) {

@@ -76,3 +76,58 @@ test("continues to course upsert when course change logging times out", async ()
 
   expect(upsertedChunks).toEqual([[course]]);
 });
+
+test("uses one detected_at timestamp across course change insert chunks", async () => {
+  const previousCourses = Array.from({ length: 501 }, (_, index) => ({
+    ...course,
+    raw_id: `11510-CS ${String(index).padStart(4, "0")}00`,
+    capacity: 50,
+  }));
+  const currentCourses = previousCourses.map((previous) => ({
+    ...previous,
+    capacity: 60,
+  }));
+  const insertedChanges: Array<{ detected_at: string }> = [];
+  const supabase = {
+    from(table: string) {
+      if (table === "courses") {
+        return {
+          select: () => ({
+            eq: () => ({
+              order: () => ({
+                range: async () => ({ data: previousCourses, error: null }),
+              }),
+            }),
+          }),
+          upsert: async () => ({ error: null }),
+        };
+      }
+
+      return {
+        select: () => ({
+          eq: () => ({
+            in: () => ({
+              order: () => ({
+                range: async () => ({ data: [], error: null }),
+              }),
+            }),
+          }),
+        }),
+        insert: async (rows: Array<{ detected_at: string }>) => {
+          insertedChanges.push(...rows);
+          return { error: null };
+        },
+      };
+    },
+  } as unknown as Parameters<typeof syncCourseRows>[0];
+
+  await syncCourseRows(supabase, "11510", currentCourses);
+
+  expect(insertedChanges).toHaveLength(501);
+  expect(
+    new Set(insertedChanges.map(({ detected_at }) => detected_at)).size,
+  ).toBe(1);
+  expect(new Date(insertedChanges[0].detected_at).toString()).not.toBe(
+    "Invalid Date",
+  );
+});
