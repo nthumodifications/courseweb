@@ -8,6 +8,7 @@ import adminHandler from "./admin";
 import { createKvStorageApp } from "./kv_storage";
 import { createCalendarApp } from "./calendar";
 import { resolveUserStorageMode } from "../storage/userStore";
+import reviewsHandler from "./reviews";
 
 const userStorageMode = resolveUserStorageMode();
 
@@ -38,6 +39,7 @@ const app = new Hono()
   .route("/apikeys", apiKeysHandler)
   .route("/calendar", createCalendarApp(undefined, userStorageMode))
   .route("/course-dates", courseDatesHandler)
+  .route("/reviews", reviewsHandler)
   .route("/admin", adminHandler);
 
 export default app;

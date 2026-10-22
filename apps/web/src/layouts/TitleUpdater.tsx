@@ -13,7 +13,9 @@ interface RouteHandle {
   description?: string;
   descriptionZh?: string;
   noindex?: boolean;
-  titleZhKey?: "course.instructor.title";
+  titleZhKey?:
+    | "course.instructor.title"
+    | "course.details.native_reviews.past_page.title";
 }
 
 const BASE_URL = "https://nthumods.com";
@@ -139,7 +141,9 @@ const TitleUpdater = () => {
   const dictionaryTitle =
     handle?.titleZhKey === "course.instructor.title"
       ? dict.course.instructor.title
-      : undefined;
+      : handle?.titleZhKey === "course.details.native_reviews.past_page.title"
+        ? dict.course.details.native_reviews.past_page.title
+        : undefined;
   const pageTitle = localize(getPageTitle(isZh, dictionaryTitle, handle) ?? "");
   const description = localize(getDescription(isZh, handle));
   const fullTitle = localize(getFullTitle(isZh, pageTitle || undefined));

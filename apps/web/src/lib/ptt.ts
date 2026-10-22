@@ -1,3 +1,15 @@
+import {
+  normalizePttUrl,
+  parsePttPostedAt,
+  parsePttRating,
+} from "@courseweb/shared";
+
+export {
+  normalizePttUrl,
+  parsePttPostedAt,
+  parsePttRating,
+} from "@courseweb/shared";
+
 export type PttReviewFields = {
   courseName: string | null;
   instructor: string | null;
@@ -29,6 +41,8 @@ export type PttReview = PttReviewFields & {
   body: string;
   content: string;
   date: string | null;
+  sourceUrl: string | null;
+  sourceAuthor: string | null;
   blocks: PttReviewBlock[];
 };
 
@@ -174,13 +188,20 @@ const dateFrom = (input: unknown) => {
   return typeof date === "string" && date.trim() ? date.trim() : null;
 };
 
-function plainReview(body: string, date: string | null): PttReview {
+function plainReview(
+  body: string,
+  date: string | null,
+  sourceUrl: string | null = null,
+  sourceAuthor: string | null = null,
+): PttReview {
   return {
     ...emptyFields(),
     parsed: false,
     body,
     content: body,
-    date,
+    date: parsePttPostedAt(date),
+    sourceUrl,
+    sourceAuthor,
     blocks: [{ kind: "text", text: body }],
   };
 }
@@ -188,6 +209,8 @@ function plainReview(body: string, date: string | null): PttReview {
 export function parsePttReview(input: {
   text: string;
   date?: string | null;
+  sourceUrl?: string | null;
+  sourceAuthor?: string | null;
 }): PttReview {
   const body = input.text.replace(/\r\n?/g, "\n").trim();
   const { blocks, fields } = parseBlocks(body);
@@ -203,14 +226,31 @@ export function parsePttReview(input: {
     parsed,
     body,
     content: body,
-    date: input.date?.trim() || null,
+    date: parsePttPostedAt(input.date ?? null),
+    sourceUrl: normalizePttUrl(input.sourceUrl ?? null),
+    sourceAuthor: input.sourceAuthor?.trim() || null,
     blocks,
   };
 }
 
 /** Convert the API's current { content, date } response into the web view model. */
 export function parsePttResponse(input: unknown): PttReview {
-  return parsePttReview({ text: bodyFrom(input), date: dateFrom(input) });
+  const record =
+    input && typeof input === "object"
+      ? (input as Record<string, unknown>)
+      : {};
+  const sourceUrl = ["sourceUrl", "url", "link"].find(
+    (key) => typeof record[key] === "string" && record[key],
+  );
+  const sourceAuthor = ["sourceAuthor", "author", "authorId"].find(
+    (key) => typeof record[key] === "string" && record[key],
+  );
+  return parsePttReview({
+    text: bodyFrom(input),
+    date: dateFrom(input),
+    sourceUrl: sourceUrl ? String(record[sourceUrl]) : null,
+    sourceAuthor: sourceAuthor ? String(record[sourceAuthor]) : null,
+  });
 }
 
 /** Keep an old persisted response visible as the plain text shown by the main branch. */
@@ -224,7 +264,13 @@ export function normalizePttReview(input: unknown): PttReview {
     return input as PttReview;
   }
   const body = bodyFrom(input).replace(/\r\n?/g, "\n").trim();
-  return plainReview(body, dateFrom(input));
+  const record = input as Record<string, unknown>;
+  return plainReview(
+    body,
+    dateFrom(input),
+    typeof record.sourceUrl === "string" ? record.sourceUrl : null,
+    typeof record.sourceAuthor === "string" ? record.sourceAuthor : null,
+  );
 }
 
 export function getPttRenderedTextFragments(review: PttReview) {
