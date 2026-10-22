@@ -189,6 +189,7 @@ export function AIPreferencesPanel() {
       </div>
 
       <SettingItem
+        id="setting-ai-department"
         title={dict.settings.ai.profile.department.label}
         control={
           <Popover
@@ -265,6 +266,7 @@ export function AIPreferencesPanel() {
       />
 
       <SettingItem
+        id="setting-ai-entrance-year"
         title={dict.settings.ai.profile.entrance_year.label}
         control={
           <Select
@@ -290,6 +292,7 @@ export function AIPreferencesPanel() {
       />
 
       <SettingItem
+        id="setting-ai-api-key"
         title={dict.settings.ai.api_key.title}
         description={dict.settings.ai.api_key.description}
         control={
@@ -305,6 +308,7 @@ export function AIPreferencesPanel() {
       {settings.useCustomKey && (
         <>
           <SettingItem
+            id="setting-ai-api-key-value"
             title={dict.settings.ai.api_key.label}
             control={
               <div className="flex w-[min(60vw,480px)] flex-col gap-2">
