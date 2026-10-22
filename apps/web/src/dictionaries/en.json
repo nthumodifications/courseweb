@@ -136,7 +136,27 @@
       "import_all": "Import all",
       "no_venue": "No venue",
       "courses_unit": "courses",
-      "total_credits": "total credits"
+      "total_credits": "total credits",
+      "ccxp_title": "Importing from CCXP",
+      "ccxp_description": "Review the changes from your CCXP timetable before importing this semester.",
+      "ccxp_added": "added",
+      "ccxp_already_present": "already in your timetable",
+      "ccxp_removed": "removed on replace",
+      "ccxp_merge": "Merge into my timetable",
+      "ccxp_replace": "Replace this semester",
+      "ccxp_replace_title": "Replace this semester?",
+      "ccxp_replace_description": "This removes {count} courses.",
+      "ccxp_replace_confirm": "Replace",
+      "ccxp_unknown_title": "Courses not imported",
+      "ccxp_unknown_more": "and {count} more",
+      "ccxp_load_error": "Course data could not be loaded. Nothing was changed.",
+      "ccxp_syncing": "Waiting for timetable data to settle.",
+      "ccxp_unknown_reasons": {
+        "malformed": "invalid course number format",
+        "semester": "does not belong to this semester",
+        "unknown": "course not found in NTHUMods",
+        "limit": "over the 60-course import limit"
+      }
     },
     "sidebar": {
       "groups": "Groups",
@@ -935,7 +955,10 @@
       "syncDescription": "Sign in to sync your timetable and settings across devices.",
       "ccxp": {
         "title": "Proxy Login into your NTHU AIS Account",
-        "description": "Access more features by connecting with NTHU AIS securely."
+        "description": "Access more features by connecting with NTHU AIS securely.",
+        "import_title": "CCXP timetable import",
+        "import_description": "Use ccxp-lite to import a timetable from CCXP.",
+        "import_link": "Open ccxp-lite"
       },
       "logoutDescription": "Are you sure you want to log out?",
       "logoutConfimation": "Log out?",

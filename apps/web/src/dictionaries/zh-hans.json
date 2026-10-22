@@ -136,7 +136,27 @@
       "import_all": "导入全部",
       "no_venue": "无上课地点",
       "courses_unit": "门课",
-      "total_credits": "总学分"
+      "total_credits": "总学分",
+      "ccxp_title": "从校务资讯系统导入",
+      "ccxp_description": "导入本学期前，先确认 CCXP 课表会如何变更。",
+      "ccxp_added": "新增",
+      "ccxp_already_present": "已在你的课表",
+      "ccxp_removed": "取代时移除",
+      "ccxp_merge": "合并到我的课表",
+      "ccxp_replace": "取代本学期课表",
+      "ccxp_replace_title": "取代本学期课表？",
+      "ccxp_replace_description": "将移除 {count} 门课。",
+      "ccxp_replace_confirm": "取代",
+      "ccxp_unknown_title": "以下课程未导入",
+      "ccxp_unknown_more": "以及其他 {count} 门",
+      "ccxp_load_error": "无法加载课程资料，未变更任何内容。",
+      "ccxp_syncing": "正在等待课表资料完成同步。",
+      "ccxp_unknown_reasons": {
+        "malformed": "课号格式不正确",
+        "semester": "不属于这个学期",
+        "unknown": "NTHUMods 找不到这门课",
+        "limit": "超过 60 门课的导入上限"
+      }
     },
     "sidebar": {
       "groups": "群组",
@@ -935,7 +955,10 @@
       "syncDescription": "登录后即可在不同设备间同步课表与设置。",
       "ccxp": {
         "title": "代理登录校务资讯系统",
-        "description": "系统会用代理登录方式，让学生们可以在 NTHUMods 上轻松链接校务系统功能。"
+        "description": "系统会用代理登录方式，让学生们可以在 NTHUMods 上轻松链接校务系统功能。",
+        "import_title": "CCXP 课表导入",
+        "import_description": "使用 ccxp-lite 从校务资讯系统导入课表。",
+        "import_link": "开启 ccxp-lite"
       },
       "logoutDescription": "是否确定要登出？",
       "logoutConfimation": "确认登出",
