@@ -125,6 +125,17 @@ const renderSyncedStorage = async (
     getResult: () => result,
     queryClient,
     root,
+    rerender: async () => {
+      await act(async () => {
+        root.render(
+          createElement(
+            QueryClientProvider,
+            { client: queryClient },
+            createElement(Probe),
+          ),
+        );
+      });
+    },
   };
 };
 
@@ -237,6 +248,7 @@ describe("useSyncedStorage remote read states", () => {
   afterEach(() => {
     authState.isAuthenticated = true;
     authState.user = user;
+    user.expires_at = 1;
     activeDom?.window.close();
     activeDom = undefined;
     restoreGlobals();
@@ -306,6 +318,96 @@ describe("useSyncedStorage remote read states", () => {
     await cleanupSyncedStorage(rendered);
   });
 
+  const legacyUpgradeFixtures = [
+    {
+      label: "raw values",
+      records: {
+        courses: { "11410": ["RAW-COURSE"] },
+        course_favourites: ["RAW-FAVOURITE"],
+        course_color_map: { "RAW-COURSE": "#123456" },
+      },
+    },
+    {
+      label: "value and lastModified wrappers",
+      records: {
+        courses: {
+          value: { "11410": ["WRAPPED-COURSE"] },
+          lastModified: 123,
+        },
+        course_favourites: {
+          value: ["WRAPPED-FAVOURITE"],
+          lastModified: 124,
+        },
+        course_color_map: {
+          value: { "WRAPPED-COURSE": "#654321" },
+          lastModified: 125,
+        },
+      },
+    },
+  ] as const;
+
+  test.each(legacyUpgradeFixtures)(
+    "upgrades all pre-September $label records to anonymous scoped keys",
+    async ({ records }) => {
+      setupDom();
+      authState.isAuthenticated = false;
+      authState.user = undefined;
+
+      const expected = {
+        courses: records.courses.value ?? records.courses,
+        course_favourites:
+          records.course_favourites.value ?? records.course_favourites,
+        course_color_map:
+          records.course_color_map.value ?? records.course_color_map,
+      };
+      for (const key of [
+        "courses",
+        "course_favourites",
+        "course_color_map",
+      ] as const) {
+        const legacyValue = records[key];
+        window.localStorage.setItem(key, JSON.stringify(legacyValue));
+
+        const rendered = await renderSyncedStorage(() =>
+          useSyncedStorage(key, {}),
+        );
+        await waitForResult(
+          rendered.getResult,
+          (result) =>
+            JSON.stringify(result?.[0]) === JSON.stringify(expected[key]),
+        );
+
+        expect(rendered.getResult()?.[0]).toEqual(expected[key]);
+        expect(window.localStorage.getItem(key)).toBe(
+          JSON.stringify(legacyValue),
+        );
+        expect(
+          JSON.parse(
+            window.localStorage.getItem(getSyncedStorageKey(key))!,
+          ),
+        ).toMatchObject({ value: expected[key] });
+
+        authState.isAuthenticated = true;
+        authState.user = user;
+        await rendered.rerender();
+        expect(
+          window.localStorage.getItem(
+            getSyncedStorageKey(key, user.profile.sub),
+          ),
+        ).toBeNull();
+        expect(
+          window.localStorage.getItem(getSyncedStorageKey(key)),
+        ).not.toBeNull();
+
+        await cleanupSyncedStorage(rendered);
+        window.localStorage.removeItem(key);
+        window.localStorage.removeItem(getSyncedStorageKey(key));
+        authState.isAuthenticated = false;
+        authState.user = undefined;
+      }
+    },
+  );
+
   test("does not adopt a raw record while signed in, but retains it for recovery", async () => {
     setupDom();
     const legacyCourses = { "11410": ["LEGACY-COURSE"] };
@@ -352,6 +454,63 @@ describe("useSyncedStorage remote read states", () => {
       ),
     ).toBeNull();
 
+    await cleanupSyncedStorage(rendered);
+  });
+
+  test("returns the same account data after sign-out and sign-in on one device", async () => {
+    setupDom();
+    window.localStorage.setItem("nthumods_device_id", "device-a");
+    const storageKey = getSyncedStorageKey("courses", user.profile.sub);
+    const local = {
+      value: { "11410": ["ACCOUNT-COURSE"] },
+      lastModified: 100,
+      updatedAt: 100,
+      deviceId: "device-a",
+    };
+    window.localStorage.setItem(storageKey, JSON.stringify(local));
+    get.mockImplementationOnce(
+      async () =>
+        new Response(JSON.stringify({ error: "Not found" }), { status: 404 }),
+    );
+
+    const rendered = await renderSyncedStorage(() =>
+      useSyncedStorage("courses", {}, mergeCourseStorage),
+    );
+    await waitForResult(
+      rendered.getResult,
+      (result) =>
+        JSON.stringify(result?.[0]) ===
+        JSON.stringify({ "11410": ["ACCOUNT-COURSE"] }),
+    );
+
+    authState.isAuthenticated = false;
+    authState.user = undefined;
+    await rendered.rerender();
+    await waitForResult(
+      rendered.getResult,
+      (result) =>
+        JSON.stringify(result?.[0]) ===
+        JSON.stringify({ "11410": ["ACCOUNT-COURSE"] }),
+    );
+
+    authState.isAuthenticated = true;
+    authState.user = user;
+    user.expires_at = 2;
+    get.mockImplementationOnce(
+      async () =>
+        new Response(JSON.stringify({ error: "Not found" }), { status: 404 }),
+    );
+    await rendered.rerender();
+    await waitForResult(
+      rendered.getResult,
+      (result) =>
+        JSON.stringify(result?.[0]) ===
+        JSON.stringify({ "11410": ["ACCOUNT-COURSE"] }),
+    );
+
+    expect(JSON.parse(window.localStorage.getItem(storageKey)!)).toMatchObject(
+      local,
+    );
     await cleanupSyncedStorage(rendered);
   });
 
@@ -600,9 +759,9 @@ describe("useSyncedStorage remote read states", () => {
     await cleanupSyncedStorage(rendered);
   });
 
-  test("uses a newer remote course clear without uploading local data back", async () => {
+  test("device B clears stale local courses after device A cleared them", async () => {
     setupDom();
-    window.localStorage.setItem("nthumods_device_id", "device-a");
+    window.localStorage.setItem("nthumods_device_id", "device-b");
     const storageKey = getSyncedStorageKey("courses", user.profile.sub);
     window.localStorage.setItem(
       storageKey,
@@ -610,7 +769,7 @@ describe("useSyncedStorage remote read states", () => {
         value: { "11410": ["LOCAL-COURSE"] },
         lastModified: 100,
         updatedAt: 100,
-        deviceId: "device-a",
+        deviceId: "device-b",
       }),
     );
     get.mockImplementationOnce(
@@ -620,7 +779,7 @@ describe("useSyncedStorage remote read states", () => {
             value: {},
             lastModified: 200,
             updatedAt: 200,
-            deviceId: "device-b",
+            deviceId: "device-a",
           }),
           { status: 200 },
         ),
@@ -639,11 +798,16 @@ describe("useSyncedStorage remote read states", () => {
       await new Promise((resolve) => setTimeout(resolve, 20));
     });
     expect(post).not.toHaveBeenCalled();
+    expect(
+      JSON.parse(
+        window.localStorage.getItem(getSyncedStorageBackupKey(storageKey))!,
+      ),
+    ).toMatchObject({ value: { "11410": ["LOCAL-COURSE"] } });
 
     await cleanupSyncedStorage(rendered);
   });
 
-  test("uses a newer remote favourites clear without uploading local data back", async () => {
+  test("clears local favourites when the remote clear is newer", async () => {
     setupDom();
     window.localStorage.setItem("nthumods_device_id", "device-a");
     window.localStorage.setItem(
@@ -673,7 +837,8 @@ describe("useSyncedStorage remote read states", () => {
     );
     await waitForResult(
       rendered.getResult,
-      (result) => JSON.stringify(result?.[0]) === JSON.stringify([]),
+      (result) =>
+        JSON.stringify(result?.[0]) === JSON.stringify([]),
     );
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 20));
@@ -681,6 +846,15 @@ describe("useSyncedStorage remote read states", () => {
 
     expect(rendered.getResult()?.[0]).toEqual([]);
     expect(post).not.toHaveBeenCalled();
+    expect(
+      JSON.parse(
+        window.localStorage.getItem(
+          getSyncedStorageBackupKey(
+            getSyncedStorageKey("course_favourites", user.profile.sub),
+          ),
+        )!,
+      ),
+    ).toMatchObject({ value: ["LOCAL-FAVOURITE"] });
 
     await cleanupSyncedStorage(rendered);
   });

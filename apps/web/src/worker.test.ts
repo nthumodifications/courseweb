@@ -662,6 +662,7 @@ describe("Worker asset and shell caching", () => {
     "laundry",
     "youbike",
     "library",
+    "announcements",
     "map",
     "chat",
     "shops",

@@ -136,7 +136,26 @@
       "import_all": "匯入全部",
       "no_venue": "無上課地點",
       "courses_unit": "門課",
-      "total_credits": "總學分"
+      "total_credits": "總學分",
+      "ccxp_summary": "從 CCXP 匯入 {semester} 學期・新增 {added} 門・{already} 門已在課表",
+      "ccxp_status_new": "新增",
+      "ccxp_status_already": "已在課表",
+      "ccxp_status_removed": "取代時移除",
+      "ccxp_merge": "合併到我的課表",
+      "ccxp_replace": "取代本學期課表",
+      "ccxp_replace_title": "取代本學期課表？",
+      "ccxp_replace_description": "將移除 {count} 門課。",
+      "ccxp_replace_confirm": "取代",
+      "ccxp_unknown_title": "以下課程未匯入",
+      "ccxp_unknown_more": "以及其他 {count} 門",
+      "ccxp_load_error": "無法載入課程資料，未變更任何內容。",
+      "ccxp_syncing": "正在等待課表資料完成同步。",
+      "ccxp_unknown_reasons": {
+        "malformed": "課號格式不正確",
+        "semester": "不屬於這個學期",
+        "unknown": "找不到這門課",
+        "limit": "超過上限"
+      }
     },
     "sidebar": {
       "groups": "群組",
@@ -348,6 +367,30 @@
       "remarks": "備註",
       "description": "課程大綱",
       "restrictions": "課程限制",
+      "changes": {
+        "title": "變更紀錄",
+        "fields": {
+          "times": "時間",
+          "venues": "教室",
+          "teacher": "授課教師",
+          "teacher_zh": "授課教師",
+          "teacher_en": "授課教師",
+          "capacity": "人數限制",
+          "reserve": "保留名額",
+          "credits": "學分",
+          "closed_mark": "開課狀態",
+          "no_extra_selection": "不開放加選",
+          "note": "備註",
+          "restrictions": "課程限制",
+          "course": "課程"
+        },
+        "removed": "不再列於課程資料",
+        "reappeared": "重新列出",
+        "empty": "無",
+        "true_value": "是",
+        "false_value": "否",
+        "value_separator": "、"
+      },
       "prerequesites": "擋修",
       "prerequisite_based_on_offering": "依 {semester} 開課資料",
       "timetable": "時間表",
@@ -820,6 +863,26 @@
     "machine_number": "{type} {number}",
     "progress": "洗程進度"
   },
+  "announcements": {
+    "meta_title": "校園公告",
+    "meta_description": "追蹤清大各處室與系所，掌握校園公告與重要時限。",
+    "search_placeholder": "搜尋公告標題",
+    "filter_source": "依追蹤來源篩選",
+    "all_followed": "所有追蹤來源",
+    "manage_follows": "管理追蹤",
+    "manage_follows_description": "選擇要顯示在公告列表中的校園來源。",
+    "source_search_placeholder": "搜尋來源",
+    "source_language": {
+      "zh_tw": "中文",
+      "en": "英文"
+    },
+    "load_error": "目前無法取得校園公告",
+    "try_again": "再試一次",
+    "no_results": "沒有符合的追蹤公告",
+    "show_more": "顯示更多",
+    "attribution_prefix": "資料來源：",
+    "attribution_name": "NTHU-SA 清大學生會 NTHU-Data-API"
+  },
   "bus": {
     "north_gate": "北校門口",
     "tsmc": "台積館",
@@ -1033,7 +1096,10 @@
       "restoreConfirm": "還原",
       "ccxp": {
         "title": "代理登入校務資訊系統",
-        "description": "系統會用代理登入方式，讓學生們可以在 NTHUMods 上輕鬆連結校務系統功能。"
+        "description": "系統會用代理登入方式，讓學生們可以在 NTHUMods 上輕鬆連結校務系統功能。",
+        "import_title": "CCXP 課表匯入",
+        "import_description": "使用 ccxp-lite 從校務資訊系統匯入課表。",
+        "import_link": "開啟 ccxp-lite"
       },
       "logoutDescription": "是否確定要登出？",
       "logoutConfimation": "確認登出",
@@ -1195,6 +1261,9 @@
           },
           "grades": {
             "title": "成績與 GPA"
+          },
+          "announcements": {
+            "title": "校園公告"
           }
         },
         "weather": {

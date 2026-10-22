@@ -15,6 +15,7 @@ import {
   GraduationCap,
   WashingMachine,
   Library,
+  Megaphone,
 } from "lucide-react";
 import ChumeiIcon from "@/components/Apps/ChumeiIcon";
 
@@ -147,6 +148,15 @@ export const apps: AppDefinition[] = [
     title_en: "Dorm Laundry",
     href: "/laundry",
     Icon: WashingMachine,
+    beta: true,
+  },
+  {
+    id: "announcements",
+    category: "facilities",
+    title_zh: "校園公告",
+    title_en: "Campus Announcements",
+    href: "/announcements",
+    Icon: Megaphone,
     beta: true,
   },
   {

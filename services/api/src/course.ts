@@ -44,6 +44,15 @@ const courseParamValidator = zValidator(
     courseId: courseIdSchema,
   }),
 );
+const courseChangesQueryValidator = zValidator(
+  "query",
+  z.object({
+    semester: z.string().trim().min(1).max(20),
+    days: z.coerce.number().int().min(1).max(365).default(7),
+  }),
+);
+const courseChangeCacheControl =
+  "public, max-age=60, s-maxage=300, stale-while-revalidate=3600";
 
 const queryInChunks = async <T>(
   ids: string[],
@@ -82,6 +91,22 @@ const app = new Hono()
     }
     return c.json(data);
   })
+  .get("/changes", courseChangesQueryValidator, async (c) => {
+    const { semester, days } = c.req.valid("query");
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+    const { data, error } = await supabase_server(c)
+      .from("course_changes")
+      .select("*")
+      .eq("semester", semester)
+      .gte("detected_at", since)
+      .order("detected_at", { ascending: false })
+      .range(0, 499);
+    if (error) {
+      throw new Error(error.message);
+    }
+    c.header("Cache-Control", courseChangeCacheControl);
+    return c.json(data ?? []);
+  })
   .get("/dates", courseListQueryValidator, async (c) => {
     const { courses: _courses } = c.req.valid("query");
     const courses = Array.isArray(_courses) ? _courses : [_courses];
@@ -101,6 +126,20 @@ const app = new Hono()
         date: d.date,
       })),
     );
+  })
+  .get("/:courseId/changes", courseParamValidator, async (c) => {
+    const { courseId } = c.req.valid("param");
+    const { data, error } = await supabase_server(c)
+      .from("course_changes")
+      .select("*")
+      .eq("raw_id", courseId)
+      .order("detected_at", { ascending: false })
+      .range(0, 49);
+    if (error) {
+      throw new Error(error.message);
+    }
+    c.header("Cache-Control", courseChangeCacheControl);
+    return c.json(data ?? []);
   })
   .get("/:courseId", courseParamValidator, async (c) => {
     const { courseId } = c.req.valid("param");

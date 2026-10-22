@@ -136,7 +136,26 @@
       "import_all": "Import all",
       "no_venue": "No venue",
       "courses_unit": "courses",
-      "total_credits": "total credits"
+      "total_credits": "total credits",
+      "ccxp_summary": "From CCXP · {semester} · {added} new · {already} already in your timetable",
+      "ccxp_status_new": "New",
+      "ccxp_status_already": "Already added",
+      "ccxp_status_removed": "Removed if replaced",
+      "ccxp_merge": "Merge into my timetable",
+      "ccxp_replace": "Replace this semester",
+      "ccxp_replace_title": "Replace this semester?",
+      "ccxp_replace_description": "This removes {count} courses.",
+      "ccxp_replace_confirm": "Replace",
+      "ccxp_unknown_title": "Courses not imported",
+      "ccxp_unknown_more": "and {count} more",
+      "ccxp_load_error": "Course data could not be loaded. Nothing was changed.",
+      "ccxp_syncing": "Waiting for timetable data to settle.",
+      "ccxp_unknown_reasons": {
+        "malformed": "invalid course number format",
+        "semester": "does not belong to this semester",
+        "unknown": "course not found",
+        "limit": "over the import limit"
+      }
     },
     "sidebar": {
       "groups": "Groups",
@@ -348,6 +367,30 @@
       "remarks": "Remarks",
       "description": "Description",
       "restrictions": "Restrictions",
+      "changes": {
+        "title": "Changes",
+        "fields": {
+          "times": "Time",
+          "venues": "Venue",
+          "teacher": "Instructor",
+          "teacher_zh": "Instructor",
+          "teacher_en": "Instructor",
+          "capacity": "Capacity",
+          "reserve": "Reserved places",
+          "credits": "Credits",
+          "closed_mark": "Course status",
+          "no_extra_selection": "Extra selection",
+          "note": "Notes",
+          "restrictions": "Restrictions",
+          "course": "Course"
+        },
+        "removed": "No longer listed",
+        "reappeared": "Listed again",
+        "empty": "None",
+        "true_value": "Yes",
+        "false_value": "No",
+        "value_separator": ", "
+      },
       "prerequesites": "Prerequisites",
       "prerequisite_based_on_offering": "Based on the {semester} offering",
       "timetable": "Timetable",
@@ -820,6 +863,26 @@
     "machine_number": "{type} {number}",
     "progress": "Cycle progress"
   },
+  "announcements": {
+    "meta_title": "Campus Announcements",
+    "meta_description": "Follow NTHU offices and departments to keep up with campus deadlines and news.",
+    "search_placeholder": "Search announcement titles",
+    "filter_source": "Filter by followed source",
+    "all_followed": "All followed sources",
+    "manage_follows": "Manage follows",
+    "manage_follows_description": "Choose the campus sources shown in your feed.",
+    "source_search_placeholder": "Search sources",
+    "source_language": {
+      "zh_tw": "Chinese",
+      "en": "English"
+    },
+    "load_error": "Announcements are unavailable",
+    "try_again": "Try again",
+    "no_results": "No followed announcements found",
+    "show_more": "Show more",
+    "attribution_prefix": "Data:",
+    "attribution_name": "NTHU-SA NTHU-Data-API"
+  },
   "bus": {
     "north_gate": "North Gate",
     "tsmc": "TSMC",
@@ -1033,7 +1096,10 @@
       "restoreConfirm": "Restore",
       "ccxp": {
         "title": "Proxy Login into your NTHU AIS Account",
-        "description": "Access more features by connecting with NTHU AIS securely."
+        "description": "Access more features by connecting with NTHU AIS securely.",
+        "import_title": "CCXP timetable import",
+        "import_description": "Use ccxp-lite to import a timetable from CCXP.",
+        "import_link": "Open ccxp-lite"
       },
       "logoutDescription": "Are you sure you want to log out?",
       "logoutConfimation": "Log out?",
@@ -1195,6 +1261,9 @@
           },
           "grades": {
             "title": "Grades and GPA"
+          },
+          "announcements": {
+            "title": "Campus announcements"
           }
         },
         "weather": {

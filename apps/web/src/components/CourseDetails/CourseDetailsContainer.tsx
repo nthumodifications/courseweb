@@ -242,11 +242,15 @@ const CourseDetailContainer = ({
   courseId,
   bottomAware = false,
   modal = false,
+  courseChanges,
+  hasCourseChanges = false,
 }: {
   lang: Language;
   courseId: string;
   bottomAware?: boolean;
   modal?: boolean;
+  courseChanges?: ReactNode;
+  hasCourseChanges?: boolean;
 }) => {
   const dict = useDictionary();
   const localizeData = useLocalizedZhData();
@@ -923,6 +927,7 @@ const CourseDetailContainer = ({
                   </Table>
                 </div>
               </CourseDetailSection>
+              {courseChanges}
             </div>
             <div className="w-full lg:w-[284px] flex flex-col gap-4">
               <CourseDetailSection id="toc">
@@ -963,6 +968,12 @@ const CourseDetailContainer = ({
                         href="#other"
                         label={dict.course.details.related_courses}
                       />
+                      {hasCourseChanges && (
+                        <TOCNavItem
+                          href="#changes"
+                          label={dict.course.details.changes.title}
+                        />
+                      )}
                     </ul>
                   </div>
                 </ScrollArea>

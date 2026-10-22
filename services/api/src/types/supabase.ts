@@ -306,6 +306,47 @@ export type Database = {
         };
         Relationships: [];
       };
+      course_changes: {
+        Row: {
+          detected_at: string;
+          field: string;
+          id: number;
+          kind: string;
+          new_value: Json | null;
+          old_value: Json | null;
+          raw_id: string;
+          semester: string;
+        };
+        Insert: {
+          detected_at?: string;
+          field: string;
+          id?: number;
+          kind: string;
+          new_value?: Json | null;
+          old_value?: Json | null;
+          raw_id: string;
+          semester: string;
+        };
+        Update: {
+          detected_at?: string;
+          field?: string;
+          id?: number;
+          kind?: string;
+          new_value?: Json | null;
+          old_value?: Json | null;
+          raw_id?: string;
+          semester?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "course_changes_raw_id_fkey";
+            columns: ["raw_id"];
+            isOneToOne: false;
+            referencedRelation: "courses";
+            referencedColumns: ["raw_id"];
+          },
+        ];
+      };
       course_comments: {
         Row: {
           comment: string;

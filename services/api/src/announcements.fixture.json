@@ -1,0 +1,145 @@
+{
+  "sources": [
+    {
+      "title": "最新消息",
+      "link": "https://academic.example/zh",
+      "language": "zh-tw",
+      "department": "教務處"
+    },
+    {
+      "title": "News",
+      "link": "https://student.example/en",
+      "language": "en",
+      "department": "學務處"
+    }
+  ],
+  "zh": [
+    {
+      "title": "最新消息",
+      "link": "https://academic.example/zh",
+      "language": "zh-tw",
+      "department": "教務處",
+      "articles": [
+        {
+          "title": "Valid",
+          "link": "https://example/valid",
+          "date": "2026-10-20"
+        },
+        {
+          "title": "Invalid date",
+          "link": "https://example/invalid",
+          "date": "7"
+        },
+        { "title": "Old", "link": "https://example/old", "date": "2026-01-01" }
+      ]
+    }
+  ],
+  "en": [
+    {
+      "title": "News",
+      "link": "https://student.example/en",
+      "language": "en",
+      "department": "學務處",
+      "articles": [
+        {
+          "title": "English valid",
+          "link": "https://example/en",
+          "date": "2026-10-19"
+        }
+      ]
+    }
+  ],
+  "dedup": [
+    {
+      "title": "博士班最新公告",
+      "link": "https://graduate.example/doctoral",
+      "language": "zh-tw",
+      "department": "教務處招生策略中心",
+      "articles": [
+        {
+          "title": "116學年度碩、博士班甄試核定報名人數統計表",
+          "link": "https://example/doctoral",
+          "date": "2026-10-20"
+        }
+      ]
+    },
+    {
+      "title": "碩士班最新公告",
+      "link": "https://graduate.example/master",
+      "language": "zh-tw",
+      "department": "教務處招生策略中心",
+      "articles": [
+        {
+          "title": " 116學年度碩、博士班甄試核定報名人數統計表 ",
+          "link": "https://example/master",
+          "date": "2026-10-20"
+        }
+      ]
+    },
+    {
+      "title": "公告",
+      "link": "https://housing.example/notice",
+      "language": "zh-tw",
+      "department": "學務處學生住宿組",
+      "articles": [
+        {
+          "title": "防颱  注意事項",
+          "link": "https://example/typhoon-announcement",
+          "date": "2026-10-19"
+        }
+      ]
+    },
+    {
+      "title": "宣導",
+      "link": "https://housing.example/campaign",
+      "language": "zh-tw",
+      "department": "學務處學生住宿組",
+      "articles": [
+        {
+          "title": " 防颱   注意事項 ",
+          "link": "https://example/typhoon-campaign",
+          "date": "2026-10-19"
+        }
+      ]
+    },
+    {
+      "title": "公告",
+      "link": "https://housing.example/dorm-election-notice",
+      "language": "zh-tw",
+      "department": "學務處學生住宿組",
+      "articles": [
+        {
+          "title": "116年學生宿舍齋長改選辦法",
+          "link": "https://example/dorm-election",
+          "date": "2026-10-18"
+        }
+      ]
+    },
+    {
+      "title": "宣導",
+      "link": "https://housing.example/dorm-election-campaign",
+      "language": "zh-tw",
+      "department": "學務處學生住宿組",
+      "articles": [
+        {
+          "title": "116年學生宿舍齋長改選辦法",
+          "link": "https://example/dorm-election-campaign",
+          "date": "2026-10-18"
+        }
+      ]
+    },
+    {
+      "title": "衛生保健公告",
+      "link": "https://health.example/notice",
+      "language": "zh-tw",
+      "department": "學務處衛生保健組",
+      "articles": [
+        {
+          "title": "防颱注意事項",
+          "link": "https://example/typhoon-health",
+          "date": "2026-10-19"
+        }
+      ]
+    }
+  ]
+}

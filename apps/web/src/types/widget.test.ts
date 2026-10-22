@@ -40,6 +40,12 @@ describe("widget dashboard config migration", () => {
         enabled: false,
       },
       { id: "grades-default", type: "grades", order: 13, enabled: false },
+      {
+        id: "announcements-default",
+        type: "announcements",
+        order: 14,
+        enabled: false,
+      },
     ]);
   });
 
@@ -58,7 +64,7 @@ describe("widget dashboard config migration", () => {
         {
           id: "course-selection-default",
           type: "course-selection",
-          order: 14,
+          order: 15,
           enabled: true,
         },
       ],
@@ -95,7 +101,12 @@ describe("widget dashboard config migration", () => {
   });
 
   test("keeps a pre-slice layout order and appends new widgets disabled", () => {
-    const newTypes = new Set(["shops", "upcoming-events", "grades"]);
+    const newTypes = new Set([
+      "shops",
+      "upcoming-events",
+      "grades",
+      "announcements",
+    ]);
     const stored = {
       ...DEFAULT_DASHBOARD_CONFIG,
       widgets: DEFAULT_DASHBOARD_CONFIG.widgets
@@ -117,6 +128,12 @@ describe("widget dashboard config migration", () => {
         enabled: false,
       },
       { id: "grades-default", type: "grades", order: 33, enabled: false },
+      {
+        id: "announcements-default",
+        type: "announcements",
+        order: 34,
+        enabled: false,
+      },
     ]);
   });
 });

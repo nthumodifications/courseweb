@@ -2,6 +2,18 @@ import { describe, expect, it, mock } from "bun:test";
 import { createSupabaseServerMock } from "./test-helpers/module-mocks";
 
 const rowsById = new Map<string, { raw_id: string }>();
+const changeRows = [
+  {
+    id: 1,
+    raw_id: "11510-CS 101000",
+    semester: "11510",
+    field: "capacity",
+    old_value: 50,
+    new_value: 60,
+    kind: "changed",
+    detected_at: "2026-10-21T00:00:00.000Z",
+  },
+];
 const inQuery = mock(async (_column: string, ids: string[]) => ({
   data: ids.flatMap((id) => {
     const row = rowsById.get(id);
@@ -14,10 +26,33 @@ const eqQuery = mock(async (_column: string, id: string) => ({
   error: null,
 }));
 
+const createChain = (table: string) => {
+  const result = {
+    data: table === "course_changes" ? changeRows : [],
+    error: null,
+  };
+  const chain = {
+    gte: mock(() => chain),
+    order: mock(() => chain),
+    range: mock(async () => result),
+    then: (
+      resolve: (value: typeof result) => unknown,
+      reject?: (reason: unknown) => unknown,
+    ) => Promise.resolve(result).then(resolve, reject),
+  };
+  return chain;
+};
+
 mock.module("./config/supabase_server", () =>
   createSupabaseServerMock(() => ({
-    from: () => ({
-      select: () => ({ in: inQuery, eq: eqQuery }),
+    from: (table: string) => ({
+      select: () => ({
+        in: table === "courses" ? inQuery : async () => ({ data: [], error: null }),
+        eq:
+          table === "courses"
+            ? eqQuery
+            : () => createChain(table),
+      }),
     }),
   })),
 );
@@ -65,5 +100,25 @@ describe("course ID list bounds", () => {
 
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ raw_id: "11510-CS 101000" });
+  });
+
+  it("returns newest changes for one course with public caching", async () => {
+    const response = await course.request("/11510-CS 101000/changes");
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Cache-Control")).toBe(
+      "public, max-age=60, s-maxage=300, stale-while-revalidate=3600",
+    );
+    expect(await response.json()).toEqual(changeRows);
+  });
+
+  it("returns recent semester changes with public caching", async () => {
+    const response = await course.request("/changes?semester=11510&days=7");
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Cache-Control")).toBe(
+      "public, max-age=60, s-maxage=300, stale-while-revalidate=3600",
+    );
+    expect(await response.json()).toEqual(changeRows);
   });
 });

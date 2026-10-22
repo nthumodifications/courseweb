@@ -136,7 +136,26 @@
       "import_all": "导入全部",
       "no_venue": "无上课地点",
       "courses_unit": "门课",
-      "total_credits": "总学分"
+      "total_credits": "总学分",
+      "ccxp_summary": "从 CCXP 导入 {semester} 学期・添加 {added} 门・{already} 门已在课表",
+      "ccxp_status_new": "添加",
+      "ccxp_status_already": "已在课表",
+      "ccxp_status_removed": "取代时移除",
+      "ccxp_merge": "合并到我的课表",
+      "ccxp_replace": "取代本学期课表",
+      "ccxp_replace_title": "取代本学期课表？",
+      "ccxp_replace_description": "将移除 {count} 门课。",
+      "ccxp_replace_confirm": "取代",
+      "ccxp_unknown_title": "以下课程未导入",
+      "ccxp_unknown_more": "以及其他 {count} 门",
+      "ccxp_load_error": "无法加载课程数据，未变更任何内容。",
+      "ccxp_syncing": "正在等待课表数据完成同步。",
+      "ccxp_unknown_reasons": {
+        "malformed": "课号格式不正确",
+        "semester": "不属于这个学期",
+        "unknown": "找不到这门课",
+        "limit": "超过上限"
+      }
     },
     "sidebar": {
       "groups": "群组",
@@ -348,6 +367,30 @@
       "remarks": "备注",
       "description": "课程大纲",
       "restrictions": "课程限制",
+      "changes": {
+        "title": "变更纪录",
+        "fields": {
+          "times": "时间",
+          "venues": "教室",
+          "teacher": "授课教师",
+          "teacher_zh": "授课教师",
+          "teacher_en": "授课教师",
+          "capacity": "人数限制",
+          "reserve": "保留名额",
+          "credits": "学分",
+          "closed_mark": "开课状态",
+          "no_extra_selection": "不开放加选",
+          "note": "备注",
+          "restrictions": "课程限制",
+          "course": "课程"
+        },
+        "removed": "不再列于课程数据",
+        "reappeared": "重新列出",
+        "empty": "无",
+        "true_value": "是",
+        "false_value": "否",
+        "value_separator": "、"
+      },
       "prerequesites": "挡修",
       "prerequisite_based_on_offering": "依 {semester} 开课数据",
       "timetable": "时间表",
@@ -585,7 +628,11 @@
       "search_description": "跨学期搜索同一门课的开课纪录。",
       "search_placeholder": "搜索课号、课名或教师……",
       "search_prompt": "输入课号、课名或教师，寻找历年开课纪录。",
-      "search_examples": ["微积分", "程序", "CS 1355"],
+      "search_examples": [
+        "微积分",
+        "程序",
+        "CS 1355"
+      ],
       "search_no_results": "找不到符合的课程模块",
       "search_results": "个课程模块",
       "search_other_modules": "搜索其他课程",
@@ -820,6 +867,26 @@
     "machine_number": "{type} {number}",
     "progress": "洗程进度"
   },
+  "announcements": {
+    "meta_title": "校园公告",
+    "meta_description": "追踪清大各处室与系所，掌握校园公告与重要时限。",
+    "search_placeholder": "搜索公告标题",
+    "filter_source": "依追踪来源筛选",
+    "all_followed": "所有追踪来源",
+    "manage_follows": "管理追踪",
+    "manage_follows_description": "选择要显示在公告列表中的校园来源。",
+    "source_search_placeholder": "搜索来源",
+    "source_language": {
+      "zh_tw": "中文",
+      "en": "英文"
+    },
+    "load_error": "目前无法取得校园公告",
+    "try_again": "再试一次",
+    "no_results": "没有符合的追踪公告",
+    "show_more": "显示更多",
+    "attribution_prefix": "数据源：",
+    "attribution_name": "NTHU-SA 清大学生会 NTHU-Data-API"
+  },
   "bus": {
     "north_gate": "北校门口",
     "tsmc": "台积馆",
@@ -1033,7 +1100,10 @@
       "restoreConfirm": "还原",
       "ccxp": {
         "title": "代理登录校务资讯系统",
-        "description": "系统会用代理登录方式，让学生们可以在 NTHUMods 上轻松链接校务系统功能。"
+        "description": "系统会用代理登录方式，让学生们可以在 NTHUMods 上轻松链接校务系统功能。",
+        "import_title": "CCXP 课表导入",
+        "import_description": "使用 ccxp-lite 从校务资讯系统导入课表。",
+        "import_link": "打开 ccxp-lite"
       },
       "logoutDescription": "是否确定要登出？",
       "logoutConfimation": "确认登出",
@@ -1195,6 +1265,9 @@
           },
           "grades": {
             "title": "成绩与 GPA"
+          },
+          "announcements": {
+            "title": "校园公告"
           }
         },
         "weather": {

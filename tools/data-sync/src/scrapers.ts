@@ -12,6 +12,12 @@ import {
 } from "linkedom/worker";
 import type { Course, Department, SyncEnvironment } from "./types";
 import {
+  diffCourseRows,
+  isCompleteCourseSnapshot,
+  TRACKED_COURSE_FIELDS,
+  type CourseSnapshot,
+} from "./course-diff";
+import {
   retryWithBackoff,
   fullWidthToHalfWidth,
   createSupabaseClient,
@@ -19,6 +25,214 @@ import {
 } from "./utils";
 
 const baseUrl = `https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/6/6.2/6.2.9/JH629002.php`;
+
+const CHANGE_LOG_PAGE_SIZE = 1_000;
+const CHANGE_LOG_MAX_PAGES = 10;
+const CHANGE_LOG_INSERT_CHUNK_SIZE = 500;
+export const COURSE_CHANGE_LOG_TIMEOUT_MS = 60_000;
+const CHANGE_LOG_SELECT = ["raw_id", "semester", ...TRACKED_COURSE_FIELDS].join(
+  ",",
+);
+
+const readExistingCourseRows = async (
+  supabase: ReturnType<typeof createSupabaseClient>,
+  semester: string,
+): Promise<CourseSnapshot[]> => {
+  const rows: CourseSnapshot[] = [];
+
+  for (let offset = 0; ; offset += CHANGE_LOG_PAGE_SIZE) {
+    const { data, error } = await supabase
+      .from("courses")
+      .select(CHANGE_LOG_SELECT)
+      .eq("semester", semester)
+      .order("raw_id", { ascending: true })
+      .range(offset, offset + CHANGE_LOG_PAGE_SIZE - 1);
+
+    if (error) throw new Error(`Failed to read previous courses: ${error.message}`);
+
+    rows.push(...((data ?? []) as unknown as CourseSnapshot[]));
+    if (!data || data.length < CHANGE_LOG_PAGE_SIZE) break;
+  }
+
+  return rows;
+};
+
+const readPreviouslyRemovedIds = async (
+  supabase: ReturnType<typeof createSupabaseClient>,
+  semester: string,
+): Promise<Set<string>> => {
+  const latestKindById = new Map<string, string>();
+
+  for (let page = 0; page < CHANGE_LOG_MAX_PAGES; page++) {
+    const offset = page * CHANGE_LOG_PAGE_SIZE;
+    const { data, error } = await supabase
+      .from("course_changes")
+      .select("raw_id, kind, detected_at")
+      .eq("semester", semester)
+      .in("kind", ["removed", "reappeared"])
+      .order("detected_at", { ascending: false })
+      .range(offset, offset + CHANGE_LOG_PAGE_SIZE - 1);
+
+    if (error) throw new Error(`Failed to read previous course changes: ${error.message}`);
+
+    for (const row of data ?? []) {
+      if (!latestKindById.has(row.raw_id)) {
+        latestKindById.set(row.raw_id, row.kind);
+      }
+    }
+    if (!data || data.length < CHANGE_LOG_PAGE_SIZE) break;
+
+    if (page === CHANGE_LOG_MAX_PAGES - 1) {
+      console.warn(
+        `Course change history lookup reached the ${CHANGE_LOG_MAX_PAGES}-page cap for ${semester}`,
+      );
+    }
+  }
+
+  return new Set(
+    [...latestKindById]
+      .filter(([, kind]) => kind === "removed")
+      .map(([rawId]) => rawId),
+  );
+};
+
+const recordCourseChanges = async (
+  supabase: ReturnType<typeof createSupabaseClient>,
+  semester: string,
+  currentRows: Course[],
+  detectedAt: string,
+): Promise<void> => {
+  const previousRows = await readExistingCourseRows(supabase, semester);
+  if (previousRows.length === 0) return;
+
+  const previouslyRemovedIds = await readPreviouslyRemovedIds(supabase, semester);
+  const activePreviousRows = previousRows.filter(
+    (course) => !previouslyRemovedIds.has(course.raw_id),
+  );
+
+  if (!isCompleteCourseSnapshot(activePreviousRows, currentRows)) {
+    console.warn(
+      `Skipping course removals for ${semester}: current snapshot has ${currentRows.length} rows, previous snapshot had ${activePreviousRows.length}`,
+    );
+  }
+
+  const changes = diffCourseRows(
+    activePreviousRows,
+    currentRows as unknown as CourseSnapshot[],
+    { previouslyRemovedIds },
+  );
+  for (let offset = 0; offset < changes.length; offset += CHANGE_LOG_INSERT_CHUNK_SIZE) {
+    const chunk = changes
+      .slice(offset, offset + CHANGE_LOG_INSERT_CHUNK_SIZE)
+      .map((change) => ({ ...change, detected_at: detectedAt }));
+    const { error } = await supabase.from("course_changes").insert(chunk);
+    if (error) {
+      console.error(
+        `Failed to insert course change log chunk ${Math.floor(offset / CHANGE_LOG_INSERT_CHUNK_SIZE) + 1}:`,
+        error,
+      );
+    }
+  }
+};
+
+class CourseChangeLogTimeoutError extends Error {
+  constructor(timeoutMs: number) {
+    super(`Course change logging timed out after ${timeoutMs}ms`);
+    this.name = "CourseChangeLogTimeoutError";
+  }
+}
+
+const withTimeout = async <T>(
+  operation: Promise<T>,
+  timeoutMs: number,
+): Promise<T> => {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      operation,
+      new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(
+          () => reject(new CourseChangeLogTimeoutError(timeoutMs)),
+          timeoutMs,
+        );
+      }),
+    ]);
+  } finally {
+    if (timeoutId !== undefined) clearTimeout(timeoutId);
+  }
+};
+
+export interface CourseSyncOptions {
+  changeLogTimeoutMs?: number;
+}
+
+const upsertCourses = async (
+  supabase: ReturnType<typeof createSupabaseClient>,
+  normalizedCourses: Course[],
+): Promise<void> => {
+  // Update supabase with retry logic - split array into chunks of 500
+  const chunked = normalizedCourses.reduce((acc, cur, i) => {
+    const index = Math.floor(i / 500);
+    acc[index] = acc[index] || [];
+    acc[index].push(cur);
+    return acc;
+  }, [] as Course[][]);
+
+  let successfulChunks = 0;
+  for (const chunk of chunked) {
+    try {
+      await retryWithBackoff(
+        async () => {
+          const { error } = await supabase.from("courses").upsert(chunk);
+          if (error) throw new Error(`Supabase error: ${error.message}`);
+        },
+        3,
+        2000,
+        `database chunk ${successfulChunks + 1}/${chunked.length}`,
+      );
+      successfulChunks++;
+    } catch (error) {
+      console.error(
+        `Failed to upsert chunk ${successfulChunks + 1}/${chunked.length}:`,
+        error,
+      );
+      // Continue with other chunks instead of failing completely
+    }
+  }
+
+  console.log(
+    `Successfully saved ${successfulChunks}/${chunked.length} chunks to database`,
+  );
+};
+
+export const syncCourseRows = async (
+  supabase: ReturnType<typeof createSupabaseClient>,
+  semester: string,
+  normalizedCourses: Course[],
+  options: CourseSyncOptions = {},
+): Promise<void> => {
+  const timeoutMs = options.changeLogTimeoutMs ?? COURSE_CHANGE_LOG_TIMEOUT_MS;
+  const detectedAt = new Date().toISOString();
+  try {
+    await withTimeout(
+      recordCourseChanges(supabase, semester, normalizedCourses, detectedAt),
+      timeoutMs,
+    );
+  } catch (error) {
+    if (error instanceof CourseChangeLogTimeoutError) {
+      console.warn(
+        `${error.message}; continuing with the course upsert`,
+      );
+    } else {
+      console.error(
+        "Course change logging failed; continuing with the course upsert:",
+        error,
+      );
+    }
+  }
+
+  await upsertCourses(supabase, normalizedCourses);
+};
 
 /**
  * Scrape archived courses from CCXP system
@@ -438,40 +652,8 @@ export const scrapeArchivedCourses = async (
   }
   console.log(`Found ${normalizedCourses.length} courses in ${semester}`);
 
-  // Update supabase with retry logic - split array into chunks of 500
-  const chunked = normalizedCourses.reduce((acc, cur, i) => {
-    const index = Math.floor(i / 500);
-    acc[index] = acc[index] || [];
-    acc[index].push(cur);
-    return acc;
-  }, [] as Course[][]);
-
   const supabase = createSupabaseClient(env);
-  let successfulChunks = 0;
-  for (const chunk of chunked) {
-    try {
-      await retryWithBackoff(
-        async () => {
-          const { error } = await supabase.from("courses").upsert(chunk);
-          if (error) throw new Error(`Supabase error: ${error.message}`);
-        },
-        3,
-        2000,
-        `database chunk ${successfulChunks + 1}/${chunked.length}`,
-      );
-      successfulChunks++;
-    } catch (error) {
-      console.error(
-        `Failed to upsert chunk ${successfulChunks + 1}/${chunked.length}:`,
-        error,
-      );
-      // Continue with other chunks instead of failing completely
-    }
-  }
-
-  console.log(
-    `Successfully saved ${successfulChunks}/${chunked.length} chunks to database`,
-  );
+  await syncCourseRows(supabase, semester, normalizedCourses);
 
   return normalizedCourses;
 };

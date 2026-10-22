@@ -12,7 +12,8 @@ export type WidgetType =
   | "youbike"
   | "shops"
   | "upcoming-events"
-  | "grades";
+  | "grades"
+  | "announcements";
 
 export interface WidgetConfig {
   id: string; // unique instance uuid
@@ -60,6 +61,12 @@ export const DEFAULT_DASHBOARD_CONFIG: DashboardConfig = {
       enabled: false,
     },
     { id: "grades-default", type: "grades", order: 13, enabled: false },
+    {
+      id: "announcements-default",
+      type: "announcements",
+      order: 14,
+      enabled: false,
+    },
   ],
 };
 
@@ -168,6 +175,13 @@ export const WIDGET_DEFINITIONS: WidgetDefinition[] = [
     label: "Grades and GPA",
     labelZh: "成績與 GPA",
     description: "Estimated semester and cumulative GPA",
+    defaultEnabled: false,
+  },
+  {
+    type: "announcements",
+    label: "Announcements",
+    labelZh: "校園公告",
+    description: "Latest posts from followed campus sources",
     defaultEnabled: false,
   },
 ];

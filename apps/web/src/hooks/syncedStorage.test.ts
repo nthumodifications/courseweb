@@ -35,6 +35,75 @@ const accountCourseRecords = () => {
 
 const emptySyncedRecord = (deviceId: string) => syncedRecord({}, -1, deviceId);
 
+type CourseMergeCase = {
+  name: string;
+  local: SyncedData<Record<string, string[]>>;
+  remote: SyncedData<Record<string, string[]>> | null;
+  initial: boolean;
+  remoteReadSuccessful?: boolean;
+  expected: Record<string, string[]>;
+  persistLocal: boolean;
+  upload?: { merge: boolean };
+  backupLocal?: boolean;
+};
+
+const courseMergeCases: CourseMergeCase[] = [
+  {
+    name: "local non-empty and older than an empty remote",
+    local: syncedRecord({ "11410": ["local-course"] }, 100, "device-a"),
+    remote: syncedRecord({}, 200, "device-b"),
+    initial: true,
+    expected: {},
+    persistLocal: true,
+    backupLocal: true,
+  },
+  {
+    name: "local non-empty and newer than an empty remote",
+    local: syncedRecord({ "11410": ["local-course"] }, 300, "device-a"),
+    remote: syncedRecord({}, 200, "device-b"),
+    initial: true,
+    expected: { "11410": ["local-course"] },
+    persistLocal: false,
+    upload: { merge: false },
+  },
+  {
+    name: "local empty and newer than remote non-empty",
+    local: syncedRecord({}, 200, "device-a"),
+    remote: syncedRecord({ "11410": ["remote-course"] }, 100, "device-b"),
+    initial: true,
+    expected: {},
+    persistLocal: false,
+    upload: { merge: false },
+  },
+  {
+    name: "both non-empty and different",
+    local: syncedRecord({ "11410": ["local-course"] }, 100, "device-a"),
+    remote: syncedRecord({ "11410": ["remote-course"] }, 200, "device-b"),
+    initial: true,
+    expected: { "11410": ["local-course", "remote-course"] },
+    persistLocal: true,
+    upload: { merge: true },
+  },
+  {
+    name: "remote read fails",
+    local: syncedRecord({ "11410": ["local-course"] }, 100, "device-a"),
+    remote: null,
+    initial: true,
+    remoteReadSuccessful: false,
+    expected: { "11410": ["local-course"] },
+    persistLocal: false,
+  },
+  {
+    name: "local deletion after the first sync",
+    local: syncedRecord({}, 300, "device-a"),
+    remote: syncedRecord({ "11410": ["remote-course"] }, 200, "device-b"),
+    initial: false,
+    expected: {},
+    persistLocal: false,
+    upload: { merge: false },
+  },
+];
+
 const expectMergedClear = (
   reconciliation: ReturnType<typeof reconcileSyncedData>,
   persistLocal: boolean,
@@ -45,6 +114,23 @@ const expectMergedClear = (
 };
 
 describe("synced storage reconciliation", () => {
+  test.each(courseMergeCases)("sign-in merge: $name", (scenario) => {
+    const reconciliation = reconcileSyncedData({
+      local: scenario.local,
+      remote: scenario.remote,
+      mergeData: mergeCourseStorage,
+      initial: scenario.initial,
+      deviceId: "device-a",
+      remoteReadSuccessful: scenario.remoteReadSuccessful,
+      now: 1000,
+    });
+
+    expect(reconciliation.data.value).toEqual(scenario.expected);
+    expect(reconciliation.persistLocal).toBe(scenario.persistLocal);
+    expect(reconciliation.upload).toEqual(scenario.upload);
+    expect(reconciliation.backupLocal).toBe(scenario.backupLocal);
+  });
+
   test("takes remote data over an uninitialized local snapshot", () => {
     const reconciliation = reconcileSyncedData({
       local: emptySyncedRecord("device-a"),
@@ -70,7 +156,7 @@ describe("synced storage reconciliation", () => {
     expectMergedClear(reconciliation, false);
   });
 
-  test("honors a newer remote clear instead of merging it with local data", () => {
+  test("honors a newer remote clear and backs up stale local data", () => {
     const reconciliation = reconcileSyncedData({
       local: syncedRecord({ "11410": ["course-a"] }, 100, "device-a"),
       remote: syncedRecord({}, 200, "device-b"),
@@ -85,12 +171,12 @@ describe("synced storage reconciliation", () => {
     expect(reconciliation.backupLocal).toBe(true);
   });
 
-  test("propagates a newer local clear without resurrecting remote data", () => {
+  test("propagates a newer local clear after the first sync", () => {
     const reconciliation = reconcileSyncedData({
       local: syncedRecord({}, 200, "device-a"),
       remote: syncedRecord({ "11410": ["course-a"] }, 100, "device-b"),
       mergeData: mergeCourseStorage,
-      initial: true,
+      initial: false,
       deviceId: "device-a",
     });
 

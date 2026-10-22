@@ -221,6 +221,30 @@ const SyncStatusSetting = ({
   />
 );
 
+const CcxpImportSetting = ({ copy }: { copy: AccountCopy }) => (
+  <SettingItem
+    id="setting-ccxp-import"
+    title={copy.ccxp.import_title}
+    description={copy.ccxp.import_description}
+    searchKeywords={[
+      copy.ccxp.import_title,
+      copy.ccxp.import_description,
+      copy.ccxp.import_link,
+    ]}
+    control={
+      <Button variant="outline" size="sm" asChild>
+        <a
+          href="https://github.com/sago-cream/ccxp-lite"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {copy.ccxp.import_link}
+        </a>
+      </Button>
+    }
+  />
+);
+
 interface RestoreSettingProps {
   copy: AccountCopy;
   restoreEnabled: boolean;
@@ -298,6 +322,7 @@ const AccountSettingsSection = ({
         status={syncStatus}
         statusText={syncStatusText}
       />
+      <CcxpImportSetting copy={copy} />
       {backups.length > 0 && (
         <RestoreSetting
           copy={copy}

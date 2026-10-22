@@ -5,7 +5,6 @@ import { dehydrate, QueryClient, useQueryClient } from "@tanstack/react-query";
 import { afterAll, afterEach, describe, expect, mock, test } from "bun:test";
 import { captureGlobalState } from "@/test-utils/global-state";
 
-const actualPersister = await import("@/lib/idb_persister");
 const restoreGlobals = captureGlobalState([
   "window",
   "document",
@@ -32,14 +31,6 @@ const persistClient = mock(
     persistedClients.push(client);
   },
 );
-
-mock.module("@/lib/idb_persister", () => ({
-  createIDBPersister: () => ({
-    persistClient,
-    restoreClient: async () => persistedClients[0],
-    removeClient: async () => {},
-  }),
-}));
 
 const { default: ReactQuery, shouldPersistQuery } = await import(
   "./ReactQuery"
@@ -93,7 +84,19 @@ describe("React Query persistence", () => {
     const root = createRoot(container);
 
     await act(async () => {
-      root.render(createElement(ReactQuery, null, createElement(Probe)));
+      root.render(
+        createElement(
+          ReactQuery,
+          {
+            persister: {
+              persistClient,
+              restoreClient: async () => persistedClients[0],
+              removeClient: async () => {},
+            },
+          },
+          createElement(Probe),
+        ),
+      );
     });
     await waitFor(() => persistClient.mock.calls.length > 0);
 
@@ -117,7 +120,6 @@ describe("React Query persistence", () => {
   });
 
   afterAll(() => {
-    mock.module("@/lib/idb_persister", () => actualPersister);
     seedClient.clear();
   });
 });
