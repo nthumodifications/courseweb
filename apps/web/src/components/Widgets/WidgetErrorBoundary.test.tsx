@@ -12,6 +12,7 @@ import {
   Cloud,
   Dumbbell,
   LayoutGrid,
+  Megaphone,
   Store,
   Timer,
   WashingMachine,
@@ -185,6 +186,12 @@ describe("WidgetErrorBoundary", () => {
         "grades",
         BookOpen,
         zh.settings.calendar.widget_dashboard.widget_options.grades.title,
+      ],
+      [
+        "announcements",
+        Megaphone,
+        zh.settings.calendar.widget_dashboard.widget_options.announcements
+          .title,
       ],
     ] as const;
 

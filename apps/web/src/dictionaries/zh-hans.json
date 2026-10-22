@@ -511,7 +511,11 @@
       "search_description": "跨学期搜索同一门课的开课纪录。",
       "search_placeholder": "搜索课号、课名或教师……",
       "search_prompt": "输入课号、课名或教师，寻找历年开课纪录。",
-      "search_examples": ["微积分", "程序", "CS 1355"],
+      "search_examples": [
+        "微积分",
+        "程序",
+        "CS 1355"
+      ],
       "search_no_results": "找不到符合的课程模块",
       "search_results": "个课程模块",
       "search_other_modules": "搜索其他课程",
@@ -745,6 +749,26 @@
     "load_error": "无法连接至洗衣机状态服务。",
     "machine_number": "{type} {number}",
     "progress": "洗程进度"
+  },
+  "announcements": {
+    "meta_title": "校园公告",
+    "meta_description": "追踪清大各处室与系所，掌握校园公告与重要时限。",
+    "search_placeholder": "搜索公告标题",
+    "filter_source": "依追踪来源筛选",
+    "all_followed": "所有追踪来源",
+    "manage_follows": "管理追踪",
+    "manage_follows_description": "选择要显示在公告列表中的校园来源。",
+    "source_search_placeholder": "搜索来源",
+    "source_language": {
+      "zh_tw": "中文",
+      "en": "英文"
+    },
+    "load_error": "目前无法取得校园公告",
+    "try_again": "再试一次",
+    "no_results": "没有符合的追踪公告",
+    "show_more": "显示更多",
+    "attribution_prefix": "数据源：",
+    "attribution_name": "NTHU-SA 清大学生会 NTHU-Data-API"
   },
   "bus": {
     "north_gate": "北校门口",
@@ -1097,6 +1121,9 @@
           },
           "grades": {
             "title": "成绩与 GPA"
+          },
+          "announcements": {
+            "title": "校园公告"
           }
         },
         "weather": {
