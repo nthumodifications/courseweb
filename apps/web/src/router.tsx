@@ -8,6 +8,7 @@ import ShortlinkRedirect from "@/layouts/ShortlinkRedirect";
 import AppProviders from "@/layouts/AppProviders";
 import { ROUTE_PATHS } from "@/routerPaths";
 import en from "@/dictionaries/en.json";
+import zh from "@/dictionaries/zh.json";
 
 // Auth callback (outside lang layout)
 const AuthCallbackPage = lazyWithRetry(
@@ -55,6 +56,9 @@ const YouBikePage = lazyWithRetry(
 );
 const LibraryPage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/library/page"),
+);
+const AnnouncementsPage = lazyWithRetry(
+  () => import("@/app/[lang]/(mods-pages)/announcements/page"),
 );
 const BusRoutePage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/bus/[route]/page"),
@@ -377,6 +381,16 @@ export const appRoutes = [
                     "Check real-time available seats, study carrels, discussion rooms, and PC workstations across NTHU libraries.",
                   descriptionZh:
                     "即時查詢清大總圖書館、夜讀區、人社分館與科管院之座位與空間空位狀態。",
+                },
+              },
+              {
+                path: "announcements",
+                element: <AnnouncementsPage />,
+                handle: {
+                  title: en.announcements.meta_title,
+                  titleZh: zh.announcements.meta_title,
+                  description: en.announcements.meta_description,
+                  descriptionZh: zh.announcements.meta_description,
                 },
               },
               {

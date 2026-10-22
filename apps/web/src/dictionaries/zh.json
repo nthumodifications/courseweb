@@ -790,6 +790,26 @@
     "machine_number": "{type} {number}",
     "progress": "洗程進度"
   },
+  "announcements": {
+    "meta_title": "校園公告",
+    "meta_description": "追蹤清大各處室與系所，掌握校園公告與重要時限。",
+    "search_placeholder": "搜尋公告標題",
+    "filter_source": "依追蹤來源篩選",
+    "all_followed": "所有追蹤來源",
+    "manage_follows": "管理追蹤",
+    "manage_follows_description": "選擇要顯示在公告列表中的校園來源。",
+    "source_search_placeholder": "搜尋來源",
+    "source_language": {
+      "zh_tw": "中文",
+      "en": "英文"
+    },
+    "load_error": "目前無法取得校園公告",
+    "try_again": "再試一次",
+    "no_results": "沒有符合的追蹤公告",
+    "show_more": "顯示更多",
+    "attribution_prefix": "資料來源：",
+    "attribution_name": "NTHU-SA 清大學生會 NTHU-Data-API"
+  },
   "bus": {
     "north_gate": "北校門口",
     "tsmc": "台積館",
@@ -1144,6 +1164,9 @@
           },
           "grades": {
             "title": "成績與 GPA"
+          },
+          "announcements": {
+            "title": "校園公告"
           }
         },
         "weather": {

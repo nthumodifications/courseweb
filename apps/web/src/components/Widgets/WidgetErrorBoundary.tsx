@@ -7,6 +7,7 @@ import {
   Cloud,
   Dumbbell,
   LayoutGrid,
+  Megaphone,
   Store,
   Timer,
   WashingMachine,
@@ -101,6 +102,12 @@ const WIDGET_METADATA: Record<WidgetType, WidgetMetadata> = {
     title: (dict) =>
       dict.settings.calendar.widget_dashboard.widget_options.grades.title,
     icon: BookOpen,
+  },
+  announcements: {
+    title: (dict) =>
+      dict.settings.calendar.widget_dashboard.widget_options.announcements
+        .title,
+    icon: Megaphone,
   },
 };
 

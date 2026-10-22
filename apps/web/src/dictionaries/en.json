@@ -790,6 +790,26 @@
     "machine_number": "{type} {number}",
     "progress": "Cycle progress"
   },
+  "announcements": {
+    "meta_title": "Campus Announcements",
+    "meta_description": "Follow NTHU offices and departments to keep up with campus deadlines and news.",
+    "search_placeholder": "Search announcement titles",
+    "filter_source": "Filter by followed source",
+    "all_followed": "All followed sources",
+    "manage_follows": "Manage follows",
+    "manage_follows_description": "Choose the campus sources shown in your feed.",
+    "source_search_placeholder": "Search sources",
+    "source_language": {
+      "zh_tw": "Chinese",
+      "en": "English"
+    },
+    "load_error": "Announcements are unavailable",
+    "try_again": "Try again",
+    "no_results": "No followed announcements found",
+    "show_more": "Show more",
+    "attribution_prefix": "Data:",
+    "attribution_name": "NTHU-SA NTHU-Data-API"
+  },
   "bus": {
     "north_gate": "North Gate",
     "tsmc": "TSMC",
@@ -1144,6 +1164,9 @@
           },
           "grades": {
             "title": "Grades and GPA"
+          },
+          "announcements": {
+            "title": "Campus announcements"
           }
         },
         "weather": {

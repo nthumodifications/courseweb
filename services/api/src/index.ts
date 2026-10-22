@@ -33,6 +33,7 @@ import type { ProviderName } from "./ai/llm";
 import usage from "./usage";
 import { syncUsageTick } from "./usage/collector";
 import contributeGrades from "./contribute-grades";
+import announcements from "./announcements";
 
 export type Bindings = {
   DB: D1Database;
@@ -101,6 +102,7 @@ export const app = new Hono<{ Bindings: Bindings }>()
   .route("/recruit", recruit)
   .route("/dining", dining)
   .route("/youbike", youbike)
+  .route("/announcements", announcements)
   .route("/usage", usage)
   .route("/contribute", contributeGrades);
 

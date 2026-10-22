@@ -31,6 +31,7 @@ import YouBikeWidget from "./YouBikeWidget";
 import ShopsWidget from "./ShopsWidget";
 import UpcomingEventsWidget from "./UpcomingEventsWidget";
 import GradesWidget from "./GradesWidget";
+import AnnouncementsWidget from "./AnnouncementsWidget";
 import { cn } from "@/lib/utils";
 import { WidgetErrorBoundary } from "./WidgetErrorBoundary";
 
@@ -90,6 +91,8 @@ const SortableWidget: FC<{
         return <UpcomingEventsWidget {...commonProps} />;
       case "grades":
         return <GradesWidget {...commonProps} />;
+      case "announcements":
+        return <AnnouncementsWidget {...commonProps} />;
       default:
         return null;
     }
