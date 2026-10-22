@@ -51,6 +51,21 @@ export const AccountSection = () => {
             </Button>
           }
         />
+        <SettingItem
+          title={dict.settings.account.ccxp.import_title}
+          description={dict.settings.account.ccxp.import_description}
+          control={
+            <Button variant="outline" size="sm" asChild>
+              <a
+                href="https://github.com/sago-cream/ccxp-lite"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {dict.settings.account.ccxp.import_link}
+              </a>
+            </Button>
+          }
+        />
       </SettingsSection>
       <AccountLogoutDialog
         open={logoutDialogOpen}

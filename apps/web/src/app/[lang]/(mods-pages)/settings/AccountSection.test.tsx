@@ -76,6 +76,11 @@ mock.module("@/dictionaries/useDictionary", () => ({
         logoutDescription: "Are you sure you want to log out?",
         keepLocalData: "Keep data locally",
         logout: "Logout",
+        ccxp: {
+          import_title: "CCXP timetable import",
+          import_description: "Use ccxp-lite to import a timetable from CCXP.",
+          import_link: "Open ccxp-lite",
+        },
       },
     },
   }),
@@ -115,6 +120,10 @@ describe("AccountSection", () => {
     expect(container.textContent).toContain("Sign in to sync your timetable");
     expect(container.textContent).toContain("Sign In");
     expect(container.textContent).not.toContain("Sign Out");
+    const ccxpLink = container.querySelector<HTMLAnchorElement>(
+      'a[href="https://github.com/sago-cream/ccxp-lite"]',
+    );
+    expect(ccxpLink?.textContent).toBe("Open ccxp-lite");
 
     await act(async () => root.unmount());
   });
