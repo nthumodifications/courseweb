@@ -139,7 +139,7 @@
       "total_credits": "总学分",
       "ccxp_title": "从校务资讯系统导入",
       "ccxp_description": "导入本学期前，先确认 CCXP 课表会如何变更。",
-      "ccxp_added": "新增",
+      "ccxp_added": "添加",
       "ccxp_already_present": "已在你的课表",
       "ccxp_removed": "取代时移除",
       "ccxp_merge": "合并到我的课表",
@@ -149,8 +149,8 @@
       "ccxp_replace_confirm": "取代",
       "ccxp_unknown_title": "以下课程未导入",
       "ccxp_unknown_more": "以及其他 {count} 门",
-      "ccxp_load_error": "无法加载课程资料，未变更任何内容。",
-      "ccxp_syncing": "正在等待课表资料完成同步。",
+      "ccxp_load_error": "无法加载课程数据，未变更任何内容。",
+      "ccxp_syncing": "正在等待课表数据完成同步。",
       "ccxp_unknown_reasons": {
         "malformed": "课号格式不正确",
         "semester": "不属于这个学期",
@@ -958,7 +958,7 @@
         "description": "系统会用代理登录方式，让学生们可以在 NTHUMods 上轻松链接校务系统功能。",
         "import_title": "CCXP 课表导入",
         "import_description": "使用 ccxp-lite 从校务资讯系统导入课表。",
-        "import_link": "开启 ccxp-lite"
+        "import_link": "打开 ccxp-lite"
       },
       "logoutDescription": "是否确定要登出？",
       "logoutConfimation": "确认登出",
