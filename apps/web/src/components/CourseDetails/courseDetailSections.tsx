@@ -20,6 +20,7 @@ export const COURSE_DETAIL_SECTION_REGISTRY = [
   { id: "elective-membership" },
   { id: "first-specialization-membership" },
   { id: "second-specialization-membership" },
+  { id: "cross-discipline-membership" },
   { id: "updated-at" },
 ] as const;
 

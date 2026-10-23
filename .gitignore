@@ -23,6 +23,7 @@ pnpm-debug.log*
 /build
 **/build/
 **/dist/
+apps/web/layout-guard-artifacts/
 
 # misc
 .DS_Store
