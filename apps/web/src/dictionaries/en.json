@@ -81,6 +81,15 @@
     }
   },
   "timetable": {
+    "course_changes": {
+      "summary": "{count} courses in your timetable changed",
+      "summary_singular": "{count} course in your timetable changed",
+      "dismiss": "Got it",
+      "removed": "No longer listed",
+      "reappeared": "Listed again",
+      "change_separator": " ・ ",
+      "detail_date_separator": ", "
+    },
     "seo": {
       "application_name": "NTHUMods Timetable",
       "page_title": "Timetable Management | NTHUMods",

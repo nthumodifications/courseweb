@@ -81,6 +81,15 @@
     }
   },
   "timetable": {
+    "course_changes": {
+      "summary": "課表中有 {count} 門課有異動",
+      "summary_singular": "課表中有 {count} 門課有異動",
+      "dismiss": "知道了",
+      "removed": "不再列出",
+      "reappeared": "重新列出",
+      "change_separator": " ・ ",
+      "detail_date_separator": "，"
+    },
     "seo": {
       "application_name": "NTHUMods 課表系統",
       "page_title": "課表管理 | NTHUMods",

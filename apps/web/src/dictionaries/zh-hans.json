@@ -81,6 +81,15 @@
     }
   },
   "timetable": {
+    "course_changes": {
+      "summary": "课表中有 {count} 门课有异动",
+      "summary_singular": "课表中有 {count} 门课有异动",
+      "dismiss": "知道了",
+      "removed": "不再列出",
+      "reappeared": "重新列出",
+      "change_separator": " ・ ",
+      "detail_date_separator": "，"
+    },
     "seo": {
       "application_name": "NTHUMods 课表系统",
       "page_title": "课表管理 | NTHUMods",
