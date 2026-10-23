@@ -71,7 +71,10 @@ const CourseChangeNotice = ({ courses, semester }: CourseChangeNoticeProps) => {
   const { lang } = useParams<{ lang: string }>();
   const [seenIds, setSeenIds] = useState(readSeenIds);
   const courseIds = useMemo(
-    () => [...new Set(courses.map((course) => course.raw_id))].sort(),
+    () =>
+      [...new Set(courses.map((course) => course.raw_id))].sort((a, b) =>
+        a.localeCompare(b),
+      ),
     [courses],
   );
   const {
