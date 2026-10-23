@@ -54,6 +54,13 @@ jobs:
 
       # Build all services
       - name: Build all services
+        # Placeholders for the git-ignored apps/web/.env so the bundle boots;
+        # this build is not deployed and the layout guard mocks these origins.
+        env:
+          VITE_SUPABASE_URL: https://cmzdlrqfpuktcczvsobs.supabase.co
+          VITE_SUPABASE_ANON_KEY: layout-guard-placeholder
+          VITE_ALGOLIA_APP_ID: LAYOUTGUARD
+          VITE_ALGOLIA_SEARCH_KEY: layout-guard-placeholder
         run: |
           bun run build
 
