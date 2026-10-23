@@ -123,6 +123,7 @@ type MembershipSectionId = Extract<
   | "elective-membership"
   | "first-specialization-membership"
   | "second-specialization-membership"
+  | "cross-discipline-membership"
 >;
 
 const CourseMembershipSection = ({
@@ -148,7 +149,7 @@ const CourseMembershipSection = ({
           {values.map((value, index) => (
             <CourseDialogLink
               key={index}
-              to={`/${lang}/courses?nthu_courses%5BrefinementList%5D%5B${filterKey}%5D%5B0%5D=${values}`}
+              to={`/${lang}/courses?nthu_courses%5BrefinementList%5D%5B${filterKey}%5D%5B0%5D=${encodeURIComponent(value)}`}
             >
               <Badge variant="outline">
                 {formatValue ? formatValue(value) : value}
@@ -218,22 +219,6 @@ const TOCNavItem = ({
       </a>
       {children}
     </li>
-  );
-};
-
-const CrossDisciplineTagList = ({ course }: { course: CourseDefinition }) => {
-  if (!course.cross_discipline?.length) return null;
-  return (
-    <div className="flex flex-row gap-2 flex-wrap">
-      {course.cross_discipline?.map((m, index) => (
-        <div
-          key={index}
-          className="flex min-w-[65px] flex-row items-center justify-center rounded-md bg-muted px-2 py-2 text-sm text-foreground select-none"
-        >
-          {m}
-        </div>
-      ))}
-    </div>
   );
 };
 
@@ -571,68 +556,69 @@ const CourseDetailContainer = ({
           <CourseDetailSection id="header">
             <div className="flex flex-col md:flex-row md:items-end gap-4">
               <div className="flex min-w-0 w-full flex-1 flex-col gap-2">
-                <div className="font-medium text-base">
-                  {toPrettySemester(course.semester)}{" "}
-                  {dict.course.details.semester}
+                <div className="flex min-w-0 flex-col gap-2 md:w-[calc(100%-86px)] md:pr-6">
+                  <div className="font-medium text-base">
+                    {toPrettySemester(course.semester)}{" "}
+                    {dict.course.details.semester}
+                  </div>
+                  <div className="font-bold text-xl text-nthu-600">{`${course.department} ${course.course}-${course.class}`}</div>
+                  <h1 className="flex min-w-0 flex-row flex-wrap gap-1 font-bold text-xl">
+                    <span className="min-w-0 whitespace-normal">
+                      {localizeData(course.name_zh)}
+                    </span>
+                    <span>
+                      {course.teacher_zh?.map((displayName, index) => (
+                        <Fragment key={`${displayName}-${index}`}>
+                          {index > 0 ? "," : ""}
+                          <InstructorLink
+                            lang={contentLanguage(lang)}
+                            name={course.teacher_zh?.[index] ?? ""}
+                          >
+                            {localizeData(displayName)}
+                          </InstructorLink>
+                        </Fragment>
+                      ))}
+                    </span>
+                  </h1>
+                  <h2 className="flex min-w-0 flex-row flex-wrap gap-1 font-medium">
+                    <span className="min-w-0 whitespace-normal">
+                      {course.name_en}
+                    </span>
+                    <span>
+                      {course.teacher_en?.map((displayName, index) => (
+                        <Fragment key={`${displayName}-${index}`}>
+                          {index > 0 ? "," : ""}
+                          <InstructorLink
+                            lang={contentLanguage(lang)}
+                            name={
+                              bilingualNamesAreAligned
+                                ? (course.teacher_zh?.[index] ?? "")
+                                : ""
+                            }
+                          >
+                            {displayName}
+                          </InstructorLink>
+                        </Fragment>
+                      ))}
+                    </span>
+                  </h2>
                 </div>
-                <div className="font-bold text-xl text-nthu-600">{`${course.department} ${course.course}-${course.class}`}</div>
-                <h1 className="flex min-w-0 flex-row flex-wrap gap-1 font-bold text-xl">
-                  <span className="min-w-0 whitespace-normal">
-                    {localizeData(course.name_zh)}
-                  </span>
-                  <span>
-                    {course.teacher_zh?.map((displayName, index) => (
-                      <Fragment key={`${displayName}-${index}`}>
-                        {index > 0 ? "," : ""}
-                        <InstructorLink
-                          lang={contentLanguage(lang)}
-                          name={course.teacher_zh?.[index] ?? ""}
-                        >
-                          {localizeData(displayName)}
-                        </InstructorLink>
-                      </Fragment>
-                    ))}
-                  </span>
-                </h1>
-                <h2 className="flex min-w-0 flex-row flex-wrap gap-1 font-medium">
-                  <span className="min-w-0 whitespace-normal">
-                    {course.name_en}
-                  </span>
-                  <span>
-                    {course.teacher_en?.map((displayName, index) => (
-                      <Fragment key={`${displayName}-${index}`}>
-                        {index > 0 ? "," : ""}
-                        <InstructorLink
-                          lang={contentLanguage(lang)}
-                          name={
-                            bilingualNamesAreAligned
-                              ? (course.teacher_zh?.[index] ?? "")
-                              : ""
-                          }
-                        >
-                          {displayName}
-                        </InstructorLink>
-                      </Fragment>
-                    ))}
-                  </span>
-                </h2>
+                <CourseTagList course={course} />
+                <div>
+                  {course.venues ? (
+                    course.venues.map((vn, i) => (
+                      <p key={vn} className="text-muted-foreground text-sm">
+                        {localizeData(vn)}{" "}
+                        <span className="text-foreground">
+                          {course.times![i]}
+                        </span>
+                      </p>
+                    ))
+                  ) : (
+                    <p>{dict.course.details.no_venues}</p>
+                  )}
+                </div>
               </div>
-              <CourseTagList course={course} />
-              <div>
-                {course.venues ? (
-                  course.venues.map((vn, i) => (
-                    <p key={vn} className="text-muted-foreground text-sm">
-                      {localizeData(vn)}{" "}
-                      <span className="text-foreground">
-                        {course.times![i]}
-                      </span>
-                    </p>
-                  ))
-                ) : (
-                  <p>{dict.course.details.no_venues}</p>
-                )}
-              </div>
-              <CrossDisciplineTagList course={course} />
             </div>
             <CourseDetailSection id="actions">
               <div className="hidden md:flex flex-col gap-2 absolute top-0 right-0 mt-4 mr-4">
@@ -1064,6 +1050,13 @@ const CourseDetailContainer = ({
                     title={dict.course.details.second_specialization}
                     values={course.second_specialization ?? []}
                     filterKey="second_specialization"
+                    lang={lang}
+                  />
+                  <CourseMembershipSection
+                    id="cross-discipline-membership"
+                    title={dict.course.details.cross_discipline}
+                    values={course.cross_discipline ?? []}
+                    filterKey="cross_discipline"
                     lang={lang}
                   />
 
