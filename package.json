@@ -23,6 +23,7 @@
     "clean": "turbo run clean",
     "dev:web": "turbo run dev --filter=@courseweb/web",
     "build:web": "turbo run build --filter=@courseweb/web",
+    "layout-guard": "bun run --cwd apps/web layout-guard",
     "build:api": "turbo run build --filter=@courseweb/api",
     "build:secure-api": "turbo run build --filter=@courseweb/secure-api",
     "build:apis": "turbo run build --filter=@courseweb/api --filter=@courseweb/secure-api",

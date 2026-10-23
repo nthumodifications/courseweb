@@ -1,5 +1,12 @@
 # Stability inventory
 
+## Responsive layout rules
+
+- A text column in a flex row must not share the row with flex-wrap chip rows or any max-content-sized sibling. Stack them, or give the sibling a fixed/max width and `shrink-0` intent.
+- Every UI PR checks 390, 768-1024 (the in-between band where this bug lived), and 1440.
+- After `bun run build` in `apps/web`, run `bun run layout-guard` locally.
+- Add a route to the guard's route table in `apps/web/scripts/layout-guard.ts`; provide its path, locales, fixture (if any), and optional page assertion.
+
 Snapshot: `origin/main` at `616fa241`, revised 2026-10-15. Issue and PR states below were checked against GitHub on this review.
 
 | Area                       | What exists today                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | What depends on it                                                                                                                          | Decision     | Tracking issue                    | Status                                                                                                             |

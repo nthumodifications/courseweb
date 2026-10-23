@@ -57,6 +57,23 @@ jobs:
         run: |
           bun run build
 
+      - name: Setup Node for layout guard
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Layout guard
+        working-directory: apps/web
+        run: timeout 210s bun run layout-guard
+
+      - name: Upload layout guard artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: layout-guard-artifacts
+          path: apps/web/layout-guard-artifacts
+          if-no-files-found: ignore
+
   check-migrations:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'

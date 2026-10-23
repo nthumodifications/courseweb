@@ -1,0 +1,142 @@
+{
+  "source": {
+    "capturedAt": "2026-10-22",
+    "courseId": "11110EE  231001",
+    "apiOrigin": "https://api.nthumods.com",
+    "supabaseOrigin": "https://cmzdlrqfpuktcczvsobs.supabase.co"
+  },
+  "course": {
+    "raw_id": "11110EE  231001",
+    "semester": "11110",
+    "department": "EE",
+    "course": "2310",
+    "class": "1",
+    "name_en": "Introduction to Programming",
+    "name_zh": "計算機程式設計",
+    "credits": 3,
+    "capacity": 60,
+    "reserve": 50,
+    "language": "英",
+    "ge_target": " ",
+    "ge_type": "",
+    "note": "大一必修。每週上課4小時",
+    "closed_mark": "",
+    "prerequisites": "",
+    "restrictions": "限電機系大學部,電資院學士班大學部",
+    "no_extra_selection": false,
+    "cross_discipline": [
+      "積體電路設計學分學程",
+      "數據科學學分學程",
+      "人工智慧與應用基礎學分學程",
+      "音樂科技與健康學分學程",
+      "神經科學學分學程"
+    ],
+    "teacher_en": ["HUANG,CHIH-HAO"],
+    "teacher_zh": ["黃之浩"],
+    "first_specialization": ["電機工程", "電機資訊"],
+    "second_specialization": ["數據科學", "電機工程"],
+    "times": ["M1M2R1R2"],
+    "compulsory_for": ["電機系111BA", "電機系111BB", "電資院學士班111B"],
+    "elective_for": [],
+    "tags": [],
+    "venues": ["DELTA台達217"],
+    "enrolled": 0,
+    "updated_at": "2025-02-04T05:30:36.067194+00:00",
+    "course_syllabus": null,
+    "course_scores": null,
+    "course_dates": []
+  },
+  "ptt": [],
+  "changes": [],
+  "related": [
+    {
+      "raw_id": "11210EE  231001",
+      "semester": "11210",
+      "department": "EE",
+      "course": "2310",
+      "class": "1",
+      "name_en": "Introduction to Programming",
+      "name_zh": "計算機程式設計",
+      "credits": 3,
+      "capacity": 60,
+      "reserve": 50,
+      "language": "英",
+      "ge_target": " ",
+      "ge_type": "",
+      "note": "大一必修。每週上課4小時。欲加簽者，第一堂課務必到課抽簽。",
+      "closed_mark": "",
+      "prerequisites": "",
+      "restrictions": "限電機系大學部,電資院學士班大學部",
+      "no_extra_selection": false,
+      "cross_discipline": [
+        "積體電路設計學分學程",
+        "數據科學學分學程",
+        "人工智慧與應用基礎學分學程",
+        "音樂科技與健康學分學程",
+        "神經科學學分學程"
+      ],
+      "teacher_en": ["HUANG,CHIH-HAO"],
+      "teacher_zh": ["黃之浩"],
+      "first_specialization": ["電機工程", "電機資訊"],
+      "second_specialization": ["資訊工程", "數據科學"],
+      "times": ["M1M2R1R2"],
+      "compulsory_for": ["電機系112BA", "電機系112BB", "電資院學士班112B"],
+      "elective_for": [],
+      "tags": [],
+      "venues": ["DELTA台達217"],
+      "enrolled": 0,
+      "updated_at": "2025-02-04T05:30:36.067194+00:00",
+      "course_scores": {
+        "raw_id": "11210EE  231001",
+        "enrollment": 81,
+        "type": "percent",
+        "average": 77.95,
+        "std_dev": 9.99,
+        "created_at": "2024-06-13T09:23:07.839935+00:00",
+        "updated_at": "2025-02-04T13:40:45.869663+00:00"
+      }
+    }
+  ],
+  "grades": {
+    "courseCode": "EE231001",
+    "statistics": [
+      {
+        "rawId": "11420EE 231001",
+        "courseCode": "EE231001",
+        "semester": "11420",
+        "enrollment": 12,
+        "scale": "percent",
+        "average": 78.17,
+        "stdDev": 9.4,
+        "updatedAt": "2026-10-17T02:59:17.204Z"
+      },
+      {
+        "rawId": "11410EE 231001",
+        "courseCode": "EE231001",
+        "semester": "11410",
+        "enrollment": 64,
+        "scale": "percent",
+        "average": 77.14,
+        "stdDev": 10.84,
+        "updatedAt": "2026-10-17T02:59:36.393Z"
+      }
+    ]
+  },
+  "moduleHistory": [
+    { "semester": "10810", "department": "EE", "course": "2310", "name_zh": "計算機程式設計", "name_en": "Introduction to Programming", "credits": 3 },
+    { "semester": "10820", "department": "EE", "course": "2310", "name_zh": "計算機程式設計", "name_en": "Introduction to Programming", "credits": 3 },
+    { "semester": "10910", "department": "EE", "course": "2310", "name_zh": "計算機程式設計", "name_en": "Introduction to Programming", "credits": 3 },
+    { "semester": "10920", "department": "EE", "course": "2310", "name_zh": "計算機程式設計", "name_en": "Introduction to Programming", "credits": 3 },
+    { "semester": "11010", "department": "EE", "course": "2310", "name_zh": "計算機程式設計", "name_en": "Introduction to Programming", "credits": 3 },
+    { "semester": "11020", "department": "EE", "course": "2310", "name_zh": "計算機程式設計", "name_en": "Introduction to Programming", "credits": 3 },
+    { "semester": "11110", "department": "EE", "course": "2310", "name_zh": "計算機程式設計", "name_en": "Introduction to Programming", "credits": 3 },
+    { "semester": "11120", "department": "EE", "course": "2310", "name_zh": "計算機程式設計", "name_en": "Introduction to Programming", "credits": 3 },
+    { "semester": "11210", "department": "EE", "course": "2310", "name_zh": "計算機程式設計", "name_en": "Introduction to Programming", "credits": 3 },
+    { "semester": "11220", "department": "EE", "course": "2310", "name_zh": "計算機程式設計", "name_en": "Introduction to Programming", "credits": 3 },
+    { "semester": "11310", "department": "EE", "course": "2310", "name_zh": "計算機程式設計", "name_en": "Introduction to Programming", "credits": 3 },
+    { "semester": "11320", "department": "EE", "course": "2310", "name_zh": "計算機程式設計", "name_en": "Introduction to Programming", "credits": 3 },
+    { "semester": "11410", "department": "EE", "course": "2310", "name_zh": "計算機程式設計", "name_en": "Introduction to Programming", "credits": 3 },
+    { "semester": "11420", "department": "EE", "course": "2310", "name_zh": "計算機程式設計", "name_en": "Introduction to Programming", "credits": 3 },
+    { "semester": "11510", "department": "EE", "course": "2310", "name_zh": "計算機程式設計", "name_en": "Introduction to Programming", "credits": 3 }
+  ]
+}

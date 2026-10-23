@@ -1,0 +1,48 @@
+{
+  "source": {
+    "derivedFrom": "production.json",
+    "case": "60-char Chinese title, 90-char English title, 3 instructors, 8 cross_discipline entries"
+  },
+  "course": {
+    "raw_id": "11110EE  231001",
+    "semester": "11110",
+    "department": "EE",
+    "course": "2310",
+    "class": "1",
+    "name_en": "This deliberately long English title stresses responsive layout at medium viewport widths!",
+    "name_zh": "響應式課程標題回歸測試響應式課程標題回歸測試響應式課程標題回歸測試響應式課程標題回歸測試響應式課程標題回歸測試超長標題例",
+    "credits": 3,
+    "capacity": 60,
+    "reserve": 50,
+    "language": "英",
+    "ge_target": " ",
+    "ge_type": "",
+    "note": "大一必修。每週上課4小時",
+    "closed_mark": "",
+    "prerequisites": "",
+    "restrictions": "限電機系大學部,電資院學士班大學部",
+    "no_extra_selection": false,
+    "cross_discipline": ["積體電路設計學分學程", "數據科學學分學程", "人工智慧與應用基礎學分學程", "音樂科技與健康學分學程", "神經科學學分學程", "跨域創新學分學程", "永續發展學分學程", "量子科技學分學程"],
+    "teacher_en": ["HUANG,CHIH-HAO", "LIN,LAYOUT", "CHEN,GUARD"],
+    "teacher_zh": ["黃之浩", "林版面", "陳守門"],
+    "first_specialization": ["電機工程", "電機資訊"],
+    "second_specialization": ["數據科學", "電機工程"],
+    "times": ["M1M2R1R2"],
+    "compulsory_for": ["電機系111BA", "電機系111BB", "電資院學士班111B"],
+    "elective_for": [],
+    "tags": [],
+    "venues": ["DELTA台達217"],
+    "enrolled": 0,
+    "updated_at": "2025-02-04T05:30:36.067194+00:00",
+    "course_syllabus": null,
+    "course_scores": null,
+    "course_dates": []
+  },
+  "ptt": [],
+  "changes": [],
+  "related": [],
+  "grades": { "courseCode": "EE231001", "statistics": [] },
+  "moduleHistory": [
+    { "semester": "11110", "department": "EE", "course": "2310", "name_zh": "響應式課程標題回歸測試響應式課程標題回歸測試響應式課程標題回歸測試響應式課程標題回歸測試響應式課程標題回歸測試超長標題例", "name_en": "This deliberately long English title stresses responsive layout at medium viewport widths!", "credits": 3 }
+  ]
+}
