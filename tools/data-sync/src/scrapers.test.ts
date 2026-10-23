@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { syncCourseRows } from "./scrapers";
+import { fetchOcrResult, syncCourseRows } from "./scrapers";
 import type { Course } from "./types";
 
 const course: Course = {
@@ -34,6 +34,28 @@ const course: Course = {
   enrolled: 10,
   updated_at: "2026-10-21T00:00:00.000Z",
 };
+
+test("sends a browser-like User-Agent to the OCR service", async () => {
+  const originalFetch = globalThis.fetch;
+  let requestInit: RequestInit | undefined;
+  globalThis.fetch = (async (
+    _input: RequestInfo | URL,
+    init: RequestInit | undefined,
+  ) => {
+    requestInit = init;
+    return new Response("123", { status: 200 });
+  }) as unknown as typeof fetch;
+
+  try {
+    await expect(fetchOcrResult("test-store")).resolves.toBe("123");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+
+  expect(new Headers(requestInit?.headers).get("User-Agent")).toStartWith(
+    "Mozilla/5.0",
+  );
+});
 
 test("continues to course upsert when course change logging times out", async () => {
   const upsertedChunks: Course[][] = [];
