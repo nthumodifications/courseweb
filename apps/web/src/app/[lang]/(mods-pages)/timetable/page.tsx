@@ -17,6 +17,7 @@ import { timetableEvents } from "@/lib/trackingEvents";
 import { filterHiddenCourses } from "@/helpers/timetableVisibility";
 import useDictionary from "@/dictionaries/useDictionary";
 import { intlLocale } from "@/helpers/contentLanguage";
+import CourseChangeNotice from "./CourseChangeNotice";
 
 const TimetablePage = () => {
   const {
@@ -32,10 +33,11 @@ const TimetablePage = () => {
   const dict = useDictionary();
   const { setPortalContent, clearPortalContent } = useHeaderPortal();
   const previousSemesterRef = useRef(semester);
+  const semesterCourses = getSemesterCourses(semester);
 
   const timetableData = createTimetableFromCoursesAndCustomItems(
     filterHiddenCourses(
-      getSemesterCourses(semester),
+      semesterCourses,
       preferences.hiddenCourses,
     ) as MinimalCourse[],
     getSemesterCustomItems(semester),
@@ -128,6 +130,7 @@ const TimetablePage = () => {
           className={`grid grid-cols-1 md:grid-rows-1 ${!vertical ? "" : "md:grid-cols-[3fr_2fr]"} px-1 py-4 md:p-4 gap-4 md:gap-2`}
         >
           <div className="flex h-full w-full flex-col gap-4" {...handlers}>
+            <CourseChangeNotice courses={semesterCourses} semester={semester} />
             <Timetable
               timetableData={timetableData}
               vertical={vertical}
