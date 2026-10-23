@@ -1,5 +1,28 @@
 import { describe, expect, test } from "bun:test";
-import { decodeSchoolText, parseSyllabusMarkup } from "./syllabus";
+import {
+  decodeSchoolText,
+  fetchOcrResult,
+  parseSyllabusMarkup,
+} from "./syllabus";
+
+test("sends a browser-like User-Agent to the OCR service", async () => {
+  const originalFetch = globalThis.fetch;
+  let requestInit: RequestInit | undefined;
+  globalThis.fetch = (async (_input, init) => {
+    requestInit = init;
+    return new Response("123", { status: 200 });
+  }) as unknown as typeof fetch;
+
+  try {
+    await expect(fetchOcrResult("test-store")).resolves.toBe("123");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+
+  expect(new Headers(requestInit?.headers).get("User-Agent")).toStartWith(
+    "Mozilla/5.0",
+  );
+});
 
 describe("school syllabus text decoding", () => {
   test.each(["JH84201.html", "JH84202_114_30.html", "JH84202_115_10.html"])(

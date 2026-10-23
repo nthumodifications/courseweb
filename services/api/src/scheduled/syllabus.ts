@@ -11,7 +11,10 @@ import {
   describeAlgoliaError,
   isAlgoliaUnusableError,
 } from "../config/algolia";
-import { fetchUpstream } from "../utils/upstream";
+import { fetchUpstream, UpstreamHttpError } from "../utils/upstream";
+
+export const SCRAPER_USER_AGENT =
+  "Mozilla/5.0 (compatible; NTHUModsBot/1.0; +https://nthumods.com)";
 
 // Utility function for retry with exponential backoff
 const retryWithBackoff = async <T>(
@@ -124,6 +127,35 @@ export function decodeSchoolText(bytes: ArrayBuffer): string {
   return new TextDecoder("big5").decode(new Uint8Array(bytes));
 }
 
+export const fetchOcrResult = async (acixStore: string): Promise<string> => {
+  return await retryWithBackoff(
+    async () => {
+      try {
+        const response = await fetchUpstream(
+          `https://ocr.nthumods.com/?url=https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/mod/auth_img/auth_img.php?ACIXSTORE=${acixStore}&d=3`,
+          { headers: { "User-Agent": SCRAPER_USER_AGENT } },
+        );
+        const text = await response.text();
+        if (text.length !== 3) {
+          throw new Error(`OCR results are not valid: ${text}`);
+        }
+        return text;
+      } catch (error) {
+        if (error instanceof UpstreamHttpError) {
+          const body = await error.response.clone().text();
+          throw new Error(
+            `HTTP ${error.response.status}: ${error.response.statusText}; body: ${body.slice(0, 100)}`,
+          );
+        }
+        throw error;
+      }
+    },
+    3,
+    2000,
+    "OCR results",
+  );
+};
+
 export const scrapeArchivedCourses = async (env: Env, semester: string) => {
   // Fetch landing page with retry
   const landingPageRes = await retryWithBackoff(
@@ -151,21 +183,7 @@ export const scrapeArchivedCourses = async (env: Env, semester: string) => {
   const acixStore = acixStoreMatch[1];
 
   // Fetch OCR results with retry
-  const ocrResults = await retryWithBackoff(
-    async () => {
-      const response = await fetchUpstream(
-        `https://ocr.nthumods.com/?url=https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/mod/auth_img/auth_img.php?ACIXSTORE=${acixStore}&d=3`,
-      );
-      const text = await response.text();
-      if (text.length !== 3) {
-        throw new Error(`OCR results are not valid: ${text}`);
-      }
-      return text;
-    },
-    3,
-    2000,
-    "OCR results",
-  );
+  const ocrResults = await fetchOcrResult(acixStore);
   const webLanding = parseHTML(landingPageRes).document;
 
   // Extract department options from the select element

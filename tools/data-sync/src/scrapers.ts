@@ -22,6 +22,7 @@ import {
   fullWidthToHalfWidth,
   createSupabaseClient,
   createAlgoliaClient,
+  SCRAPER_USER_AGENT,
 } from "./utils";
 
 const baseUrl = `https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/6/6.2/6.2.9/JH629002.php`;
@@ -33,6 +34,31 @@ export const COURSE_CHANGE_LOG_TIMEOUT_MS = 60_000;
 const CHANGE_LOG_SELECT = ["raw_id", "semester", ...TRACKED_COURSE_FIELDS].join(
   ",",
 );
+
+export const fetchOcrResult = async (acixStore: string): Promise<string> => {
+  return await retryWithBackoff(
+    async () => {
+      const response = await fetch(
+        `https://ocr.nthumods.com/?url=https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/mod/auth_img/auth_img.php?ACIXSTORE=${acixStore}&d=3`,
+        { headers: { "User-Agent": SCRAPER_USER_AGENT } },
+      );
+      if (!response.ok) {
+        const body = await response.text();
+        throw new Error(
+          `HTTP ${response.status}: ${response.statusText}; body: ${body.slice(0, 100)}`,
+        );
+      }
+      const text = await response.text();
+      if (text.length !== 3) {
+        throw new Error(`OCR results are not valid: ${text}`);
+      }
+      return text;
+    },
+    3,
+    2000,
+    "OCR results",
+  );
+};
 
 const readExistingCourseRows = async (
   supabase: ReturnType<typeof createSupabaseClient>,
@@ -246,6 +272,7 @@ export const scrapeArchivedCourses = async (
     async () => {
       const response = await fetch(
         "https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/6/6.2/6.2.9/JH629001.php",
+        { headers: { "User-Agent": SCRAPER_USER_AGENT } },
       );
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -269,24 +296,7 @@ export const scrapeArchivedCourses = async (
   }
   const acixStore = acixStoreMatch[1];
   // Fetch OCR results with retry
-  const ocrResults = await retryWithBackoff(
-    async () => {
-      const response = await fetch(
-        `https://ocr.nthumods.com/?url=https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/mod/auth_img/auth_img.php?ACIXSTORE=${acixStore}&d=3`,
-      );
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      const text = await response.text();
-      if (text.length !== 3) {
-        throw new Error(`OCR results are not valid: ${text}`);
-      }
-      return text;
-    },
-    3,
-    2000,
-    "OCR results",
-  );
+  const ocrResults = await fetchOcrResult(acixStore);
   const webLanding = parseHTML(landingPageRes).document;
 
   // Extract department options from the select element
@@ -371,6 +381,7 @@ export const scrapeArchivedCourses = async (
     return await retryWithBackoff(
       async () => {
         const response = await fetch(baseUrl, {
+          headers: { "User-Agent": SCRAPER_USER_AGENT },
           body: new URLSearchParams({
             "cache-control": "max-age=0",
             ACIXSTORE: `${acixStore}`,
@@ -666,7 +677,10 @@ const getAnonACIX = async (): Promise<string> => {
     async () => {
       const url =
         "https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/6/6.2/6.2.6/JH626001.php";
-      const response = await fetch(url, { redirect: "manual" });
+      const response = await fetch(url, {
+        headers: { "User-Agent": SCRAPER_USER_AGENT },
+        redirect: "manual",
+      });
       const location = response.headers.get("location");
       const ACIXSTORE = location?.split("=")[1];
 
@@ -693,7 +707,9 @@ const downloadPDF = async (
   try {
     const file = await retryWithBackoff(
       async () => {
-        const response = await fetch(url);
+        const response = await fetch(url, {
+          headers: { "User-Agent": SCRAPER_USER_AGENT },
+        });
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
@@ -797,7 +813,9 @@ export const scrapeSyllabus = async (
   const fetchSyllabusHTML = async (c_key: string) => {
     return await retryWithBackoff(
       async () => {
-        const response = await fetch(baseURL + encodeURIComponent(c_key));
+        const response = await fetch(baseURL + encodeURIComponent(c_key), {
+          headers: { "User-Agent": SCRAPER_USER_AGENT },
+        });
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }

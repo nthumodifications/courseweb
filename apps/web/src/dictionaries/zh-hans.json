@@ -81,6 +81,15 @@
     }
   },
   "timetable": {
+    "course_changes": {
+      "summary": "课表中有 {count} 门课有异动",
+      "summary_singular": "课表中有 {count} 门课有异动",
+      "dismiss": "知道了",
+      "removed": "不再列出",
+      "reappeared": "重新列出",
+      "change_separator": " ・ ",
+      "detail_date_separator": "，"
+    },
     "seo": {
       "application_name": "NTHUMods 课表系统",
       "page_title": "课表管理 | NTHUMods",
@@ -1680,6 +1689,15 @@
     "area_placeholder": "选择地区",
     "area_all": "全部",
     "no_open": "目前没有营业中的店家",
+    "pick_for_me": "随便吃",
+    "pick_summary": "从 {count} 家营业中的店抽出",
+    "pick_again": "再抽一次",
+    "pick_hide": "不要这家",
+    "pick_close": "关闭随便吃",
+    "pick_include_snacks": "包含便利商店与饮料店",
+    "pick_reset_hidden": "重设排除 ({count})",
+    "pick_no_open": "现在没有营业中的店",
+    "pick_no_open_area": "{area}：现在没有营业中的店",
     "separator": "・",
     "load_error": "无法加载店家数据。",
     "view_on_map": "在地图中查看",

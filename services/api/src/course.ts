@@ -51,6 +51,13 @@ const courseChangesQueryValidator = zValidator(
     days: z.coerce.number().int().min(1).max(365).default(7),
   }),
 );
+const courseNoticeChangesQueryValidator = zValidator(
+  "query",
+  z.object({
+    courses: z.union([courseIdSchema, z.array(courseIdSchema).min(1).max(100)]),
+    days: z.coerce.number().int().min(1).max(60).default(14),
+  }),
+);
 const courseChangeCacheControl =
   "public, max-age=60, s-maxage=300, stale-while-revalidate=3600";
 
@@ -93,7 +100,9 @@ const app = new Hono()
   })
   .get("/changes", courseChangesQueryValidator, async (c) => {
     const { semester, days } = c.req.valid("query");
-    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+    const since = new Date(
+      Date.now() - days * 24 * 60 * 60 * 1000,
+    ).toISOString();
     const { data, error } = await supabase_server(c)
       .from("course_changes")
       .select("*")
@@ -106,6 +115,36 @@ const app = new Hono()
     }
     c.header("Cache-Control", courseChangeCacheControl);
     return c.json(data ?? []);
+  })
+  .get("/changes/for-courses", courseNoticeChangesQueryValidator, async (c) => {
+    const { courses: _courses, days } = c.req.valid("query");
+    const courses = Array.isArray(_courses) ? _courses : [_courses];
+    const since = new Date(
+      Date.now() - days * 24 * 60 * 60 * 1000,
+    ).toISOString();
+    const { data, error } = await queryInChunks<any>(courses, (chunk) =>
+      supabase_server(c)
+        .from("course_changes")
+        .select("*")
+        .in("raw_id", chunk)
+        .gte("detected_at", since)
+        .order("detected_at", { ascending: false })
+        .range(0, 199),
+    );
+    if (error) {
+      throw new Error(
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch course changes",
+      );
+    }
+
+    data.sort((left, right) => {
+      const detectedAt = right.detected_at.localeCompare(left.detected_at);
+      return detectedAt || right.id - left.id;
+    });
+    c.header("Cache-Control", courseChangeCacheControl);
+    return c.json(data.slice(0, 200));
   })
   .get("/dates", courseListQueryValidator, async (c) => {
     const { courses: _courses } = c.req.valid("query");
