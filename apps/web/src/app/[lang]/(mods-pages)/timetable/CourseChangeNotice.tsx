@@ -129,7 +129,7 @@ const CourseChangeNotice = ({ courses, semester }: CourseChangeNoticeProps) => {
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col px-2">
       <div className="flex items-center gap-2">
         <p className="flex-1 text-sm text-muted-foreground">
           {(notices.length === 1
