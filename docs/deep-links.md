@@ -40,8 +40,8 @@ Duplicate parameters: `ignored`.
 | --- | --- | --- | --- |
 | `stop:route1_up` | 該南大路線的站名。 A stop name on the selected Nanda line. | `北校門口`, `綜二`, `人社院/生科院`, `台積館(經寶山路)`, `南大校區`, `North Main Gate`, `General Building II`, `CHSS/CLS Building`, `TSMC Building(Baoshan Rd.)`, `Nanda Campus` | `TSMC Building(Baoshan Rd.)` |
 | `stop:route1_down` | 該南大路線的站名。 A stop name on the selected Nanda line. | `南大校區`, `台積館(經寶山路)`, `人社院/生科院`, `綜二`, `北校門口`, `Nanda Campus`, `TSMC Building(Baoshan Rd.)`, `CHSS/CLS Building`, `General Building II`, `North Main Gate` | `TSMC Building(Baoshan Rd.)` |
-| `stop:route2_up` | 該南大路線的站名。 A stop name on the selected Nanda line. | `北校門口`, `綜二`, `奕園停車場`, `教育學院大樓/南門停車場(經寶山路)`, `南大校區`, `North Main Gate`, `General Building II`, `Yi Pavilion Parking Lot`, `COE Building/South Gate Parking Lot(Baoshan Rd.)`, `Nanda Campus` | `TSMC Building(Baoshan Rd.)` |
-| `stop:route2_down` | 該南大路線的站名。 A stop name on the selected Nanda line. | `南大校區`, `教育學院大樓/南門停車場(經寶山路)`, `奕園停車場`, `綜二`, `北校門口`, `Nanda Campus`, `COE Building/South Gate Parking Lot(Baoshan Rd.)`, `Yi Pavilion Parking Lot`, `General Building II`, `North Main Gate` | `TSMC Building(Baoshan Rd.)` |
+| `stop:route2_up` | 該南大路線的站名。 A stop name on the selected Nanda line. | `北校門口`, `綜二`, `奕園停車場`, `教育學院大樓/南門停車場(經寶山路)`, `南大校區`, `North Main Gate`, `General Building II`, `Yi Pavilion Parking Lot`, `COE Building/South Gate Parking Lot(Baoshan Rd.)`, `Nanda Campus` | `北校門口` |
+| `stop:route2_down` | 該南大路線的站名。 A stop name on the selected Nanda line. | `南大校區`, `教育學院大樓/南門停車場(經寶山路)`, `奕園停車場`, `綜二`, `北校門口`, `Nanda Campus`, `COE Building/South Gate Parking Lot(Baoshan Rd.)`, `Yi Pavilion Parking Lot`, `General Building II`, `North Main Gate` | `南大校區` |
 
 Examples:
 
