@@ -101,6 +101,10 @@
               "South Gate Parking Lot",
               "Yi Pavilion Parking Lot"
             ]
+          },
+          "lineExamples": {
+            "green": "綜二",
+            "red": "綜二"
           }
         }
       ],
@@ -169,6 +173,12 @@
               "General Building II",
               "North Main Gate"
             ]
+          },
+          "lineExamples": {
+            "route1_up": "TSMC Building(Baoshan Rd.)",
+            "route1_down": "TSMC Building(Baoshan Rd.)",
+            "route2_up": "北校門口",
+            "route2_down": "南大校區"
           }
         }
       ],

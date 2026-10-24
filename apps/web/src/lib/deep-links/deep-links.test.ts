@@ -28,6 +28,8 @@ import {
   buildDeepLinksManifest,
   buildDeepLinksMarkdown,
   normalizeGeneratedText,
+  resolveDeepLinkLineValues,
+  resolveDeepLinkValues,
 } from "../../../scripts/gen-deep-links";
 import {
   DEEP_LINK_REGISTRY,
@@ -139,6 +141,41 @@ test.each([
     | (DeepLinkParam & { lineValues?: () => Readonly<Record<string, unknown>> })
     | undefined;
   expect(param?.lineValues && Object.keys(param.lineValues())).toEqual(lineKeys);
+});
+
+test("registry and emitted line examples are accepted values", () => {
+  const markdown = buildDeepLinksMarkdown();
+  const manifest = buildDeepLinksManifest();
+  for (const route of DEEP_LINK_REGISTRY) {
+    for (const param of route.params) {
+      const values = resolveDeepLinkValues(param.values);
+      if (Array.isArray(values)) expect(values).toContain(param.example);
+
+      if (!param.lineValues) continue;
+      for (const [line, lineValues] of Object.entries(
+        resolveDeepLinkLineValues(param.lineValues),
+      )) {
+        if (!Array.isArray(lineValues)) {
+          throw new Error(`Expected list values for ${route.route}:${line}`);
+        }
+        const row = markdown
+          .split("\n")
+          .find((candidate) =>
+            candidate.startsWith(`| \`${param.name}:${line}\` |`),
+          );
+        const emittedExample = row?.match(/\| `([^`]*)` \|$/)?.[1];
+        expect(emittedExample).toBeDefined();
+        expect(lineValues).toContain(emittedExample);
+
+        const manifestParam = manifest.routes
+          .find((item) => item.route === route.route)
+          ?.params.find((item) => item.name === param.name);
+        const emittedJsonExample = manifestParam?.lineExamples?.[line];
+        expect(emittedJsonExample).toBeDefined();
+        expect(lineValues).toContain(emittedJsonExample);
+      }
+    }
+  }
 });
 
 test("every URLSearchParams parameter is registered or explicitly internal", async () => {

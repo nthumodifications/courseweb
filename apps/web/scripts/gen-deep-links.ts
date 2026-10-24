@@ -18,6 +18,7 @@ export type DeepLinksManifest = {
         string,
         string[] | "free-text" | { pattern: string }
       >;
+      lineExamples?: Record<string, string>;
       runtime?: boolean;
     }>;
     examples: string[];
@@ -43,6 +44,27 @@ export const resolveDeepLinkLineValues = (
     ]),
   );
 
+export const resolveDeepLinkExample = (
+  example: string,
+  values: ReturnType<typeof resolveDeepLinkValues>,
+) =>
+  Array.isArray(values) && !values.includes(example)
+    ? (values[0] ?? example)
+    : example;
+
+export const resolveDeepLinkLineExamples = (
+  example: string,
+  source: NonNullable<
+    import("../src/lib/deep-links/registry").DeepLinkParam["lineValues"]
+  >,
+) =>
+  Object.fromEntries(
+    Object.entries(resolveDeepLinkLineValues(source)).map(([line, values]) => [
+      line,
+      resolveDeepLinkExample(example, values),
+    ]),
+  );
+
 export const normalizeGeneratedText = (text: string) =>
   text.replaceAll("\r\n", "\n");
 
@@ -59,7 +81,13 @@ export function buildDeepLinksManifest(): DeepLinksManifest {
         values: resolveDeepLinkValues(param.values),
         example: param.example,
         ...(param.lineValues
-          ? { lineValues: resolveDeepLinkLineValues(param.lineValues) }
+          ? {
+              lineValues: resolveDeepLinkLineValues(param.lineValues),
+              lineExamples: resolveDeepLinkLineExamples(
+                param.example,
+                param.lineValues,
+              ),
+            }
           : {}),
         ...(param.runtime ? { runtime: true } : {}),
       })),
@@ -100,9 +128,12 @@ export function buildDeepLinksMarkdown(): string {
       const lineValues = param.lineValues
         ? Object.entries(resolveDeepLinkLineValues(param.lineValues))
         : [["", resolveDeepLinkValues(param.values)] as const];
+      const lineExamples = param.lineValues
+        ? resolveDeepLinkLineExamples(param.example, param.lineValues)
+        : undefined;
       for (const [line, values] of lineValues) {
         lines.push(
-          `| \`${param.name}${line ? `:${line}` : ""}\` | ${param.description.zh} ${param.description.en} | ${formatValues(values, param.runtime)} | \`${param.example}\` |`,
+          `| \`${param.name}${line ? `:${line}` : ""}\` | ${param.description.zh} ${param.description.en} | ${formatValues(values, param.runtime)} | \`${lineExamples?.[line] ?? resolveDeepLinkExample(param.example, values)}\` |`,
         );
       }
     }
