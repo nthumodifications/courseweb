@@ -26,6 +26,7 @@ import CityBusCatalogue, {
 } from "@/features/bus/CityBusCatalogue";
 import { useBusPins, type CampusBusPin } from "@/features/bus/busPins";
 import type { CompleteBusData } from "@/libs/bus";
+import { getSingleSearchParam } from "@/lib/deep-links/search-params";
 
 function selectedCampusBus(
   pin: CampusBusPin,
@@ -94,13 +95,13 @@ const BusPage = () => {
   const dict = useDictionary();
   const [searchParams] = useSearchParams();
   const [tab, setTab] = useState<BusTab>(() =>
-    normalizeBusTab(searchParams.get("tab")),
+    normalizeBusTab(getSingleSearchParam(searchParams, "tab")),
   );
   const navigate = useNavigate();
-  const stop = searchParams.get("stop") ?? undefined;
+  const stop = getSingleSearchParam(searchParams, "stop") ?? undefined;
   const { pins, toggle: togglePin } = useBusPins();
   useEffect(() => {
-    setTab(normalizeBusTab(searchParams.get("tab")));
+    setTab(normalizeBusTab(getSingleSearchParam(searchParams, "tab")));
   }, [searchParams]);
 
   const weektype = isWeekend(time) ? "weekend" : "weekday";
@@ -409,8 +410,9 @@ const BusPage = () => {
     const validTab = normalizeBusTab(nextTab);
     setTab(validTab);
     const nextParams = new URLSearchParams({ tab: validTab });
-    if (searchParams.has("stop")) {
-      nextParams.set("stop", searchParams.get("stop") ?? "");
+    const currentStop = getSingleSearchParam(searchParams, "stop");
+    if (currentStop !== null) {
+      nextParams.set("stop", currentStop);
     }
     navigate(`?${nextParams.toString()}`, { replace: true });
   };
@@ -498,12 +500,7 @@ const BusPage = () => {
         ) : (
           <div className="flex flex-col px-2 divide-y divide-border">
             {displayBuses.map((bus, index) => (
-              <BusListingItem
-                key={index}
-                {...bus}
-                stop={stop}
-                refTime={time}
-              />
+              <BusListingItem key={index} {...bus} stop={stop} refTime={time} />
             ))}
           </div>
         )}

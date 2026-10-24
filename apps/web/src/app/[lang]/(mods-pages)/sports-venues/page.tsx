@@ -46,7 +46,7 @@ import {
   getSportsDeepLinkAction,
   parseSportsVenuesDeepLink,
 } from "./deep-link";
-import { hasDeepLinkRequestChanged } from "@/lib/deep-link";
+import { hasDeepLinkRequestChanged } from "@/lib/deep-links/deep-link";
 
 type OccupancyItem = VenueOccupancy;
 
@@ -534,9 +534,7 @@ const SportsVenuesPage = () => {
   useEffect(() => {
     const facilityName = deepLink.facility;
     if (!facilityName) {
-      if (
-        !hasDeepLinkRequestChanged(lastAppliedFacility.current, undefined)
-      ) {
+      if (!hasDeepLinkRequestChanged(lastAppliedFacility.current, undefined)) {
         return;
       }
       lastAppliedFacility.current = undefined;

@@ -12,6 +12,7 @@ export function getSearchParamValues(
     : [params.get(name)].filter((value): value is string => value !== null);
 }
 
+/** A repeated parameter is ambiguous and is ignored instead of taking a value. */
 export function getSingleSearchParam(
   params: SearchParamsLike,
   name: string,

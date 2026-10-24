@@ -41,7 +41,7 @@ import {
   useUsageForecast,
 } from "@/lib/usage-forecast";
 import { getLibraryDeepLinkKey, parseLibraryDeepLink } from "./deep-link";
-import { reconcileSearchState } from "@/lib/reconcile-search-state";
+import { reconcileSearchState } from "@/lib/deep-links/reconcile-search-state";
 
 function getCategoryIcon(category: SpaceCategory) {
   switch (category) {

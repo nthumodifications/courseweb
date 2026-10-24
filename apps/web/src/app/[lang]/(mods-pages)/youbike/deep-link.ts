@@ -1,7 +1,14 @@
 import type { YouBikeTab } from "@/lib/youbike";
+import { getSingleSearchParam } from "@/lib/deep-links/search-params";
 
-const YOUBIKE_TABS: readonly YouBikeTab[] = ["all", "main", "nanda", "mine"];
-const YOUBIKE_STATION_ID = /^\d{9}$/;
+export const YOUBIKE_TABS: readonly YouBikeTab[] = [
+  "all",
+  "main",
+  "nanda",
+  "mine",
+];
+export const YOUBIKE_STATION_ID_PATTERN = "\\d{9}";
+const YOUBIKE_STATION_ID = new RegExp(`^${YOUBIKE_STATION_ID_PATTERN}$`);
 
 export interface YouBikeDeepLink {
   tab?: YouBikeTab;
@@ -11,8 +18,8 @@ export interface YouBikeDeepLink {
 export const parseYouBikeDeepLink = (
   searchParams: URLSearchParams,
 ): YouBikeDeepLink => {
-  const tab = searchParams.get("tab");
-  const station = searchParams.get("station");
+  const tab = getSingleSearchParam(searchParams, "tab");
+  const station = getSingleSearchParam(searchParams, "station");
 
   return {
     tab: YOUBIKE_TABS.includes(tab as YouBikeTab)

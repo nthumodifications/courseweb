@@ -3,7 +3,7 @@ import {
   getSportsDeepLinkAction,
   parseSportsVenuesDeepLink,
 } from "./deep-link";
-import { hasDeepLinkRequestChanged } from "@/lib/deep-link";
+import { hasDeepLinkRequestChanged } from "@/lib/deep-links/deep-link";
 
 const facilities = ["體育館", "重訓室"] as const;
 
@@ -14,6 +14,7 @@ describe("parseSportsVenuesDeepLink", () => {
     ["invalid", "facility=unknown", {}],
     ["empty", "facility=", {}],
     ["missing", "", {}],
+    ["duplicate facility is ignored", "facility=體育館&facility=重訓室", {}],
   ] as const)("handles %s values", (_label, query, expected) => {
     expect(
       parseSportsVenuesDeepLink(new URLSearchParams(query), facilities),

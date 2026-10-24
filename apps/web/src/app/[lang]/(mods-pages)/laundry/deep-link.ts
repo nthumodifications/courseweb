@@ -8,7 +8,7 @@ import {
   getSearchParamValues,
   getSingleSearchParam,
   type SearchParamsLike,
-} from "@/lib/search-params";
+} from "@/lib/deep-links/search-params";
 
 export interface LaundryDeepLinkState {
   dorm: LaundryDorm | "";

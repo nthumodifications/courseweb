@@ -33,6 +33,7 @@ import {
   withCampusBusStopIds,
 } from "@/features/bus/campusBusStop";
 import { linesDict } from "@/features/bus/campusBusLines";
+import { getSingleSearchParam } from "@/lib/deep-links/search-params";
 export { linesDict } from "@/features/bus/campusBusLines";
 
 const CampusLineDisplayPage = () => {
@@ -48,7 +49,8 @@ const CampusLineDisplayPage = () => {
   const contentLang = contentLanguage(language);
   const dict = useDictionary();
   const { pinned, toggle } = useBusPins();
-  const returnUrl = searchParams.get("return_url") ?? `/${language}/bus`;
+  const returnUrl =
+    getSingleSearchParam(searchParams, "return_url") ?? `/${language}/bus`;
   const campusLine =
     line === "red" || line === "green"
       ? line
@@ -429,7 +431,7 @@ const CampusLineDisplayPage = () => {
   }, [time, busOfInterest, contentLang]);
 
   const activeStopIndex = findCampusBusStopIndex(
-    searchParams.get("stop"),
+    getSingleSearchParam(searchParams, "stop"),
     lineData.stations_zh,
     lineData.stations_en,
     displayText.map((item) => item.state === BusStationState.LEFT),

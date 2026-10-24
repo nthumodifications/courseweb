@@ -37,7 +37,7 @@ import {
   resolveLaundryDeepLink,
   shouldPersistLaundryDorm,
 } from "./deep-link";
-import { reconcileSearchState } from "@/lib/reconcile-search-state";
+import { reconcileSearchState } from "@/lib/deep-links/reconcile-search-state";
 type MachineFilter = "all" | LaundryMachineType;
 type GenderFilter = "all" | Exclude<LaundryGender, "mixed">;
 const filterValues: MachineFilter[] = ["all", "washer", "dryer"];

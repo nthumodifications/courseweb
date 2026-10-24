@@ -17,7 +17,7 @@ import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
 import OpenCollectiveSponsorBanner from "@/components/Sponsorship/OpenCollectiveSponsorBanner";
 import { activateOnKey } from "@/lib/activate-on-key";
 import { contentLanguage } from "@/helpers/contentLanguage";
-import { hasDeepLinkRequestChanged } from "@/lib/deep-link";
+import { hasDeepLinkRequestChanged } from "@/lib/deep-links/deep-link";
 import { parseYouBikeDeepLink } from "./deep-link";
 
 export type YouBikeItemProps = {

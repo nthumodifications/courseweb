@@ -31,6 +31,7 @@ import { SettingItem } from "./SettingItem";
 import { MobileQuickNav } from "./MobileQuickNav";
 import { useScrollTracking } from "./useScrollTracking";
 import { AccountSection } from "./AccountSection";
+import { SETTINGS_SECTION_IDS, SETTINGS_SETTING_IDS } from "./sectionHash";
 import {
   SettingsSearchBar,
   SettingsSearchEmptyState,
@@ -78,40 +79,8 @@ const SettingsPage = () => {
   const dict = useDictionary();
   const pendingSectionRef = useRef<string | null>(null);
 
-  const sectionIds = useMemo(
-    () => [
-      "appearance",
-      "display",
-      "calendar",
-      "timetable",
-      "ai",
-      "account",
-      "privacy",
-      "advanced",
-    ],
-    [],
-  );
-  const settingIds = useMemo(
-    () => [
-      "setting-dark-mode",
-      "setting-language",
-      "setting-compact-header",
-      "setting-academic-calendar",
-      "setting-experimental-calendar",
-      "setting-widget-dashboard",
-      "setting-default-view",
-      "setting-ai-department",
-      "setting-ai-entrance-year",
-      "setting-ai-api-key",
-      "setting-ai-api-key-value",
-      "setting-account",
-      "setting-sync-status",
-      "setting-restore-backup",
-      "setting-analytics",
-      "setting-custom-css",
-    ],
-    [],
-  );
+  const sectionIds = useMemo(() => [...SETTINGS_SECTION_IDS], []);
+  const settingIds = useMemo(() => [...SETTINGS_SETTING_IDS], []);
   const { activeSection, scrollToSection } = useScrollTracking(
     sectionIds,
     settingIds,

@@ -12,18 +12,21 @@ import {
 import { Search, AlarmClockCheck, Store } from "lucide-react";
 // import shops from "./shops.json"
 import ShopItem from "./ShopItem";
-import areas from "./areas.json";
 import useDictionary from "@/dictionaries/useDictionary";
 import type { DiningArea } from "./types";
-import { getShopAreaDeepLinkKey, resolveShopAreaDeepLink } from "./deep-link";
-import { reconcileSearchState } from "@/lib/reconcile-search-state";
+import {
+  getShopAreaDeepLinkKey,
+  resolveShopAreaDeepLink,
+  SHOP_AREAS,
+} from "./deep-link";
+import { reconcileSearchState } from "@/lib/deep-links/reconcile-search-state";
 
 const Shops = ({ data }: { data: DiningArea[] }) => {
   const shops = data.flatMap((area) => area.restaurants);
   const dict = useDictionary();
   const [searchParams, setSearchParams] = useSearchParams();
   const [initialDeepLink] = useState(() =>
-    resolveShopAreaDeepLink(searchParams, areas),
+    resolveShopAreaDeepLink(searchParams, SHOP_AREAS),
   );
 
   const [search, setSearch] = useState("");
@@ -38,7 +41,7 @@ const Shops = ({ data }: { data: DiningArea[] }) => {
     previousDeepLinkSearchKey.current = deepLinkSearchKey;
     if (previousSearchKey === deepLinkSearchKey) return;
 
-    const next = resolveShopAreaDeepLink(searchParams, areas);
+    const next = resolveShopAreaDeepLink(searchParams, SHOP_AREAS);
     setFilterArea((current) =>
       reconcileSearchState(
         current,
@@ -109,7 +112,7 @@ const Shops = ({ data }: { data: DiningArea[] }) => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="anywhere">{dict.shops.area_all}</SelectItem>
-              {areas.map((area) => (
+              {SHOP_AREAS.map((area) => (
                 <SelectItem key={area} value={area}>
                   {area}
                 </SelectItem>

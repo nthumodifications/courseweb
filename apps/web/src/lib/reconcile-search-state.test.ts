@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { reconcileSearchState } from "./reconcile-search-state";
+import { reconcileSearchState } from "./deep-links/reconcile-search-state";
 
 describe("reconcileSearchState", () => {
   test.each([

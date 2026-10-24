@@ -23,6 +23,11 @@ describe("parseCalendarDeepLink", () => {
     ["invalid", "date=2026-02-29&view=year", {}],
     ["empty", "date=&view=", {}],
     ["missing", "", {}],
+    [
+      "duplicate date is ignored",
+      "date=2026-10-24&date=2026-10-25&view=month",
+      { view: "month" },
+    ],
   ] as const)("handles %s values", (_label, query, expected) => {
     expect(parseCalendarDeepLink(new URLSearchParams(query))).toEqual(expected);
   });
@@ -41,7 +46,11 @@ describe("calendar deep-link transitions", () => {
 
   test.each([
     ["same request", { date: "2026-10-24", view: "month" }, "2026-10-24|month"],
-    ["changed request", { date: "2026-11-21", view: "week" }, "2026-11-21|week"],
+    [
+      "changed request",
+      { date: "2026-11-21", view: "week" },
+      "2026-11-21|week",
+    ],
   ] as const)("builds the %s key", (_label, request, expected) => {
     expect(getCalendarDeepLinkRequest(request)).toBe(expected);
   });

@@ -3,16 +3,16 @@ import {
   getSearchParamValues,
   getSingleSearchParam,
   type SearchParamsLike,
-} from "@/lib/search-params";
+} from "@/lib/deep-links/search-params";
 
-const branches: readonly LibraryBranch[] = [
+export const LIBRARY_BRANCHES: readonly LibraryBranch[] = [
   "all",
   "moonlight",
   "main",
   "hss",
   "ctm",
 ];
-const categories: readonly SpaceCategory[] = [
+export const LIBRARY_CATEGORIES: readonly SpaceCategory[] = [
   "all",
   "moonlight",
   "discussion",
@@ -41,10 +41,10 @@ export function parseLibraryDeepLink(
   const category = getSingleSearchParam(params, "category");
 
   return {
-    branch: branches.includes(branch as LibraryBranch)
+    branch: LIBRARY_BRANCHES.includes(branch as LibraryBranch)
       ? (branch as LibraryBranch)
       : "all",
-    category: categories.includes(category as SpaceCategory)
+    category: LIBRARY_CATEGORIES.includes(category as SpaceCategory)
       ? (category as SpaceCategory)
       : "all",
   };

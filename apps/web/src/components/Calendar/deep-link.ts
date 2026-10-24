@@ -3,10 +3,11 @@ import {
   getTaipeiWeek,
   isTaipeiDateKey,
 } from "@/helpers/dates";
+import { getSingleSearchParam } from "@/lib/deep-links/search-params";
 
 export type CalendarDisplayMode = "week" | "month" | "upcoming";
 
-const CALENDAR_DISPLAY_MODES: readonly CalendarDisplayMode[] = [
+export const CALENDAR_DISPLAY_MODES: readonly CalendarDisplayMode[] = [
   "week",
   "month",
   "upcoming",
@@ -35,19 +36,19 @@ export const shouldResetCalendarToOrigin = (
   lastAppliedRequest !== request &&
   request === getCalendarDeepLinkRequest({});
 
-export const isCalendarNavigationNoop = (
-  mode: CalendarDisplayMode,
-): boolean => mode === "upcoming";
+export const isCalendarNavigationNoop = (mode: CalendarDisplayMode): boolean =>
+  mode === "upcoming";
 
 export const getCalendarTransition = (
   mode: CalendarDisplayMode,
   anchorDate: Date | undefined,
   currentDates: Date[],
 ): CalendarTransition => {
-  const effectiveAnchorDate =
-    anchorDate ?? currentDates[0] ?? new Date();
+  const effectiveAnchorDate = anchorDate ?? currentDates[0] ?? new Date();
   const urlDate = (displayDates: Date[]) =>
-    anchorDate ?? displayDates[Math.floor(displayDates.length / 2)] ?? effectiveAnchorDate;
+    anchorDate ??
+    displayDates[Math.floor(displayDates.length / 2)] ??
+    effectiveAnchorDate;
 
   switch (mode) {
     case "week": {
@@ -69,8 +70,8 @@ export const getCalendarTransition = (
 export const parseCalendarDeepLink = (
   searchParams: URLSearchParams,
 ): CalendarDeepLink => {
-  const date = searchParams.get("date");
-  const view = searchParams.get("view");
+  const date = getSingleSearchParam(searchParams, "date");
+  const view = getSingleSearchParam(searchParams, "view");
 
   return {
     date: date && isTaipeiDateKey(date) ? date : undefined,

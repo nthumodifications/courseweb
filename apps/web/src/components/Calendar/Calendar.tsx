@@ -57,7 +57,7 @@ import {
   shouldResetCalendarToOrigin,
   type CalendarDisplayMode,
 } from "./deep-link";
-import { hasDeepLinkRequestChanged } from "@/lib/deep-link";
+import { hasDeepLinkRequestChanged } from "@/lib/deep-links/deep-link";
 
 type TimetableSyncPrompt = TimetableSyncRequest & {
   deletionCount: number;
@@ -293,11 +293,7 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
     anchorDate?: Date,
     syncUrl = true,
   ) => {
-    const transition = getCalendarTransition(
-      mode,
-      anchorDate,
-      displayDates,
-    );
+    const transition = getCalendarTransition(mode, anchorDate, displayDates);
     setDisplayMode(mode);
     setDisplayDates(transition.displayDates);
     if (syncUrl) {

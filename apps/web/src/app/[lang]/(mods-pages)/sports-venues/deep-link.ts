@@ -16,9 +16,10 @@ export const parseSportsVenuesDeepLink = (
   searchParams: URLSearchParams,
   facilityNames: readonly string[],
 ): SportsVenuesDeepLink => {
-  const facility = searchParams.get("facility");
+  const facility = getSingleSearchParam(searchParams, "facility");
   return {
     facility:
       facility && facilityNames.includes(facility) ? facility : undefined,
   };
 };
+import { getSingleSearchParam } from "@/lib/deep-links/search-params";

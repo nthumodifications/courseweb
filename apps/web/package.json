@@ -9,6 +9,7 @@
     "build": "vite build",
     "layout-guard": "node --experimental-strip-types scripts/layout-guard.ts",
     "gen:campus-buildings": "bun scripts/gen-campus-buildings.ts",
+    "gen:deep-links": "bun scripts/gen-deep-links.ts",
     "gen:zh-hans": "bun scripts/gen-zh-hans.mjs",
     "test": "bun test src",
     "preview": "vite preview",

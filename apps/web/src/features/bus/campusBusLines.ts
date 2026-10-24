@@ -190,3 +190,12 @@ export const linesDict: Record<string, CampusBusLine> = {
     timings: [10, 1, 2, 1],
   },
 };
+
+export const CAMPUS_BUS_STOP_NAMES = [
+  ...new Set(
+    Object.values(linesDict).flatMap((line) => [
+      ...line.stations_zh,
+      ...line.stations_en,
+    ]),
+  ),
+] as const;

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { parseYouBikeDeepLink } from "./deep-link";
-import { hasDeepLinkRequestChanged } from "@/lib/deep-link";
+import { hasDeepLinkRequestChanged } from "@/lib/deep-links/deep-link";
 
 describe("parseYouBikeDeepLink", () => {
   test.each([
@@ -17,6 +17,11 @@ describe("parseYouBikeDeepLink", () => {
     ["invalid", "tab=unknown&station=not-a-station", {}],
     ["empty", "tab=&station=", {}],
     ["missing", "", {}],
+    [
+      "duplicate tab is ignored",
+      "tab=main&tab=nanda&station=500401008",
+      { stationId: "500401008" },
+    ],
   ] as const)("handles %s values", (_label, query, expected) => {
     expect(parseYouBikeDeepLink(new URLSearchParams(query))).toEqual(expected);
   });

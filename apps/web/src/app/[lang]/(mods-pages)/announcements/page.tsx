@@ -34,7 +34,7 @@ import {
   useAnnouncements,
   type AnnouncementSource,
 } from "@/lib/announcements";
-import { hasDeepLinkRequestChanged } from "@/lib/deep-link";
+import { hasDeepLinkRequestChanged } from "@/lib/deep-links/deep-link";
 import { parseAnnouncementsDeepLink } from "./deep-link";
 
 const sourceMatches = (source: AnnouncementSource, search: string) => {
@@ -69,7 +69,9 @@ const AnnouncementsPage = () => {
   const lastAppliedSource = useRef<string | undefined | null>(null);
   useEffect(() => {
     if (isLoading || sources.length === 0) return;
-    if (!hasDeepLinkRequestChanged(lastAppliedSource.current, deepLink.source)) {
+    if (
+      !hasDeepLinkRequestChanged(lastAppliedSource.current, deepLink.source)
+    ) {
       return;
     }
     lastAppliedSource.current = deepLink.source;

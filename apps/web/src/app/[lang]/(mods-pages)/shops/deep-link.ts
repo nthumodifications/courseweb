@@ -2,7 +2,10 @@ import {
   getSearchParamValues,
   getSingleSearchParam,
   type SearchParamsLike,
-} from "@/lib/search-params";
+} from "@/lib/deep-links/search-params";
+import areas from "./areas.json";
+
+export const SHOP_AREAS = areas;
 
 export interface ShopAreaDeepLinkState {
   area: string;
@@ -18,7 +21,7 @@ export function getShopAreaDeepLinkKey(params: SearchParamsLike): string {
 
 export function resolveShopAreaDeepLink(
   params: SearchParamsLike,
-  availableAreas: readonly string[],
+  availableAreas: readonly string[] = SHOP_AREAS,
 ): ShopAreaDeepLinkState {
   const requestedArea = getSingleSearchParam(params, "area");
   if (requestedArea && availableAreas.includes(requestedArea)) {

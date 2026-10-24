@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { parseAnnouncementsDeepLink } from "./deep-link";
-import { hasDeepLinkRequestChanged } from "@/lib/deep-link";
+import { hasDeepLinkRequestChanged } from "@/lib/deep-links/deep-link";
 
 const sourceIds = ["source-academic", "source-student"] as const;
 
@@ -15,6 +15,11 @@ describe("parseAnnouncementsDeepLink", () => {
     ["invalid", "source=unknown", {}],
     ["empty", "source=", {}],
     ["missing", "", {}],
+    [
+      "duplicate source is ignored",
+      "source=source-academic&source=source-student",
+      {},
+    ],
   ] as const)("handles %s values", (_label, query, expected) => {
     expect(
       parseAnnouncementsDeepLink(new URLSearchParams(query), sourceIds),
