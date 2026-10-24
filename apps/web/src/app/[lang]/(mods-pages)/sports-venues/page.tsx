@@ -22,7 +22,8 @@ import {
   Loader2,
   ExternalLink,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import useTime from "@/hooks/useTime";
 import { semesterInfo } from "@courseweb/shared";
 import useDictionary from "@/dictionaries/useDictionary";
@@ -41,6 +42,11 @@ import {
   useVenueOccupancy,
   type VenueOccupancy,
 } from "@/hooks/useVenueOccupancy";
+import {
+  getSportsDeepLinkAction,
+  parseSportsVenuesDeepLink,
+} from "./deep-link";
+import { hasDeepLinkRequestChanged } from "@/lib/deep-link";
 
 type OccupancyItem = VenueOccupancy;
 
@@ -421,6 +427,7 @@ const SportsVenuesPage = () => {
   const dict = useDictionary();
   const localizeData = useLocalizedZhData();
   const { language } = useSettings();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [selectedFacility, setSelectedFacility] =
     useState<FacilitySchedule | null>(null);
   const [selectedForecast, setSelectedForecast] = useState<{
@@ -428,6 +435,7 @@ const SportsVenuesPage = () => {
     capacity: number;
     generatedAt: string | null;
   } | null>(null);
+  const lastAppliedFacility = useRef<string | undefined | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const queryClient = useQueryClient();
   const { data: usageForecast } = useUsageForecast("gym");
@@ -495,12 +503,108 @@ const SportsVenuesPage = () => {
           }
         : null,
     );
+    setSearchParams(
+      (current) => {
+        const next = new URLSearchParams(current);
+        next.set("facility", facility.name_zh);
+        return next;
+      },
+      { replace: true },
+    );
   };
 
   const closeFacility = () => {
     setSelectedFacility(null);
     setSelectedForecast(null);
+    setSearchParams(
+      (current) => {
+        const next = new URLSearchParams(current);
+        next.delete("facility");
+        return next;
+      },
+      { replace: true },
+    );
   };
+
+  const deepLink = parseSportsVenuesDeepLink(
+    searchParams,
+    openingTimes?.facilities.map((facility) => facility.name_zh) ?? [],
+  );
+
+  useEffect(() => {
+    const facilityName = deepLink.facility;
+    if (!facilityName) {
+      if (
+        !hasDeepLinkRequestChanged(lastAppliedFacility.current, undefined)
+      ) {
+        return;
+      }
+      lastAppliedFacility.current = undefined;
+      if (selectedFacility) {
+        setSelectedFacility(null);
+        setSelectedForecast(null);
+      }
+      return;
+    }
+
+    if (
+      openingTimesLoading ||
+      occupancyLoading ||
+      !openingTimes ||
+      !occupancy
+    ) {
+      return;
+    }
+
+    const facility = openingTimes.facilities.find(
+      (item) => item.name_zh === facilityName,
+    );
+    if (!facility) return;
+
+    const occupancyItem = occupancy?.find((item) =>
+      matchFacility(item.project_name, [facility]),
+    );
+    const displayName =
+      OCCUPANCY_NAME_ALIASES[occupancyItem?.project_name ?? ""] ??
+      facility.name_zh;
+    const forecast = occupancyItem
+      ? getUsageSeries(usageForecast, occupancyItem.project_id)
+      : undefined;
+    const action = getSportsDeepLinkAction(
+      selectedFacility?.name_zh,
+      facility.name_zh,
+    );
+    const requestChanged = hasDeepLinkRequestChanged(
+      lastAppliedFacility.current,
+      facilityName,
+    );
+    if (action === "open" && !requestChanged) return;
+    const capacity = venueInfo(displayName).capacity;
+    const nextForecast =
+      forecast?.status === "ready"
+        ? {
+            series: forecast,
+            capacity,
+            generatedAt: usageForecast?.generatedAt ?? null,
+          }
+        : null;
+
+    if (action === "open") {
+      lastAppliedFacility.current = facilityName;
+      openFacility(facility, forecast, capacity);
+    } else if (action === "update") {
+      lastAppliedFacility.current = facilityName;
+      setSelectedForecast(nextForecast);
+    }
+  }, [
+    deepLink.facility,
+    occupancy,
+    occupancyLoading,
+    openingTimes,
+    openingTimesLoading,
+    selectedFacility,
+    usageForecast,
+  ]);
 
   if (occupancyError || openingTimesError) {
     return (

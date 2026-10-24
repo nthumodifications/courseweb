@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { KeyboardEvent, useCallback, useEffect, useRef, useState } from "react";
 import { Button, Tabs, TabsList, TabsTrigger, toast } from "@courseweb/ui";
+import { useSearchParams } from "react-router-dom";
 
 import {
   CalendarEvent,
@@ -20,6 +21,8 @@ import { AddEventButton } from "./AddEventButton";
 import {
   addTaipeiDays,
   addTaipeiMonths,
+  fromTaipeiDateKey,
+  getTaipeiDateKey,
   getTaipeiMonthForDisplay,
   getTaipeiWeek,
 } from "@/helpers/dates";
@@ -46,8 +49,15 @@ import {
   reconcileTimetableEvents,
 } from "./timetableReconcile";
 import { filterHiddenCourses } from "@/helpers/timetableVisibility";
-
-type CalendarDisplayMode = "week" | "month" | "upcoming";
+import {
+  getCalendarDeepLinkRequest,
+  getCalendarTransition,
+  isCalendarNavigationNoop,
+  parseCalendarDeepLink,
+  shouldResetCalendarToOrigin,
+  type CalendarDisplayMode,
+} from "./deep-link";
+import { hasDeepLinkRequestChanged } from "@/lib/deep-link";
 
 type TimetableSyncPrompt = TimetableSyncRequest & {
   deletionCount: number;
@@ -70,10 +80,14 @@ const CalendarError = ({
 };
 
 const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const deepLink = parseCalendarDeepLink(searchParams);
   const [displayDates, setDisplayDates] = useState<Date[]>(
     getTaipeiWeek(new Date()),
   );
-  const [displayMode, setDisplayMode] = useState<CalendarDisplayMode>("week");
+  const [displayMode, setDisplayMode] = useState<CalendarDisplayMode>(
+    deepLink.view ?? "week",
+  );
   const {
     addEvent,
     displayContainer,
@@ -98,9 +112,24 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
   // Get the portal functions
   const { setPortalContent, clearPortalContent } = useHeaderPortal();
 
+  const updateCalendarUrl = useCallback(
+    (date: Date, mode: CalendarDisplayMode) => {
+      setSearchParams(
+        (current) => {
+          const next = new URLSearchParams(current);
+          next.set("date", getTaipeiDateKey(date));
+          next.set("view", mode);
+          return next;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
+
   const setDate = useCallback(
-    (date: Date) => {
-      switch (displayMode) {
+    (date: Date, mode: CalendarDisplayMode = displayMode, syncUrl = true) => {
+      switch (mode) {
         case "week":
           setDisplayDates(getTaipeiWeek(date));
           break;
@@ -108,8 +137,9 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
           setDisplayDates(getTaipeiMonthForDisplay(date));
           break;
       }
+      if (syncUrl) updateCalendarUrl(date, mode);
     },
-    [displayMode],
+    [displayMode, updateCalendarUrl],
   );
 
   // When component mounts or displayDates change, update the header content
@@ -199,78 +229,111 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
 
   //week movers
   const moveBackward = () => {
+    if (isCalendarNavigationNoop(displayMode)) return;
+
+    let nextDates = displayDates;
     switch (displayMode) {
       case "week":
-        setDisplayDates(
-          getTaipeiWeek(
-            addTaipeiDays(
-              displayDates[Math.floor(displayDates.length / 2)],
-              -7,
-            ),
-          ),
+        nextDates = getTaipeiWeek(
+          addTaipeiDays(displayDates[Math.floor(displayDates.length / 2)], -7),
         );
         break;
       case "month": {
         // get month of current center date
         const month = displayDates[Math.floor(displayDates.length / 2)];
         // subtract 1 month from the month
-        setDisplayDates(getTaipeiMonthForDisplay(addTaipeiMonths(month, -1)));
+        nextDates = getTaipeiMonthForDisplay(addTaipeiMonths(month, -1));
         break;
       }
     }
+    setDisplayDates(nextDates);
+    updateCalendarUrl(nextDates[Math.floor(nextDates.length / 2)], displayMode);
   };
 
   const moveForward = () => {
+    if (isCalendarNavigationNoop(displayMode)) return;
+
+    let nextDates = displayDates;
     switch (displayMode) {
       case "week":
-        setDisplayDates(
-          getTaipeiWeek(
-            addTaipeiDays(displayDates[Math.floor(displayDates.length / 2)], 7),
-          ),
+        nextDates = getTaipeiWeek(
+          addTaipeiDays(displayDates[Math.floor(displayDates.length / 2)], 7),
         );
         break;
       case "month": {
         // get month of current center date
         const month = displayDates[Math.floor(displayDates.length / 2)];
         // add 1 month from the month
-        setDisplayDates(getTaipeiMonthForDisplay(addTaipeiMonths(month, 1)));
+        nextDates = getTaipeiMonthForDisplay(addTaipeiMonths(month, 1));
         break;
       }
     }
+    setDisplayDates(nextDates);
+    updateCalendarUrl(nextDates[Math.floor(nextDates.length / 2)], displayMode);
   };
 
   const backToToday = () => {
+    if (isCalendarNavigationNoop(displayMode)) return;
+
+    let nextDates = displayDates;
     switch (displayMode) {
       case "week":
-        setDisplayDates(getTaipeiWeek(new Date()));
+        nextDates = getTaipeiWeek(new Date());
         break;
       case "month":
-        setDisplayDates(getTaipeiMonthForDisplay(new Date()));
+        nextDates = getTaipeiMonthForDisplay(new Date());
         break;
+    }
+    setDisplayDates(nextDates);
+    updateCalendarUrl(nextDates[Math.floor(nextDates.length / 2)], displayMode);
+  };
+
+  const handleSwitchMode = (
+    mode: CalendarDisplayMode,
+    anchorDate?: Date,
+    syncUrl = true,
+  ) => {
+    const transition = getCalendarTransition(
+      mode,
+      anchorDate,
+      displayDates,
+    );
+    setDisplayMode(mode);
+    setDisplayDates(transition.displayDates);
+    if (syncUrl) {
+      updateCalendarUrl(transition.urlDate, mode);
     }
   };
 
-  const handleSwitchMode = (mode: CalendarDisplayMode) => {
-    setDisplayMode(mode);
-    switch (mode) {
-      case "week":
-        setDisplayDates(getTaipeiWeek(displayDates[0]));
-        break;
-      case "month":
-        setDisplayDates(getTaipeiMonthForDisplay(displayDates[0]));
-        break;
-      case "upcoming":
-        break;
+  const lastAppliedDeepLink = useRef<string | null>(null);
+  useEffect(() => {
+    const request = getCalendarDeepLinkRequest(deepLink);
+    const previousRequest = lastAppliedDeepLink.current;
+    if (!hasDeepLinkRequestChanged(lastAppliedDeepLink.current, request)) {
+      return;
     }
-  };
+    lastAppliedDeepLink.current = request;
+    if (!deepLink.date && !deepLink.view) {
+      if (shouldResetCalendarToOrigin(previousRequest, request)) {
+        setDisplayMode("week");
+        setDisplayDates(getTaipeiWeek(new Date()));
+      }
+      return;
+    }
+
+    handleSwitchMode(
+      deepLink.view ?? displayMode,
+      deepLink.date ? fromTaipeiDateKey(deepLink.date) : undefined,
+      false,
+    );
+  }, [deepLink.date, deepLink.view, displayMode]);
 
   const handleAddEvent = (data: CalendarEvent) => {
     addEvent(data);
   };
 
   const handleOnViewChange = (view: "week" | "month", date: Date) => {
-    setDate(date);
-    handleSwitchMode(view);
+    handleSwitchMode(view, date);
   };
 
   //listen to keypress events
