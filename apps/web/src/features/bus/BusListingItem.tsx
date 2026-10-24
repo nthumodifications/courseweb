@@ -28,6 +28,7 @@ export type BusListingItemProps = {
   countdown?: string;
   sourceLabel?: string;
   compact?: boolean;
+  stop?: string;
 };
 
 export const BusListingItem = ({
@@ -49,6 +50,7 @@ export const BusListingItem = ({
   countdown,
   sourceLabel,
   compact = false,
+  stop,
 }: BusListingItemProps) => {
   const { language } = useSettings();
   const dict = useDictionary();
@@ -83,8 +85,13 @@ export const BusListingItem = ({
       );
       return;
     }
+    const stopQuery = stop ? `&stop=${encodeURIComponent(stop)}` : "";
+    const campusReturnUrl = `/${language}/bus?tab=${tab}${stopQuery}`;
+    const returnUrl = stop
+      ? encodeURIComponent(campusReturnUrl)
+      : campusReturnUrl;
     navigate(
-      `/${language}/bus/${route}/${line === "nanda" || line === "route1" || line === "route2" ? `${line}_${direction}` : line}?return_url=/${language}/bus?tab=${tab}`,
+      `/${language}/bus/${route}/${line === "nanda" || line === "route1" || line === "route2" ? `${line}_${direction}` : line}?return_url=${returnUrl}${stopQuery}`,
     );
   };
 

@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, ExternalLink, WashingMachine, Wind } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 import { Button, cn, ErrorState, Skeleton } from "@courseweb/ui";
 import { Helmet } from "react-helmet-async";
 import { serializeJsonLd } from "@/lib/seo";
@@ -29,6 +30,14 @@ import {
   type FastestReady,
   type LaundrySummary,
 } from "@/lib/laundry-selectors";
+import {
+  getLaundryDeepLinkKey,
+  getLaundryDormFromSearchParams,
+  getLaundryDormFromValue,
+  resolveLaundryDeepLink,
+  shouldPersistLaundryDorm,
+} from "./deep-link";
+import { reconcileSearchState } from "@/lib/deep-links/reconcile-search-state";
 type MachineFilter = "all" | LaundryMachineType;
 type GenderFilter = "all" | Exclude<LaundryGender, "mixed">;
 const filterValues: MachineFilter[] = ["all", "washer", "dryer"];
@@ -353,26 +362,111 @@ const LaundrySkeleton = () => (
 const LaundryPage = () => {
   const dict = useDictionary();
   const { language } = useSettings();
+  const [searchParams, setSearchParams] = useSearchParams();
   const now = useTime(1000);
   const { statuses, connectionState, lastMessageAt, retry } =
     useLaundryStatus();
-  const [myDorm, setMyDorm] = useState<LaundryDorm | "">(() => {
-    if (typeof localStorage === "undefined") return "";
-    try {
-      const stored = localStorage.getItem("laundry_my_dorm");
-      return stored && stored in LAUNDRY_DORMS ? (stored as LaundryDorm) : "";
-    } catch {
-      return "";
+  const [initialDeepLink] = useState(() => {
+    let storedDorm: string | null = null;
+    if (typeof localStorage !== "undefined") {
+      try {
+        storedDorm = localStorage.getItem("laundry_my_dorm");
+      } catch {
+        storedDorm = null;
+      }
     }
+    const storedDormKey: LaundryDorm | "" =
+      getLaundryDormFromValue(storedDorm) ?? "";
+    return {
+      resolved: resolveLaundryDeepLink(searchParams, storedDorm),
+      storedDorm: storedDormKey,
+      urlDorm: getLaundryDormFromSearchParams(searchParams),
+    };
   });
+  const [myDorm, setMyDorm] = useState<LaundryDorm | "">(
+    initialDeepLink.resolved.dorm,
+  );
+  const [deepLinkArea, setDeepLinkArea] = useState<LaundryArea | null>(
+    initialDeepLink.resolved.area,
+  );
   const [machineFilter, setMachineFilter] = useState<MachineFilter>("all");
   const [genderFilter, setGenderFilter] = useState<GenderFilter>("all");
-  const [expandedAreas, setExpandedAreas] = useState<Set<LaundryArea>>(() =>
-    defaultExpandedAreas(myDorm),
-  );
+  const [expandedAreas, setExpandedAreas] = useState<Set<LaundryArea>>(() => {
+    const expanded = defaultExpandedAreas(initialDeepLink.resolved.dorm);
+    if (initialDeepLink.resolved.area) {
+      expanded.add(initialDeepLink.resolved.area);
+    }
+    return expanded;
+  });
+  const deepLinkAreaRef = useRef<HTMLElement>(null);
+  const hasScrolledToDeepLink = useRef(false);
+  const storedDormRef = useRef<LaundryDorm | "">(initialDeepLink.storedDorm);
+  const deepLinkSearchKey = getLaundryDeepLinkKey(searchParams);
+  const previousDeepLinkSearchKey = useRef(deepLinkSearchKey);
+
+  useEffect(() => {
+    if (
+      !shouldPersistLaundryDorm(
+        initialDeepLink.resolved.dorm,
+        initialDeepLink.urlDorm,
+        storedDormRef.current,
+      )
+    ) {
+      return;
+    }
+    try {
+      localStorage.setItem("laundry_my_dorm", initialDeepLink.resolved.dorm);
+      storedDormRef.current = initialDeepLink.resolved.dorm;
+    } catch {
+      // Private browsing and blocked storage should not prevent live status updates.
+    }
+  }, [initialDeepLink]);
+
+  useEffect(() => {
+    const previousSearchKey = previousDeepLinkSearchKey.current;
+    previousDeepLinkSearchKey.current = deepLinkSearchKey;
+    if (previousSearchKey === deepLinkSearchKey) return;
+
+    const next = resolveLaundryDeepLink(searchParams, storedDormRef.current);
+    const urlDorm = getLaundryDormFromSearchParams(searchParams);
+    if (shouldPersistLaundryDorm(next.dorm, urlDorm, storedDormRef.current)) {
+      try {
+        localStorage.setItem("laundry_my_dorm", next.dorm);
+        storedDormRef.current = next.dorm;
+      } catch {
+        // Private browsing and blocked storage should not prevent live status updates.
+      }
+    }
+    setMyDorm((current) =>
+      reconcileSearchState(
+        current,
+        next.dorm,
+        previousSearchKey,
+        deepLinkSearchKey,
+      ),
+    );
+    setDeepLinkArea((current) =>
+      reconcileSearchState(
+        current,
+        next.area,
+        previousSearchKey,
+        deepLinkSearchKey,
+      ),
+    );
+    setExpandedAreas((current) => {
+      const updated = new Set(current);
+      for (const area of defaultExpandedAreas(next.dorm)) updated.add(area);
+      if (next.area) updated.add(next.area);
+      return updated;
+    });
+    hasScrolledToDeepLink.current = false;
+  }, [deepLinkSearchKey, searchParams]);
+
   const updateMyDorm = (value: string) => {
-    const next = value as LaundryDorm | "";
+    const next = getLaundryDormFromValue(value) ?? "";
     setMyDorm(next);
+    setDeepLinkArea(null);
+    storedDormRef.current = next;
     if (next) {
       setExpandedAreas((current) => {
         const updated = new Set(current);
@@ -386,6 +480,11 @@ const LaundryPage = () => {
     } catch {
       // Private browsing and blocked storage should not prevent live status updates.
     }
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete("area");
+    if (next) nextParams.set("dorm", LAUNDRY_DORMS[next].slug);
+    else nextParams.delete("dorm");
+    setSearchParams(nextParams, { replace: true });
   };
   const toggleArea = (area: LaundryArea) => {
     setExpandedAreas((current) => {
@@ -394,6 +493,12 @@ const LaundryPage = () => {
       else updated.add(area);
       return updated;
     });
+    if (area === deepLinkArea) {
+      const nextParams = new URLSearchParams(searchParams);
+      if (expandedAreas.has(area)) nextParams.delete("area");
+      else nextParams.set("area", LAUNDRY_AREAS[area].slug);
+      setSearchParams(nextParams, { replace: true });
+    }
   };
   const visibleAreas = useMemo(() => {
     return (Object.keys(LAUNDRY_AREAS) as LaundryArea[])
@@ -416,6 +521,19 @@ const LaundryPage = () => {
         );
       });
   }, [genderFilter, machineFilter, myDorm]);
+
+  useEffect(() => {
+    if (
+      !deepLinkArea ||
+      hasScrolledToDeepLink.current ||
+      !deepLinkAreaRef.current
+    ) {
+      return;
+    }
+    hasScrolledToDeepLink.current = true;
+    deepLinkAreaRef.current.scrollIntoView({ block: "start" });
+  }, [connectionState, deepLinkArea, statuses, visibleAreas]);
+
   const title = dict.laundry.title;
   const lastUpdated = lastMessageAt
     ? replaceTemplate(dict.laundry.last_updated, {
@@ -588,6 +706,7 @@ const LaundryPage = () => {
                 <section
                   className="flex flex-col rounded-lg border border-border p-3"
                   key={area}
+                  ref={area === deepLinkArea ? deepLinkAreaRef : undefined}
                 >
                   <button
                     type="button"
