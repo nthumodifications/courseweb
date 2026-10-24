@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Input,
   Select,
@@ -14,14 +15,57 @@ import ShopItem from "./ShopItem";
 import areas from "./areas.json";
 import useDictionary from "@/dictionaries/useDictionary";
 import type { DiningArea } from "./types";
+import { getShopAreaDeepLinkKey, resolveShopAreaDeepLink } from "./deep-link";
+import { reconcileSearchState } from "@/lib/reconcile-search-state";
 
 const Shops = ({ data }: { data: DiningArea[] }) => {
   const shops = data.flatMap((area) => area.restaurants);
   const dict = useDictionary();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [initialDeepLink] = useState(() =>
+    resolveShopAreaDeepLink(searchParams, areas),
+  );
 
   const [search, setSearch] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
-  const [filterArea, setFilterArea] = useState("");
+  const [filterArea, setFilterArea] = useState(initialDeepLink.area);
+  const [filterAreas, setFilterAreas] = useState(initialDeepLink.areas);
+  const deepLinkSearchKey = getShopAreaDeepLinkKey(searchParams);
+  const previousDeepLinkSearchKey = useRef(deepLinkSearchKey);
+
+  useEffect(() => {
+    const previousSearchKey = previousDeepLinkSearchKey.current;
+    previousDeepLinkSearchKey.current = deepLinkSearchKey;
+    if (previousSearchKey === deepLinkSearchKey) return;
+
+    const next = resolveShopAreaDeepLink(searchParams, areas);
+    setFilterArea((current) =>
+      reconcileSearchState(
+        current,
+        next.area,
+        previousSearchKey,
+        deepLinkSearchKey,
+      ),
+    );
+    setFilterAreas((current) =>
+      reconcileSearchState(
+        current,
+        next.areas,
+        previousSearchKey,
+        deepLinkSearchKey,
+      ),
+    );
+  }, [deepLinkSearchKey, searchParams]);
+
+  const handleAreaChange = (value: string) => {
+    setFilterArea(value === "anywhere" ? "" : value);
+    setFilterAreas(undefined);
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete("building");
+    if (value === "anywhere") nextParams.delete("area");
+    else nextParams.set("area", value);
+    setSearchParams(nextParams, { replace: true });
+  };
 
   return (
     <div className="flex flex-col px-4">
@@ -56,7 +100,7 @@ const Shops = ({ data }: { data: DiningArea[] }) => {
             <MapPinned size="16" />
             Near me
           </Toggle> */}
-          <Select value={filterArea} onValueChange={setFilterArea}>
+          <Select value={filterArea} onValueChange={handleAreaChange}>
             <SelectTrigger className="w-[180px]">
               <div className="flex items-center gap-2">
                 <Store size="16" />
@@ -80,7 +124,12 @@ const Shops = ({ data }: { data: DiningArea[] }) => {
           <ShopItem
             key={shop.name}
             shop={shop}
-            filter={{ search: search, open: filterOpen, area: filterArea }}
+            filter={{
+              search: search,
+              open: filterOpen,
+              area: filterArea,
+              areas: filterAreas,
+            }}
           />
         ))}
       </div>
