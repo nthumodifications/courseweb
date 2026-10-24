@@ -20,6 +20,7 @@ import {
   BusListingItem,
   type BusListingItemProps,
 } from "@/features/bus/BusListingItem";
+import { normalizeBusTab, type BusTab } from "@/features/bus/busTab";
 import CityBusCatalogue, {
   CityBusSelectedLines,
 } from "@/features/bus/CityBusCatalogue";
@@ -92,13 +93,14 @@ const BusPage = () => {
   const time = useTime();
   const dict = useDictionary();
   const [searchParams] = useSearchParams();
-  const [tab, setTab] = useState("north_gate");
+  const [tab, setTab] = useState<BusTab>(() =>
+    normalizeBusTab(searchParams.get("tab")),
+  );
   const navigate = useNavigate();
+  const stop = searchParams.get("stop") ?? undefined;
   const { pins, toggle: togglePin } = useBusPins();
   useEffect(() => {
-    if (searchParams.has("tab")) {
-      setTab(searchParams.get("tab") as string);
-    }
+    setTab(normalizeBusTab(searchParams.get("tab")));
   }, [searchParams]);
 
   const weektype = isWeekend(time) ? "weekend" : "weekday";
@@ -403,9 +405,14 @@ const BusPage = () => {
     return returnData;
   }, [tab, busData, weektype, dict, time, language]);
 
-  const handleTabChange = (tab: string) => {
-    setTab(tab);
-    navigate(`?tab=${tab}`, { replace: true });
+  const handleTabChange = (nextTab: string) => {
+    const validTab = normalizeBusTab(nextTab);
+    setTab(validTab);
+    const nextParams = new URLSearchParams({ tab: validTab });
+    if (searchParams.has("stop")) {
+      nextParams.set("stop", searchParams.get("stop") ?? "");
+    }
+    navigate(`?${nextParams.toString()}`, { replace: true });
   };
 
   const busPageJsonLd = {
@@ -459,6 +466,7 @@ const BusPage = () => {
               <BusListingItem
                 key={`${bus.line}:${bus.direction}:${index}`}
                 {...bus}
+                stop={stop}
                 refTime={time}
               />
             ))}
@@ -490,7 +498,12 @@ const BusPage = () => {
         ) : (
           <div className="flex flex-col px-2 divide-y divide-border">
             {displayBuses.map((bus, index) => (
-              <BusListingItem key={index} {...bus} refTime={time} />
+              <BusListingItem
+                key={index}
+                {...bus}
+                stop={stop}
+                refTime={time}
+              />
             ))}
           </div>
         )}
