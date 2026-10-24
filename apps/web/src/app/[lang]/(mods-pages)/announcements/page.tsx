@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useReducer, useState } from "react";
+import { useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { ExternalLink, ListFilter, Search } from "lucide-react";
 import { useLocalStorage } from "usehooks-ts";
 import {
@@ -33,6 +34,8 @@ import {
   useAnnouncements,
   type AnnouncementSource,
 } from "@/lib/announcements";
+import { hasDeepLinkRequestChanged } from "@/lib/deep-link";
+import { parseAnnouncementsDeepLink } from "./deep-link";
 
 const sourceMatches = (source: AnnouncementSource, search: string) => {
   const query = search.trim().toLocaleLowerCase();
@@ -45,6 +48,7 @@ const sourceMatches = (source: AnnouncementSource, search: string) => {
 const AnnouncementsPage = () => {
   const dict = useDictionary();
   const { language } = useSettings();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [storedFollowIds, setStoredFollowIds] = useLocalStorage<unknown>(
     ANNOUNCEMENT_FOLLOWS_KEY,
     null,
@@ -58,6 +62,22 @@ const AnnouncementsPage = () => {
   const { data, isLoading, error, refetch } = useAnnouncements();
 
   const sources = data?.sources ?? [];
+  const deepLink = parseAnnouncementsDeepLink(
+    searchParams,
+    sources.map((source) => source.id),
+  );
+  const lastAppliedSource = useRef<string | undefined | null>(null);
+  useEffect(() => {
+    if (isLoading || sources.length === 0) return;
+    if (!hasDeepLinkRequestChanged(lastAppliedSource.current, deepLink.source)) {
+      return;
+    }
+    lastAppliedSource.current = deepLink.source;
+    dispatchArticleList({
+      type: "sourceFilter",
+      value: deepLink.source ?? "all",
+    });
+  }, [deepLink.source, isLoading, sources.length]);
   const followIds = useMemo(
     () => getEffectiveFollowIds(storedFollowIds, sources, language),
     [language, sources, storedFollowIds],
@@ -76,16 +96,32 @@ const AnnouncementsPage = () => {
     () => sources.filter((source) => followedSourceIds.has(source.id)),
     [sources, followedSourceIds],
   );
+  const selectableSources = useMemo(() => {
+    const selectedSource = sourceById.get(articleListState.sourceFilter);
+    if (selectedSource && !followedSourceIds.has(selectedSource.id)) {
+      return [selectedSource, ...followedSources];
+    }
+    return followedSources;
+  }, [
+    articleListState.sourceFilter,
+    followedSources,
+    followedSourceIds,
+    sourceById,
+  ]);
   const visibleArticles = useMemo(() => {
     const query = articleListState.search.trim().toLocaleLowerCase();
     return (data?.articles ?? []).filter((article) => {
       const articleSources = article.sourceIds
         .map((sourceId) => sourceById.get(sourceId))
         .filter((source): source is AnnouncementSource => Boolean(source));
+      const sourceFilterMatches =
+        articleListState.sourceFilter === "all"
+          ? article.sourceIds.some((sourceId) =>
+              followedSourceIds.has(sourceId),
+            )
+          : article.sourceIds.includes(articleListState.sourceFilter);
       return (
-        article.sourceIds.some((sourceId) => followedSourceIds.has(sourceId)) &&
-        (articleListState.sourceFilter === "all" ||
-          article.sourceIds.includes(articleListState.sourceFilter)) &&
+        sourceFilterMatches &&
         (!query || article.title.toLocaleLowerCase().includes(query)) &&
         articleSources.length > 0
       );
@@ -155,9 +191,18 @@ const AnnouncementsPage = () => {
           <div className="flex gap-2 sm:contents">
             <Select
               value={articleListState.sourceFilter}
-              onValueChange={(value) =>
-                dispatchArticleList({ type: "sourceFilter", value })
-              }
+              onValueChange={(value) => {
+                dispatchArticleList({ type: "sourceFilter", value });
+                setSearchParams(
+                  (current) => {
+                    const next = new URLSearchParams(current);
+                    if (value === "all") next.delete("source");
+                    else next.set("source", value);
+                    return next;
+                  },
+                  { replace: true },
+                );
+              }}
             >
               <SelectTrigger
                 className="min-w-0 flex-1 sm:w-[180px] sm:flex-none"
@@ -169,7 +214,7 @@ const AnnouncementsPage = () => {
                 <SelectItem value="all">
                   {dict.announcements.all_followed}
                 </SelectItem>
-                {followedSources.map((source) => (
+                {selectableSources.map((source) => (
                   <SelectItem value={source.id} key={source.id}>
                     {source.department} · {source.title}
                   </SelectItem>
