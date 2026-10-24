@@ -1,7 +1,8 @@
 import { useSettings } from "@/hooks/contexts/settings";
 import { Helmet } from "react-helmet-async";
 import { cn, Tabs, TabsList, TabsTrigger } from "@courseweb/ui";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   getPinnedStationIds,
   togglePinnedStationId,
@@ -16,6 +17,8 @@ import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
 import OpenCollectiveSponsorBanner from "@/components/Sponsorship/OpenCollectiveSponsorBanner";
 import { activateOnKey } from "@/lib/activate-on-key";
 import { contentLanguage } from "@/helpers/contentLanguage";
+import { hasDeepLinkRequestChanged } from "@/lib/deep-links/deep-link";
+import { parseYouBikeDeepLink } from "./deep-link";
 
 export type YouBikeItemProps = {
   station: YouBikeStation;
@@ -45,6 +48,7 @@ export const YouBikeListingItem = ({
 
   return (
     <div
+      data-youbike-station-id={station.id}
       className={cn(
         "flex flex-col gap-4 py-4",
         isOutOfService ? "opacity-30" : "",
@@ -152,17 +156,47 @@ export const YouBikeListingItem = ({
 
 const YouBikePage = () => {
   const dict = useDictionary();
-  const [tab, setTab] = useState<YouBikeTab>("mine");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const deepLink = useMemo(
+    () => parseYouBikeDeepLink(searchParams),
+    [searchParams],
+  );
+  const [tab, setTab] = useState<YouBikeTab>(deepLink.tab ?? "mine");
   const [search, setSearch] = useState("");
   const [pinnedIds, setPinnedIds] = useState<string[]>([]);
+  const [pinnedIdsReady, setPinnedIdsReady] = useState(false);
+  const lastAppliedTab = useRef<YouBikeTab | undefined | null>(null);
+  const lastAppliedStation = useRef<string | undefined | null>(null);
 
   useEffect(() => {
     setPinnedIds(getPinnedStationIds());
+    setPinnedIdsReady(true);
   }, []);
+
+  useEffect(() => {
+    if (!hasDeepLinkRequestChanged(lastAppliedTab.current, deepLink.tab)) {
+      return;
+    }
+    lastAppliedTab.current = deepLink.tab;
+    setTab(deepLink.tab ?? "mine");
+  }, [deepLink.tab]);
 
   const handleTogglePin = (id: string) => {
     const next = togglePinnedStationId(id);
     setPinnedIds(next);
+  };
+
+  const handleTabChange = (value: string) => {
+    const nextTab = value as YouBikeTab;
+    setTab(nextTab);
+    setSearchParams(
+      (current) => {
+        const next = new URLSearchParams(current);
+        next.set("tab", nextTab);
+        return next;
+      },
+      { replace: true },
+    );
   };
 
   const {
@@ -198,6 +232,48 @@ const YouBikePage = () => {
     return list;
   }, [result.stations, tab, search, pinnedIds]);
 
+  useEffect(() => {
+    const stationId = deepLink.stationId;
+    if (!hasDeepLinkRequestChanged(lastAppliedStation.current, stationId)) {
+      return;
+    }
+    if (!stationId) {
+      lastAppliedStation.current = undefined;
+      return;
+    }
+    if (isLoading || error || (tab === "mine" && !pinnedIdsReady)) return;
+
+    const station = result.stations.find((item) => item.id === stationId);
+    if (!station) return;
+
+    const stationInTab =
+      tab === "all" ||
+      (tab === "main" && !isNandaCampusStation(station)) ||
+      (tab === "nanda" && isNandaCampusStation(station)) ||
+      (tab === "mine" && pinnedIds.includes(station.id));
+    if (!stationInTab) {
+      handleTabChange("all");
+      return;
+    }
+
+    const frame = requestAnimationFrame(() => {
+      const element = document.querySelector<HTMLElement>(
+        `[data-youbike-station-id="${stationId}"]`,
+      );
+      element?.scrollIntoView({ behavior: "smooth", block: "center" });
+      lastAppliedStation.current = stationId;
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [
+    deepLink.stationId,
+    error,
+    isLoading,
+    pinnedIds,
+    pinnedIdsReady,
+    result.stations,
+    tab,
+  ]);
+
   return (
     <div className="flex flex-col px-4 md:px-6">
       <Helmet>
@@ -205,11 +281,7 @@ const YouBikePage = () => {
       </Helmet>
 
       {/* Tabs */}
-      <Tabs
-        value={tab}
-        onValueChange={(val) => setTab(val as YouBikeTab)}
-        className="w-full"
-      >
+      <Tabs value={tab} onValueChange={handleTabChange} className="w-full">
         <TabsList className="w-full justify-start overflow-x-auto mb-4">
           <TabsTrigger className="flex-1 shrink-0" value="mine">
             {dict.youbike.tabs.mine} ({pinnedIds.length})
