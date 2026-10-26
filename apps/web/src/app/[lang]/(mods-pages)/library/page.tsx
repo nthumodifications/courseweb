@@ -159,7 +159,7 @@ const LostAndFoundSection = () => {
         </div>
         <Select value={selectedType} onValueChange={setSelectedType}>
           <SelectTrigger
-            className="min-w-0 flex-1 sm:w-[180px] sm:flex-none"
+            className="h-8 min-w-0 flex-1 sm:w-[180px] sm:flex-none"
             aria-label={dict.library.lost_found_filter_type}
           >
             <SelectValue placeholder={dict.library.lost_found_all_types} />
