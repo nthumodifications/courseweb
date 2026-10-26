@@ -16,7 +16,18 @@ import {
   Search,
   Users,
 } from "lucide-react";
-import { Button, cn, ErrorState, Skeleton } from "@courseweb/ui";
+import {
+  Button,
+  cn,
+  ErrorState,
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Skeleton,
+} from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
 import { intlLocale } from "@/helpers/contentLanguage";
 import { useSettings } from "@/hooks/contexts/settings";
@@ -87,6 +98,7 @@ const LostAndFoundSection = () => {
   const dict = useDictionary();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState("all");
+  const [showAllItems, setShowAllItems] = useState(false);
   const {
     data: response,
     isLoading,
@@ -99,7 +111,14 @@ const LostAndFoundSection = () => {
     () => filterLostAndFoundItems(items, selectedType, searchQuery),
     [items, searchQuery, selectedType],
   );
+  const displayedItems = showAllItems
+    ? filteredItems
+    : filteredItems.slice(0, 20);
   const hasError = Boolean(error) || response?.error === true;
+
+  useEffect(() => {
+    setShowAllItems(false);
+  }, [searchQuery, selectedType]);
 
   return (
     <section className="flex flex-col border-t border-border pt-4">
@@ -121,29 +140,34 @@ const LostAndFoundSection = () => {
 
       <div className="flex flex-col gap-2 border-b border-border py-3 sm:flex-row">
         <div className="relative min-w-0 flex-1">
-          <Search className="absolute left-2.5 top-2 h-4 w-4 text-muted-foreground" />
-          <input
+          <Search className="absolute left-2 top-2 h-4 w-4 text-muted-foreground" />
+          <Input
             type="search"
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
             placeholder={dict.library.lost_found_search_placeholder}
             aria-label={dict.library.lost_found_search_placeholder}
-            className="h-8 w-full rounded-md border border-input bg-background pl-6 pr-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            className="h-8 pl-6 text-xs"
           />
         </div>
-        <select
-          value={selectedType}
-          onChange={(event) => setSelectedType(event.target.value)}
-          aria-label={dict.library.lost_found_filter_type}
-          className="h-8 rounded-md border border-input bg-background px-2 text-xs text-foreground"
-        >
-          <option value="all">{dict.library.lost_found_all_types}</option>
-          {types.map((type) => (
-            <option key={type} value={type}>
-              {type}
-            </option>
-          ))}
-        </select>
+        <Select value={selectedType} onValueChange={setSelectedType}>
+          <SelectTrigger
+            className="min-w-0 flex-1 sm:w-[180px] sm:flex-none"
+            aria-label={dict.library.lost_found_filter_type}
+          >
+            <SelectValue placeholder={dict.library.lost_found_all_types} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">
+              {dict.library.lost_found_all_types}
+            </SelectItem>
+            {types.map((type) => (
+              <SelectItem key={type} value={type}>
+                {type}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {isLoading ? (
@@ -179,7 +203,7 @@ const LostAndFoundSection = () => {
         </div>
       ) : (
         <div className="flex flex-col divide-y divide-border">
-          {filteredItems.map((item: LostAndFoundItem) => (
+          {displayedItems.map((item: LostAndFoundItem) => (
             <div key={item.id} className="flex flex-row gap-4 py-4">
               <div className="flex min-w-0 flex-1 flex-col gap-1">
                 <h3 className="font-bold text-foreground">{item.type}</h3>
@@ -198,6 +222,16 @@ const LostAndFoundSection = () => {
           ))}
         </div>
       )}
+
+      {!isLoading &&
+        !hasError &&
+        filteredItems.length > displayedItems.length && (
+          <div className="flex items-center gap-4 py-4">
+            <Button variant="outline" onClick={() => setShowAllItems(true)}>
+              {dict.library.lost_found_show_more}
+            </Button>
+          </div>
+        )}
 
       {hasError && items.length > 0 && (
         <p className="border-t border-border py-2 text-sm text-muted-foreground">

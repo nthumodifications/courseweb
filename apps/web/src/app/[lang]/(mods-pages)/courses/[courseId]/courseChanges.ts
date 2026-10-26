@@ -64,6 +64,7 @@ export type FormattedCourseChange = {
   id: number;
   dateLabel: string;
   fieldLabel: string;
+  isCourseStatus: boolean;
   oldValue: string | null;
   newValue: string | null;
   statusLabel: string | null;
@@ -244,6 +245,7 @@ export const formatCourseChanges = (
         fieldLabel: isTeacherField(change.field)
           ? labels.fields.teacher
           : labels.fields[change.field],
+        isCourseStatus: change.field === "course" && isStatusChange,
         oldValue: isStatusChange
           ? null
           : formatValue(change.old_value, change.field, labels),

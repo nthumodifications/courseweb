@@ -190,10 +190,10 @@ const CourseChangesFeedPage = () => {
         <div className="flex flex-col divide-y divide-border">
           {groups.map((departmentGroup) => (
             <section
-              className="flex flex-col gap-2 py-4"
+              className="flex flex-col py-4"
               key={departmentGroup.department}
             >
-              <h2 className="font-bold">
+              <h2 className="mb-2 font-bold">
                 {departmentGroup.department}
                 <span className="ml-2 text-sm font-medium text-muted-foreground">
                   {departments.find(
@@ -214,7 +214,7 @@ const CourseChangesFeedPage = () => {
                     ) || dict.course_changes.course_fallback;
                   return (
                     <div
-                      className="flex flex-col gap-2 py-4"
+                      className="flex flex-col gap-1 py-2"
                       key={courseGroup.rawId}
                     >
                       <Link
@@ -226,32 +226,50 @@ const CourseChangesFeedPage = () => {
                           {courseGroup.rawId}
                         </span>
                       </Link>
-                      <div className="flex flex-col divide-y divide-border">
+                      <div className="flex flex-col">
                         {formattedChanges.map((change) => (
                           <article
                             key={change.id}
-                            className="flex flex-col gap-2 py-4 first:pt-2"
+                            className="flex flex-wrap items-baseline gap-2 py-1 text-sm"
                           >
-                            <div className="flex flex-wrap items-baseline gap-2 text-sm">
-                              <time className="text-muted-foreground">
-                                {change.dateLabel}
-                              </time>
-                              <span className="font-medium">
-                                {change.fieldLabel}
-                              </span>
-                            </div>
-                            {change.statusLabel ? (
-                              <p className="text-sm">{change.statusLabel}</p>
+                            <time className="shrink-0 text-muted-foreground">
+                              {change.dateLabel}
+                            </time>
+                            <span
+                              className="text-muted-foreground"
+                              aria-hidden="true"
+                            >
+                              ·
+                            </span>
+                            {change.isCourseStatus ? (
+                              <span>{change.statusLabel}</span>
                             ) : (
-                              <p className="flex flex-wrap gap-2 text-sm whitespace-pre-line">
-                                <span className="text-muted-foreground">
-                                  {change.oldValue}
+                              <>
+                                <span className="font-medium">
+                                  {change.fieldLabel}
                                 </span>
-                                <span className="text-muted-foreground">→</span>
-                                <span className="text-foreground">
-                                  {change.newValue}
+                                <span
+                                  className="text-muted-foreground"
+                                  aria-hidden="true"
+                                >
+                                  ·
                                 </span>
-                              </p>
+                                {change.statusLabel ? (
+                                  <span>{change.statusLabel}</span>
+                                ) : (
+                                  <span className="whitespace-pre-line">
+                                    <span className="text-muted-foreground">
+                                      {change.oldValue}
+                                    </span>{" "}
+                                    <span className="text-muted-foreground">
+                                      →
+                                    </span>{" "}
+                                    <span className="text-foreground">
+                                      {change.newValue}
+                                    </span>
+                                  </span>
+                                )}
+                              </>
                             )}
                           </article>
                         ))}

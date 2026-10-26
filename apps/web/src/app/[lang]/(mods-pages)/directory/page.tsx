@@ -10,12 +10,13 @@ import {
   RefreshCw,
   Search,
 } from "lucide-react";
-import { Button, ErrorState, Skeleton } from "@courseweb/ui";
+import { Button, ErrorState, Input, Skeleton } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
 import {
   filterDirectoryUnits,
   getDirectoryTelHref,
+  splitDirectoryExtensions,
 } from "@/lib/directory-core";
 import { useDirectory, type DirectoryUnit } from "@/lib/directory";
 
@@ -33,7 +34,13 @@ const DirectoryUnitRow = ({
   onCopy: (key: string, value: string) => void;
 }) => {
   const dict = useDictionary();
-  const phoneHref = getDirectoryTelHref(unit.phone, unit.extension);
+  const extensions = splitDirectoryExtensions(unit.extension);
+  const phoneLinks = unit.phone
+    ? (extensions.length > 0 ? extensions : [null]).map((extension) => ({
+        extension,
+        href: getDirectoryTelHref(unit.phone, extension),
+      }))
+    : [];
   const website = unit.website ?? unit.url;
 
   return (
@@ -48,25 +55,26 @@ const DirectoryUnitRow = ({
             </span>
           )}
         </div>
-        {unit.extension && (
-          <span className="whitespace-nowrap text-right text-sm font-bold text-foreground">
-            {dict.directory.extension} {unit.extension}
-          </span>
-        )}
       </div>
 
       <div className="flex flex-wrap gap-2 text-sm font-medium">
-        {phoneHref && unit.phone && (
-          <div className="flex items-center gap-2">
+        {phoneLinks.length > 0 && (
+          <div className="flex min-w-0 items-start gap-2">
             <Phone className="h-4 w-4 text-muted-foreground" />
-            <a
-              href={phoneHref}
-              className="text-foreground underline hover:text-primary"
-            >
-              {unit.phone}
-              {unit.extension &&
-                ` ${dict.directory.extension} ${unit.extension}`}
-            </a>
+            <div className="flex min-w-0 flex-wrap gap-2">
+              {phoneLinks.map(({ extension, href }) =>
+                href ? (
+                  <a
+                    href={href}
+                    className="text-foreground underline hover:text-primary"
+                    key={extension ?? "phone"}
+                  >
+                    {unit.phone}
+                    {extension && ` ${dict.directory.extension} ${extension}`}
+                  </a>
+                ) : null,
+              )}
+            </div>
             <button
               type="button"
               className="rounded p-1 text-muted-foreground hover:text-primary"
@@ -170,14 +178,14 @@ const DirectoryPage = () => {
         </div>
 
         <div className="relative border-b border-border py-3">
-          <Search className="absolute left-2.5 top-5 h-4 w-4 text-muted-foreground" />
-          <input
+          <Search className="absolute left-2 top-2 h-4 w-4 text-muted-foreground" />
+          <Input
             type="search"
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
             placeholder={dict.directory.search_placeholder}
             aria-label={dict.directory.search_placeholder}
-            className="h-9 w-full rounded-md border border-input bg-background pl-6 pr-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            className="h-8 pl-6 text-xs"
           />
         </div>
 

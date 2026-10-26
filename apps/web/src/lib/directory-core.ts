@@ -5,8 +5,18 @@ export const getDirectoryTelHref = (
   extension: string | null,
 ): string | null => {
   if (!phone) return null;
-  return extension ? `tel:${phone};ext=${extension}` : `tel:${phone}`;
+  const normalizedPhone = phone.replace(/[\s-]+/g, "");
+  const normalizedExtension = extension?.replace(/[\s-]+/g, "");
+  return normalizedExtension
+    ? `tel:${normalizedPhone};ext=${normalizedExtension}`
+    : `tel:${normalizedPhone}`;
 };
+
+export const splitDirectoryExtensions = (extension: string | null): string[] =>
+  extension
+    ?.split(/[、,\/\s]+/)
+    .map((value) => value.trim())
+    .filter(Boolean) ?? [];
 
 export const filterDirectoryUnits = (
   units: readonly DirectoryUnit[],

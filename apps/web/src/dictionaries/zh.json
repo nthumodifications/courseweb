@@ -805,6 +805,7 @@
     "source_name": "國立清華大學圖書館座位管理系統 (libsms)",
     "lost_found_title": "失物招領",
     "lost_found_search_placeholder": "搜尋物品、日期或地點",
+    "lost_found_show_more": "顯示更多",
     "lost_found_filter_type": "依物品類型篩選",
     "lost_found_all_types": "全部物品類型",
     "lost_found_no_results": "找不到符合的失物",

@@ -148,6 +148,7 @@ test.each([
     labels,
   )[0];
   expect(result.statusLabel).toBe(expected);
+  expect(result.isCourseStatus).toBe(true);
   expect(result.oldValue).toBeNull();
   expect(result.newValue).toBeNull();
 });

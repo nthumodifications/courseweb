@@ -809,6 +809,7 @@
     "source_name": "国立清华大学图书馆座位管理系统 (libsms)",
     "lost_found_title": "失物招领",
     "lost_found_search_placeholder": "搜索物品、日期或地点",
+    "lost_found_show_more": "显示更多",
     "lost_found_filter_type": "依物品类型筛选",
     "lost_found_all_types": "全部物品类型",
     "lost_found_no_results": "找不到符合的失物",

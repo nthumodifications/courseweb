@@ -805,6 +805,7 @@
     "source_name": "NTHU Library Booking System (libsms)",
     "lost_found_title": "Lost and found",
     "lost_found_search_placeholder": "Search item, date, or location",
+    "lost_found_show_more": "Show more",
     "lost_found_filter_type": "Filter by item type",
     "lost_found_all_types": "All item types",
     "lost_found_no_results": "No matching lost items found",

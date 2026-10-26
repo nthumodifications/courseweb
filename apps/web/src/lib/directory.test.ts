@@ -1,5 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { filterDirectoryUnits, getDirectoryTelHref } from "./directory-core";
+import {
+  filterDirectoryUnits,
+  getDirectoryTelHref,
+  splitDirectoryExtensions,
+} from "./directory-core";
 import type { DirectoryUnit } from "./directory";
 
 const units: DirectoryUnit[] = [
@@ -36,9 +40,19 @@ describe("directory helpers", () => {
   });
 
   test("builds phone links with extensions", () => {
-    expect(getDirectoryTelHref("03-5162001", "62001")).toBe(
-      "tel:03-5162001;ext=62001",
-    );
+    const extensions = splitDirectoryExtensions("62001、62002, 62003/62004");
+    expect(extensions).toEqual(["62001", "62002", "62003", "62004"]);
+    expect(
+      extensions.map((extension) =>
+        getDirectoryTelHref("03-516 2001", extension),
+      ),
+    ).toEqual([
+      "tel:035162001;ext=62001",
+      "tel:035162001;ext=62002",
+      "tel:035162001;ext=62003",
+      "tel:035162001;ext=62004",
+    ]);
+    expect(getDirectoryTelHref("03-516 2001", null)).toBe("tel:035162001");
     expect(getDirectoryTelHref(null, "62001")).toBeNull();
   });
 });
