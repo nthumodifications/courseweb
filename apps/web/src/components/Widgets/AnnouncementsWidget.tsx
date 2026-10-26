@@ -2,6 +2,7 @@ import { FC, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Megaphone } from "lucide-react";
 import { useLocalStorage } from "usehooks-ts";
+import { Badge } from "@courseweb/ui";
 import { WidgetShell } from "./WidgetShell";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useSettings } from "@/hooks/contexts/settings";
@@ -13,6 +14,12 @@ import {
   useAnnouncements,
 } from "@/lib/announcements";
 import type { AnnouncementSource } from "@/lib/announcements";
+import {
+  ANNOUNCEMENT_KEYWORDS_KEY,
+  ANNOUNCEMENT_KEYWORDS_LAST_SEEN_KEY,
+  countNewKeywordMatches,
+  normalizeAnnouncementKeywords,
+} from "@/lib/announcements-keywords";
 
 interface AnnouncementsWidgetProps {
   onRemove?: () => void;
@@ -27,6 +34,14 @@ const AnnouncementsWidget: FC<AnnouncementsWidgetProps> = (props) => {
     ANNOUNCEMENT_FOLLOWS_KEY,
     null,
   );
+  const [storedKeywords] = useLocalStorage<unknown>(
+    ANNOUNCEMENT_KEYWORDS_KEY,
+    [],
+  );
+  const [storedKeywordLastSeen] = useLocalStorage<unknown>(
+    ANNOUNCEMENT_KEYWORDS_LAST_SEEN_KEY,
+    null,
+  );
   const { data, isLoading, error } = useAnnouncements();
   const sources = data?.sources ?? [];
   const followIds = useMemo(
@@ -37,6 +52,38 @@ const AnnouncementsWidget: FC<AnnouncementsWidgetProps> = (props) => {
     () => new Map(sources.map((source) => [source.id, source])),
     [sources],
   );
+  const keywords = useMemo(
+    () => normalizeAnnouncementKeywords(storedKeywords),
+    [storedKeywords],
+  );
+  const newMatchesCount = countNewKeywordMatches(
+    data?.articles ?? [],
+    keywords,
+    sourceById,
+    typeof storedKeywordLastSeen === "string" ? storedKeywordLastSeen : null,
+  );
+  const widgetTitle = (
+    <span className="flex items-center gap-2">
+      <span>
+        {
+          dict.settings.calendar.widget_dashboard.widget_options.announcements
+            .title
+        }
+      </span>
+      {newMatchesCount > 0 && (
+        <Badge
+          variant="secondary"
+          className="h-5 min-w-5 px-1 text-xs"
+          aria-label={dict.announcements.new_matches_count.replace(
+            "{count}",
+            String(newMatchesCount),
+          )}
+        >
+          {newMatchesCount}
+        </Badge>
+      )}
+    </span>
+  );
   const articles = (data?.articles ?? [])
     .filter((article) =>
       article.sourceIds.some((sourceId) => followIds.includes(sourceId)),
@@ -44,13 +91,7 @@ const AnnouncementsWidget: FC<AnnouncementsWidgetProps> = (props) => {
     .slice(0, 5);
 
   return (
-    <WidgetShell
-      title={
-        dict.settings.calendar.widget_dashboard.widget_options.announcements
-          .title
-      }
-      {...props}
-    >
+    <WidgetShell title={widgetTitle} {...props}>
       <div className="flex flex-col p-4">
         {isLoading ? (
           <div className="flex flex-col gap-3">
