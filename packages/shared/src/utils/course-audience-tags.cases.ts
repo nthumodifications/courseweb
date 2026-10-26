@@ -7,12 +7,16 @@ export const COURSE_AUDIENCE_PARSE_CASES = [
   ["限博士班", "r:d"],
   ["排除大學部", "e:u"],
   ["排除大学部", "e:u"],
+  ["排除碩士班", "e:m"],
+  ["排除大學部1年級2年級", "e:y1:u e:y2:u"],
   ["排除碩士班1年級", "e:y1:m"],
+  ["排除博士班1年級", "e:y1:d"],
   ["限本系學生", "r:o"],
   ["限本系", "r:o"],
   ["限男生", "r:male"],
   ["限女生", "r:female"],
   ["限外籍生", "r:i"],
+  ["限心諮系博士班", "r:d"],
   ["限大學部1年級", "r:u r:y1:u"],
   ["限大學部2年級3年級4年級", "r:u r:y2:u r:y3:u r:y4:u"],
   ["限大一", "r:y1:u"],
@@ -23,9 +27,9 @@ export const COURSE_AUDIENCE_PARSE_CASES = [
   ["限博三以上", "r:d r:y3:d r:y4:d"],
   ["限大學部二年級以上", "r:u r:y2:u r:y3:u r:y4:u"],
   ["限博士班第二年始得選課", "r:d r:y2:d"],
-  ["材料系大學部1年級清班優先", "p:u p:y1:u"],
-  ["工學院學士班大學部1年級,醫科系大學部1年級,單號優先", "p:u p:y1:u"],
-  ["資工系大二優先", "p:y2:u"],
+  ["材料系大學部1年級清班優先", ""],
+  ["工學院學士班大學部1年級,醫科系大學部1年級,單號優先", ""],
+  ["資工系大二優先", ""],
   ["男生優先", "p:male"],
   ["Undergraduate students only", "r:u"],
   ["Graduate students only", "r:g"],
@@ -95,7 +99,27 @@ export const COURSE_AUDIENCE_PARSE_CASES = [
   ],
   [
     "電機系大學部3年級4年級,電資院學士班大學部3年級4年級優先，第3次選課起開放全校修習",
-    "p:u p:y3:u p:y4:u",
+    "",
+  ],
+] as const;
+
+export const COURSE_AUDIENCE_PARSE_TEXT_CASES = [
+  [{ restrictions: "排除國際學士班" }, ""],
+  [{ restrictions: "排除大學部專班" }, ""],
+  [{ restrictions: "排除科管所碩士班1年級" }, ""],
+  [{ restrictions: "排除社會所碩士班1年級2年級" }, ""],
+  [{ restrictions: "排除台文所博士班1年級2年級" }, ""],
+  [{ restrictions: "排除精準醫療博士學程博士班1年級" }, ""],
+  [{ restrictions: "排除專班1年級" }, ""],
+  [{ restrictions: "排除MBA專班專班1年級" }, ""],
+  [{ restrictions: "排除環文系在職專班專班1年級" }, ""],
+  [{ restrictions: "排除健康經管專班專班1年級" }, ""],
+  [
+    {
+      restrictions: "限公共政策與管理碩士專班專班2年級3年級4年級",
+      note: "MPM一年級學生不得選此課",
+    },
+    "r:m r:y2:m r:y3:m r:y4:m",
   ],
 ] as const;
 

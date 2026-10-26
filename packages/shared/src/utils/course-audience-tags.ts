@@ -64,6 +64,43 @@ const COMPACT_YEAR_RANGE_PATTERN = new RegExp(
   `[^,，。；;\\n]{0,120}?[大碩硕博][1-4](?:\\s*[,、]\\s*[1-4])+\\s*以上`,
   "gu",
 );
+const ACADEMIC_AUDIENCE_CONTEXT_PATTERN = new RegExp(
+  [
+    "大學部",
+    "大学部",
+    "大學生",
+    "大学生",
+    "大學",
+    "大学",
+    "學士班",
+    "学士班",
+    "學士生",
+    "学士生",
+    "研究所",
+    "研究生",
+    "碩博(?:生)?",
+    "硕博(?:生)?",
+    "碩士班",
+    "硕士班",
+    "碩士生",
+    "硕士生",
+    "碩士",
+    "硕士",
+    "博士班",
+    "博士生",
+    "博士",
+    "[大碩硕博][1-4一二三四]",
+    "第[1-4一二三四]年(?:級|级|年)?",
+    "[1-4一二三四](?:年級|年级|年)",
+  ].join("|"),
+  "gu",
+);
+const ACADEMIC_AUDIENCE_QUALIFIER_PATTERN =
+  /(?:學士班|学士班|學程|学程|學位學程|学位学程|專班|专班|在職班|在职班)/u;
+const ACADEMIC_AUDIENCE_RELATION_PATTERN =
+  /(?:排除|恕?(?:不開放|不开放)|不接受|不得|不可(?:以)?|限制|限定|限|優先|优先)/giu;
+const ACADEMIC_AUDIENCE_CONNECTOR_PATTERN = /[及與和或、,，\s]/gu;
+const ACADEMIC_AUDIENCE_GENERIC_PATTERN = /(?:同學|同学|學生|学生|生|班)/gu;
 
 const ENGLISH_AUDIENCE_PATTERN =
   /\b(?:restricted to|limited to|undergraduates?|graduate(?: students?)?|postgraduate(?: students?)?|master(?:'s)?(?: students?)?|doctoral(?: students?)?|phd(?: students?)?|freshmen?|sophomores?|juniors?|seniors?|male(?: students?)?|female(?: students?)?|international(?: students?)?)[^.!?;，。；\n]{0,100}/giu;
@@ -233,6 +270,28 @@ const addClause = (
   clauses.push({ relation, source: trimmed });
 };
 
+const hasQualifiedAcademicAudience = (source: string) => {
+  const stripAllowedContext = (context: string) =>
+    context
+      .replace(ACADEMIC_AUDIENCE_CONTEXT_PATTERN, "")
+      .replace(ACADEMIC_AUDIENCE_RELATION_PATTERN, "")
+      .replace(ACADEMIC_AUDIENCE_CONNECTOR_PATTERN, "")
+      .replace(ACADEMIC_AUDIENCE_GENERIC_PATTERN, "");
+
+  for (const match of source.matchAll(ACADEMIC_AUDIENCE_CONTEXT_PATTERN)) {
+    const index = match.index ?? 0;
+    if (stripAllowedContext(source.slice(0, index))) return true;
+    if (
+      ACADEMIC_AUDIENCE_QUALIFIER_PATTERN.test(
+        source.slice(index + match[0].length),
+      )
+    )
+      return true;
+  }
+
+  return false;
+};
+
 const extractClauses = (source: string): ParsedClause[] => {
   const clauses: ParsedClause[] = [];
 
@@ -273,6 +332,12 @@ const extractClauses = (source: string): ParsedClause[] => {
 };
 
 const parseClause = (clause: ParsedClause): CourseAudienceTag[] => {
+  if (
+    (clause.relation === "exclusion" || clause.relation === "priority") &&
+    hasQualifiedAcademicAudience(clause.source)
+  )
+    return [];
+
   const values = extractValues(clause.source);
   const years = expandYearRanges(clause.source, extractYears(clause.source));
   if (values.length === 0 && years.length === 0) return [];

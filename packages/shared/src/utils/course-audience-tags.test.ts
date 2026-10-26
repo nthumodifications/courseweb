@@ -8,6 +8,7 @@ import {
 import {
   COURSE_AUDIENCE_NON_MATCHING_CASES,
   COURSE_AUDIENCE_PARSE_CASES,
+  COURSE_AUDIENCE_PARSE_TEXT_CASES,
 } from "./course-audience-tags.cases";
 
 const fixture = (await Bun.file(
@@ -50,17 +51,27 @@ type RelationCode = keyof typeof relationCodes;
 type ValueCode = keyof typeof valueCodes;
 
 const buildExpectedTags = (shorthand: string): ExpectedTag[] =>
-  shorthand.split(" ").map((code) => {
-    const [relation, value, scope] = code.split(":") as [
-      RelationCode,
-      ValueCode,
-      ValueCode | undefined,
-    ];
-    const tag: ExpectedTag = scope
-      ? [relationCodes[relation], valueCodes[value], valueCodes[scope]]
-      : [relationCodes[relation], valueCodes[value]];
-    return tag;
-  });
+  shorthand
+    ? shorthand.split(" ").map((code) => {
+        const [relation, value, scope] = code.split(":") as [
+          RelationCode,
+          ValueCode,
+          ValueCode | undefined,
+        ];
+        const tag: ExpectedTag = scope
+          ? [relationCodes[relation], valueCodes[value], valueCodes[scope]]
+          : [relationCodes[relation], valueCodes[value]];
+        return tag;
+      })
+    : [];
+
+const parseCases = [
+  ...COURSE_AUDIENCE_PARSE_CASES.map(([source, shorthand]) => [
+    { note: source },
+    shorthand,
+  ] as const),
+  ...COURSE_AUDIENCE_PARSE_TEXT_CASES,
+];
 
 describe("course audience tags", () => {
   test("serializes stable facet values and keeps scoped years distinct", () => {
@@ -81,8 +92,8 @@ describe("course audience tags", () => {
     ).toEqual(["restriction:year-3", "restriction:year-4"]);
   });
 
-  test.each(COURSE_AUDIENCE_PARSE_CASES)("parses %s", (source, shorthand) => {
-    expect(project(parseCourseAudienceTags({ note: source }))).toEqual(
+  test.each(parseCases)("parses %j", (text, shorthand) => {
+    expect(project(parseCourseAudienceTags(text))).toEqual(
       buildExpectedTags(shorthand),
     );
   });

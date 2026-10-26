@@ -3,12 +3,14 @@ import * as canonical from "../../../packages/shared/src/utils/course-audience-t
 import {
   COURSE_AUDIENCE_NON_MATCHING_CASES,
   COURSE_AUDIENCE_PARSE_CASES,
+  COURSE_AUDIENCE_PARSE_TEXT_CASES,
 } from "../../../packages/shared/src/utils/course-audience-tags.cases";
 import * as dataSync from "../../../tools/data-sync/src/course-audience-tags";
 import * as worker from "./utils/course-audience-tags";
 
 const parityCases = [
   ...COURSE_AUDIENCE_PARSE_CASES.map(([note]) => ({ note })),
+  ...COURSE_AUDIENCE_PARSE_TEXT_CASES.map(([text]) => text),
   ...COURSE_AUDIENCE_NON_MATCHING_CASES.map((note) => ({ note })),
 ];
 
