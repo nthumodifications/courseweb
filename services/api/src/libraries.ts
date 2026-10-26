@@ -129,7 +129,7 @@ export const createLibrariesApp = (
     const response = c.json<LibrariesResponse>(
       { data, source: LOST_AND_FOUND_SOURCE, error },
       200,
-      { "Cache-Control": CACHE_CONTROL },
+      { "Cache-Control": error ? "no-store" : CACHE_CONTROL },
     );
 
     if (!error && cache) {

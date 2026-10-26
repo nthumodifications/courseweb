@@ -15,7 +15,20 @@ export const DIRECTORY_SOURCE = {
 } as const;
 
 const nullableString = z.string().trim().nullable().optional();
-const nullableUrl = z.string().url().nullable().optional().catch(null);
+const nullableUrl = z
+  .string()
+  .url()
+  .refine((value) => {
+    try {
+      const protocol = new URL(value).protocol;
+      return protocol === "http:" || protocol === "https:";
+    } catch {
+      return false;
+    }
+  })
+  .nullable()
+  .optional()
+  .catch(null);
 const contactSchema = z
   .object({
     extension: nullableString,
@@ -166,7 +179,7 @@ export const createDirectoryApp = (
     const response = c.json<DirectoryResponse>(
       { data, source: DIRECTORY_SOURCE, error },
       200,
-      { "Cache-Control": CACHE_CONTROL },
+      { "Cache-Control": error ? "no-store" : CACHE_CONTROL },
     );
 
     if (!error && cache) {

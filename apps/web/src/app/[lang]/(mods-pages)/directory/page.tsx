@@ -19,6 +19,7 @@ import {
   splitDirectoryExtensions,
 } from "@/lib/directory-core";
 import { useDirectory, type DirectoryUnit } from "@/lib/directory";
+import { safeExternalUrl } from "@/lib/safe-external-url";
 
 const DIRECTORY_SOURCE_URL = "https://tel.net.nthu.edu.tw/nthusearch/";
 
@@ -41,7 +42,7 @@ const DirectoryUnitRow = ({
         href: getDirectoryTelHref(unit.phone, extension),
       }))
     : [];
-  const website = unit.website ?? unit.url;
+  const website = safeExternalUrl(unit.website) ?? safeExternalUrl(unit.url);
 
   return (
     <div className="flex flex-col gap-3 py-4">

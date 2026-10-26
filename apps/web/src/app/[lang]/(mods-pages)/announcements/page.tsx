@@ -41,13 +41,13 @@ import {
 import {
   ANNOUNCEMENT_KEYWORDS_KEY,
   ANNOUNCEMENT_KEYWORDS_LAST_SEEN_KEY,
-  countNewKeywordMatches,
+  getAnnouncementKeywordMatchState,
   getMatchedAnnouncementKeywords,
-  getNewestKeywordMatchDate,
   normalizeAnnouncementKeywords,
   splitAnnouncementTitle,
 } from "@/lib/announcements-keywords";
 import { hasDeepLinkRequestChanged } from "@/lib/deep-links/deep-link";
+import { safeExternalUrl } from "@/lib/safe-external-url";
 import { parseAnnouncementsDeepLink } from "./deep-link";
 
 const sourceMatches = (source: AnnouncementSource, search: string) => {
@@ -81,7 +81,7 @@ const AnnouncementsPage = () => {
   const [keywordsOpen, setKeywordsOpen] = useState(false);
   const [keywordDraft, setKeywordDraft] = useState("");
   const [newMatchesCount, setNewMatchesCount] = useState(0);
-  const recordedKeywordVisits = useRef(new Set<string>());
+  const recordedKeywordVisits = useRef(new WeakMap<object, Set<string>>());
   const { data, isLoading, error, refetch } = useAnnouncements();
 
   const sources = data?.sources ?? [];
@@ -135,25 +135,24 @@ const AnnouncementsPage = () => {
     [data?.articles, keywords, sourceById],
   );
   useEffect(() => {
-    if (!data || recordedKeywordVisits.current.has(keywordSignature)) return;
+    if (!data) return;
+    const recordedSignatures =
+      recordedKeywordVisits.current.get(data) ?? new Set<string>();
+    if (recordedSignatures.has(keywordSignature)) return;
 
-    setNewMatchesCount(
-      countNewKeywordMatches(
+    const { newMatchesCount: nextNewMatchesCount, newestMatchDate } =
+      getAnnouncementKeywordMatchState(
         data.articles,
         keywords,
         sourceById,
         keywordLastSeen,
-      ),
-    );
-    const newestMatchDate = getNewestKeywordMatchDate(
-      data.articles,
-      keywords,
-      sourceById,
-    );
+      );
+    setNewMatchesCount(nextNewMatchesCount);
     if (newestMatchDate && newestMatchDate !== keywordLastSeen) {
       setStoredKeywordLastSeen(newestMatchDate);
     }
-    recordedKeywordVisits.current.add(keywordSignature);
+    recordedSignatures.add(keywordSignature);
+    recordedKeywordVisits.current.set(data, recordedSignatures);
   }, [
     data,
     keywordLastSeen,
@@ -531,6 +530,8 @@ const AnnouncementsPage = () => {
                   Boolean(source),
                 );
               if (articleSources.length === 0) return null;
+              const href = safeExternalUrl(article.link);
+              if (!href) return null;
               const matchedKeywords =
                 matchedKeywordsByArticle.get(article.link) ?? [];
               const titleSegments =
@@ -540,7 +541,7 @@ const AnnouncementsPage = () => {
               return (
                 <a
                   className="flex min-w-0 flex-col gap-2 py-4 hover:bg-accent/50 sm:flex-row sm:gap-4"
-                  href={article.link}
+                  href={href}
                   key={`${article.link}:${article.date}`}
                   target="_blank"
                   rel="noreferrer"

@@ -63,6 +63,25 @@ describe("directory normalization", () => {
     expect(department?.url).toBeNull();
     expect(department?.website).toBeNull();
   });
+
+  test("turns non-HTTP department URLs into null", () => {
+    const [department] = normalizeDirectory([
+      {
+        ...fixture[0],
+        url: "javascript:alert(1)",
+        details: {
+          ...fixture[0].details,
+          contact: {
+            ...fixture[0].details?.contact,
+            website: "data:text/html,<p>unsafe</p>",
+          },
+        },
+      },
+    ]);
+
+    expect(department?.url).toBeNull();
+    expect(department?.website).toBeNull();
+  });
 });
 
 describe("directory route", () => {
@@ -109,5 +128,6 @@ describe("directory route", () => {
       source: DIRECTORY_SOURCE,
       error: true,
     });
+    expect(response.headers.get("Cache-Control")).toBe("no-store");
   });
 });

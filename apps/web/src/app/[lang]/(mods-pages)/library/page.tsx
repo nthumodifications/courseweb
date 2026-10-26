@@ -54,6 +54,7 @@ import {
   useLibraryLostAndFound,
   type LostAndFoundItem,
 } from "@/lib/library-lost-and-found";
+import { safeExternalUrl } from "@/lib/safe-external-url";
 import {
   pickLibraryForecastSeries,
   shouldShowUsageLearningNotice,
@@ -115,6 +116,9 @@ const LostAndFoundSection = () => {
     ? filteredItems
     : filteredItems.slice(0, 20);
   const hasError = Boolean(error) || response?.error === true;
+  const sourceUrl =
+    safeExternalUrl(response?.source.url) ??
+    "https://adage.lib.nthu.edu.tw/find";
 
   useEffect(() => {
     setShowAllItems(false);
@@ -245,7 +249,7 @@ const LostAndFoundSection = () => {
       <div className="pt-4 text-xs text-muted-foreground">
         {dict.library.lost_found_data_source}{" "}
         <a
-          href={response?.source.url ?? "https://adage.lib.nthu.edu.tw/find"}
+          href={sourceUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="underline hover:text-foreground"

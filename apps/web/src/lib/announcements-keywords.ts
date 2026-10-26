@@ -135,3 +135,23 @@ export const countNewKeywordMatches = (
       getMatchedAnnouncementKeywords(article, keywords, sourceById).length > 0,
   ).length;
 };
+
+export interface AnnouncementKeywordMatchState {
+  newMatchesCount: number;
+  newestMatchDate: string | null;
+}
+
+export const getAnnouncementKeywordMatchState = (
+  articles: readonly AnnouncementArticle[],
+  keywords: readonly string[],
+  sourceById: ReadonlyMap<string, AnnouncementSource>,
+  lastSeenDate: string | null | undefined,
+): AnnouncementKeywordMatchState => ({
+  newMatchesCount: countNewKeywordMatches(
+    articles,
+    keywords,
+    sourceById,
+    lastSeenDate,
+  ),
+  newestMatchDate: getNewestKeywordMatchDate(articles, keywords, sourceById),
+});

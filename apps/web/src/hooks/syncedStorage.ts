@@ -358,6 +358,18 @@ const isJsonOmittedValue = (value: unknown) =>
 const normalizeJsonNumber = (value: number) =>
   Number.isFinite(value) ? (Object.is(value, -0) ? 0 : value) : null;
 
+const valueAfterToJSON = (value: unknown): unknown => {
+  if (
+    value === null ||
+    (typeof value !== "object" && typeof value !== "function")
+  ) {
+    return value;
+  }
+
+  const toJSON = (value as { toJSON?: unknown }).toJSON;
+  return typeof toJSON === "function" ? toJSON.call(value) : value;
+};
+
 /**
  * Compare values at the JSON storage boundary without depending on object key
  * insertion order. Object members omitted by JSON.stringify remain omitted;
@@ -367,6 +379,12 @@ const normalizeJsonNumber = (value: number) =>
 export const valuesEqual = (left: unknown, right: unknown): boolean => {
   if (isJsonOmittedValue(left) || isJsonOmittedValue(right)) {
     return isJsonOmittedValue(left) && isJsonOmittedValue(right);
+  }
+
+  const leftJsonValue = valueAfterToJSON(left);
+  const rightJsonValue = valueAfterToJSON(right);
+  if (leftJsonValue !== left || rightJsonValue !== right) {
+    return valuesEqual(leftJsonValue, rightJsonValue);
   }
 
   if (typeof left === "number" || typeof right === "number") {
@@ -425,10 +443,11 @@ export const valuesEqual = (left: unknown, right: unknown): boolean => {
     (key) => !isJsonOmittedValue(rightRecord[key]),
   );
   if (leftKeys.length !== rightKeys.length) return false;
+  const rightKeySet = new Set(rightKeys);
 
   return leftKeys.every(
     (key) =>
-      rightKeys.includes(key) && valuesEqual(leftRecord[key], rightRecord[key]),
+      rightKeySet.has(key) && valuesEqual(leftRecord[key], rightRecord[key]),
   );
 };
 

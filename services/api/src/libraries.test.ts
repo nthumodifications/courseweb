@@ -89,5 +89,6 @@ describe("lost-and-found route", () => {
       source: LOST_AND_FOUND_SOURCE,
       error: true,
     });
+    expect(response.headers.get("Cache-Control")).toBe("no-store");
   });
 });

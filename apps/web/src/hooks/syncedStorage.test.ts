@@ -164,6 +164,32 @@ describe("synced storage value equality", () => {
     expect(valuesEqual(new Date("2026-01-01"), new Date("2026-01-02"))).toBe(
       false,
     );
+    expect(
+      valuesEqual(new Date("2026-01-01"), "2026-01-01T00:00:00.000Z"),
+    ).toBe(true);
+    expect(valuesEqual(new Date("not-a-date"), null)).toBe(true);
+  });
+
+  test("handles an own __proto__ key", () => {
+    const left = JSON.parse('{"__proto__":{"value":1}}');
+    const right = Object.create(null) as Record<string, unknown>;
+    right["__proto__"] = { value: 1 };
+
+    expect(valuesEqual(left, right)).toBe(true);
+    expect(valuesEqual(left, { __proto__: { value: 1 } })).toBe(false);
+  });
+
+  test("compares a large object efficiently", () => {
+    const left: Record<string, number> = {};
+    const right: Record<string, number> = {};
+    for (let index = 0; index < 5_000; index += 1) {
+      left[`key-${index}`] = index;
+      right[`key-${index}`] = index;
+    }
+
+    const started = performance.now();
+    expect(valuesEqual(left, right)).toBe(true);
+    expect(performance.now() - started).toBeLessThan(1_000);
   });
 });
 

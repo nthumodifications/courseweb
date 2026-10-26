@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
   countNewKeywordMatches,
+  getAnnouncementKeywordMatchState,
   getMatchedAnnouncementKeywords,
   getNewestKeywordMatchDate,
   isValidAnnouncementKeywords,
@@ -113,5 +114,30 @@ describe("new announcement keyword matches", () => {
         sourceById,
       ),
     ).toBe("2026-10-21");
+  });
+
+  test("recomputes the count and watermark for newly fetched articles", () => {
+    const previousArticles = articles.slice(0, 2);
+    const nextArticles = [
+      ...previousArticles,
+      article("Newest scholarship", "2026-10-23"),
+    ];
+
+    expect(
+      getAnnouncementKeywordMatchState(
+        previousArticles,
+        ["scholarship"],
+        sourceById,
+        "2026-10-21",
+      ),
+    ).toEqual({ newMatchesCount: 0, newestMatchDate: "2026-10-21" });
+    expect(
+      getAnnouncementKeywordMatchState(
+        nextArticles,
+        ["scholarship"],
+        sourceById,
+        "2026-10-21",
+      ),
+    ).toEqual({ newMatchesCount: 1, newestMatchDate: "2026-10-23" });
   });
 });
