@@ -91,14 +91,33 @@ describe("announcement list paging", () => {
     [
       3,
       { type: "search", value: "deadline" },
-      { page: 1, search: "deadline", sourceFilter: "all" },
+      {
+        page: 1,
+        search: "deadline",
+        sourceFilter: "all",
+        view: "followed",
+      },
     ],
     [
       3,
       { type: "sourceFilter", value: "academic" },
-      { page: 1, search: "", sourceFilter: "academic" },
+      {
+        page: 1,
+        search: "",
+        sourceFilter: "academic",
+        view: "followed",
+      },
     ],
-    [1, { type: "showMore" }, { page: 2, search: "", sourceFilter: "all" }],
+    [
+      1,
+      { type: "view", value: "matches" },
+      { page: 1, search: "", sourceFilter: "all", view: "matches" },
+    ],
+    [
+      1,
+      { type: "showMore" },
+      { page: 2, search: "", sourceFilter: "all", view: "followed" },
+    ],
   ] as const)("applies %s to the list state", (page, action, expected) => {
     expect(
       announcementListReducer(

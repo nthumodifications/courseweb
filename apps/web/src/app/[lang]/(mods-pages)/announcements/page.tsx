@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { ExternalLink, ListFilter, Search } from "lucide-react";
+import { ExternalLink, ListFilter, Search, Tag, X } from "lucide-react";
 import { useLocalStorage } from "usehooks-ts";
 import {
   Button,
+  Badge,
   Checkbox,
   Dialog,
   DialogContent,
@@ -19,6 +20,9 @@ import {
   SelectTrigger,
   SelectValue,
   Skeleton,
+  Tabs,
+  TabsList,
+  TabsTrigger,
 } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useSettings } from "@/hooks/contexts/settings";
@@ -34,6 +38,15 @@ import {
   useAnnouncements,
   type AnnouncementSource,
 } from "@/lib/announcements";
+import {
+  ANNOUNCEMENT_KEYWORDS_KEY,
+  ANNOUNCEMENT_KEYWORDS_LAST_SEEN_KEY,
+  countNewKeywordMatches,
+  getMatchedAnnouncementKeywords,
+  getNewestKeywordMatchDate,
+  normalizeAnnouncementKeywords,
+  splitAnnouncementTitle,
+} from "@/lib/announcements-keywords";
 import { hasDeepLinkRequestChanged } from "@/lib/deep-links/deep-link";
 import { parseAnnouncementsDeepLink } from "./deep-link";
 
@@ -53,12 +66,22 @@ const AnnouncementsPage = () => {
     ANNOUNCEMENT_FOLLOWS_KEY,
     null,
   );
+  const [storedKeywords, setStoredKeywords] = useLocalStorage<unknown>(
+    ANNOUNCEMENT_KEYWORDS_KEY,
+    [],
+  );
+  const [storedKeywordLastSeen, setStoredKeywordLastSeen] =
+    useLocalStorage<unknown>(ANNOUNCEMENT_KEYWORDS_LAST_SEEN_KEY, null);
   const [articleListState, dispatchArticleList] = useReducer(
     announcementListReducer,
     initialAnnouncementListState,
   );
   const [sourceSearch, setSourceSearch] = useState("");
   const [manageOpen, setManageOpen] = useState(false);
+  const [keywordsOpen, setKeywordsOpen] = useState(false);
+  const [keywordDraft, setKeywordDraft] = useState("");
+  const [newMatchesCount, setNewMatchesCount] = useState(0);
+  const recordedKeywordVisits = useRef(new Set<string>());
   const { data, isLoading, error, refetch } = useAnnouncements();
 
   const sources = data?.sources ?? [];
@@ -94,6 +117,51 @@ const AnnouncementsPage = () => {
     () => new Map(sources.map((source) => [source.id, source])),
     [sources],
   );
+  const keywords = useMemo(
+    () => normalizeAnnouncementKeywords(storedKeywords),
+    [storedKeywords],
+  );
+  const keywordLastSeen =
+    typeof storedKeywordLastSeen === "string" ? storedKeywordLastSeen : null;
+  const keywordSignature = keywords.join("\u001f");
+  const matchedKeywordsByArticle = useMemo(
+    () =>
+      new Map(
+        (data?.articles ?? []).map((article) => [
+          article.link,
+          getMatchedAnnouncementKeywords(article, keywords, sourceById),
+        ]),
+      ),
+    [data?.articles, keywords, sourceById],
+  );
+  useEffect(() => {
+    if (!data || recordedKeywordVisits.current.has(keywordSignature)) return;
+
+    setNewMatchesCount(
+      countNewKeywordMatches(
+        data.articles,
+        keywords,
+        sourceById,
+        keywordLastSeen,
+      ),
+    );
+    const newestMatchDate = getNewestKeywordMatchDate(
+      data.articles,
+      keywords,
+      sourceById,
+    );
+    if (newestMatchDate && newestMatchDate !== keywordLastSeen) {
+      setStoredKeywordLastSeen(newestMatchDate);
+    }
+    recordedKeywordVisits.current.add(keywordSignature);
+  }, [
+    data,
+    keywordLastSeen,
+    keywordSignature,
+    keywords,
+    setStoredKeywordLastSeen,
+    sourceById,
+  ]);
   const followedSources = useMemo(
     () => sources.filter((source) => followedSourceIds.has(source.id)),
     [sources, followedSourceIds],
@@ -117,13 +185,19 @@ const AnnouncementsPage = () => {
         .map((sourceId) => sourceById.get(sourceId))
         .filter((source): source is AnnouncementSource => Boolean(source));
       const sourceFilterMatches =
-        articleListState.sourceFilter === "all"
-          ? article.sourceIds.some((sourceId) =>
-              followedSourceIds.has(sourceId),
-            )
-          : article.sourceIds.includes(articleListState.sourceFilter);
+        articleListState.view === "matches"
+          ? true
+          : articleListState.sourceFilter === "all"
+            ? article.sourceIds.some((sourceId) =>
+                followedSourceIds.has(sourceId),
+              )
+            : article.sourceIds.includes(articleListState.sourceFilter);
+      const keywordFilterMatches =
+        articleListState.view !== "matches" ||
+        (matchedKeywordsByArticle.get(article.link)?.length ?? 0) > 0;
       return (
         sourceFilterMatches &&
+        keywordFilterMatches &&
         (!query || article.title.toLocaleLowerCase().includes(query)) &&
         articleSources.length > 0
       );
@@ -131,8 +205,10 @@ const AnnouncementsPage = () => {
   }, [
     articleListState.search,
     articleListState.sourceFilter,
+    articleListState.view,
     data?.articles,
     followedSourceIds,
+    matchedKeywordsByArticle,
     sourceById,
   ]);
 
@@ -171,9 +247,52 @@ const AnnouncementsPage = () => {
     setStoredFollowIds([...next]);
   };
 
+  const addKeyword = (value: string) => {
+    const next = normalizeAnnouncementKeywords([...keywords, value]);
+    setStoredKeywords(next);
+    setKeywordDraft("");
+  };
+
+  const removeKeyword = (keyword: string) => {
+    setStoredKeywords(keywords.filter((candidate) => candidate !== keyword));
+  };
+
+  const newMatchesLabel = dict.announcements.new_matches_count.replace(
+    "{count}",
+    String(newMatchesCount),
+  );
+
   return (
     <div className="flex flex-col px-4 md:px-6">
       <div className="flex flex-col gap-3 border-b border-border py-3">
+        <Tabs
+          value={articleListState.view}
+          onValueChange={(value) => {
+            if (value === "followed" || value === "matches") {
+              dispatchArticleList({ type: "view", value });
+            }
+          }}
+        >
+          <TabsList className="w-full">
+            <TabsTrigger className="flex-1" value="followed">
+              {dict.announcements.followed_tab}
+            </TabsTrigger>
+            <TabsTrigger className="flex-1" value="matches">
+              <span className="flex items-center justify-center gap-2">
+                {dict.announcements.matches_tab}
+                {newMatchesCount > 0 && (
+                  <Badge
+                    variant="secondary"
+                    className="h-5 min-w-5 px-1 text-xs"
+                    aria-label={newMatchesLabel}
+                  >
+                    {newMatchesCount}
+                  </Badge>
+                )}
+              </span>
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
         <div className="flex flex-col gap-2 sm:flex-row">
           <div className="relative min-w-0 flex-1">
             <Search className="absolute left-2 top-2 h-4 w-4 text-muted-foreground" />
@@ -191,38 +310,40 @@ const AnnouncementsPage = () => {
             />
           </div>
           <div className="flex gap-2 sm:contents">
-            <Select
-              value={articleListState.sourceFilter}
-              onValueChange={(value) => {
-                dispatchArticleList({ type: "sourceFilter", value });
-                setSearchParams(
-                  (current) => {
-                    const next = new URLSearchParams(current);
-                    if (value === "all") next.delete("source");
-                    else next.set("source", value);
-                    return next;
-                  },
-                  { replace: true },
-                );
-              }}
-            >
-              <SelectTrigger
-                className="min-w-0 flex-1 sm:w-[180px] sm:flex-none"
-                aria-label={dict.announcements.filter_source}
+            {articleListState.view === "followed" && (
+              <Select
+                value={articleListState.sourceFilter}
+                onValueChange={(value) => {
+                  dispatchArticleList({ type: "sourceFilter", value });
+                  setSearchParams(
+                    (current) => {
+                      const next = new URLSearchParams(current);
+                      if (value === "all") next.delete("source");
+                      else next.set("source", value);
+                      return next;
+                    },
+                    { replace: true },
+                  );
+                }}
               >
-                <SelectValue placeholder={dict.announcements.all_followed} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">
-                  {dict.announcements.all_followed}
-                </SelectItem>
-                {selectableSources.map((source) => (
-                  <SelectItem value={source.id} key={source.id}>
-                    {source.department} · {source.title}
+                <SelectTrigger
+                  className="min-w-0 flex-1 sm:w-[180px] sm:flex-none"
+                  aria-label={dict.announcements.filter_source}
+                >
+                  <SelectValue placeholder={dict.announcements.all_followed} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">
+                    {dict.announcements.all_followed}
                   </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                  {selectableSources.map((source) => (
+                    <SelectItem value={source.id} key={source.id}>
+                      {source.department} · {source.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
             <Dialog open={manageOpen} onOpenChange={setManageOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm" className="shrink-0">
@@ -285,6 +406,88 @@ const AnnouncementsPage = () => {
                 </div>
               </DialogContent>
             </Dialog>
+            <Dialog open={keywordsOpen} onOpenChange={setKeywordsOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="shrink-0">
+                  <Tag />
+                  {dict.announcements.manage_keywords}
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100%-1rem)] overflow-hidden p-4 sm:w-full">
+                <DialogHeader>
+                  <DialogTitle>
+                    {dict.announcements.manage_keywords}
+                  </DialogTitle>
+                  <DialogDescription>
+                    {dict.announcements.manage_keywords_description}
+                  </DialogDescription>
+                </DialogHeader>
+                <form
+                  className="flex gap-2"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    if (keywordDraft.trim()) addKeyword(keywordDraft);
+                  }}
+                >
+                  <Input
+                    value={keywordDraft}
+                    onChange={(event) => setKeywordDraft(event.target.value)}
+                    placeholder={dict.announcements.keyword_placeholder}
+                    aria-label={dict.announcements.keyword_placeholder}
+                    className="h-8 min-w-0 flex-1 text-xs"
+                  />
+                  <Button
+                    type="submit"
+                    size="sm"
+                    disabled={!keywordDraft.trim()}
+                  >
+                    {dict.announcements.add_keyword}
+                  </Button>
+                </form>
+                <div className="flex flex-wrap gap-2">
+                  {keywords.map((keyword) => (
+                    <Badge
+                      variant="outline"
+                      className="gap-1 py-1"
+                      key={keyword}
+                    >
+                      {keyword}
+                      <button
+                        type="button"
+                        className="rounded-sm text-muted-foreground hover:text-foreground"
+                        onClick={() => removeKeyword(keyword)}
+                        aria-label={`${dict.announcements.remove_keyword}: ${keyword}`}
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+                <div className="flex flex-col gap-2">
+                  <span className="text-sm font-medium">
+                    {dict.announcements.keyword_suggestions}
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {dict.announcements.suggested_keywords.map((keyword) => (
+                      <Button
+                        key={keyword}
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={keywords.some(
+                          (existing) =>
+                            existing.toLocaleLowerCase() ===
+                            keyword.toLocaleLowerCase(),
+                        )}
+                        onClick={() => addKeyword(keyword)}
+                      >
+                        {keyword}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
       </div>
@@ -312,7 +515,11 @@ const AnnouncementsPage = () => {
         />
       ) : visibleArticles.length === 0 ? (
         <div className="py-4 text-left text-sm text-muted-foreground">
-          {dict.announcements.no_results}
+          {articleListState.view === "matches"
+            ? keywords.length > 0
+              ? dict.announcements.no_keyword_matches
+              : dict.announcements.no_keywords
+            : dict.announcements.no_results}
         </div>
       ) : (
         <>
@@ -324,6 +531,12 @@ const AnnouncementsPage = () => {
                   Boolean(source),
                 );
               if (articleSources.length === 0) return null;
+              const matchedKeywords =
+                matchedKeywordsByArticle.get(article.link) ?? [];
+              const titleSegments =
+                articleListState.view === "matches"
+                  ? splitAnnouncementTitle(article.title, matchedKeywords)
+                  : [{ text: article.title, matched: false }];
               return (
                 <a
                   className="flex min-w-0 flex-col gap-2 py-4 hover:bg-accent/50 sm:flex-row sm:gap-4"
@@ -334,7 +547,18 @@ const AnnouncementsPage = () => {
                 >
                   <div className="min-w-0 flex-1">
                     <div className="font-bold text-foreground">
-                      {article.title}
+                      {titleSegments.map((segment, index) =>
+                        segment.matched ? (
+                          <mark
+                            className="rounded bg-primary/20 text-foreground"
+                            key={index}
+                          >
+                            {segment.text}
+                          </mark>
+                        ) : (
+                          <span key={index}>{segment.text}</span>
+                        ),
+                      )}
                     </div>
                     <div className="text-sm text-muted-foreground">
                       {formatAnnouncementSourceGroups(articleSources, language)}
