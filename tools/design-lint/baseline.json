@@ -80,6 +80,7 @@
     "spacing-vocab": {
       "files": {
         "apps/web/src/app/[lang]/(mods-pages)/(side-pages)/changelog/page.tsx": 1,
+        "apps/web/src/app/[lang]/(mods-pages)/directory/page.tsx": 1,
         "apps/web/src/app/[lang]/(mods-pages)/bus/[route]/BusDetailsContainer.tsx": 1,
         "apps/web/src/app/[lang]/(mods-pages)/community/page.tsx": 1,
         "apps/web/src/app/[lang]/(mods-pages)/courses/AiSearchBox.tsx": 2,
@@ -89,7 +90,7 @@
         "apps/web/src/app/[lang]/(mods-pages)/courses/module/[moduleKey]/page.tsx": 2,
         "apps/web/src/app/[lang]/(mods-pages)/courses/SearchContainer.tsx": 1,
         "apps/web/src/app/[lang]/(mods-pages)/courses/TimeSelectionFilter.tsx": 2,
-        "apps/web/src/app/[lang]/(mods-pages)/library/page.tsx": 6,
+        "apps/web/src/app/[lang]/(mods-pages)/library/page.tsx": 7,
         "apps/web/src/app/[lang]/(mods-pages)/settings/AIPreferences.tsx": 1,
         "apps/web/src/app/[lang]/(mods-pages)/settings/ThemeSection.tsx": 1,
         "apps/web/src/app/[lang]/(mods-pages)/student/planner/components/course-list/course-grid-item.tsx": 2,
