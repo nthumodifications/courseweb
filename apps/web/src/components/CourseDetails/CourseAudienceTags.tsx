@@ -8,10 +8,8 @@ import useDictionary from "@/dictionaries/useDictionary";
 
 export type AudienceLabels = {
   title: string;
-  year_1: string;
-  year_2: string;
-  year_3: string;
-  year_4: string;
+  year_grade: Record<YearValue, string>;
+  scoped_years: Record<AcademicLevel, Record<YearValue, string>>;
   undergraduate: string;
   graduate: string;
   master: string;
@@ -23,7 +21,7 @@ export type AudienceLabels = {
   restriction_suffix: string;
   exclusion_prefix: string;
   priority_suffix: string;
-  year_numbers: Record<string, string>;
+  groups: Record<CourseAudienceTag["relation"], string>;
 };
 
 type YearValue = Extract<
@@ -31,25 +29,109 @@ type YearValue = Extract<
   "year-1" | "year-2" | "year-3" | "year-4"
 >;
 
+type AcademicLevel = NonNullable<CourseAudienceTag["scope"]>;
+type NonYearValue = Exclude<CourseAudienceTagValue, YearValue>;
+type NonYearLabelKey =
+  | "undergraduate"
+  | "graduate"
+  | "master"
+  | "doctoral"
+  | "own_department"
+  | "international"
+  | "male"
+  | "female";
+
+export const AUDIENCE_RELATIONS: readonly CourseAudienceTag["relation"][] = [
+  "restriction",
+  "exclusion",
+  "priority",
+];
+
+export const ACADEMIC_LEVELS: readonly AcademicLevel[] = [
+  "undergraduate",
+  "graduate",
+  "master",
+  "doctoral",
+];
+
+const YEAR_VALUES: readonly YearValue[] = [
+  "year-1",
+  "year-2",
+  "year-3",
+  "year-4",
+];
+
+export const AUDIENCE_VALUES: readonly CourseAudienceTagValue[] = [
+  ...ACADEMIC_LEVELS,
+  "own-department",
+  "international",
+  "male",
+  "female",
+  ...YEAR_VALUES,
+];
+
+const NON_YEAR_LABEL_KEYS: Record<NonYearValue, NonYearLabelKey> = {
+  undergraduate: "undergraduate",
+  graduate: "graduate",
+  master: "master",
+  doctoral: "doctoral",
+  "own-department": "own_department",
+  international: "international",
+  male: "male",
+  female: "female",
+};
+
+const kindForValue = (
+  value: CourseAudienceTagValue,
+): CourseAudienceTag["kind"] => {
+  if (value.startsWith("year-")) return "year";
+  if (ACADEMIC_LEVELS.includes(value as AcademicLevel)) return "level";
+  if (value === "own-department") return "department";
+  return "other";
+};
+
+const makeAudienceTag = (
+  relation: CourseAudienceTag["relation"],
+  value: CourseAudienceTagValue,
+  scope?: AcademicLevel,
+): CourseAudienceTag => ({
+  kind: kindForValue(value),
+  value,
+  relation,
+  source: "",
+  ...(scope ? { scope } : {}),
+});
+
+/** All facet values the parser can emit, in the order used by the filter. */
+export const courseAudienceTagCandidates = (): CourseAudienceTag[] => {
+  const orderedValues: Array<{
+    value: CourseAudienceTagValue;
+    scope?: AcademicLevel;
+  }> = [
+    ...ACADEMIC_LEVELS.map((value) => ({ value })),
+    ...ACADEMIC_LEVELS.flatMap((scope) =>
+      YEAR_VALUES.map((value) => ({ value, scope })),
+    ),
+    ...YEAR_VALUES.map((value) => ({ value })),
+    { value: "own-department" },
+    { value: "international" },
+    { value: "male" },
+    { value: "female" },
+  ];
+
+  return AUDIENCE_RELATIONS.flatMap((relation) =>
+    orderedValues.map(({ value, scope }) =>
+      makeAudienceTag(relation, value, scope),
+    ),
+  );
+};
+
 const valueLabel = (
   value: CourseAudienceTagValue,
   labels: AudienceLabels,
 ): string => {
-  if (value.startsWith("year-")) {
-    const key = `year_${value.slice(-1)}` as `year_${1 | 2 | 3 | 4}`;
-    return labels[key];
-  }
-
-  const key = value.replace("-", "_") as Exclude<
-    keyof AudienceLabels,
-    | "title"
-    | "restriction_suffix"
-    | "exclusion_prefix"
-    | "priority_suffix"
-    | "year_numbers"
-    | `year_${1 | 2 | 3 | 4}`
-  >;
-  return labels[key];
+  if (value.startsWith("year-")) return labels.year_grade[value as YearValue];
+  return labels[NON_YEAR_LABEL_KEYS[value as NonYearValue]];
 };
 
 export const courseAudienceTagLabel = (
@@ -58,15 +140,18 @@ export const courseAudienceTagLabel = (
   language: string,
 ) => {
   const separator = language === "en" ? " " : "";
-  let label = valueLabel(tag.value, labels);
+  const label =
+    tag.kind === "year" && tag.scope
+      ? labels.scoped_years[tag.scope][tag.value as YearValue]
+      : valueLabel(tag.value, labels);
 
-  if (tag.kind === "year" && tag.scope && tag.scope !== "undergraduate") {
-    const yearKey = tag.value as YearValue;
-    label = `${valueLabel(tag.scope, labels)}${separator}${labels.year_numbers[yearKey]}`;
+  if (tag.relation === "exclusion") {
+    const exclusionLabel =
+      language === "en"
+        ? label.charAt(0).toLowerCase() + label.slice(1)
+        : label;
+    return `${labels.exclusion_prefix}${separator}${exclusionLabel}`;
   }
-
-  if (tag.relation === "exclusion")
-    return `${labels.exclusion_prefix}${separator}${label}`;
   if (tag.relation === "priority")
     return `${label}${separator}${labels.priority_suffix}`;
   return `${label}${separator}${labels.restriction_suffix}`;

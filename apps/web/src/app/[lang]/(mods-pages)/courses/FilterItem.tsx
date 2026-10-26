@@ -3,6 +3,7 @@ import {
   Button,
   Command,
   CommandEmpty,
+  CommandGroup,
   CommandInput,
   CommandItem,
   CommandList,
@@ -37,6 +38,10 @@ const FilterItem = memo(
     hideWhenEmpty = false,
     sortFn,
     synonymsOnly = false,
+    selectedFirst = true,
+    groupBy,
+    groupLabels = {},
+    groupOrder,
   }: {
     attribute: string;
     limit?: number;
@@ -49,6 +54,10 @@ const FilterItem = memo(
     hideWhenEmpty?: boolean;
     sortFn?: (left: RefinementItem, right: RefinementItem) => number;
     synonymsOnly?: boolean;
+    selectedFirst?: boolean;
+    groupBy?: (item: RefinementItem) => string;
+    groupLabels?: Record<string, string>;
+    groupOrder?: readonly string[];
   }) => {
     const dict = useDictionary();
     const resolvedPlaceholder = placeholder ?? dict.planner.coursePicker.search;
@@ -56,8 +65,12 @@ const FilterItem = memo(
       attribute: attribute,
       limit: limit,
     });
-    const orderedItems = [...items].sort((left, right) => {
-      if (left.isRefined !== right.isRefined) return left.isRefined ? -1 : 1;
+    const availableItems = items.filter(
+      (item) => item.count > 0 || item.isRefined,
+    );
+    const orderedItems = [...availableItems].sort((left, right) => {
+      if (selectedFirst && left.isRefined !== right.isRefined)
+        return left.isRefined ? -1 : 1;
       return sortFn?.(left, right) ?? 0;
     });
 
@@ -129,7 +142,7 @@ const FilterItem = memo(
       };
     }, []);
 
-    if (hideWhenEmpty && items.length === 0) return null;
+    if (hideWhenEmpty && availableItems.length === 0) return null;
 
     const itemLabel = (value: string, fallback: string) =>
       synonymsOnly
@@ -138,15 +151,45 @@ const FilterItem = memo(
           ? `${value} - ${synonms[value] ?? synonms[fallback]}`
           : fallback;
 
+    const groupedItems = groupBy
+      ? (groupOrder ?? [...new Set(orderedItems.map((item) => groupBy(item)))])
+          .map((group) => ({
+            group,
+            items: orderedItems.filter((item) => groupBy(item) === group),
+          }))
+          .filter(({ items: groupItems }) => groupItems.length > 0)
+      : null;
+
+    const renderItem = (item: RefinementItem) => (
+      <CommandItem
+        className="cursor-pointer"
+        key={item.value}
+        onSelect={() => select(item.value)}
+      >
+        <div className="flex w-full items-center">
+          <div className="ml-1 mr-2">
+            <Check
+              size={16}
+              className={`${item.isRefined ? "" : "opacity-0"}`}
+            />
+          </div>
+          <span className="mr-4">{itemLabel(item.value, item.label)}</span>
+          <Badge variant="outline">{item.count}</Badge>
+        </div>
+      </CommandItem>
+    );
+
     const filter = (
       <Popover modal={true} onOpenChange={openChange}>
         <Button variant="outline" className={`w-full justify-start h-max p-0`}>
           <PopoverTrigger asChild>
             <div className="flex-1 text-left px-4 py-2">
-              {searching ? (
-                dict.common.selecting
-              ) : selected.length == 0 ? (
-                dict.common.all
+              {selected.length === 0 ? (
+                searching ? (
+                  ""
+                ) : (
+                  dict.planner.coursePicker.clickToSelect
+                )
               ) : (
                 <div className="flex flex-col gap-1">
                   {selected.map((i) => (
@@ -163,7 +206,10 @@ const FilterItem = memo(
           )}
         </Button>
 
-        <PopoverContent className="p-0" align="start">
+        <PopoverContent
+          className="w-[var(--radix-popover-trigger-width)] p-0"
+          align="start"
+        >
           <Command shouldFilter={clientSearch}>
             {searchable && (
               <CommandInput
@@ -185,26 +231,16 @@ const FilterItem = memo(
             >
               <CommandList className="max-h-none">
                 <CommandEmpty>{dict.common.no_results}</CommandEmpty>
-                {orderedItems.map((item) => (
-                  <CommandItem
-                    className="cursor-pointer"
-                    key={item.label}
-                    onSelect={() => select(item.value)}
-                  >
-                    <div className="flex w-full items-center">
-                      <div className="ml-1 mr-2">
-                        <Check
-                          size={16}
-                          className={`${item.isRefined ? "" : "opacity-0"}`}
-                        />
-                      </div>
-                      <span className="mr-4">
-                        {itemLabel(item.value, item.label)}
-                      </span>
-                      <Badge variant="outline">{item.count}</Badge>
-                    </div>
-                  </CommandItem>
-                ))}
+                {groupedItems
+                  ? groupedItems.map(({ group, items: groupItems }) => (
+                      <CommandGroup
+                        key={group}
+                        heading={groupLabels[group] ?? group}
+                      >
+                        {groupItems.map(renderItem)}
+                      </CommandGroup>
+                    ))
+                  : orderedItems.map(renderItem)}
               </CommandList>
             </ScrollArea>
           </Command>

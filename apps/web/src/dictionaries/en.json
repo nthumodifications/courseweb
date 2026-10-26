@@ -418,26 +418,53 @@
       "note_prefix": "Notes: ",
       "audience_tags": {
         "title": "Audience",
-        "year_1": "Year 1",
-        "year_2": "Year 2",
-        "year_3": "Year 3",
-        "year_4": "Year 4",
+        "year_grade": {
+          "year-1": "Year 1",
+          "year-2": "Year 2",
+          "year-3": "Year 3",
+          "year-4": "Year 4"
+        },
+        "scoped_years": {
+          "undergraduate": {
+            "year-1": "Undergraduate Year 1",
+            "year-2": "Undergraduate Year 2",
+            "year-3": "Undergraduate Year 3",
+            "year-4": "Undergraduate Year 4"
+          },
+          "graduate": {
+            "year-1": "Graduate Year 1",
+            "year-2": "Graduate Year 2",
+            "year-3": "Graduate Year 3",
+            "year-4": "Graduate Year 4"
+          },
+          "master": {
+            "year-1": "Master's Year 1",
+            "year-2": "Master's Year 2",
+            "year-3": "Master's Year 3",
+            "year-4": "Master's Year 4"
+          },
+          "doctoral": {
+            "year-1": "Doctoral Year 1",
+            "year-2": "Doctoral Year 2",
+            "year-3": "Doctoral Year 3",
+            "year-4": "Doctoral Year 4"
+          }
+        },
         "undergraduate": "Undergraduates",
         "graduate": "Graduate students",
-        "master": "Master's students",
-        "doctoral": "Doctoral students",
+        "master": "Master's",
+        "doctoral": "Doctoral",
         "own_department": "Own department",
         "male": "Male students",
         "female": "Female students",
         "international": "International students",
         "restriction_suffix": "only",
         "exclusion_prefix": "Excludes",
-        "priority_suffix": "priority",
-        "year_numbers": {
-          "year-1": "1",
-          "year-2": "2",
-          "year-3": "3",
-          "year-4": "4"
+        "priority_suffix": "first",
+        "groups": {
+          "restriction": "Only",
+          "exclusion": "Excluded",
+          "priority": "Priority"
         }
       },
       "prerequisites_available": "Prerequisites available",

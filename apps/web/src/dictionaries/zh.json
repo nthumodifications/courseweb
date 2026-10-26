@@ -418,14 +418,42 @@
       "note_prefix": "備註：",
       "audience_tags": {
         "title": "適用對象",
-        "year_1": "大一",
-        "year_2": "大二",
-        "year_3": "大三",
-        "year_4": "大四",
+        "year_grade": {
+          "year-1": "一年級",
+          "year-2": "二年級",
+          "year-3": "三年級",
+          "year-4": "四年級"
+        },
+        "scoped_years": {
+          "undergraduate": {
+            "year-1": "大一",
+            "year-2": "大二",
+            "year-3": "大三",
+            "year-4": "大四"
+          },
+          "graduate": {
+            "year-1": "研究所一年級",
+            "year-2": "研究所二年級",
+            "year-3": "研究所三年級",
+            "year-4": "研究所四年級"
+          },
+          "master": {
+            "year-1": "碩一",
+            "year-2": "碩二",
+            "year-3": "碩三",
+            "year-4": "碩四"
+          },
+          "doctoral": {
+            "year-1": "博一",
+            "year-2": "博二",
+            "year-3": "博三",
+            "year-4": "博四"
+          }
+        },
         "undergraduate": "大學部",
         "graduate": "研究所",
-        "master": "碩",
-        "doctoral": "博",
+        "master": "碩士班",
+        "doctoral": "博士班",
         "own_department": "本系",
         "male": "男生",
         "female": "女生",
@@ -433,11 +461,10 @@
         "restriction_suffix": "限定",
         "exclusion_prefix": "排除",
         "priority_suffix": "優先",
-        "year_numbers": {
-          "year-1": "一",
-          "year-2": "二",
-          "year-3": "三",
-          "year-4": "四"
+        "groups": {
+          "restriction": "限定",
+          "exclusion": "排除",
+          "priority": "優先"
         }
       },
       "prerequisites_available": "有擋修",
