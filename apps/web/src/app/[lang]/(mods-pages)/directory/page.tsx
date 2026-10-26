@@ -180,7 +180,7 @@ const DirectoryPage = () => {
         <div className="border-b border-border py-3">
           <div className="relative">
             <Search
-              className="absolute left-2 top-2 h-4 w-4 text-muted-foreground"
+              className="absolute left-1.5 top-2 h-3.5 w-3.5 text-muted-foreground"
               aria-hidden
             />
             <Input

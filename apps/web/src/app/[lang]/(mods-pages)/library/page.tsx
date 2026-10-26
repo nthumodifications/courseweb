@@ -141,7 +141,7 @@ const LostAndFoundSection = () => {
       <div className="flex flex-col gap-2 border-b border-border py-3 sm:flex-row">
         <div className="relative h-8 min-w-0 flex-1">
           <Search
-            className="absolute left-2 top-2 h-4 w-4 text-muted-foreground"
+            className="absolute left-1.5 top-2 h-3.5 w-3.5 text-muted-foreground"
             aria-hidden
           />
           <Input
@@ -571,7 +571,7 @@ const LibraryPage = () => {
           <div className="no-scrollbar flex items-center gap-2 overflow-x-auto whitespace-nowrap">
             {/* Search */}
             <div className="relative flex-1 min-w-[180px]">
-              <Search className="absolute left-2 top-2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-1.5 top-2 h-3.5 w-3.5 text-muted-foreground" />
               <input
                 type="text"
                 aria-label={dict.library.search_placeholder}
