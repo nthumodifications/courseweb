@@ -294,7 +294,7 @@ const AnnouncementsPage = () => {
         </Tabs>
         <div className="flex flex-col gap-2 sm:flex-row">
           <div className="relative min-w-0 flex-1">
-            <Search className="absolute left-2 top-2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-1.5 top-2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
               value={articleListState.search}
               onChange={(event) =>
@@ -358,7 +358,7 @@ const AnnouncementsPage = () => {
                   </DialogDescription>
                 </DialogHeader>
                 <div className="relative">
-                  <Search className="absolute left-2 top-2 h-4 w-4 text-muted-foreground" />
+                  <Search className="absolute left-1.5 top-2 h-3.5 w-3.5 text-muted-foreground" />
                   <Input
                     value={sourceSearch}
                     onChange={(event) => setSourceSearch(event.target.value)}
