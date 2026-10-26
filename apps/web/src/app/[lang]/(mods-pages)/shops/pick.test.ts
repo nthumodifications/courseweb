@@ -108,6 +108,50 @@ const restoreGlobals = captureGlobalState([
 let activeDom: JSDOM | undefined;
 let activeRoot: Root | undefined;
 
+const findButton = (container: HTMLElement, label: string) =>
+  [...container.querySelectorAll<HTMLButtonElement>("button")].find(
+    (candidate) => candidate.textContent === label,
+  );
+
+const renderShops = async ({
+  url,
+  initialEntry,
+  restaurants,
+}: {
+  url: string;
+  initialEntry: string;
+  restaurants: DiningShop[];
+}) => {
+  jest.useFakeTimers();
+  setSystemTime(now);
+  activeDom = new JSDOM("<!doctype html><html><body></body></html>", {
+    url,
+  });
+  Object.assign(globalThis, {
+    window: activeDom.window,
+    document: activeDom.window.document,
+    navigator: activeDom.window.navigator,
+    localStorage: activeDom.window.localStorage,
+    IS_REACT_ACT_ENVIRONMENT: true,
+  });
+
+  const container = document.createElement("div");
+  document.body.appendChild(container);
+  activeRoot = createRoot(container);
+  await act(async () => {
+    activeRoot!.render(
+      createElement(
+        MemoryRouter,
+        { initialEntries: [initialEntry] },
+        createElement(Shops, {
+          data: [{ building: "Test", restaurants }],
+        }),
+      ),
+    );
+  });
+  return container;
+};
+
 afterEach(() => {
   setSystemTime();
   jest.useRealTimers();
@@ -283,40 +327,12 @@ describe("pickRandom", () => {
 
 describe("Shops picker", () => {
   it("disables picker actions during shuffle and retains the row after settling", async () => {
-    jest.useFakeTimers();
-    setSystemTime(now);
-    activeDom = new JSDOM("<!doctype html><html><body></body></html>", {
+    const container = await renderShops({
       url: "http://localhost/en/shops",
-    });
-    Object.assign(globalThis, {
-      window: activeDom.window,
-      document: activeDom.window.document,
-      navigator: activeDom.window.navigator,
-      localStorage: activeDom.window.localStorage,
-      IS_REACT_ACT_ENVIRONMENT: true,
+      initialEntry: "/en/shops",
+      restaurants: [shop("one"), shop("two")],
     });
 
-    const container = document.createElement("div");
-    document.body.appendChild(container);
-    activeRoot = createRoot(container);
-    await act(async () => {
-      activeRoot!.render(
-        createElement(
-          MemoryRouter,
-          { initialEntries: ["/en/shops"] },
-          createElement(Shops, {
-            data: [
-              { building: "Test", restaurants: [shop("one"), shop("two")] },
-            ],
-          }),
-        ),
-      );
-    });
-
-    const findButton = (label: string) =>
-      [...container.querySelectorAll("button")].find(
-        (candidate) => candidate.textContent === label,
-      ) as HTMLButtonElement | undefined;
     const dices = container.querySelector(
       'button[aria-label="Pick for me"]',
     ) as HTMLButtonElement;
@@ -324,8 +340,8 @@ describe("Shops picker", () => {
     await act(async () => dices.click());
 
     expect(dices.disabled).toBe(true);
-    expect(findButton("Pick again")?.disabled).toBe(true);
-    expect(findButton("Hide")?.disabled).toBe(true);
+    expect(findButton(container, "Pick again")?.disabled).toBe(true);
+    expect(findButton(container, "Hide")?.disabled).toBe(true);
     const rowBeforeSettling = container.querySelector("div.grid.min-w-0");
     expect(rowBeforeSettling).not.toBeNull();
     expect(rowBeforeSettling?.children).toHaveLength(8);
@@ -339,46 +355,19 @@ describe("Shops picker", () => {
     expect(rowAfterSettling?.className).toBe(rowBeforeSettling?.className);
     expect(rowAfterSettling?.children).toHaveLength(8);
     expect(dices.disabled).toBe(false);
-    expect(findButton("Pick again")?.disabled).toBe(false);
-    expect(findButton("Hide")?.disabled).toBe(false);
+    expect(findButton(container, "Pick again")?.disabled).toBe(false);
+    expect(findButton(container, "Hide")?.disabled).toBe(false);
   });
 
   it("picks only from open shops in a deep-linked building filter", async () => {
-    jest.useFakeTimers();
-    setSystemTime(now);
-    activeDom = new JSDOM("<!doctype html><html><body></body></html>", {
+    const container = await renderShops({
       url: "http://localhost/en/shops?building=%E9%A2%A8%E9%9B%B2",
-    });
-    Object.assign(globalThis, {
-      window: activeDom.window,
-      document: activeDom.window.document,
-      navigator: activeDom.window.navigator,
-      localStorage: activeDom.window.localStorage,
-      IS_REACT_ACT_ENVIRONMENT: true,
-    });
-
-    const container = document.createElement("div");
-    document.body.appendChild(container);
-    activeRoot = createRoot(container);
-    await act(async () => {
-      activeRoot!.render(
-        createElement(
-          MemoryRouter,
-          { initialEntries: ["/en/shops?building=%E9%A2%A8%E9%9B%B2"] },
-          createElement(Shops, {
-            data: [
-              {
-                building: "Test",
-                restaurants: [
-                  shop("filtered open", "風雲1樓"),
-                  shop("filtered closed", "風雲2樓", "13:00-20:00"),
-                  shop("outside open", "小吃部"),
-                ],
-              },
-            ],
-          }),
-        ),
-      );
+      initialEntry: "/en/shops?building=%E9%A2%A8%E9%9B%B2",
+      restaurants: [
+        shop("filtered open", "風雲1樓"),
+        shop("filtered closed", "風雲2樓", "13:00-20:00"),
+        shop("outside open", "小吃部"),
+      ],
     });
 
     const dices = container.querySelector(
