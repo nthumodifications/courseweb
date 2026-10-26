@@ -384,8 +384,9 @@
           "restrictions": "課程限制",
           "course": "課程"
         },
-        "removed": "不再列於課程資料",
-        "reappeared": "重新列出",
+        "removed": "已從課程資料中移除",
+        "reappeared": "重新出現在課程資料中",
+        "feed_link": "查看本系所有變更",
         "empty": "無",
         "true_value": "是",
         "false_value": "否",
@@ -681,6 +682,19 @@
       "namesake_notice": "此姓名可能由多位教師共用。資料中出現的英文姓名：",
       "research_portal": "搜尋清華研究人才資料庫"
     }
+  },
+  "course_changes": {
+    "meta_title": "課程變更",
+    "meta_description": "依系所與課程查看清大近期的課程變更。",
+    "title": "課程變更",
+    "days_label": "近期變更",
+    "days_7": "7 天",
+    "days_14": "14 天",
+    "days_30": "30 天",
+    "department_label": "系所",
+    "all_departments": "所有系所",
+    "no_results": "這段期間沒有課程變更。",
+    "course_fallback": "無法取得課程資料"
   },
   "navigation": {
     "today": "今日",
@@ -1509,6 +1523,7 @@
     },
     "apps": {
       "courses": "課程查詢",
+      "course-changes": "課程變更",
       "modules": "課程模組",
       "chat": "AI 課程助手",
       "venues": "地點相關課程",

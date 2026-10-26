@@ -384,8 +384,9 @@
           "restrictions": "课程限制",
           "course": "课程"
         },
-        "removed": "不再列于课程数据",
-        "reappeared": "重新列出",
+        "removed": "已从课程数据中移除",
+        "reappeared": "重新出现在课程数据中",
+        "feed_link": "查看本系所有变更",
         "empty": "无",
         "true_value": "是",
         "false_value": "否",
@@ -685,6 +686,19 @@
       "namesake_notice": "此姓名可能由多位教师共用。数据中出现的英文姓名：",
       "research_portal": "搜索清华研究人才数据库"
     }
+  },
+  "course_changes": {
+    "meta_title": "课程变更",
+    "meta_description": "依系所与课程查看清大近期的课程变更。",
+    "title": "课程变更",
+    "days_label": "近期变更",
+    "days_7": "7 天",
+    "days_14": "14 天",
+    "days_30": "30 天",
+    "department_label": "系所",
+    "all_departments": "所有系所",
+    "no_results": "这段期间没有课程变更。",
+    "course_fallback": "无法取得课程数据"
   },
   "navigation": {
     "today": "今日",
@@ -1513,6 +1527,7 @@
     },
     "apps": {
       "courses": "课程查询",
+      "course-changes": "课程变更",
       "modules": "课程模块",
       "chat": "AI 课程助手",
       "venues": "地点相关课程",

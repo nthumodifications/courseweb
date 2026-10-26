@@ -18,6 +18,7 @@ const AuthCallbackPage = lazyWithRetry(
 // Main pages
 export const routeLoaders = {
   courses: () => import("@/app/[lang]/(mods-pages)/courses/page"),
+  courseChanges: () => import("@/app/[lang]/(mods-pages)/courses/changes/page"),
   courseDetail: () =>
     import("@/app/[lang]/(mods-pages)/courses/[courseId]/page"),
   module: () =>
@@ -39,6 +40,7 @@ const PastReviewsPage = lazyWithRetry(
   () => import("@/app/[lang]/reviews/past/page"),
 );
 const CoursesPage = lazyWithRetry(routeLoaders.courses);
+const CourseChangesFeedPage = lazyWithRetry(routeLoaders.courseChanges);
 const CourseDetailPage = lazyWithRetry(routeLoaders.courseDetail);
 const ModulePage = lazyWithRetry(routeLoaders.module);
 const InstructorPage = lazyWithRetry(routeLoaders.instructor);
@@ -279,6 +281,16 @@ export const appRoutes = [
                   description:
                     "Search one NTHU course across its recorded semesters and title variants.",
                   descriptionZh: "跨學期搜尋清大課程的開課紀錄與課名變化。",
+                },
+              },
+              {
+                path: ROUTE_PATHS.courseChanges,
+                element: <CourseChangesFeedPage />,
+                handle: {
+                  title: en.course_changes.meta_title,
+                  titleZh: zh.course_changes.meta_title,
+                  description: en.course_changes.meta_description,
+                  descriptionZh: zh.course_changes.meta_description,
                 },
               },
               {

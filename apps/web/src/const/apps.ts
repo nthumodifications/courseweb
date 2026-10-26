@@ -17,6 +17,7 @@ import {
   Library,
   Megaphone,
   ContactRound,
+  History,
 } from "lucide-react";
 import ChumeiIcon from "@/components/Apps/ChumeiIcon";
 
@@ -40,6 +41,14 @@ export const apps: AppDefinition[] = [
     title_en: "Course Search",
     href: "/courses",
     Icon: BookOpen,
+  },
+  {
+    id: "course-changes",
+    category: "courses",
+    title_zh: "課程變更",
+    title_en: "Course Changes",
+    href: "/courses/changes",
+    Icon: History,
   },
   {
     id: "modules",

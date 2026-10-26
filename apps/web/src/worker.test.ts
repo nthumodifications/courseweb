@@ -646,6 +646,7 @@ describe("Worker asset and shell caching", () => {
     "timetable",
     "timetable/view",
     "courses",
+    "courses/changes",
     "courses/modules",
     "courses/module/CS%20%2F%20101",
     "courses/instructor/%E6%9E%97%E6%95%99%E6%8E%88",

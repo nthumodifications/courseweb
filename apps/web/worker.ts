@@ -682,6 +682,17 @@ const STATIC_PAGE_METADATA: Record<string, { zh: PageMeta; en: PageMeta }> = {
         "Search all NTHU courses, view syllabi, grading policies, past scores, prerequisites, and student reviews at National Tsing Hua University.",
     },
   },
+  "/courses/changes": {
+    zh: {
+      title: "課程變更 | NTHUMods",
+      description: "依系所與課程查看清大近期的課程變更。",
+    },
+    en: {
+      title: "Course Changes | NTHUMods",
+      description:
+        "See recent changes to NTHU courses, grouped by department and course.",
+    },
+  },
   "/courses/modules": {
     zh: {
       title: "搜尋清大課程模組 | NTHUMods",
@@ -1236,7 +1247,7 @@ export default {
 
     // Course detail page
     const courseMatch =
-      /^\/(zh|zh-cn|en)\/courses\/(?!modules(?:\/|$)|module(?:\/|$)|instructor(?:\/|$))(.+)$/.exec(
+      /^\/(zh|zh-cn|en)\/courses\/(?!changes(?:\/|$)|modules(?:\/|$)|module(?:\/|$)|instructor(?:\/|$))(.+)$/.exec(
         url.pathname,
       );
     if (courseMatch) {
