@@ -17,6 +17,15 @@ export const COURSE_CHANGE_FIELDS = [
 export type CourseChangeField = (typeof COURSE_CHANGE_FIELDS)[number];
 export type CourseChangeKind = "changed" | "removed" | "reappeared";
 
+export type CourseChangeCourse = {
+  raw_id: string;
+  name_zh: string;
+  name_en: string;
+  department: string;
+  course: string;
+  class: string;
+};
+
 export type CourseChangeRecord = {
   id: number;
   raw_id: string;
@@ -26,6 +35,18 @@ export type CourseChangeRecord = {
   new_value: unknown;
   kind: CourseChangeKind;
   detected_at: string;
+  course?: CourseChangeCourse | null;
+};
+
+export type CourseChangeCourseGroup = {
+  rawId: string;
+  course: CourseChangeCourse | null;
+  changes: CourseChangeRecord[];
+};
+
+export type CourseChangeDepartmentGroup = {
+  department: string;
+  courses: CourseChangeCourseGroup[];
 };
 
 export type CourseChangeLabels = {
@@ -46,6 +67,73 @@ export type FormattedCourseChange = {
   oldValue: string | null;
   newValue: string | null;
   statusLabel: string | null;
+};
+
+const isEmptyValue = (value: unknown): boolean =>
+  value === null ||
+  value === undefined ||
+  value === "" ||
+  (Array.isArray(value) && value.length === 0) ||
+  (typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value) &&
+    Object.keys(value).length === 0);
+
+/** Ignore initial empty-to-set writes emitted by the course synchronizer. */
+export const filterCourseChanges = (
+  changes: readonly CourseChangeRecord[],
+): CourseChangeRecord[] =>
+  changes.filter(
+    (change) =>
+      change.kind !== "changed" ||
+      !(isEmptyValue(change.old_value) && !isEmptyValue(change.new_value)),
+  );
+
+export const getCourseChangeDepartment = (rawId: string): string =>
+  rawId.slice(5, 9).trim().replace(/^-/, "");
+
+export const getCourseChangeCourseName = (
+  course: CourseChangeCourse | null,
+  language: "zh" | "en",
+): string => {
+  if (!course) return "";
+  return language === "en"
+    ? course.name_en || course.name_zh
+    : course.name_zh || course.name_en;
+};
+
+export const groupCourseChanges = (
+  changes: readonly CourseChangeRecord[],
+): CourseChangeDepartmentGroup[] => {
+  const groups = new Map<string, Map<string, CourseChangeCourseGroup>>();
+
+  for (const change of changes) {
+    const department =
+      change.course?.department ||
+      getCourseChangeDepartment(change.raw_id) ||
+      "?";
+    const courses = groups.get(department) ?? new Map();
+    const existing = courses.get(change.raw_id);
+    if (existing) {
+      existing.changes.push(change);
+    } else {
+      courses.set(change.raw_id, {
+        rawId: change.raw_id,
+        course: change.course ?? null,
+        changes: [change],
+      });
+    }
+    groups.set(department, courses);
+  }
+
+  return [...groups.entries()]
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([department, courses]) => ({
+      department,
+      courses: [...courses.values()].sort((left, right) =>
+        left.rawId.localeCompare(right.rawId),
+      ),
+    }));
 };
 
 const COURSE_CHANGE_KINDS: ReadonlySet<string> = new Set([

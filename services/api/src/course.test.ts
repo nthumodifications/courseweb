@@ -2,10 +2,21 @@ import { describe, expect, it, mock } from "bun:test";
 import { createSupabaseServerMock } from "./test-helpers/module-mocks";
 
 const rowsById = new Map<string, { raw_id: string }>();
+const courseRowsById = new Map<
+  string,
+  {
+    raw_id: string;
+    name_zh: string;
+    name_en: string;
+    department: string;
+    course: string;
+    class: string;
+  }
+>();
 const changeRows = [
   {
     id: 1,
-    raw_id: "11510-CS 101000",
+    raw_id: "11510CS 101000",
     semester: "11510",
     field: "capacity",
     old_value: 50,
@@ -16,6 +27,8 @@ const changeRows = [
 ];
 const inQuery = mock(async (_column: string, ids: string[]) => ({
   data: ids.flatMap((id) => {
+    const course = courseRowsById.get(id);
+    if (course) return [course];
     const row = rowsById.get(id);
     return row ? [row] : [];
   }),
@@ -25,6 +38,7 @@ const eqQuery = mock(async (_column: string, id: string) => ({
   data: [{ raw_id: id }],
   error: null,
 }));
+const departmentLikeCalls: [string, string][] = [];
 
 const createChain = (table: string) => {
   const result = {
@@ -33,6 +47,10 @@ const createChain = (table: string) => {
   };
   const chain = {
     gte: mock(() => chain),
+    like: mock((column: string, pattern: string) => {
+      departmentLikeCalls.push([column, pattern]);
+      return chain;
+    }),
     order: mock(() => chain),
     range: mock(async () => result),
     then: (
@@ -47,11 +65,11 @@ mock.module("./config/supabase_server", () =>
   createSupabaseServerMock(() => ({
     from: (table: string) => ({
       select: () => ({
-        in: table === "courses" ? inQuery : async () => ({ data: [], error: null }),
-        eq:
+        in:
           table === "courses"
-            ? eqQuery
-            : () => createChain(table),
+            ? inQuery
+            : async () => ({ data: [], error: null }),
+        eq: table === "courses" ? eqQuery : () => createChain(table),
       }),
     }),
   })),
@@ -120,5 +138,46 @@ describe("course ID list bounds", () => {
       "public, max-age=60, s-maxage=300, stale-while-revalidate=3600",
     );
     expect(await response.json()).toEqual(changeRows);
+  });
+
+  it("filters by department prefix and enriches rows with course metadata", async () => {
+    departmentLikeCalls.length = 0;
+    courseRowsById.set(changeRows[0]!.raw_id, {
+      raw_id: changeRows[0]!.raw_id,
+      name_zh: "資料結構",
+      name_en: "Data Structures",
+      department: "CS",
+      course: "1010",
+      class: "00",
+    });
+
+    const response = await course.request(
+      "/changes?semester=11510&days=14&department=CS&limit=1",
+    );
+
+    expect(response.status).toBe(200);
+    expect(departmentLikeCalls).toEqual([["raw_id", "11510CS %"]]);
+    expect(await response.json()).toEqual([
+      {
+        ...changeRows[0],
+        course: {
+          raw_id: changeRows[0]!.raw_id,
+          name_zh: "資料結構",
+          name_en: "Data Structures",
+          department: "CS",
+          course: "1010",
+          class: "00",
+        },
+      },
+    ]);
+
+    await course.request(
+      "/changes?semester=11510&days=14&department=AIIM&limit=1",
+    );
+    expect(departmentLikeCalls).toEqual([
+      ["raw_id", "11510CS %"],
+      ["raw_id", "11510AIIM%"],
+    ]);
+    courseRowsById.clear();
   });
 });

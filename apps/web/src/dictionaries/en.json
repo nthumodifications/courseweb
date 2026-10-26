@@ -386,6 +386,7 @@
         },
         "removed": "No longer listed",
         "reappeared": "Listed again",
+        "feed_link": "See all changes in this department",
         "empty": "None",
         "true_value": "Yes",
         "false_value": "No",
@@ -681,6 +682,19 @@
       "namesake_notice": "This name may be shared by more than one instructor. English names seen:",
       "research_portal": "Search the NTHU Research Portal"
     }
+  },
+  "course_changes": {
+    "meta_title": "Course changes",
+    "meta_description": "See recent changes to NTHU courses, grouped by department and course.",
+    "title": "Course changes",
+    "days_label": "Recent changes",
+    "days_7": "7 days",
+    "days_14": "14 days",
+    "days_30": "30 days",
+    "department_label": "Department",
+    "all_departments": "All departments",
+    "no_results": "No course changes in this period.",
+    "course_fallback": "Course details unavailable"
   },
   "navigation": {
     "today": "Today",
@@ -1485,6 +1499,7 @@
     },
     "apps": {
       "courses": "Course Search",
+      "course-changes": "Course Changes",
       "modules": "Course Modules",
       "chat": "AI Course Assistant",
       "venues": "Venues",

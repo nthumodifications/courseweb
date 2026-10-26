@@ -1,6 +1,7 @@
 export const ROUTE_PATHS = {
   timetable: "timetable",
   courses: "courses",
+  courseChanges: "courses/changes",
   modules: "courses/modules",
   module: "courses/module/:moduleKey",
   instructor: "courses/instructor/:name",

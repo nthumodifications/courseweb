@@ -165,6 +165,19 @@ Examples:
 
 - `/zh/announcements?source=source-academic`
 
+## `/courses/changes`
+
+Duplicate parameters: `first-value`.
+
+| Parameter | Description | Accepted values | Example |
+| --- | --- | --- | --- |
+| `days` | 顯示最近幾天的課程變更。 The number of recent days of course changes to show. | `7`, `14`, `30` | `7` |
+| `department` | 系所代碼，例如 CS。 A department code, such as CS. | `AES`, `AIA`, `AIIM`, `AMEV`, `ANTH`, `ANTU`, `ASTR`, `BAI`, `BME`, `BMES`, `CF`, `CHE`, `CHEM`, `CHSS`, `CL`, `CLC`, `CLU`, `COM`, `CS`, `CSR`, `CTM`, `DL`, `DMS`, `E`, `EC`, `ECON`, `EE`, `EECS`, `EMBA`, `EMD`, `EMIM`, `EMM`, `EMS`, `ENE`, `ESS`, `EST`, `ESTU`, `FL`, `FLU`, `FMMI`, `GE`, `GEC`, `GEU`, `GLLB`, `GOM`, `GPTS`, `HBA`, `HIS`, `HSS`, `HSSU`, `IACS`, `IACU`, `IBP`, `ICMS`, `IEEM`, `IEM`, `IIMT`, `IIS`, `IMBA`, `IMS`, `IPE`, `IPHD`, `IPMT`, `IPNS`, `IPT`, `IPTH`, `ISA`, `ISS`, `JAC`, `JAD`, `JADN`, `JANT`, `JITA`, `JMU`, `JMUN`, `KCSN`, `KEC`, `KECN`, `KEE`, `KEEN`, `KEL`, `KELN`, `KENI`, `KES`, `KHCT`, `KIPE`, `KLST`, `KMS`, `KMSN`, `KPC`, `KPCN`, `KPE`, `KSEN`, `KSN`, `KSPE`, `KSS`, `KSSN`, `KTLT`, `KWEN`, `LANG`, `LE`, `LING`, `LMIP`, `LS`, `LSBI`, `LSBS`, `LSBT`, `LSC`, `LSIN`, `LSMC`, `LSMM`, `LSSN`, `LST`, `MATH`, `MATU`, `MBA`, `MCLC`, `MFB`, `MI`, `MPM`, `MS`, `NEMS`, `NES`, `NUCL`, `PE`, `PE1`, `PE3`, `PFMI`, `PHIL`, `PHYS`, `PHYU`, `PME`, `PMED`, `QF`, `QTAM`, `RADM`, `RDDM`, `RDIC`, `RDPE`, `S`, `SCI`, `SL`, `SLS`, `SNHC`, `SOC`, `STAT`, `STAU`, `TE`, `TEE`, `TEG`, `THC`, `THSM`, `TIGP`, `TL`, `TM`, `TSE`, `TSED`, `UPPP`, `VA`, `VGE`, `VM`, `W`, `WH`, `WW`, `WZ`, `X`, `XA`, `XZ`, `YZ`, `ZY` | `CS` |
+
+Examples:
+
+- `/zh/courses/changes?days=7&department=CS`
+
 ## `/settings`
 
 Duplicate parameters: `first-value`.

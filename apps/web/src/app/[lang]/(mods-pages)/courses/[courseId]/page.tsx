@@ -10,7 +10,9 @@ import useDictionary from "@/dictionaries/useDictionary";
 import { useQuery } from "@tanstack/react-query";
 import client from "@/config/api";
 import {
+  filterCourseChanges,
   formatCourseChanges,
+  getCourseChangeDepartment,
   parseCourseChanges,
   type CourseChangeLabels,
   type FormattedCourseChange,
@@ -18,17 +20,31 @@ import {
 
 const CourseChanges = ({
   changes,
+  department,
+  lang,
 }: {
   changes: readonly FormattedCourseChange[];
+  department: string;
+  lang: string;
 }) => {
   const dict = useDictionary();
   if (changes.length === 0) return null;
 
   return (
     <div className="flex flex-col gap-2">
-      <h3 className="font-bold text-base" id="changes">
-        {dict.course.details.changes.title}
-      </h3>
+      <div className="flex flex-wrap items-baseline gap-2">
+        <h3 className="font-bold text-base" id="changes">
+          {dict.course.details.changes.title}
+        </h3>
+        {department && (
+          <Link
+            className="text-sm text-muted-foreground underline underline-offset-2"
+            to={`/${lang}/courses/changes?department=${encodeURIComponent(department)}`}
+          >
+            {dict.course.details.changes.feed_link}
+          </Link>
+        )}
+      </div>
       <div className="flex flex-col divide-y divide-border">
         {changes.map((change) => (
           <article key={change.id} className="flex flex-col gap-2 py-4">
@@ -89,7 +105,7 @@ const CourseDetailPage = () => {
   const formattedChanges =
     changesLoading || changesFetching || changesError
       ? []
-      : formatCourseChanges(changes, changeLabels);
+      : formatCourseChanges(filterCourseChanges(changes), changeLabels);
   const hasCourseChanges = formattedChanges.length > 0;
 
   // Track course detail view
@@ -114,7 +130,13 @@ const CourseDetailPage = () => {
         courseId={courseId}
         bottomAware
         courseChanges={
-          hasCourseChanges ? <CourseChanges changes={formattedChanges} /> : null
+          hasCourseChanges ? (
+            <CourseChanges
+              changes={formattedChanges}
+              department={getCourseChangeDepartment(courseId)}
+              lang={lang ?? "zh"}
+            />
+          ) : null
         }
         hasCourseChanges={hasCourseChanges}
       />
