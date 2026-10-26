@@ -81,6 +81,15 @@
     }
   },
   "timetable": {
+    "course_changes": {
+      "summary": "課表中有 {count} 門課有異動",
+      "summary_singular": "課表中有 {count} 門課有異動",
+      "dismiss": "知道了",
+      "removed": "已從課程資料中移除",
+      "reappeared": "重新出現在課程資料中",
+      "change_separator": " ・ ",
+      "detail_date_separator": "，"
+    },
     "seo": {
       "application_name": "NTHUMods 課表系統",
       "page_title": "課表管理 | NTHUMods",
@@ -385,7 +394,7 @@
           "course": "課程"
         },
         "removed": "不再列於課程資料",
-        "reappeared": "重新列出",
+        "reappeared": "重新出現在課程資料中",
         "empty": "無",
         "true_value": "是",
         "false_value": "否",
@@ -1677,6 +1686,15 @@
     "area_placeholder": "選擇地區",
     "area_all": "全部",
     "no_open": "目前沒有營業中的店家",
+    "pick_for_me": "隨便吃",
+    "pick_summary": "從 {count} 家營業中的店抽出",
+    "pick_again": "再抽一次",
+    "pick_hide": "不要這家",
+    "pick_close": "關閉隨便吃",
+    "pick_include_snacks": "包含便利商店與飲料店",
+    "pick_reset_hidden": "重設排除 ({count})",
+    "pick_no_open": "現在沒有營業中的店",
+    "pick_no_open_area": "{area}：現在沒有營業中的店",
     "separator": "・",
     "load_error": "無法載入店家資料。",
     "view_on_map": "在地圖中查看",
