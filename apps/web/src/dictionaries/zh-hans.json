@@ -384,8 +384,8 @@
           "restrictions": "课程限制",
           "course": "课程"
         },
-        "removed": "不再列于课程数据",
-        "reappeared": "重新列出",
+        "removed": "已从课程数据中移除",
+        "reappeared": "重新出现在课程数据中",
         "feed_link": "查看本系所有变更",
         "empty": "无",
         "true_value": "是",
@@ -629,7 +629,11 @@
       "search_description": "跨学期搜索同一门课的开课纪录。",
       "search_placeholder": "搜索课号、课名或教师……",
       "search_prompt": "输入课号、课名或教师，寻找历年开课纪录。",
-      "search_examples": ["微积分", "程序", "CS 1355"],
+      "search_examples": [
+        "微积分",
+        "程序",
+        "CS 1355"
+      ],
       "search_no_results": "找不到符合的课程模块",
       "search_results": "个课程模块",
       "search_other_modules": "搜索其他课程",

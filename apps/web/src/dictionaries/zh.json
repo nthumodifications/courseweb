@@ -384,8 +384,8 @@
           "restrictions": "課程限制",
           "course": "課程"
         },
-        "removed": "不再列於課程資料",
-        "reappeared": "重新列出",
+        "removed": "已從課程資料中移除",
+        "reappeared": "重新出現在課程資料中",
         "feed_link": "查看本系所有變更",
         "empty": "無",
         "true_value": "是",

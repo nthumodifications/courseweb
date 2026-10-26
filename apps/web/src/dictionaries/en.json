@@ -384,8 +384,8 @@
           "restrictions": "Restrictions",
           "course": "Course"
         },
-        "removed": "No longer listed",
-        "reappeared": "Listed again",
+        "removed": "Removed from the course list",
+        "reappeared": "Back in the course list",
         "feed_link": "See all changes in this department",
         "empty": "None",
         "true_value": "Yes",

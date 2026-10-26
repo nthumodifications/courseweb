@@ -25,6 +25,7 @@ const changeRows = [
     detected_at: "2026-10-21T00:00:00.000Z",
   },
 ];
+let courseChangeRows = changeRows;
 const inQuery = mock(async (_column: string, ids: string[]) => ({
   data: ids.flatMap((id) => {
     const course = courseRowsById.get(id);
@@ -42,7 +43,7 @@ const departmentLikeCalls: [string, string][] = [];
 
 const createChain = (table: string) => {
   const result = {
-    data: table === "course_changes" ? changeRows : [],
+    data: table === "course_changes" ? courseChangeRows : [],
     error: null,
   };
   const chain = {
@@ -178,6 +179,50 @@ describe("course ID list bounds", () => {
       ["raw_id", "11510CS %"],
       ["raw_id", "11510AIIM%"],
     ]);
+    courseRowsById.clear();
+  });
+
+  it("enriches all recent changes in chunks", async () => {
+    const manyChanges = Array.from({ length: 201 }, (_, index) => {
+      const raw_id = `11510CS ${String(index).padStart(6, "0")}`;
+      const course = {
+        raw_id,
+        name_zh: `課程 ${index}`,
+        name_en: `Course ${index}`,
+        department: "CS",
+        course: String(index).padStart(4, "0"),
+        class: "00",
+      };
+      courseRowsById.set(raw_id, course);
+      return {
+        id: index + 1,
+        raw_id,
+        semester: "11510",
+        field: "capacity",
+        old_value: 50,
+        new_value: 60,
+        kind: "changed",
+        detected_at: "2026-10-21T00:00:00.000Z",
+      };
+    });
+    courseChangeRows = manyChanges;
+    inQuery.mockClear();
+
+    const response = await course.request(
+      "/changes?semester=11510&days=14&limit=500",
+    );
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body).toHaveLength(manyChanges.length);
+    expect(body.every((change) => change.course)).toBe(true);
+    expect(inQuery.mock.calls.map(([, ids]) => ids.length)).toEqual([
+      100,
+      100,
+      1,
+    ]);
+
+    courseChangeRows = changeRows;
     courseRowsById.clear();
   });
 });

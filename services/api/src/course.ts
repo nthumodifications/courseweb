@@ -137,10 +137,19 @@ const app = new Hono()
       }
     >();
     if (rawIds.length > 0) {
-      const { data: courses, error: coursesError } = await supabase_server(c)
-        .from("courses")
-        .select("raw_id, name_zh, name_en, department, course, class")
-        .in("raw_id", rawIds);
+      const { data: courses, error: coursesError } = await queryInChunks<{
+        raw_id: string;
+        name_zh: string;
+        name_en: string;
+        department: string;
+        course: string;
+        class: string;
+      }>(rawIds, (chunk) =>
+        supabase_server(c)
+          .from("courses")
+          .select("raw_id, name_zh, name_en, department, course, class")
+          .in("raw_id", chunk),
+      );
       if (coursesError) {
         console.error("Failed to enrich course changes:", coursesError);
       } else {
