@@ -1,6 +1,6 @@
 // ── Container-local mirror of packages/shared/src/utils/course-audience-tags.ts
 // The data-sync image copies only tools/data-sync/src, so it cannot resolve
-// @courseweb/shared at runtime. search-audience-parity.test.ts compares this
+// @courseweb/shared at runtime. course-audience-tags-parity.test.ts compares this
 // mirror with the canonical source.
 
 export type CourseAudienceTagRelation =

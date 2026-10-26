@@ -1,7 +1,7 @@
 // ── Worker-local mirror of packages/shared/src/utils/course-audience-tags.ts ─
 // The Worker cannot import @courseweb/shared here: its package export points at
 // dist, which CI does not build, and the canonical source is outside this
-// package's rootDir. search-audience-parity.test.ts compares this mirror with
+// package's rootDir. course-audience-tags-parity.test.ts compares this mirror with
 // the canonical source.
 
 export type CourseAudienceTagRelation =
