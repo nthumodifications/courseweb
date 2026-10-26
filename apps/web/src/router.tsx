@@ -63,6 +63,9 @@ const LibraryPage = lazyWithRetry(
 const AnnouncementsPage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/announcements/page"),
 );
+const DirectoryPage = lazyWithRetry(
+  () => import("@/app/[lang]/(mods-pages)/directory/page"),
+);
 const BusRoutePage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/bus/[route]/page"),
 );
@@ -405,6 +408,16 @@ export const appRoutes = [
                   titleZh: zh.announcements.meta_title,
                   description: en.announcements.meta_description,
                   descriptionZh: zh.announcements.meta_description,
+                },
+              },
+              {
+                path: "directory",
+                element: <DirectoryPage />,
+                handle: {
+                  title: en.directory.meta_title,
+                  titleZh: zh.directory.meta_title,
+                  description: en.directory.meta_description,
+                  descriptionZh: zh.directory.meta_description,
                 },
               },
               {

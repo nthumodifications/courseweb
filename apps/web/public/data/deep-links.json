@@ -344,6 +344,14 @@
       ]
     },
     {
+      "route": "/directory",
+      "duplicates": "ignored",
+      "params": [],
+      "examples": [
+        "/en/directory"
+      ]
+    },
+    {
       "route": "/shops",
       "duplicates": "ignored",
       "params": [

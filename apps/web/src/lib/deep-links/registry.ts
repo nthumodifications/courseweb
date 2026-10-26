@@ -230,6 +230,12 @@ export const DEEP_LINK_REGISTRY: readonly DeepLinkRoute[] = [
     examples: ["/en/library?branch=moonlight&category=carrel"],
   },
   {
+    route: "/directory",
+    duplicates: "ignored",
+    params: [],
+    examples: ["/en/directory"],
+  },
+  {
     route: "/shops",
     duplicates: "ignored",
     params: [
