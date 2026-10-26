@@ -141,7 +141,7 @@ const LostAndFoundSection = () => {
       <div className="flex flex-col gap-2 border-b border-border py-3 sm:flex-row">
         <div className="relative h-8 min-w-0 flex-1">
           <Search
-            className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+            className="absolute left-2 top-2 h-4 w-4 text-muted-foreground"
             aria-hidden
           />
           <Input
@@ -150,7 +150,7 @@ const LostAndFoundSection = () => {
             onChange={(event) => setSearchQuery(event.target.value)}
             placeholder={dict.library.lost_found_search_placeholder}
             aria-label={dict.library.lost_found_search_placeholder}
-            className="h-8 pl-8 text-xs"
+            className="h-8 pl-6 text-xs"
           />
         </div>
         <Select value={selectedType} onValueChange={setSelectedType}>
@@ -571,14 +571,14 @@ const LibraryPage = () => {
           <div className="no-scrollbar flex items-center gap-2 overflow-x-auto whitespace-nowrap">
             {/* Search */}
             <div className="relative flex-1 min-w-[180px]">
-              <Search className="absolute left-2.5 top-2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-2 top-2 h-4 w-4 text-muted-foreground" />
               <input
                 type="text"
                 aria-label={dict.library.search_placeholder}
                 placeholder={dict.library.search_placeholder}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-8 w-full rounded-md border border-input bg-background pl-8 pr-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                className="h-8 w-full rounded-md border border-input bg-background pl-6 pr-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
 
