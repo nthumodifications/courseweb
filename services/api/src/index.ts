@@ -34,6 +34,8 @@ import usage from "./usage";
 import { syncUsageTick } from "./usage/collector";
 import contributeGrades from "./contribute-grades";
 import announcements from "./announcements";
+import directory from "./directory";
+import libraries from "./libraries";
 
 export type Bindings = {
   DB: D1Database;
@@ -103,6 +105,8 @@ export const app = new Hono<{ Bindings: Bindings }>()
   .route("/dining", dining)
   .route("/youbike", youbike)
   .route("/announcements", announcements)
+  .route("/directory", directory)
+  .route("/libraries", libraries)
   .route("/usage", usage)
   .route("/contribute", contributeGrades);
 

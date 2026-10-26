@@ -16,6 +16,7 @@ import {
   WashingMachine,
   Library,
   Megaphone,
+  ContactRound,
 } from "lucide-react";
 import ChumeiIcon from "@/components/Apps/ChumeiIcon";
 
@@ -158,6 +159,14 @@ export const apps: AppDefinition[] = [
     href: "/announcements",
     Icon: Megaphone,
     beta: true,
+  },
+  {
+    id: "directory",
+    category: "facilities",
+    title_zh: "校園通訊錄",
+    title_en: "Campus Directory",
+    href: "/directory",
+    Icon: ContactRound,
   },
   {
     id: "shops",

@@ -86,6 +86,17 @@ Examples:
 
 - `/en/library?branch=moonlight&category=carrel`
 
+## `/directory`
+
+Duplicate parameters: `ignored`.
+
+| Parameter | Description | Accepted values | Example |
+| --- | --- | --- | --- |
+
+Examples:
+
+- `/en/directory`
+
 ## `/shops`
 
 Duplicate parameters: `ignored`.

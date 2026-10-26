@@ -23,7 +23,13 @@ describe("app categories", () => {
       courses: ["courses", "modules", "chat", "venues", "timetable-community"],
       studies: ["calendar", "planner", "grades"],
       transport: ["campus-map", "bus", "youbike"],
-      facilities: ["sports-venues", "library", "laundry", "announcements"],
+      facilities: [
+        "sports-venues",
+        "library",
+        "laundry",
+        "announcements",
+        "directory",
+      ],
       services: ["shops"],
       links: ["clubs_info", "chumei", "scholarship"],
     });

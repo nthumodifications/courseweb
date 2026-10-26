@@ -115,6 +115,7 @@ test("registry declares route-specific duplicate handling", () => {
     "/bus/city/:route": "first-value",
     "/laundry": "ignored",
     "/library": "ignored",
+    "/directory": "ignored",
     "/shops": "ignored",
     "/map": "first-value",
     "/youbike": "ignored",
@@ -235,6 +236,7 @@ const resolveExample = (route: string, url: URL): unknown => {
   }
   if (route === "/laundry") return resolveLaundryDeepLink(params, null);
   if (route === "/library") return parseLibraryDeepLink(params);
+  if (route === "/directory") return {};
   if (route === "/shops") return resolveShopAreaDeepLink(params, SHOP_AREAS);
   if (route === "/map") {
     return {

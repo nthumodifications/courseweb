@@ -1,7 +1,14 @@
 import { act, createElement, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { JSDOM } from "jsdom";
-import { afterEach, describe, expect, mock, test } from "bun:test";
+import {
+  afterEach,
+  describe,
+  expect,
+  mock,
+  setSystemTime,
+  test,
+} from "bun:test";
 import en from "../../dictionaries/en.json";
 import zh from "../../dictionaries/zh.json";
 import { MemoryRouter, Route, Routes, useNavigate } from "react-router-dom";
@@ -92,6 +99,7 @@ const restoreGlobals = () => {
 };
 
 afterEach(async () => {
+  setSystemTime();
   await act(async () => {
     root?.unmount();
     await new Promise((resolve) => setTimeout(resolve, 0));
@@ -105,6 +113,7 @@ afterEach(async () => {
 
 describe("calendar event repeat date", () => {
   test("changes the repeat end date from the calendar popover", async () => {
+    setSystemTime(new Date("2026-10-01T12:00:00+08:00"));
     dom = new JSDOM("<!doctype html><html><body></body></html>");
     const globalObject = globalThis as Record<string, unknown>;
     previousGlobals = Object.fromEntries(
