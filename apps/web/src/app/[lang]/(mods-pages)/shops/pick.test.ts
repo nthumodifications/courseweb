@@ -10,6 +10,7 @@ import {
   mock,
   setSystemTime,
 } from "bun:test";
+import { MemoryRouter } from "react-router-dom";
 import { captureGlobalState } from "@/test-utils/global-state";
 import type { DiningShop } from "./types";
 import {
@@ -300,9 +301,15 @@ describe("Shops picker", () => {
     activeRoot = createRoot(container);
     await act(async () => {
       activeRoot!.render(
-        createElement(Shops, {
-          data: [{ building: "Test", restaurants: [shop("one"), shop("two")] }],
-        }),
+        createElement(
+          MemoryRouter,
+          { initialEntries: ["/en/shops"] },
+          createElement(Shops, {
+            data: [
+              { building: "Test", restaurants: [shop("one"), shop("two")] },
+            ],
+          }),
+        ),
       );
     });
 
@@ -334,5 +341,57 @@ describe("Shops picker", () => {
     expect(dices.disabled).toBe(false);
     expect(findButton("Pick again")?.disabled).toBe(false);
     expect(findButton("Hide")?.disabled).toBe(false);
+  });
+
+  it("picks only from open shops in a deep-linked building filter", async () => {
+    jest.useFakeTimers();
+    setSystemTime(now);
+    activeDom = new JSDOM("<!doctype html><html><body></body></html>", {
+      url: "http://localhost/en/shops?building=%E9%A2%A8%E9%9B%B2",
+    });
+    Object.assign(globalThis, {
+      window: activeDom.window,
+      document: activeDom.window.document,
+      navigator: activeDom.window.navigator,
+      localStorage: activeDom.window.localStorage,
+      IS_REACT_ACT_ENVIRONMENT: true,
+    });
+
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    activeRoot = createRoot(container);
+    await act(async () => {
+      activeRoot!.render(
+        createElement(
+          MemoryRouter,
+          { initialEntries: ["/en/shops?building=%E9%A2%A8%E9%9B%B2"] },
+          createElement(Shops, {
+            data: [
+              {
+                building: "Test",
+                restaurants: [
+                  shop("filtered open", "風雲1樓"),
+                  shop("filtered closed", "風雲2樓", "13:00-20:00"),
+                  shop("outside open", "小吃部"),
+                ],
+              },
+            ],
+          }),
+        ),
+      );
+    });
+
+    const dices = container.querySelector(
+      'button[aria-label="Pick for me"]',
+    ) as HTMLButtonElement;
+
+    await act(async () => dices.click());
+
+    expect(container.textContent).toContain("1 places");
+    expect(
+      container
+        .querySelector("div.flex.flex-col.gap-2.py-4 [data-shop]")
+        ?.getAttribute("data-shop"),
+    ).toBe("filtered open");
   });
 });

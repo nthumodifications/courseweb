@@ -148,12 +148,14 @@ const Shops = ({ data }: { data: DiningArea[] }) => {
       hiddenOverride = hidden,
       includeSnacksOverride = includeSnacks,
       areaOverride = filterArea,
+      areasOverride = filterAreas,
     ) => {
       stopShuffle();
       setShuffleCandidates([]);
       const candidates = pickCandidates(shops, {
         now: new Date(),
         area: areaOverride,
+        areas: areasOverride,
         includeSnacks: includeSnacksOverride,
         hidden: hiddenOverride,
       });
@@ -202,7 +204,7 @@ const Shops = ({ data }: { data: DiningArea[] }) => {
         setShuffleIndex(index);
       }, 80);
     },
-    [filterArea, hidden, includeSnacks, shops, stopShuffle],
+    [filterArea, filterAreas, hidden, includeSnacks, shops, stopShuffle],
   );
 
   useEffect(() => {
@@ -220,7 +222,7 @@ const Shops = ({ data }: { data: DiningArea[] }) => {
     if (area === "") nextParams.delete("area");
     else nextParams.set("area", area);
     setSearchParams(nextParams, { replace: true });
-    if (pick) drawPick(pick.shop, hidden, includeSnacks, area);
+    if (pick) drawPick(pick.shop, hidden, includeSnacks, area, undefined);
   };
 
   const handleIncludeSnacksChange = (checked: boolean) => {

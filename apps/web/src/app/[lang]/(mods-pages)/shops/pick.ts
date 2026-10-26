@@ -62,19 +62,21 @@ export const getPickActionState = <T>(shop: T | null, isShuffling: boolean) =>
 type PickOptions = {
   now: Date;
   area: string;
+  areas?: readonly string[];
   includeSnacks: boolean;
   hidden: ReadonlySet<string> | readonly string[];
 };
 
 export const pickCandidates = (
   shops: readonly DiningShop[],
-  { now, area, includeSnacks, hidden }: PickOptions,
+  { now, area, areas, includeSnacks, hidden }: PickOptions,
 ) => {
   const today = getTodayKey(now);
   const hiddenKeys = new Set(hidden);
 
   return shops.filter((shop) => {
     if (area && area !== "anywhere" && shop.area !== area) return false;
+    if (areas && !areas.includes(shop.area)) return false;
     if (hiddenKeys.has(getShopKey(shop))) return false;
     if (!checkOpen(shop.schedule[today], now)[0]) return false;
 
