@@ -2,6 +2,9 @@ import { createClient } from "@supabase/supabase-js";
 import algoliasearch from "algoliasearch";
 import type { SyncEnvironment } from "./types";
 
+export const SCRAPER_USER_AGENT =
+  "Mozilla/5.0 (compatible; NTHUModsBot/1.0; +https://nthumods.com)";
+
 const sanitizeLogValue = (value: unknown) =>
   String(value).replace(
     /[\u0000-\u001f\u007f]/g,

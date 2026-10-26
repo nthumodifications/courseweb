@@ -26,8 +26,8 @@ const DAY_TIMESLOT = {
 const COLON_SEPARATED_WEEKDAY =
   /(?<=[週周]一[~至][週周]五:?)\d{1,2}:\d{1,2}:\d{1,2}:\d{1,2}(?=、)/;
 
-const timeToday = (time: string) => {
-  const date = new Date();
+const timeToday = (time: string, now = new Date()) => {
+  const date = new Date(now);
   date.setHours(
     Number.parseInt(time.split(":")[0]),
     Number.parseInt(time.split(":")[1]),
@@ -36,10 +36,13 @@ const timeToday = (time: string) => {
   return date;
 };
 
-const checkRange = (start: string, end: string): OpenStatus => {
-  const startDate = timeToday(start);
-  const endDate = timeToday(end);
-  const now = new Date();
+const checkRange = (
+  start: string,
+  end: string,
+  now = new Date(),
+): OpenStatus => {
+  const startDate = timeToday(start, now);
+  const endDate = timeToday(end, now);
   const opensSoon: OpenStatus = [false, "即將開始", start + "開始營業"];
 
   if (now < startDate && startDate.valueOf() - now.valueOf() < HOUR) {
@@ -55,12 +58,12 @@ const checkRange = (start: string, end: string): OpenStatus => {
   return NO_INFO;
 };
 
-const checkSlot = (slot: string) => {
+const checkSlot = (slot: string, now = new Date()) => {
   const [start, end] = slot.split("-");
-  return checkRange(start, end);
+  return checkRange(start, end, now);
 };
 
-export const checkOpen = (schedule: string): OpenStatus => {
+export const checkOpen = (schedule: string, now = new Date()): OpenStatus => {
   if (schedule == "24小時") {
     return [true, "營業中", "24小時營業"];
   }
@@ -68,23 +71,23 @@ export const checkOpen = (schedule: string): OpenStatus => {
     return [false, "今日休息"];
   }
   if (schedule.includes("、")) {
-    const today = getTodayKey();
+    const today = getTodayKey(now);
     if (today == "weekday" && COLON_SEPARATED_WEEKDAY.test(schedule)) {
       schedule = schedule.replace(/(\d{1,2}:\d{2}):(\d{1,2}:\d{2})/, "$1-$2");
     }
     const timeslot = DAY_TIMESLOT[today].exec(schedule);
-    return timeslot ? checkSlot(timeslot[0]) : NO_INFO;
+    return timeslot ? checkSlot(timeslot[0], now) : NO_INFO;
   }
   if (schedule.includes(",")) {
     // A split day ("11:00-14:00,17:00-20:00"): the first slot that is not
     // already over decides the status.
     for (const slot of schedule.split(",")) {
-      const status = checkSlot(slot.trim());
+      const status = checkSlot(slot.trim(), now);
       if (status[1] !== CLOSED) return status;
     }
   }
   if (schedule.includes("-")) {
-    return checkSlot(schedule);
+    return checkSlot(schedule, now);
   }
   return NO_INFO;
 };

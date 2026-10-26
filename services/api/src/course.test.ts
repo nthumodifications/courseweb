@@ -1,4 +1,11 @@
-import { describe, expect, it, mock } from "bun:test";
+import {
+  beforeEach,
+  describe,
+  expect,
+  it,
+  mock,
+  setSystemTime,
+} from "bun:test";
 import { createSupabaseServerMock } from "./test-helpers/module-mocks";
 
 const rowsById = new Map<string, { raw_id: string }>();
@@ -13,7 +20,7 @@ const courseRowsById = new Map<
     class: string;
   }
 >();
-const changeRows = [
+const defaultChangeRows = [
   {
     id: 1,
     raw_id: "11510CS 101000",
@@ -25,7 +32,8 @@ const changeRows = [
     detected_at: "2026-10-21T00:00:00.000Z",
   },
 ];
-let courseChangeRows = changeRows;
+let courseChangeRows = defaultChangeRows;
+let changeRows = defaultChangeRows;
 const inQuery = mock(async (_column: string, ids: string[]) => ({
   data: ids.flatMap((id) => {
     const course = courseRowsById.get(id);
@@ -40,14 +48,29 @@ const eqQuery = mock(async (_column: string, id: string) => ({
   error: null,
 }));
 const departmentLikeCalls: [string, string][] = [];
+const changeInQuery = mock((_column: string, ids: string[]) => {
+  changeInQueryCalls.push(ids);
+  return createChain("course_changes", ids);
+});
+const changeInQueryCalls: string[][] = [];
+const changeGteCalls: [string, string][] = [];
 
-const createChain = (table: string) => {
+const createChain = (table: string, ids?: string[]) => {
   const result = {
-    data: table === "course_changes" ? courseChangeRows : [],
+    data:
+      table === "course_changes"
+        ? ids
+          ? changeRows.filter((row) => ids.includes(row.raw_id))
+          : courseChangeRows
+        : [],
     error: null,
   };
   const chain = {
-    gte: mock(() => chain),
+    in: changeInQuery,
+    gte: mock((column: string, value: string) => {
+      changeGteCalls.push([column, value]);
+      return chain;
+    }),
     like: mock((column: string, pattern: string) => {
       departmentLikeCalls.push([column, pattern]);
       return chain;
@@ -62,6 +85,16 @@ const createChain = (table: string) => {
   return chain;
 };
 
+beforeEach(() => {
+  courseChangeRows = defaultChangeRows;
+  changeRows = defaultChangeRows;
+  changeInQueryCalls.length = 0;
+  changeGteCalls.length = 0;
+  inQuery.mockClear();
+  changeInQuery.mockClear();
+  setSystemTime();
+});
+
 mock.module("./config/supabase_server", () =>
   createSupabaseServerMock(() => ({
     from: (table: string) => ({
@@ -69,7 +102,9 @@ mock.module("./config/supabase_server", () =>
         in:
           table === "courses"
             ? inQuery
-            : async () => ({ data: [], error: null }),
+            : table === "course_changes"
+              ? changeInQuery
+              : async () => ({ data: [], error: null }),
         eq: table === "courses" ? eqQuery : () => createChain(table),
       }),
     }),
@@ -138,7 +173,79 @@ describe("course ID list bounds", () => {
     expect(response.headers.get("Cache-Control")).toBe(
       "public, max-age=60, s-maxage=300, stale-while-revalidate=3600",
     );
-    expect(await response.json()).toEqual(changeRows);
+    expect(await response.json()).toEqual(defaultChangeRows);
+  });
+
+  it("validates the by-courses change query", async () => {
+    expect((await course.request("/changes/for-courses")).status).toBe(400);
+    expect(
+      (await course.request("/changes/for-courses?courses=course-1&days=0"))
+        .status,
+    ).toBe(400);
+    expect(
+      (await course.request("/changes/for-courses?courses=course-1&days=61"))
+        .status,
+    ).toBe(400);
+
+    const tooMany = new URLSearchParams();
+    for (let index = 0; index < 101; index += 1) {
+      tooMany.append("courses", `course-${index}`);
+    }
+    expect(
+      (await course.request(`/changes/for-courses?${tooMany}`)).status,
+    ).toBe(400);
+  });
+
+  it("queries unique course IDs in chunks and caps merged changes", async () => {
+    changeRows = Array.from({ length: 201 }, (_, index) => ({
+      ...defaultChangeRows[0],
+      id: index + 1,
+      raw_id: `course-${index % 100}`,
+      detected_at: new Date(Date.UTC(2026, 9, 21, 0, index)).toISOString(),
+    }));
+    const params = new URLSearchParams();
+    for (let index = 0; index < 100; index += 1) {
+      params.append("courses", `course-${index}`);
+    }
+
+    const response = await course.request(`/changes/for-courses?${params}`);
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Cache-Control")).toBe(
+      "public, max-age=60, s-maxage=300, stale-while-revalidate=3600",
+    );
+    const rows = await response.json();
+    expect(rows).toHaveLength(200);
+    expect(rows[0].id).toBe(201);
+    expect(rows.at(-1).id).toBe(2);
+    expect(changeInQueryCalls).toEqual([
+      Array.from({ length: 100 }, (_, index) => `course-${index}`),
+    ]);
+  });
+
+  it("uses fourteen days when days is omitted", async () => {
+    setSystemTime(new Date("2026-10-23T12:00:00.000Z"));
+    const response = await course.request(
+      "/changes/for-courses?courses=course-1",
+    );
+
+    expect(response.status).toBe(200);
+    expect(changeInQueryCalls).toEqual([["course-1"]]);
+    expect(changeGteCalls).toEqual([
+      ["detected_at", "2026-10-09T12:00:00.000Z"],
+    ]);
+  });
+
+  it("uses the explicit days window when provided", async () => {
+    setSystemTime(new Date("2026-10-23T12:00:00.000Z"));
+    const response = await course.request(
+      "/changes/for-courses?courses=course-1&days=3",
+    );
+
+    expect(response.status).toBe(200);
+    expect(changeGteCalls).toEqual([
+      ["detected_at", "2026-10-20T12:00:00.000Z"],
+    ]);
   });
 
   it("filters by department prefix and enriches rows with course metadata", async () => {
