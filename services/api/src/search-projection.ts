@@ -1,14 +1,15 @@
 import type { Database } from "./types/supabase";
+import { courseAudienceFacetValues } from "@courseweb/shared";
 
 export type CourseRow = Database["public"]["Tables"]["courses"]["Row"];
 
 /**
  * Increment this when the serialized search projection changes. It is part of
  * the manifest and chunk payload so clients can invalidate old cached indexes.
- * Version 2 is the two-tier shape: UI course fields in the search chunk and
+ * Version 3 is the two-tier shape: UI course fields in the search chunk and
  * syllabus text in a separate text chunk.
  */
-export const SEARCH_PROJECTION_FORMAT_VERSION = 2 as const;
+export const SEARCH_PROJECTION_FORMAT_VERSION = 3 as const;
 
 /** The attributes exposed by the existing fallback search's facet inventory. */
 export const SUPPORTED_FACETS = [
@@ -26,6 +27,7 @@ export const SUPPORTED_FACETS = [
   "courseLevel",
   "separate_times",
   "for_class",
+  "audience",
   "credits",
 ] as const;
 
@@ -34,6 +36,7 @@ const DERIVED_SEARCH_FIELDS = [
   "courseLevel",
   "separate_times",
   "for_class",
+  "audience",
 ] as const;
 
 /**
@@ -100,6 +103,7 @@ export type SearchDerivedFields = {
   courseLevel: string;
   separate_times: string[];
   for_class: string[];
+  audience: string[];
 };
 
 export type SearchProjection = Pick<
@@ -116,13 +120,23 @@ export type SearchProjection = Pick<
 export const deriveSearchFields = (
   course: Pick<
     CourseRow,
-    "raw_id" | "course" | "times" | "elective_for" | "compulsory_for"
+    | "raw_id"
+    | "course"
+    | "times"
+    | "elective_for"
+    | "compulsory_for"
+    | "note"
+    | "restrictions"
   >,
 ): SearchDerivedFields => ({
   objectID: course.raw_id,
   courseLevel: `${course.course[0] ?? ""}000`,
   separate_times: course.times.flatMap((time) => time.match(/.{1,2}/g) ?? []),
   for_class: [...(course.elective_for ?? []), ...(course.compulsory_for ?? [])],
+  audience: courseAudienceFacetValues({
+    note: course.note,
+    restrictions: course.restrictions,
+  }),
 });
 
 /** Build the only row shape that the client-side course index receives. */

@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
+  courseAudienceFacetValues,
   parseCourseAudienceTags,
   type CourseAudienceTag,
   type CourseAudienceTagValue,
@@ -58,6 +59,24 @@ const buildExpectedTags = (shorthand: string): ExpectedTag[] =>
   });
 
 describe("course audience tags", () => {
+  test("serializes stable facet values and keeps scoped years distinct", () => {
+    expect(
+      courseAudienceFacetValues({
+        note: "限碩二以上",
+        restrictions: "本課程不開放大學部修習",
+      }),
+    ).toEqual([
+      "exclusion:undergraduate",
+      "restriction:master",
+      "restriction:year-2:master",
+      "restriction:year-3:master",
+      "restriction:year-4:master",
+    ]);
+    expect(
+      courseAudienceFacetValues({ note: "Restricted to juniors and above." }),
+    ).toEqual(["restriction:year-3", "restriction:year-4"]);
+  });
+
   test.each([
     ["限大學部", "r:u"],
     ["限制大学部", "r:u"],

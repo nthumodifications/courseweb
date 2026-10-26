@@ -17,6 +17,13 @@ import { useSearchParams } from "react-router-dom";
 import useCustomRefinementList from "./useCustomRefinementList";
 import useDictionary from "@/dictionaries/useDictionary";
 
+export type RefinementItem = {
+  label: string;
+  value: string;
+  count: number;
+  isRefined: boolean;
+};
+
 const FilterItem = memo(
   ({
     attribute,
@@ -26,6 +33,10 @@ const FilterItem = memo(
     synonms = {},
     placeholder,
     defaultSearch = "",
+    title,
+    hideWhenEmpty = false,
+    sortFn,
+    synonymsOnly = false,
   }: {
     attribute: string;
     limit?: number;
@@ -34,12 +45,20 @@ const FilterItem = memo(
     synonms?: Record<string, string>;
     placeholder?: string;
     defaultSearch?: string;
+    title?: string;
+    hideWhenEmpty?: boolean;
+    sortFn?: (left: RefinementItem, right: RefinementItem) => number;
+    synonymsOnly?: boolean;
   }) => {
     const dict = useDictionary();
     const resolvedPlaceholder = placeholder ?? dict.planner.coursePicker.search;
     const { items, refine, searchForItems } = useCustomRefinementList({
       attribute: attribute,
       limit: limit,
+    });
+    const orderedItems = [...items].sort((left, right) => {
+      if (left.isRefined !== right.isRefined) return left.isRefined ? -1 : 1;
+      return sortFn?.(left, right) ?? 0;
     });
 
     const [searchParams] = useSearchParams();
@@ -110,7 +129,16 @@ const FilterItem = memo(
       };
     }, []);
 
-    return (
+    if (hideWhenEmpty && items.length === 0) return null;
+
+    const itemLabel = (value: string, fallback: string) =>
+      synonymsOnly
+        ? (synonms[value] ?? synonms[fallback] ?? fallback)
+        : synonms[value] || synonms[fallback]
+          ? `${value} - ${synonms[value] ?? synonms[fallback]}`
+          : fallback;
+
+    const filter = (
       <Popover modal={true} onOpenChange={openChange}>
         <Button variant="outline" className={`w-full justify-start h-max p-0`}>
           <PopoverTrigger asChild>
@@ -123,7 +151,7 @@ const FilterItem = memo(
                 <div className="flex flex-col gap-1">
                   {selected.map((i) => (
                     <Badge key={i} variant="outline" className="">
-                      {synonms[i] ? `${i} - ${synonms[i]}` : i}
+                      {itemLabel(i, i)}
                     </Badge>
                   ))}
                 </div>
@@ -157,39 +185,40 @@ const FilterItem = memo(
             >
               <CommandList className="max-h-none">
                 <CommandEmpty>{dict.common.no_results}</CommandEmpty>
-                {items
-                  .sort((a, b) => {
-                    if (a.isRefined) return -1;
-                    if (b.isRefined) return 1;
-                    return 0;
-                  })
-                  .map((item) => (
-                    <CommandItem
-                      className="cursor-pointer"
-                      key={item.label}
-                      onSelect={() => select(item.value)}
-                    >
-                      <div className="flex w-full items-center">
-                        <div className="ml-1 mr-2">
-                          <Check
-                            size={16}
-                            className={`${item.isRefined ? "" : "opacity-0"}`}
-                          />
-                        </div>
-                        <span className="mr-4">
-                          {synonms[item.label]
-                            ? `${item.label} - ${synonms[item.label]}`
-                            : item.label}
-                        </span>
-                        <Badge variant="outline">{item.count}</Badge>
+                {orderedItems.map((item) => (
+                  <CommandItem
+                    className="cursor-pointer"
+                    key={item.label}
+                    onSelect={() => select(item.value)}
+                  >
+                    <div className="flex w-full items-center">
+                      <div className="ml-1 mr-2">
+                        <Check
+                          size={16}
+                          className={`${item.isRefined ? "" : "opacity-0"}`}
+                        />
                       </div>
-                    </CommandItem>
-                  ))}
+                      <span className="mr-4">
+                        {itemLabel(item.value, item.label)}
+                      </span>
+                      <Badge variant="outline">{item.count}</Badge>
+                    </div>
+                  </CommandItem>
+                ))}
               </CommandList>
             </ScrollArea>
           </Command>
         </PopoverContent>
       </Popover>
+    );
+
+    return title ? (
+      <div className="flex flex-col gap-2">
+        <span className="text-sm">{title}</span>
+        {filter}
+      </div>
+    ) : (
+      filter
     );
   },
 );

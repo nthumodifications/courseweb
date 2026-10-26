@@ -13,13 +13,18 @@
     "declaration": true,
     "declarationMap": true,
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": "../..",
     "lib": ["ESNext"],
     "allowJs": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
-    "noEmit": false
+    "noEmit": false,
+    "paths": {
+      "@courseweb/shared": [
+        "./packages/shared/src/utils/course-audience-tags"
+      ]
+    }
   },
   "include": ["src/**/*", "worker-configuration.d.ts"],
   "exclude": [

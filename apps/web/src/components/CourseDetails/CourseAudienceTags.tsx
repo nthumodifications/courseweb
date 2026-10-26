@@ -6,7 +6,7 @@ import { Badge } from "@courseweb/ui";
 import { useParams } from "react-router-dom";
 import useDictionary from "@/dictionaries/useDictionary";
 
-type AudienceLabels = {
+export type AudienceLabels = {
   title: string;
   year_1: string;
   year_2: string;
@@ -52,7 +52,7 @@ const valueLabel = (
   return labels[key];
 };
 
-const tagLabel = (
+export const courseAudienceTagLabel = (
   tag: CourseAudienceTag,
   labels: AudienceLabels,
   language: string,
@@ -88,7 +88,7 @@ const CourseAudienceTags = ({
       <h3 className="font-bold text-base">{labels.title}</h3>
       <div className="flex flex-wrap gap-1">
         {tags.map((tag) => {
-          const label = tagLabel(tag, labels, lang ?? "zh");
+          const label = courseAudienceTagLabel(tag, labels, lang ?? "zh");
           return (
             <Badge
               key={`${tag.relation}-${tag.value}-${tag.scope ?? ""}`}

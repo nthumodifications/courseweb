@@ -2,10 +2,15 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": "../..",
     "declaration": true,
     "declarationMap": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "paths": {
+      "@courseweb/shared": [
+        "./packages/shared/src/utils/course-audience-tags"
+      ]
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["dist", "node_modules"]

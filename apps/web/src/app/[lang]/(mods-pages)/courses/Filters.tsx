@@ -4,6 +4,7 @@ import ExpandableClassFilter from "../student/planner/course-picker/ExpandableCl
 import ExpandableFilter from "../student/planner/course-picker/ExpandableFilter";
 import InlineCheckboxFilter from "../student/planner/course-picker/InlineCheckboxFilter";
 import TimeSelectionFilter from "./TimeSelectionFilter";
+import CourseAudienceFilter from "./CourseAudienceFilter";
 import { MinimalCourse } from "@/types/courses";
 
 const languageSynonyms: Record<string, string> = {
@@ -50,6 +51,8 @@ const Filters = ({ selectedCourses }: { selectedCourses: MinimalCourse[] }) => {
             limit={20}
           />
         </div>
+
+        <CourseAudienceFilter />
 
         <div className="flex flex-col gap-2">
           <span className="text-sm">{dict.course.refine.time}</span>

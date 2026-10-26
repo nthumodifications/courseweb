@@ -340,3 +340,20 @@ export const parseCourseAudienceTags = ({
 
   return tags;
 };
+
+/**
+ * Stable search values for audience tags.
+ *
+ * Non-year tags use relation:value. A scoped year tag appends its academic
+ * level so that "碩三" and "大三" remain distinct; an unscoped year keeps the
+ * relation:value form. This is the serialized facet contract shared by the
+ * local, fallback, and Algolia indexes.
+ */
+export const courseAudienceFacetValue = (tag: CourseAudienceTag) =>
+  `${tag.relation}:${tag.value}${
+    tag.kind === "year" && tag.scope ? `:${tag.scope}` : ""
+  }`;
+
+export const courseAudienceFacetValues = (text: CourseAudienceText) => [
+  ...new Set(parseCourseAudienceTags(text).map(courseAudienceFacetValue)),
+];
