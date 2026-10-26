@@ -99,6 +99,10 @@ Do not run data-sync against shared infrastructure without an explicit review.
 - Keep `main` green. Fix a red `main` before anything else merges.
 - User data paths such as timetable, planner, and favourites need a test that covers upgrading from the previous stored format.
 
+## Deep-link contract
+
+Deep links are a public contract used by external integrations, including the NTHU Student Association LINE bot. Renaming or removing an accepted value is a breaking change. To add or change one, update the page resolver and its entry in `apps/web/src/lib/deep-links/registry.ts`, then run `bun run gen:deep-links` from `apps/web` and commit the generated `docs/deep-links.md` and `apps/web/public/data/deep-links.json`.
+
 Keep the inventory and removal order in [docs/STABILITY.md](docs/STABILITY.md).
 
 ## Announcing a feature in What's New

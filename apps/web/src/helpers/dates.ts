@@ -12,6 +12,7 @@ import {
 import { formatInTimeZone, fromZonedTime, toZonedTime } from "date-fns-tz";
 
 export const TAIPEI_TIME_ZONE = "Asia/Taipei";
+export const TAIPEI_DATE_KEY_PATTERN = "\\d{4}-\\d{2}-\\d{2}";
 const DATE_KEY_FORMAT = "yyyy-MM-dd";
 const WALL_DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS";
 
@@ -30,7 +31,7 @@ export const fromTaipeiCalendarDate = (date: Date) =>
   fromTaipeiDateKey(format(date, DATE_KEY_FORMAT));
 
 export const isTaipeiDateKey = (dateKey: string) => {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return false;
+  if (!new RegExp(`^${TAIPEI_DATE_KEY_PATTERN}$`).test(dateKey)) return false;
   const date = fromTaipeiDateKey(dateKey);
   return !Number.isNaN(date.getTime()) && getTaipeiDateKey(date) === dateKey;
 };

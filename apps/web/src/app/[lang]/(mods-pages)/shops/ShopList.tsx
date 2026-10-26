@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Button,
   Checkbox,
@@ -13,9 +14,14 @@ import {
 import { AlarmClockCheck, Dices, Search, Store, X } from "lucide-react";
 // import shops from "./shops.json"
 import ShopItem from "./ShopItem";
-import areas from "./areas.json";
 import useDictionary from "@/dictionaries/useDictionary";
 import type { DiningArea } from "./types";
+import {
+  getShopAreaDeepLinkKey,
+  resolveShopAreaDeepLink,
+  SHOP_AREAS,
+} from "./deep-link";
+import { reconcileSearchState } from "@/lib/deep-links/reconcile-search-state";
 import {
   getPickActionState,
   getPickRow,
@@ -64,10 +70,15 @@ type PickSelection = {
 const Shops = ({ data }: { data: DiningArea[] }) => {
   const shops = useMemo(() => data.flatMap((area) => area.restaurants), [data]);
   const dict = useDictionary();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [initialDeepLink] = useState(() =>
+    resolveShopAreaDeepLink(searchParams, SHOP_AREAS),
+  );
 
   const [search, setSearch] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
-  const [filterArea, setFilterArea] = useState("");
+  const [filterArea, setFilterArea] = useState(initialDeepLink.area);
+  const [filterAreas, setFilterAreas] = useState(initialDeepLink.areas);
   const [hidden, setHidden] = useState<string[]>(readHiddenPlaces);
   const [includeSnacks, setIncludeSnacks] = useState(readIncludeSnacks);
   const [pick, setPick] = useState<PickSelection | null>(null);
@@ -76,6 +87,8 @@ const Shops = ({ data }: { data: DiningArea[] }) => {
   const [shuffleIndex, setShuffleIndex] = useState(0);
   const shuffleTimer = useRef<number | null>(null);
   const previousShops = useRef(shops);
+  const deepLinkSearchKey = getShopAreaDeepLinkKey(searchParams);
+  const previousDeepLinkSearchKey = useRef(deepLinkSearchKey);
 
   const stopShuffle = useCallback(() => {
     if (shuffleTimer.current !== null) {
@@ -85,6 +98,30 @@ const Shops = ({ data }: { data: DiningArea[] }) => {
   }, []);
 
   useEffect(() => () => stopShuffle(), [stopShuffle]);
+
+  useEffect(() => {
+    const previousSearchKey = previousDeepLinkSearchKey.current;
+    previousDeepLinkSearchKey.current = deepLinkSearchKey;
+    if (previousSearchKey === deepLinkSearchKey) return;
+
+    const next = resolveShopAreaDeepLink(searchParams, SHOP_AREAS);
+    setFilterArea((current) =>
+      reconcileSearchState(
+        current,
+        next.area,
+        previousSearchKey,
+        deepLinkSearchKey,
+      ),
+    );
+    setFilterAreas((current) =>
+      reconcileSearchState(
+        current,
+        next.areas,
+        previousSearchKey,
+        deepLinkSearchKey,
+      ),
+    );
+  }, [deepLinkSearchKey, searchParams]);
 
   useEffect(() => {
     try {
@@ -174,8 +211,15 @@ const Shops = ({ data }: { data: DiningArea[] }) => {
     if (pick) drawPick(pick.shop);
   }, [drawPick, pick, shops]);
 
-  const handleAreaChange = (area: string) => {
+  const handleAreaChange = (value: string) => {
+    const area = value === "anywhere" ? "" : value;
     setFilterArea(area);
+    setFilterAreas(undefined);
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete("building");
+    if (area === "") nextParams.delete("area");
+    else nextParams.set("area", area);
+    setSearchParams(nextParams, { replace: true });
     if (pick) drawPick(pick.shop, hidden, includeSnacks, area);
   };
 
@@ -213,7 +257,12 @@ const Shops = ({ data }: { data: DiningArea[] }) => {
         <ShopItem
           key={getShopKey(shop)}
           shop={shop}
-          filter={{ search: search, open: filterOpen, area: filterArea }}
+          filter={{
+            search: search,
+            open: filterOpen,
+            area: filterArea,
+            areas: filterAreas,
+          }}
         />
       ))}
     </div>
@@ -261,7 +310,7 @@ const Shops = ({ data }: { data: DiningArea[] }) => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="anywhere">{dict.shops.area_all}</SelectItem>
-              {areas.map((area) => (
+              {SHOP_AREAS.map((area) => (
                 <SelectItem key={area} value={area}>
                   {area}
                 </SelectItem>

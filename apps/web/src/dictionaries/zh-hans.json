@@ -85,8 +85,8 @@
       "summary": "课表中有 {count} 门课有异动",
       "summary_singular": "课表中有 {count} 门课有异动",
       "dismiss": "知道了",
-      "removed": "不再列出",
-      "reappeared": "重新列出",
+      "removed": "已从课程数据中移除",
+      "reappeared": "重新出现在课程数据中",
       "change_separator": " ・ ",
       "detail_date_separator": "，"
     },
@@ -1507,6 +1507,7 @@
       "youbike": "YouBike 2.0 实时车量",
       "sports-venues": "体育场馆使用人数",
       "library": "图书馆实时座位",
+      "announcements": "校园公告",
       "shops": "餐厅及服务",
       "calendar": "日历",
       "timetable-community": "社区课表",

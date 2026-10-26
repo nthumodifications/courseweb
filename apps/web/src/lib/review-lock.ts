@@ -1,5 +1,8 @@
 import { getSemester, lastSemester, semesterInfo } from "@courseweb/shared";
 
+export const REVIEW_SEMESTER_PATTERN = "\\d{5}";
+const reviewSemesterPattern = new RegExp(`^${REVIEW_SEMESTER_PATTERN}$`);
+
 export const getCurrentReviewSemesterId = (now = new Date()) =>
   getSemester(now)?.id ??
   [...semesterInfo].reverse().find((semester) => semester.begins <= now)?.id ??
@@ -21,7 +24,7 @@ export const isPastReviewSemester = (
   currentSemester?: string,
   now?: Date,
 ) =>
-  /^\d{5}$/.test(semester) &&
+  reviewSemesterPattern.test(semester) &&
   semester < (currentSemester ?? getCurrentReviewSemesterId(now));
 
 export const deriveReviewLock = ({

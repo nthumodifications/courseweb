@@ -14,6 +14,7 @@ interface ShopItemProps {
     search: string;
     open: boolean;
     area: string;
+    areas?: string[];
   };
 }
 
@@ -38,6 +39,10 @@ const ShopItem: React.FC<ShopItemProps> = ({ shop, filter }) => {
   }
 
   if (filter?.area && filter.area !== shop.area && filter.area !== "anywhere") {
+    return null;
+  }
+
+  if (filter?.areas && !filter.areas.includes(shop.area)) {
     return null;
   }
 

@@ -1,0 +1,877 @@
+{
+  "version": 1,
+  "generatedFrom": "registry",
+  "routes": [
+    {
+      "route": "/bus",
+      "duplicates": "ignored",
+      "params": [
+        {
+          "name": "tab",
+          "description": {
+            "zh": "校車分頁。",
+            "en": "Campus bus tab."
+          },
+          "values": [
+            "north_gate",
+            "tsmc",
+            "nanda",
+            "city"
+          ],
+          "example": "nanda"
+        },
+        {
+          "name": "stop",
+          "description": {
+            "zh": "校園站名；中文精確比對並去除前後空白，英文比對不分大小寫。重複站名會選擇尚未離站的第一個。",
+            "en": "Campus stop name; Chinese matching trims whitespace and English matching ignores case. The first not-yet-passed duplicate is selected."
+          },
+          "values": [
+            "北校門口",
+            "綜二",
+            "楓林小徑",
+            "奕園停車場",
+            "南門停車場",
+            "台積館",
+            "人社院/生科院",
+            "North Main Gate",
+            "General Building II",
+            "Maple Path",
+            "Yi Pavilion Parking Lot",
+            "South Gate Parking Lot",
+            "TSMC Building",
+            "CHSS/CLS Building",
+            "南大校區",
+            "Nanda Campus",
+            "台積館(經寶山路)",
+            "TSMC Building(Baoshan Rd.)",
+            "教育學院大樓/南門停車場(經寶山路)",
+            "COE Building/South Gate Parking Lot(Baoshan Rd.)"
+          ],
+          "example": "General Building II"
+        }
+      ],
+      "examples": [
+        "/zh/bus?tab=nanda",
+        "/en/bus?tab=north_gate&stop=General%20Building%20II"
+      ]
+    },
+    {
+      "route": "/bus/main/:line",
+      "duplicates": "ignored",
+      "params": [
+        {
+          "name": "stop",
+          "description": {
+            "zh": "該校園路線的站名。",
+            "en": "A stop name on the selected campus line."
+          },
+          "values": "free-text",
+          "example": "綜二",
+          "lineValues": {
+            "green": [
+              "北校門口",
+              "綜二",
+              "楓林小徑",
+              "奕園停車場",
+              "南門停車場",
+              "台積館",
+              "人社院/生科院",
+              "North Main Gate",
+              "General Building II",
+              "Maple Path",
+              "Yi Pavilion Parking Lot",
+              "South Gate Parking Lot",
+              "TSMC Building",
+              "CHSS/CLS Building"
+            ],
+            "red": [
+              "北校門口",
+              "綜二",
+              "楓林小徑",
+              "人社院/生科院",
+              "台積館",
+              "南門停車場",
+              "奕園停車場",
+              "North Main Gate",
+              "General Building II",
+              "Maple Path",
+              "CHSS/CLS Building",
+              "TSMC Building",
+              "South Gate Parking Lot",
+              "Yi Pavilion Parking Lot"
+            ]
+          },
+          "lineExamples": {
+            "green": "綜二",
+            "red": "綜二"
+          }
+        }
+      ],
+      "examples": [
+        "/zh/bus/main/green?stop=%E7%B6%9C%E4%BA%8C"
+      ]
+    },
+    {
+      "route": "/bus/nanda/:line",
+      "duplicates": "ignored",
+      "params": [
+        {
+          "name": "stop",
+          "description": {
+            "zh": "該南大路線的站名。",
+            "en": "A stop name on the selected Nanda line."
+          },
+          "values": "free-text",
+          "example": "TSMC Building(Baoshan Rd.)",
+          "lineValues": {
+            "route1_up": [
+              "北校門口",
+              "綜二",
+              "人社院/生科院",
+              "台積館(經寶山路)",
+              "南大校區",
+              "North Main Gate",
+              "General Building II",
+              "CHSS/CLS Building",
+              "TSMC Building(Baoshan Rd.)",
+              "Nanda Campus"
+            ],
+            "route1_down": [
+              "南大校區",
+              "台積館(經寶山路)",
+              "人社院/生科院",
+              "綜二",
+              "北校門口",
+              "Nanda Campus",
+              "TSMC Building(Baoshan Rd.)",
+              "CHSS/CLS Building",
+              "General Building II",
+              "North Main Gate"
+            ],
+            "route2_up": [
+              "北校門口",
+              "綜二",
+              "奕園停車場",
+              "教育學院大樓/南門停車場(經寶山路)",
+              "南大校區",
+              "North Main Gate",
+              "General Building II",
+              "Yi Pavilion Parking Lot",
+              "COE Building/South Gate Parking Lot(Baoshan Rd.)",
+              "Nanda Campus"
+            ],
+            "route2_down": [
+              "南大校區",
+              "教育學院大樓/南門停車場(經寶山路)",
+              "奕園停車場",
+              "綜二",
+              "北校門口",
+              "Nanda Campus",
+              "COE Building/South Gate Parking Lot(Baoshan Rd.)",
+              "Yi Pavilion Parking Lot",
+              "General Building II",
+              "North Main Gate"
+            ]
+          },
+          "lineExamples": {
+            "route1_up": "TSMC Building(Baoshan Rd.)",
+            "route1_down": "TSMC Building(Baoshan Rd.)",
+            "route2_up": "北校門口",
+            "route2_down": "南大校區"
+          }
+        }
+      ],
+      "examples": [
+        "/en/bus/nanda/route1_up?stop=TSMC%20Building%28Baoshan%20Rd.%29"
+      ]
+    },
+    {
+      "route": "/bus/city/:route",
+      "duplicates": "first-value",
+      "params": [
+        {
+          "name": "direction",
+          "description": {
+            "zh": "該城市公車路線資料中的方向 ID。",
+            "en": "Direction ID from the selected city-bus route data."
+          },
+          "values": "free-text",
+          "example": "HSZ000801",
+          "runtime": true
+        },
+        {
+          "name": "stop",
+          "description": {
+            "zh": "該城市公車方向資料中的站點 ID。",
+            "en": "Stop ID from the selected city-bus direction data."
+          },
+          "values": "free-text",
+          "example": "HSZ303582",
+          "runtime": true
+        }
+      ],
+      "examples": [
+        "/zh/bus/city/83?direction=HSZ000801&stop=HSZ303582"
+      ]
+    },
+    {
+      "route": "/laundry",
+      "duplicates": "ignored",
+      "params": [
+        {
+          "name": "dorm",
+          "description": {
+            "zh": "宿舍 key 或 slug；會覆寫已儲存的宿舍。",
+            "en": "Dorm key or slug; overrides the stored dorm."
+          },
+          "values": [
+            "義齋",
+            "明齋",
+            "實齋",
+            "新齋",
+            "華齋",
+            "禮齋",
+            "誠齋",
+            "雅齋",
+            "慧齋",
+            "靜齋",
+            "碩齋",
+            "仁齋",
+            "清華會館",
+            "yi",
+            "ming",
+            "shyr",
+            "hsin",
+            "hua",
+            "li",
+            "cheng",
+            "ya",
+            "huei",
+            "jing",
+            "shuo",
+            "jen",
+            "tsinghua_hall"
+          ],
+          "example": "jen"
+        },
+        {
+          "name": "area",
+          "description": {
+            "zh": "洗衣區 key 或 slug；沒有 dorm 時會推導宿舍。",
+            "en": "Laundry-area key or slug; implies its dorm when dorm is absent."
+          },
+          "values": [
+            "義齋",
+            "明齋",
+            "實齋男",
+            "實齋女",
+            "新齋",
+            "華齋",
+            "禮齋",
+            "誠齋",
+            "雅齋",
+            "慧齋",
+            "靜齋",
+            "碩齋",
+            "仁齋男",
+            "仁齋女",
+            "清華會館 9F",
+            "清華會館 B1",
+            "yi",
+            "ming",
+            "shyr_m",
+            "shyr_f",
+            "hsin",
+            "hua",
+            "li",
+            "cheng",
+            "ya",
+            "huei",
+            "jing",
+            "shuo",
+            "jen_m",
+            "jen_f",
+            "tsinghua_hall_9f",
+            "tsinghua_hall_b1"
+          ],
+          "example": "jen_m"
+        }
+      ],
+      "examples": [
+        "/zh/laundry?dorm=jen&area=jen_m"
+      ]
+    },
+    {
+      "route": "/library",
+      "duplicates": "ignored",
+      "params": [
+        {
+          "name": "branch",
+          "description": {
+            "zh": "圖書館分館。",
+            "en": "Library branch."
+          },
+          "values": [
+            "all",
+            "moonlight",
+            "main",
+            "hss",
+            "ctm"
+          ],
+          "example": "moonlight"
+        },
+        {
+          "name": "category",
+          "description": {
+            "zh": "座位類別。",
+            "en": "Seat category."
+          },
+          "values": [
+            "all",
+            "moonlight",
+            "discussion",
+            "carrel",
+            "workstation",
+            "av",
+            "group"
+          ],
+          "example": "carrel"
+        }
+      ],
+      "examples": [
+        "/en/library?branch=moonlight&category=carrel"
+      ]
+    },
+    {
+      "route": "/shops",
+      "duplicates": "ignored",
+      "params": [
+        {
+          "name": "area",
+          "description": {
+            "zh": "areas.json 中的完整區域名稱。",
+            "en": "An exact area name from areas.json."
+          },
+          "values": [
+            "小吃部",
+            "水木生活中心1樓",
+            "水木生活中心2樓",
+            "風雲1樓",
+            "風雲2樓",
+            "風雲3樓",
+            "風雲4樓",
+            "綜合教學大樓",
+            "行政大樓(旁)",
+            "第二活動中心一樓",
+            "旺宏館一樓",
+            "百齡堂",
+            "人社院",
+            "第二招待所一樓",
+            "綜四館一樓"
+          ],
+          "example": "風雲1樓"
+        },
+        {
+          "name": "building",
+          "description": {
+            "zh": "areas.json 區域名稱的建築前綴；多個匹配時會保留篩選清單。",
+            "en": "A building prefix from areas.json; multiple matches remain as a filter list."
+          },
+          "values": [
+            "小吃部",
+            "水木生活中心",
+            "水木生活中心1樓",
+            "水木生活中心2樓",
+            "風雲",
+            "風雲1樓",
+            "風雲2樓",
+            "風雲3樓",
+            "風雲4樓",
+            "綜合教學大樓",
+            "行政大樓(旁)",
+            "第二活動中心一樓",
+            "旺宏館一樓",
+            "百齡堂",
+            "人社院",
+            "第二招待所一樓",
+            "綜四館一樓"
+          ],
+          "example": "風雲"
+        }
+      ],
+      "examples": [
+        "/zh/shops?area=%E9%A2%A8%E9%9B%B21%E6%A8%93",
+        "/zh/shops?building=%E9%A2%A8%E9%9B%B2"
+      ]
+    },
+    {
+      "route": "/map",
+      "duplicates": "first-value",
+      "params": [
+        {
+          "name": "building",
+          "description": {
+            "zh": "校園建築 identity ID，來源為 campus-building manifest。",
+            "en": "Campus building identity ID from the campus-building manifest."
+          },
+          "values": [
+            "bmes",
+            "computer-center",
+            "chemical-engineering",
+            "chemistry",
+            "chemistry-ii",
+            "clinic-counseling",
+            "delta",
+            "dorm-ren",
+            "dorm-shi",
+            "education",
+            "eecs",
+            "engineering-i",
+            "ess",
+            "general-i",
+            "general-ii",
+            "general-iii",
+            "general-iv",
+            "hss",
+            "life-science-i",
+            "life-science-ii",
+            "green-energy",
+            "materials-science",
+            "materials-lab",
+            "mxic",
+            "nthu-lab",
+            "physics",
+            "physics-lab",
+            "student-union",
+            "tsmc"
+          ],
+          "example": "delta"
+        },
+        {
+          "name": "venue",
+          "description": {
+            "zh": "建築 code、名稱、prefix 或 alias；由同一組 building identities 驗證。",
+            "en": "Building code, name, prefix, or alias validated by the same building identities."
+          },
+          "values": [
+            "醫環",
+            "BMES",
+            "BMES醫環",
+            "生醫工程及環境科學館",
+            "Biomedical Engineering and Environmental Sciences Building",
+            "生醫工程與環境科學館",
+            "計中",
+            "CC",
+            "CC計中",
+            "第二綜合大樓(計通中心)",
+            "General Building II (Computer & Communication Center)",
+            "計通中心",
+            "化工",
+            "CHE",
+            "CHE化工",
+            "化工館",
+            "Chemical Engineering Building",
+            "化",
+            "CHEM",
+            "CHEM化",
+            "化學館",
+            "Chemistry Building",
+            "化二",
+            "CHEM II",
+            "CHEM II化二",
+            "動機化學實驗館(化學二館)",
+            "Chemistry and Power Mechanical Engineering Building",
+            "動機化學實驗室",
+            "化學二館",
+            "諮商",
+            "Counsel",
+            "Counsel諮商",
+            "醫輔中心",
+            "Clinic and Counseling Center",
+            "台達",
+            "DELTA",
+            "DELTA台達",
+            "台達館",
+            "Delta Building",
+            "Delta Hall",
+            "仁齋",
+            "D-Ren",
+            "D-Ren仁齋",
+            "Dormitory Ren",
+            "Dormitory Jen",
+            "實齋",
+            "D-Shi",
+            "D-Shi實齋",
+            "Dormitory Shi",
+            "Dormitory Shyr",
+            "教",
+            "EDU",
+            "EDU教",
+            "教育館",
+            "Education Building",
+            "資電",
+            "EECS",
+            "EECS資電",
+            "資訊電機館",
+            "Electrical Engineering and Computer Science Building",
+            "資電館",
+            "EECS Building",
+            "劉炯朗館",
+            "C.L. Liu Building",
+            "工一",
+            "ENG I",
+            "ENG I工一",
+            "工程一館",
+            "Engineering Building I",
+            "工科",
+            "ESS",
+            "ESS工科",
+            "工科館",
+            "Engineering and System Science Building",
+            "綜一",
+            "GEN I",
+            "GEN I綜一",
+            "第一綜合大樓",
+            "General Building I",
+            "第一綜合大樓: 行政大樓",
+            "綜二",
+            "GEN II",
+            "GEN II綜二",
+            "第二綜合大樓",
+            "General Building II",
+            "綜三",
+            "GEN III",
+            "GEN III綜三",
+            "第三綜合大樓",
+            "General Building III",
+            "綜四",
+            "GEN IV",
+            "GEN IV綜四",
+            "第四綜合大樓",
+            "General Building IV",
+            "人社",
+            "HSS",
+            "HSS人社",
+            "人文社會學院",
+            "Humanities and Social Sciences Building",
+            "生一",
+            "LS I",
+            "LS I生一",
+            "生命科學一館",
+            "Life Science Building I",
+            "生二",
+            "LS II",
+            "LS II生二",
+            "生命科學二館",
+            "Life Science Building II",
+            "綠能",
+            "LTM",
+            "LTM綠能",
+            "綠能大樓(李存敏館)",
+            "Lee Tsen Min Building",
+            "綠色低碳能源大樓",
+            "李存敏館",
+            "Green Energy Building",
+            "材料",
+            "MS",
+            "MS材料",
+            "材料科技館",
+            "Materials Science and Technology Building",
+            "材料科技館: 工程四館",
+            "材實",
+            "MSLAB",
+            "MSLAB材實",
+            "材料實驗館",
+            "Materials Science Laboratory",
+            "旺宏",
+            "MXIC",
+            "MXIC旺宏",
+            "旺宏館(學習資源中心)",
+            "MXIC Building(Learning Resource Center)",
+            "學習資源中心",
+            "Learning Resource Centre",
+            "Main Library",
+            "清實",
+            "NTHU Lab",
+            "NTHU Lab清實",
+            "清華實驗室",
+            "Tsing Hua Laboratory",
+            "物",
+            "PHYS",
+            "PHYS物",
+            "物理館",
+            "Physics Building",
+            "普實",
+            "PHYSLAB",
+            "PHYSLAB普實",
+            "普物實驗館",
+            "Physics Laboratory",
+            "蒙民",
+            "STC",
+            "STC蒙民",
+            "學生活動中心",
+            "Student Union",
+            "蒙民偉樓",
+            "台積",
+            "TSMC",
+            "TSMC台積",
+            "台積館",
+            "TSMC Building"
+          ],
+          "example": "Delta Hall"
+        },
+        {
+          "name": "feature",
+          "description": {
+            "zh": "下載的校園地圖 building、water 或 area feature ID；值會依目前地圖資料驗證。",
+            "en": "A building, water, or area feature ID from the downloaded campus map data; validated against the current map data."
+          },
+          "values": "free-text",
+          "example": "osm-relation-3927538-0"
+        }
+      ],
+      "examples": [
+        "/zh/map?building=delta",
+        "/en/map?venue=Delta%20Hall"
+      ]
+    },
+    {
+      "route": "/youbike",
+      "duplicates": "ignored",
+      "params": [
+        {
+          "name": "tab",
+          "description": {
+            "zh": "YouBike 篩選分頁。",
+            "en": "YouBike filter tab."
+          },
+          "values": [
+            "all",
+            "main",
+            "nanda",
+            "mine"
+          ],
+          "example": "main"
+        },
+        {
+          "name": "station",
+          "description": {
+            "zh": "YouBike 九位數站點 ID；站點必須存在於目前 API 資料。",
+            "en": "Nine-digit YouBike station ID; the station must exist in the current API data."
+          },
+          "values": {
+            "pattern": "\\d{9}"
+          },
+          "example": "500401008",
+          "runtime": true
+        }
+      ],
+      "examples": [
+        "/zh/youbike?tab=main&station=500401008"
+      ]
+    },
+    {
+      "route": "/sports-venues",
+      "duplicates": "ignored",
+      "params": [
+        {
+          "name": "facility",
+          "description": {
+            "zh": "目前運動場館資料中的中文場館名稱。",
+            "en": "A Chinese facility name from the current sports-venue data."
+          },
+          "values": "free-text",
+          "example": "體育館",
+          "runtime": true
+        }
+      ],
+      "examples": [
+        "/zh/sports-venues?facility=%E9%AB%94%E8%82%B2%E9%A4%A8"
+      ]
+    },
+    {
+      "route": "/calendar",
+      "duplicates": "ignored",
+      "params": [
+        {
+          "name": "date",
+          "description": {
+            "zh": "台北時區的有效日期，作為檢視錨點。",
+            "en": "A valid Taipei-time date used as the view anchor."
+          },
+          "values": {
+            "pattern": "\\d{4}-\\d{2}-\\d{2}"
+          },
+          "example": "2026-10-24"
+        },
+        {
+          "name": "view",
+          "description": {
+            "zh": "行事曆檢視模式。",
+            "en": "Calendar display mode."
+          },
+          "values": [
+            "week",
+            "month",
+            "upcoming"
+          ],
+          "example": "month"
+        }
+      ],
+      "examples": [
+        "/zh/calendar?date=2026-10-24&view=month"
+      ]
+    },
+    {
+      "route": "/announcements",
+      "duplicates": "ignored",
+      "params": [
+        {
+          "name": "source",
+          "description": {
+            "zh": "目前公告 API 資料中的 source ID。",
+            "en": "A source ID from the current announcements API data."
+          },
+          "values": "free-text",
+          "example": "source-academic",
+          "runtime": true
+        }
+      ],
+      "examples": [
+        "/zh/announcements?source=source-academic"
+      ]
+    },
+    {
+      "route": "/settings",
+      "duplicates": "first-value",
+      "params": [
+        {
+          "name": "#section",
+          "description": {
+            "zh": "設定頁可定位的 section 或 setting hash。",
+            "en": "A settings section or setting hash that the page can scroll to."
+          },
+          "values": [
+            "appearance",
+            "display",
+            "calendar",
+            "timetable",
+            "ai",
+            "account",
+            "privacy",
+            "advanced",
+            "setting-dark-mode",
+            "setting-language",
+            "setting-compact-header",
+            "setting-academic-calendar",
+            "setting-experimental-calendar",
+            "setting-widget-dashboard",
+            "setting-default-view",
+            "setting-ai-department",
+            "setting-ai-entrance-year",
+            "setting-ai-api-key",
+            "setting-ai-api-key-value",
+            "setting-account",
+            "setting-sync-status",
+            "setting-restore-backup",
+            "setting-analytics",
+            "setting-custom-css"
+          ],
+          "example": "account"
+        }
+      ],
+      "examples": [
+        "/zh/settings#account",
+        "/en/settings#setting-dark-mode"
+      ]
+    },
+    {
+      "route": "/reviews/past",
+      "duplicates": "first-value",
+      "params": [
+        {
+          "name": "semester",
+          "description": {
+            "zh": "將指定學期排在待評價課程清單前面。",
+            "en": "Places the selected semester first in the past-course review list."
+          },
+          "values": {
+            "pattern": "\\d{5}"
+          },
+          "example": "11420"
+        }
+      ],
+      "examples": [
+        "/zh/reviews/past?semester=11420"
+      ]
+    },
+    {
+      "route": "/courses/modules",
+      "duplicates": "first-value",
+      "params": [
+        {
+          "name": "q",
+          "description": {
+            "zh": "模組搜尋文字。",
+            "en": "Module search text."
+          },
+          "values": "free-text",
+          "example": "computer"
+        }
+      ],
+      "examples": [
+        "/en/courses/modules?q=computer"
+      ]
+    },
+    {
+      "route": "/courses/module/:moduleKey",
+      "duplicates": "first-value",
+      "params": [
+        {
+          "name": "title",
+          "description": {
+            "zh": "模組變體標題；不符合目前模組資料時使用預設變體。",
+            "en": "Module variant title; an unknown title falls back to the default variant."
+          },
+          "values": "free-text",
+          "example": "Introduction to Computer Science"
+        }
+      ],
+      "examples": [
+        "/en/courses/module/CS%3A101?title=Introduction%20to%20Computer%20Science"
+      ]
+    },
+    {
+      "route": "/timetable/view",
+      "duplicates": "first-value",
+      "params": [
+        {
+          "name": "semester_<semester>",
+          "description": {
+            "zh": "課表分享或 CCXP 匯入的學期課程清單 key，例如 semester_11510。",
+            "en": "A semester course-list key for timetable sharing or CCXP import, such as semester_11510."
+          },
+          "values": {
+            "pattern": "semester_\\d{3}(?:10|20)"
+          },
+          "example": "semester_11510=11510CS 535100"
+        },
+        {
+          "name": "source",
+          "description": {
+            "zh": "使用 CCXP 匯入模式時為 ccxp。",
+            "en": "Use ccxp to select CCXP import mode."
+          },
+          "values": [
+            "ccxp"
+          ],
+          "example": "ccxp"
+        }
+      ],
+      "examples": [
+        "/zh/timetable/view?semester_11510=11510CS%20535100&source=ccxp"
+      ]
+    }
+  ]
+}

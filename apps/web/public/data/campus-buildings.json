@@ -1,0 +1,429 @@
+{
+  "version": 1,
+  "buildings": [
+    {
+      "id": "bmes",
+      "code": "BMES",
+      "nameZh": "生醫工程及環境科學館",
+      "nameEn": "Biomedical Engineering and Environmental Sciences Building",
+      "aliases": [
+        "醫環",
+        "BMES",
+        "BMES醫環",
+        "生醫工程及環境科學館",
+        "Biomedical Engineering and Environmental Sciences Building",
+        "生醫工程與環境科學館"
+      ],
+      "url": "https://nthumods.com/zh/map?building=bmes"
+    },
+    {
+      "id": "chemical-engineering",
+      "code": "CHE",
+      "nameZh": "化工館",
+      "nameEn": "Chemical Engineering Building",
+      "aliases": [
+        "化工",
+        "CHE",
+        "CHE化工",
+        "化工館",
+        "Chemical Engineering Building"
+      ],
+      "url": "https://nthumods.com/zh/map?building=chemical-engineering"
+    },
+    {
+      "id": "chemistry",
+      "code": "CHEM",
+      "nameZh": "化學館",
+      "nameEn": "Chemistry Building",
+      "aliases": [
+        "化",
+        "CHEM",
+        "CHEM化",
+        "化學館",
+        "Chemistry Building"
+      ],
+      "url": "https://nthumods.com/zh/map?building=chemistry"
+    },
+    {
+      "id": "chemistry-ii",
+      "code": "CHEM II",
+      "nameZh": "動機化學實驗館(化學二館)",
+      "nameEn": "Chemistry and Power Mechanical Engineering Building",
+      "aliases": [
+        "化二",
+        "CHEM II",
+        "CHEM II化二",
+        "動機化學實驗館(化學二館)",
+        "Chemistry and Power Mechanical Engineering Building",
+        "動機化學實驗室",
+        "化學二館"
+      ],
+      "url": "https://nthumods.com/zh/map?building=chemistry-ii"
+    },
+    {
+      "id": "clinic-counseling",
+      "code": "Counsel",
+      "nameZh": "醫輔中心",
+      "nameEn": "Clinic and Counseling Center",
+      "aliases": [
+        "諮商",
+        "Counsel",
+        "Counsel諮商",
+        "醫輔中心",
+        "Clinic and Counseling Center"
+      ],
+      "url": "https://nthumods.com/zh/map?building=clinic-counseling"
+    },
+    {
+      "id": "computer-center",
+      "code": "CC",
+      "nameZh": "第二綜合大樓(計通中心)",
+      "nameEn": "General Building II (Computer & Communication Center)",
+      "aliases": [
+        "計中",
+        "CC",
+        "CC計中",
+        "第二綜合大樓(計通中心)",
+        "General Building II (Computer & Communication Center)",
+        "計通中心"
+      ],
+      "url": "https://nthumods.com/zh/map?building=computer-center"
+    },
+    {
+      "id": "delta",
+      "code": "DELTA",
+      "nameZh": "台達館",
+      "nameEn": "Delta Building",
+      "aliases": [
+        "台達",
+        "DELTA",
+        "DELTA台達",
+        "台達館",
+        "Delta Building",
+        "Delta Hall"
+      ],
+      "url": "https://nthumods.com/zh/map?building=delta"
+    },
+    {
+      "id": "dorm-ren",
+      "code": "D-Ren",
+      "nameZh": "仁齋",
+      "nameEn": "Dormitory Ren",
+      "aliases": [
+        "仁齋",
+        "D-Ren",
+        "D-Ren仁齋",
+        "Dormitory Ren",
+        "Dormitory Jen"
+      ],
+      "url": "https://nthumods.com/zh/map?building=dorm-ren"
+    },
+    {
+      "id": "dorm-shi",
+      "code": "D-Shi",
+      "nameZh": "實齋",
+      "nameEn": "Dormitory Shi",
+      "aliases": [
+        "實齋",
+        "D-Shi",
+        "D-Shi實齋",
+        "Dormitory Shi",
+        "Dormitory Shyr"
+      ],
+      "url": "https://nthumods.com/zh/map?building=dorm-shi"
+    },
+    {
+      "id": "education",
+      "code": "EDU",
+      "nameZh": "教育館",
+      "nameEn": "Education Building",
+      "aliases": [
+        "教",
+        "EDU",
+        "EDU教",
+        "教育館",
+        "Education Building"
+      ],
+      "url": "https://nthumods.com/zh/map?building=education"
+    },
+    {
+      "id": "eecs",
+      "code": "EECS",
+      "nameZh": "資訊電機館",
+      "nameEn": "Electrical Engineering and Computer Science Building",
+      "aliases": [
+        "資電",
+        "EECS",
+        "EECS資電",
+        "資訊電機館",
+        "Electrical Engineering and Computer Science Building",
+        "資電館",
+        "EECS Building",
+        "劉炯朗館",
+        "C.L. Liu Building"
+      ],
+      "url": "https://nthumods.com/zh/map?building=eecs"
+    },
+    {
+      "id": "engineering-i",
+      "code": "ENG I",
+      "nameZh": "工程一館",
+      "nameEn": "Engineering Building I",
+      "aliases": [
+        "工一",
+        "ENG I",
+        "ENG I工一",
+        "工程一館",
+        "Engineering Building I"
+      ],
+      "url": "https://nthumods.com/zh/map?building=engineering-i"
+    },
+    {
+      "id": "ess",
+      "code": "ESS",
+      "nameZh": "工科館",
+      "nameEn": "Engineering and System Science Building",
+      "aliases": [
+        "工科",
+        "ESS",
+        "ESS工科",
+        "工科館",
+        "Engineering and System Science Building"
+      ],
+      "url": "https://nthumods.com/zh/map?building=ess"
+    },
+    {
+      "id": "general-i",
+      "code": "GEN I",
+      "nameZh": "第一綜合大樓",
+      "nameEn": "General Building I",
+      "aliases": [
+        "綜一",
+        "GEN I",
+        "GEN I綜一",
+        "第一綜合大樓",
+        "General Building I",
+        "第一綜合大樓: 行政大樓"
+      ],
+      "url": "https://nthumods.com/zh/map?building=general-i"
+    },
+    {
+      "id": "general-ii",
+      "code": "GEN II",
+      "nameZh": "第二綜合大樓",
+      "nameEn": "General Building II",
+      "aliases": [
+        "綜二",
+        "GEN II",
+        "GEN II綜二",
+        "第二綜合大樓",
+        "General Building II"
+      ],
+      "url": "https://nthumods.com/zh/map?building=general-ii"
+    },
+    {
+      "id": "general-iii",
+      "code": "GEN III",
+      "nameZh": "第三綜合大樓",
+      "nameEn": "General Building III",
+      "aliases": [
+        "綜三",
+        "GEN III",
+        "GEN III綜三",
+        "第三綜合大樓",
+        "General Building III"
+      ],
+      "url": "https://nthumods.com/zh/map?building=general-iii"
+    },
+    {
+      "id": "general-iv",
+      "code": "GEN IV",
+      "nameZh": "第四綜合大樓",
+      "nameEn": "General Building IV",
+      "aliases": [
+        "綜四",
+        "GEN IV",
+        "GEN IV綜四",
+        "第四綜合大樓",
+        "General Building IV"
+      ],
+      "url": "https://nthumods.com/zh/map?building=general-iv"
+    },
+    {
+      "id": "green-energy",
+      "code": "LTM",
+      "nameZh": "綠能大樓(李存敏館)",
+      "nameEn": "Lee Tsen Min Building",
+      "aliases": [
+        "綠能",
+        "LTM",
+        "LTM綠能",
+        "綠能大樓(李存敏館)",
+        "Lee Tsen Min Building",
+        "綠色低碳能源大樓",
+        "李存敏館",
+        "Green Energy Building"
+      ],
+      "url": "https://nthumods.com/zh/map?building=green-energy"
+    },
+    {
+      "id": "hss",
+      "code": "HSS",
+      "nameZh": "人文社會學院",
+      "nameEn": "Humanities and Social Sciences Building",
+      "aliases": [
+        "人社",
+        "HSS",
+        "HSS人社",
+        "人文社會學院",
+        "Humanities and Social Sciences Building"
+      ],
+      "url": "https://nthumods.com/zh/map?building=hss"
+    },
+    {
+      "id": "life-science-i",
+      "code": "LS I",
+      "nameZh": "生命科學一館",
+      "nameEn": "Life Science Building I",
+      "aliases": [
+        "生一",
+        "LS I",
+        "LS I生一",
+        "生命科學一館",
+        "Life Science Building I"
+      ],
+      "url": "https://nthumods.com/zh/map?building=life-science-i"
+    },
+    {
+      "id": "life-science-ii",
+      "code": "LS II",
+      "nameZh": "生命科學二館",
+      "nameEn": "Life Science Building II",
+      "aliases": [
+        "生二",
+        "LS II",
+        "LS II生二",
+        "生命科學二館",
+        "Life Science Building II"
+      ],
+      "url": "https://nthumods.com/zh/map?building=life-science-ii"
+    },
+    {
+      "id": "materials-lab",
+      "code": "MSLAB",
+      "nameZh": "材料實驗館",
+      "nameEn": "Materials Science Laboratory",
+      "aliases": [
+        "材實",
+        "MSLAB",
+        "MSLAB材實",
+        "材料實驗館",
+        "Materials Science Laboratory"
+      ],
+      "url": "https://nthumods.com/zh/map?building=materials-lab"
+    },
+    {
+      "id": "materials-science",
+      "code": "MS",
+      "nameZh": "材料科技館",
+      "nameEn": "Materials Science and Technology Building",
+      "aliases": [
+        "材料",
+        "MS",
+        "MS材料",
+        "材料科技館",
+        "Materials Science and Technology Building",
+        "材料科技館: 工程四館"
+      ],
+      "url": "https://nthumods.com/zh/map?building=materials-science"
+    },
+    {
+      "id": "mxic",
+      "code": "MXIC",
+      "nameZh": "旺宏館(學習資源中心)",
+      "nameEn": "MXIC Building(Learning Resource Center)",
+      "aliases": [
+        "旺宏",
+        "MXIC",
+        "MXIC旺宏",
+        "旺宏館(學習資源中心)",
+        "MXIC Building(Learning Resource Center)",
+        "學習資源中心",
+        "Learning Resource Centre",
+        "Main Library"
+      ],
+      "url": "https://nthumods.com/zh/map?building=mxic"
+    },
+    {
+      "id": "nthu-lab",
+      "code": "NTHU Lab",
+      "nameZh": "清華實驗室",
+      "nameEn": "Tsing Hua Laboratory",
+      "aliases": [
+        "清實",
+        "NTHU Lab",
+        "NTHU Lab清實",
+        "清華實驗室",
+        "Tsing Hua Laboratory"
+      ],
+      "url": "https://nthumods.com/zh/map?building=nthu-lab"
+    },
+    {
+      "id": "physics",
+      "code": "PHYS",
+      "nameZh": "物理館",
+      "nameEn": "Physics Building",
+      "aliases": [
+        "物",
+        "PHYS",
+        "PHYS物",
+        "物理館",
+        "Physics Building"
+      ],
+      "url": "https://nthumods.com/zh/map?building=physics"
+    },
+    {
+      "id": "physics-lab",
+      "code": "PHYSLAB",
+      "nameZh": "普物實驗館",
+      "nameEn": "Physics Laboratory",
+      "aliases": [
+        "普實",
+        "PHYSLAB",
+        "PHYSLAB普實",
+        "普物實驗館",
+        "Physics Laboratory"
+      ],
+      "url": "https://nthumods.com/zh/map?building=physics-lab"
+    },
+    {
+      "id": "student-union",
+      "code": "STC",
+      "nameZh": "學生活動中心",
+      "nameEn": "Student Union",
+      "aliases": [
+        "蒙民",
+        "STC",
+        "STC蒙民",
+        "學生活動中心",
+        "Student Union",
+        "蒙民偉樓"
+      ],
+      "url": "https://nthumods.com/zh/map?building=student-union"
+    },
+    {
+      "id": "tsmc",
+      "code": "TSMC",
+      "nameZh": "台積館",
+      "nameEn": "TSMC Building",
+      "aliases": [
+        "台積",
+        "TSMC",
+        "TSMC台積",
+        "台積館",
+        "TSMC Building"
+      ],
+      "url": "https://nthumods.com/zh/map?building=tsmc"
+    }
+  ]
+}

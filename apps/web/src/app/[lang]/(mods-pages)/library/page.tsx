@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { serializeJsonLd } from "@/lib/seo";
 import {
@@ -39,6 +40,8 @@ import {
   shouldShowUsageLearningNotice,
   useUsageForecast,
 } from "@/lib/usage-forecast";
+import { getLibraryDeepLinkKey, parseLibraryDeepLink } from "./deep-link";
+import { reconcileSearchState } from "@/lib/deep-links/reconcile-search-state";
 
 function getCategoryIcon(category: SpaceCategory) {
   switch (category) {
@@ -75,11 +78,18 @@ function getBadgeColor(count: number, isClosed: boolean) {
 const LibraryPage = () => {
   const dict = useDictionary();
   const { language } = useSettings();
+  const [searchParams, setSearchParams] = useSearchParams();
   const now = useTime(60_000); // refresh time check every minute
 
-  const [selectedBranch, setSelectedBranch] = useState<LibraryBranch>("all");
-  const [selectedCategory, setSelectedCategory] =
-    useState<SpaceCategory>("all");
+  const [initialDeepLink] = useState(() => parseLibraryDeepLink(searchParams));
+  const [selectedBranch, setSelectedBranch] = useState<LibraryBranch>(
+    initialDeepLink.branch,
+  );
+  const [selectedCategory, setSelectedCategory] = useState<SpaceCategory>(
+    initialDeepLink.category,
+  );
+  const deepLinkSearchKey = getLibraryDeepLinkKey(searchParams);
+  const previousDeepLinkSearchKey = useRef(deepLinkSearchKey);
   const [searchQuery, setSearchQuery] = useState("");
   const { data: usageForecast } = useUsageForecast("library");
 
@@ -87,6 +97,30 @@ const LibraryPage = () => {
     useLibraryVacancy();
 
   const items = useMemo(() => data ?? [], [data]);
+
+  useEffect(() => {
+    const previousSearchKey = previousDeepLinkSearchKey.current;
+    previousDeepLinkSearchKey.current = deepLinkSearchKey;
+    if (previousSearchKey === deepLinkSearchKey) return;
+
+    const next = parseLibraryDeepLink(searchParams);
+    setSelectedBranch((current) =>
+      reconcileSearchState(
+        current,
+        next.branch,
+        previousSearchKey,
+        deepLinkSearchKey,
+      ),
+    );
+    setSelectedCategory((current) =>
+      reconcileSearchState(
+        current,
+        next.category,
+        previousSearchKey,
+        deepLinkSearchKey,
+      ),
+    );
+  }, [deepLinkSearchKey, searchParams]);
 
   const forecastSeriesById = useMemo(() => {
     const capacities = new Map<string, number | null>();
@@ -370,9 +404,14 @@ const LibraryPage = () => {
             <select
               aria-label={dict.library.filter_branch_all}
               value={selectedBranch}
-              onChange={(e) =>
-                setSelectedBranch(e.target.value as LibraryBranch)
-              }
+              onChange={(e) => {
+                const value = e.target.value as LibraryBranch;
+                setSelectedBranch(value);
+                const nextParams = new URLSearchParams(searchParams);
+                if (value === "all") nextParams.delete("branch");
+                else nextParams.set("branch", value);
+                setSearchParams(nextParams, { replace: true });
+              }}
               className="h-8 rounded-md border border-input bg-background px-2 text-xs text-foreground"
             >
               <option value="all">{dict.library.filter_branch_all}</option>
@@ -388,9 +427,14 @@ const LibraryPage = () => {
             <select
               aria-label={dict.library.filter_cat_all}
               value={selectedCategory}
-              onChange={(e) =>
-                setSelectedCategory(e.target.value as SpaceCategory)
-              }
+              onChange={(e) => {
+                const value = e.target.value as SpaceCategory;
+                setSelectedCategory(value);
+                const nextParams = new URLSearchParams(searchParams);
+                if (value === "all") nextParams.delete("category");
+                else nextParams.set("category", value);
+                setSearchParams(nextParams, { replace: true });
+              }}
               className="h-8 rounded-md border border-input bg-background px-2 text-xs text-foreground"
             >
               <option value="all">{dict.library.filter_cat_all}</option>

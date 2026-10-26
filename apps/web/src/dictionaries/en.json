@@ -85,8 +85,8 @@
       "summary": "{count} courses in your timetable changed",
       "summary_singular": "{count} course in your timetable changed",
       "dismiss": "Got it",
-      "removed": "No longer listed",
-      "reappeared": "Listed again",
+      "removed": "Removed from the course list",
+      "reappeared": "Back in the course list",
       "change_separator": " ・ ",
       "detail_date_separator": ", "
     },
@@ -1503,6 +1503,7 @@
       "youbike": "YouBike 2.0 Availability",
       "sports-venues": "Sports Venue Occupancy",
       "library": "Library Vacancy",
+      "announcements": "Campus Announcements",
       "shops": "Shops",
       "calendar": "Calendar",
       "timetable-community": "Community Timetables",

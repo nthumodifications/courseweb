@@ -3,8 +3,10 @@ import { lastSemester } from "@courseweb/shared";
 export const MAX_CCXP_COURSE_IDS = 60;
 export const MAX_CCXP_QUERY_PARTS = 200;
 export const MAX_CCXP_UNKNOWN_IDS = 20;
+export const CCXP_IMPORT_SOURCE = "ccxp";
+export const CCXP_SEMESTER_ID_PATTERN = "\\d{3}(?:10|20)";
 
-const SEMESTER_ID_PATTERN = /^\d{3}(?:10|20)$/;
+const SEMESTER_ID_PATTERN = new RegExp(`^${CCXP_SEMESTER_ID_PATTERN}$`);
 const COURSE_ID_PATTERN = /^(\d{5})([a-z]{2,6})\s*(\d{6})$/i;
 
 export type CcXpUnknownCourseId = {
