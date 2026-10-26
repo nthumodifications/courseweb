@@ -139,15 +139,18 @@ const LostAndFoundSection = () => {
       </div>
 
       <div className="flex flex-col gap-2 border-b border-border py-3 sm:flex-row">
-        <div className="relative min-w-0 flex-1">
-          <Search className="absolute left-2 top-2 h-4 w-4 text-muted-foreground" />
+        <div className="relative h-8 min-w-0 flex-1">
+          <Search
+            className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+            aria-hidden
+          />
           <Input
             type="search"
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
             placeholder={dict.library.lost_found_search_placeholder}
             aria-label={dict.library.lost_found_search_placeholder}
-            className="h-8 pl-6 text-xs"
+            className="h-8 pl-8 text-xs"
           />
         </div>
         <Select value={selectedType} onValueChange={setSelectedType}>

@@ -177,16 +177,21 @@ const DirectoryPage = () => {
           </Button>
         </div>
 
-        <div className="relative border-b border-border py-3">
-          <Search className="absolute left-2 top-2 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder={dict.directory.search_placeholder}
-            aria-label={dict.directory.search_placeholder}
-            className="h-8 pl-6 text-xs"
-          />
+        <div className="border-b border-border py-3">
+          <div className="relative">
+            <Search
+              className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+              aria-hidden
+            />
+            <Input
+              type="search"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder={dict.directory.search_placeholder}
+              aria-label={dict.directory.search_placeholder}
+              className="h-8 pl-8 text-xs"
+            />
+          </div>
         </div>
 
         {isLoading ? (
