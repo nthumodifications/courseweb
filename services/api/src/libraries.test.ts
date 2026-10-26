@@ -37,10 +37,17 @@ describe("lost-and-found normalization", () => {
     expect(getLostAndFoundType("  手機 白色")).toBe("手機");
   });
 
-  test("rejects malformed dates instead of treating them as current items", () => {
-    expect(() =>
-      normalizeLostAndFound([{ ...fixture[0], 拾獲時間: "yesterday" }]),
-    ).toThrow();
+  test("keeps valid records when another item is malformed", () => {
+    expect(
+      normalizeLostAndFound([
+        fixture[0],
+        { ...fixture[1], 拾獲時間: "yesterday" },
+      ]),
+    ).toEqual(normalizeLostAndFound([fixture[0]]));
+  });
+
+  test("rejects a non-array upstream payload", () => {
+    expect(() => normalizeLostAndFound({ error: "upstream down" })).toThrow();
   });
 });
 

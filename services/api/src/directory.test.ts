@@ -38,6 +38,31 @@ describe("directory normalization", () => {
   test("rejects a non-array upstream payload", () => {
     expect(() => normalizeDirectory({ error: "upstream down" })).toThrow();
   });
+
+  test("keeps valid departments when another entry is malformed", () => {
+    expect(
+      normalizeDirectory([fixture[0], { ...fixture[1], name: "" }]),
+    ).toEqual(normalizeDirectory([fixture[0]]));
+  });
+
+  test("turns invalid department URLs into null", () => {
+    const [department] = normalizeDirectory([
+      {
+        ...fixture[0],
+        url: "not-a-url",
+        details: {
+          ...fixture[0].details,
+          contact: {
+            ...fixture[0].details?.contact,
+            website: "not-a-url",
+          },
+        },
+      },
+    ]);
+
+    expect(department?.url).toBeNull();
+    expect(department?.website).toBeNull();
+  });
 });
 
 describe("directory route", () => {

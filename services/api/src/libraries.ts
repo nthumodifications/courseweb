@@ -23,7 +23,7 @@ const lostAndFoundItemSchema = z
   })
   .passthrough();
 
-const lostAndFoundSchema = z.array(lostAndFoundItemSchema);
+const lostAndFoundPayloadSchema = z.array(z.unknown());
 
 export interface LostAndFoundItem {
   id: string;
@@ -42,14 +42,25 @@ export interface LibrariesResponse {
 export const getLostAndFoundType = (description: string): string =>
   description.trim().split(/\s+/)[0] ?? "";
 
-export const normalizeLostAndFound = (payload: unknown): LostAndFoundItem[] =>
-  lostAndFoundSchema.parse(payload).map((item) => ({
-    id: item.序號,
-    date: item.拾獲時間,
-    location: item.拾獲地點,
-    description: item.描述,
-    type: getLostAndFoundType(item.描述),
-  }));
+export const normalizeLostAndFound = (payload: unknown): LostAndFoundItem[] => {
+  const entries = lostAndFoundPayloadSchema.parse(payload);
+
+  return entries.flatMap((entry) => {
+    const parsed = lostAndFoundItemSchema.safeParse(entry);
+    if (!parsed.success) return [];
+
+    const item = parsed.data;
+    return [
+      {
+        id: item.序號,
+        date: item.拾獲時間,
+        location: item.拾獲地點,
+        description: item.描述,
+        type: getLostAndFoundType(item.描述),
+      },
+    ];
+  });
+};
 
 const getCache = (): Cache | undefined => {
   try {

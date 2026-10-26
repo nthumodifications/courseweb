@@ -15,13 +15,14 @@ export const DIRECTORY_SOURCE = {
 } as const;
 
 const nullableString = z.string().trim().nullable().optional();
+const nullableUrl = z.string().url().nullable().optional().catch(null);
 const contactSchema = z
   .object({
     extension: nullableString,
     phone: nullableString,
     fax: nullableString,
     email: nullableString,
-    website: z.string().url().nullable().optional(),
+    website: nullableUrl,
   })
   .passthrough();
 
@@ -40,7 +41,7 @@ const departmentSchema = z
     index: z.string().trim().min(1),
     name: z.string().trim().min(1),
     parent_name: nullableString,
-    url: z.string().url().nullable().optional(),
+    url: nullableUrl,
     details: z
       .object({
         departments: z.array(z.record(z.unknown())).optional(),
@@ -52,7 +53,7 @@ const departmentSchema = z
   })
   .passthrough();
 
-const directorySchema = z.array(departmentSchema);
+const directoryPayloadSchema = z.array(z.unknown());
 
 export interface DirectoryUnit {
   id: string;
@@ -74,20 +75,29 @@ export interface DirectoryResponse {
 const asNullable = (value: string | null | undefined): string | null =>
   value?.trim() || null;
 
-export const normalizeDirectory = (payload: unknown): DirectoryUnit[] =>
-  directorySchema.parse(payload).map((department) => {
+export const normalizeDirectory = (payload: unknown): DirectoryUnit[] => {
+  const entries = directoryPayloadSchema.parse(payload);
+
+  return entries.flatMap((entry) => {
+    const parsed = departmentSchema.safeParse(entry);
+    if (!parsed.success) return [];
+
+    const department = parsed.data;
     const contact = department.details?.contact;
-    return {
-      id: department.index,
-      name: department.name,
-      parentName: asNullable(department.parent_name),
-      url: asNullable(department.url),
-      phone: asNullable(contact?.phone),
-      extension: asNullable(contact?.extension),
-      email: asNullable(contact?.email),
-      website: asNullable(contact?.website),
-    };
+    return [
+      {
+        id: department.index,
+        name: department.name,
+        parentName: asNullable(department.parent_name),
+        url: asNullable(department.url),
+        phone: asNullable(contact?.phone),
+        extension: asNullable(contact?.extension),
+        email: asNullable(contact?.email),
+        website: asNullable(contact?.website),
+      },
+    ];
   });
+};
 
 const getCache = (): Cache | undefined => {
   try {
