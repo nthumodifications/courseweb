@@ -44,11 +44,11 @@ const CLAUSE_END = "[^,，。；;\\n]{1,160}";
 
 const LIMIT_PATTERN = new RegExp(`(?:限制|限定|限)${CLAUSE_END}`, "gu");
 const EXCLUSION_PATTERN = new RegExp(
-  `(?:排除|不得|不可(?:以)?)${CLAUSE_END}`,
+  `(?:排除|恕?(?:不開放|不开放)|不接受|不得|不可(?:以)?)${CLAUSE_END}`,
   "gu",
 );
 const EXCLUSION_AFTER_AUDIENCE_PATTERN = new RegExp(
-  `([^,，。；;\\n]{1,120}?)(?:不得|不可(?:以)?)(?:修習|修|選課|選|點選)`,
+  `([^,，。；;\\n]{1,120}?)(?:不得|不可(?:以)?)(?:修習|選修|修|選課|點選|選)`,
   "gu",
 );
 const IMPLICIT_LIMIT_PATTERN = new RegExp(
@@ -56,11 +56,21 @@ const IMPLICIT_LIMIT_PATTERN = new RegExp(
   "gu",
 );
 const PRIORITY_PATTERN = new RegExp(`([^。；;\\n]{1,160}?)(?:優先|优先)`, "gu");
+const YEAR_RANGE_PATTERN = new RegExp(
+  `[^,，。；;\\n]{0,120}?(?:[大碩硕博][1-4一二三四]|[1-4一二三四](?:年級|年级|年))\\s*(?:以上|以下|以後|以后|之後|之后)`,
+  "gu",
+);
+const COMPACT_YEAR_RANGE_PATTERN = new RegExp(
+  `[^,，。；;\\n]{0,120}?[大碩硕博][1-4](?:\\s*[,、]\\s*[1-4])+\\s*以上`,
+  "gu",
+);
 
 const ENGLISH_AUDIENCE_PATTERN =
   /\b(?:restricted to|limited to|undergraduates?|graduate(?: students?)?|postgraduate(?: students?)?|master(?:'s)?(?: students?)?|doctoral(?: students?)?|phd(?: students?)?|freshmen?|sophomores?|juniors?|seniors?|male(?: students?)?|female(?: students?)?|international(?: students?)?)[^.!?;，。；\n]{0,100}/giu;
+const ENGLISH_EXCLUSION_PATTERN =
+  /\b(?:not\s+open\s+to|not\s+for|not\s+accepting|not\s+accepted\s+for)\s+(?:undergraduates?|graduate(?: students?)?|postgraduate(?: students?)?|master(?:'s)?(?: students?)?|doctoral(?: students?)?|phd(?: students?)?)[^.!?;，。；\n]{0,100}/giu;
 const ENGLISH_AUDIENCE_TRIGGER =
-  /\b(?:only|excluded|above|restricted|limited|priority|preferred)\b/i;
+  /\b(?:only|excluded|not\s+accepted|above|restricted|limited|priority|preferred)\b/i;
 
 const ACADEMIC_LEVELS = new Set<CourseAudienceTagValue>([
   "undergraduate",
@@ -103,6 +113,12 @@ const extractYears = (source: string) => {
     if (number) years.add(number);
   }
 
+  const compactYearPattern = /[大碩硕博]([1-4])(?:\s*[,、]\s*([1-4]))+/gu;
+  for (const match of source.matchAll(compactYearPattern)) {
+    for (const numberCharacter of match[0].matchAll(/[1-4]/gu))
+      years.add(Number(numberCharacter[0]));
+  }
+
   if (/\b(?:freshman|freshmen|first[- ]year(?!['’]s))\b/i.test(source))
     years.add(1);
   if (/\b(?:sophomore|sophomores|second[- ]year(?!['’]s))\b/i.test(source))
@@ -126,7 +142,11 @@ const extractValues = (source: string): CourseAudienceTagValue[] => {
     if (!values.includes(value)) values.push(value);
   };
 
-  if (/(?:大學部|大学部|學士班|学士班|\bundergraduates?\b)/iu.test(source))
+  if (
+    /(?:大學(?:部|生)?|大学(?:部|生)?|學士班|学士班|\bundergraduates?\b)/iu.test(
+      source,
+    )
+  )
     add("undergraduate");
   if (
     /(?:研究所|研究生|\bgraduate(?: students?)?\b|\bpostgraduate(?: students?)?\b)/iu.test(
@@ -142,6 +162,10 @@ const extractValues = (source: string): CourseAudienceTagValue[] => {
     add("master");
   if (/(?:博士|博班|博[1-4一二三四]|\bdoctoral\b|\bphd\b)/iu.test(source))
     add("doctoral");
+  if (/(?:碩博|硕博)/u.test(source)) {
+    add("master");
+    add("doctoral");
+  }
 
   const hasInstructorContext =
     /(?:教師|教师|教授|老師|老师|teacher|instructor|professor)/iu.test(source);
@@ -168,6 +192,29 @@ const yearScope = (
 
   const levels = values.filter(isAcademicLevel);
   return levels.length === 1 ? levels[0] : undefined;
+};
+
+const expandYearRanges = (source: string, years: readonly number[]) => {
+  // Keep the existing one-year tag model: a lower/upper bound becomes one
+  // tag for each included year, which the existing UI already renders.
+  const expanded = new Set(years);
+  const rangePattern =
+    /(?:以上|以下|以後|以后|之後|之后|\b(?:and|or)\s+(?:above|below)\b|\babove\b|\bbelow\b)/giu;
+
+  for (const range of source.matchAll(rangePattern)) {
+    const beforeRange = source.slice(0, range.index ?? 0);
+    const precedingYears = extractYears(beforeRange);
+    const start = precedingYears.at(-1);
+    if (!start) continue;
+
+    if (/(?:以上|以後|以后|之後|之后|above)/iu.test(range[0])) {
+      for (let year = start; year <= 4; year++) expanded.add(year);
+    } else {
+      for (let year = 1; year <= start; year++) expanded.add(year);
+    }
+  }
+
+  return [...expanded].sort((left, right) => left - right);
 };
 
 const addClause = (
@@ -199,11 +246,22 @@ const extractClauses = (source: string): ParsedClause[] => {
     addClause(clauses, "restriction", match[0]);
   for (const match of source.matchAll(PRIORITY_PATTERN))
     addClause(clauses, "priority", match[0]);
+  for (const match of source.matchAll(YEAR_RANGE_PATTERN)) {
+    if (!clauses.some((clause) => clause.source.includes(match[0])))
+      addClause(clauses, "restriction", match[0]);
+  }
+  for (const match of source.matchAll(COMPACT_YEAR_RANGE_PATTERN)) {
+    if (!clauses.some((clause) => clause.source.includes(match[0])))
+      addClause(clauses, "restriction", match[0]);
+  }
+
+  for (const match of source.matchAll(ENGLISH_EXCLUSION_PATTERN))
+    addClause(clauses, "exclusion", match[0]);
 
   for (const match of source.matchAll(ENGLISH_AUDIENCE_PATTERN)) {
     const phrase = match[0].trim();
     if (!ENGLISH_AUDIENCE_TRIGGER.test(phrase)) continue;
-    const relation = /\b(?:excluded|not for)\b/i.test(phrase)
+    const relation = /\b(?:excluded|not for|not\s+accepted)\b/i.test(phrase)
       ? "exclusion"
       : /\b(?:priority|preferred)\b/i.test(phrase)
         ? "priority"
@@ -216,7 +274,7 @@ const extractClauses = (source: string): ParsedClause[] => {
 
 const parseClause = (clause: ParsedClause): CourseAudienceTag[] => {
   const values = extractValues(clause.source);
-  const years = extractYears(clause.source);
+  const years = expandYearRanges(clause.source, extractYears(clause.source));
   if (values.length === 0 && years.length === 0) return [];
 
   const tags: CourseAudienceTag[] = [];
