@@ -1015,21 +1015,18 @@ const CourseDetailContainer = ({
                     )}
                   </CourseDetailSection>
                   <CourseDetailSection id="restrictions">
-                    {((course.restrictions ?? "").trim().length > 0 ||
-                      audienceTags.length > 0) && (
+                    {(course.restrictions ?? "").trim().length > 0 && (
                       <div className="flex flex-col gap-1">
-                        {(course.restrictions ?? "").trim().length > 0 && (
-                          <>
-                            <h3 className="font-bold text-base">
-                              {dict.course.details.restrictions}
-                            </h3>
-                            <p className="text-sm">{course.restrictions}</p>
-                          </>
-                        )}
-                        <CourseAudienceTags tags={audienceTags} />
+                        <h3 className="font-bold text-base">
+                          {dict.course.details.restrictions}
+                        </h3>
+                        <p className="text-sm">{course.restrictions}</p>
                       </div>
                     )}
                   </CourseDetailSection>
+                  {audienceTags.length > 0 && (
+                    <CourseAudienceTags tags={audienceTags} />
+                  )}
                   <CourseMembershipSection
                     id="compulsory-membership"
                     title={dict.course.details.compulsory}

@@ -20,6 +20,7 @@ import {
   countNewKeywordMatches,
   normalizeAnnouncementKeywords,
 } from "@/lib/announcements-keywords";
+import { safeExternalUrl } from "@/lib/safe-external-url";
 
 interface AnnouncementsWidgetProps {
   onRemove?: () => void;
@@ -119,14 +120,9 @@ const AnnouncementsWidget: FC<AnnouncementsWidgetProps> = (props) => {
                 .filter(
                   (source): source is AnnouncementSource => Boolean(source),
                 );
-              return (
-                <a
-                  className="flex flex-col gap-1 py-3"
-                  href={article.link}
-                  key={`${article.link}:${article.date}`}
-                  target="_blank"
-                  rel="noreferrer"
-                >
+              const href = safeExternalUrl(article.link);
+              const articleContent = (
+                <>
                   <span className="font-medium text-foreground">
                     {article.title}
                   </span>
@@ -135,7 +131,27 @@ const AnnouncementsWidget: FC<AnnouncementsWidgetProps> = (props) => {
                     ·{" "}
                     {formatAnnouncementDate(article.date, language)}
                   </span>
-                </a>
+                </>
+              );
+              return (
+                href ? (
+                  <a
+                    className="flex flex-col gap-1 py-3"
+                    href={href}
+                    key={`${article.link}:${article.date}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {articleContent}
+                  </a>
+                ) : (
+                  <div
+                    className="flex flex-col gap-1 py-3"
+                    key={`${article.link}:${article.date}`}
+                  >
+                    {articleContent}
+                  </div>
+                )
               );
             })}
           </div>

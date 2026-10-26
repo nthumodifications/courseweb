@@ -144,6 +144,8 @@ const DirectoryPage = () => {
     () => filterDirectoryUnits(units, searchQuery, localize),
     [localize, searchQuery, units],
   );
+  const sourceUrl =
+    safeExternalUrl(response?.source.url) ?? DIRECTORY_SOURCE_URL;
 
   const copyValue = (key: string, value: string) => {
     if (!navigator.clipboard) return;
@@ -249,7 +251,7 @@ const DirectoryPage = () => {
         <div className="mt-4 border-t border-border pt-4 text-xs text-muted-foreground">
           {dict.directory.data_source}{" "}
           <a
-            href={response?.source.url ?? DIRECTORY_SOURCE_URL}
+            href={sourceUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="underline hover:text-foreground"
