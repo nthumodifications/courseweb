@@ -85,7 +85,6 @@
         "apps/web/src/app/[lang]/(mods-pages)/courses/AiSearchBox.tsx": 2,
         "apps/web/src/app/[lang]/(mods-pages)/courses/ClasssRefinementItem.tsx": 2,
         "apps/web/src/app/[lang]/(mods-pages)/courses/CourseSearchContainer.tsx": 1,
-        "apps/web/src/app/[lang]/(mods-pages)/courses/FilterItem.tsx": 2,
         "apps/web/src/app/[lang]/(mods-pages)/courses/module/[moduleKey]/page.tsx": 2,
         "apps/web/src/app/[lang]/(mods-pages)/courses/SearchContainer.tsx": 1,
         "apps/web/src/app/[lang]/(mods-pages)/courses/TimeSelectionFilter.tsx": 2,

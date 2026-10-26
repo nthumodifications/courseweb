@@ -10,7 +10,9 @@ import {
   courseAudienceTagLabel,
   type AudienceLabels,
 } from "@/components/CourseDetails/CourseAudienceTags";
-import FilterItem, { type RefinementItem } from "./FilterItem";
+import ExpandableFilter, {
+  type RefinementItem,
+} from "../student/planner/course-picker/ExpandableFilter";
 
 const CourseAudienceFilter = () => {
   const dict = useDictionary();
@@ -36,13 +38,14 @@ const CourseAudienceFilter = () => {
     (audienceOrder[right.value] ?? Number.MAX_SAFE_INTEGER);
 
   return (
-    <FilterItem
+    <ExpandableFilter
       attribute="audience"
       title={labels.title}
       limit={100}
-      synonms={audienceSynonyms}
+      synonyms={audienceSynonyms}
       synonymsOnly={true}
       hideWhenEmpty={true}
+      hideZeroCount={true}
       sortFn={sortAudience}
       selectedFirst={false}
       groupBy={(item) => audienceGroups[item.value]}
