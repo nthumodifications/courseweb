@@ -1,7 +1,10 @@
 import { Hono } from "hono";
-import type { Context } from "hono";
 import { z } from "zod";
-import { fetchUpstream } from "./utils/upstream";
+import {
+  createCachedUpstreamHandler,
+  getDefaultCache,
+  type CachedUpstreamResponse,
+} from "./utils/cached-upstream";
 
 const UPSTREAM_URL = "https://api.nthusa.tw/libraries/lost-and-found";
 const CACHE_KEY = "https://api.nthumods.com/internal/libraries/lost-and-found";
@@ -33,11 +36,10 @@ export interface LostAndFoundItem {
   type: string;
 }
 
-export interface LibrariesResponse {
-  data: LostAndFoundItem[];
-  source: typeof LOST_AND_FOUND_SOURCE;
-  error: boolean;
-}
+export type LibrariesResponse = CachedUpstreamResponse<
+  LostAndFoundItem[],
+  typeof LOST_AND_FOUND_SOURCE
+>;
 
 export const getLostAndFoundType = (description: string): string =>
   description.trim().split(/\s+/)[0] ?? "";
@@ -62,81 +64,25 @@ export const normalizeLostAndFound = (payload: unknown): LostAndFoundItem[] => {
   });
 };
 
-const getCache = (): Cache | undefined => {
-  try {
-    return typeof caches === "undefined" ? undefined : caches.default;
-  } catch {
-    return undefined;
-  }
-};
-
-const readCache = async (cache: Cache): Promise<Response | undefined> => {
-  try {
-    return await cache.match(new Request(CACHE_KEY));
-  } catch (error) {
-    console.error("Failed to read lost-and-found cache", error);
-    return undefined;
-  }
-};
-
-const writeCache = (c: Context, response: Response, cache: Cache): void => {
-  try {
-    const write = cache.put(new Request(CACHE_KEY), response.clone());
-    const guardedWrite = write.catch((error) => {
-      console.error("Failed to write lost-and-found cache", error);
-    });
-    try {
-      c.executionCtx.waitUntil(guardedWrite);
-    } catch {
-      void guardedWrite;
-    }
-  } catch {
-    console.error("Failed to start lost-and-found cache write");
-  }
-};
-
-const fetchLostAndFound = async (
-  fetcher: typeof fetch,
-): Promise<LostAndFoundItem[]> => {
-  const response = await fetchUpstream(
-    UPSTREAM_URL,
-    {
-      headers: { Accept: "application/json" },
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-    },
-    { fetcher },
-  );
-  return normalizeLostAndFound(await response.json());
-};
-
 export const createLibrariesApp = (
   fetcher: typeof fetch = fetch,
-  cache: Cache | undefined = getCache(),
+  cache: Cache | undefined = getDefaultCache(),
 ) =>
-  new Hono().get("/lost-and-found", async (c) => {
-    const cached = cache ? await readCache(cache) : undefined;
-    if (cached) return cached;
-
-    let data: LostAndFoundItem[] = [];
-    let error = false;
-    try {
-      data = await fetchLostAndFound(fetcher);
-    } catch (caught) {
-      error = true;
-      console.error("Failed to fetch lost-and-found data", caught);
-    }
-
-    const response = c.json<LibrariesResponse>(
-      { data, source: LOST_AND_FOUND_SOURCE, error },
-      200,
-      { "Cache-Control": error ? "no-store" : CACHE_CONTROL },
-    );
-
-    if (!error && cache) {
-      writeCache(c, response, cache);
-    }
-    return response;
-  });
+  new Hono().get(
+    "/lost-and-found",
+    createCachedUpstreamHandler({
+      upstreamUrl: UPSTREAM_URL,
+      cacheKey: CACHE_KEY,
+      cacheControl: CACHE_CONTROL,
+      requestTimeoutMs: REQUEST_TIMEOUT_MS,
+      source: LOST_AND_FOUND_SOURCE,
+      label: "lost-and-found",
+      fetcher,
+      cache,
+      emptyData: (): LostAndFoundItem[] => [],
+      normalize: normalizeLostAndFound,
+    }),
+  );
 
 const libraries = createLibrariesApp();
 

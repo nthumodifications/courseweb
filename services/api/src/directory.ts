@@ -1,7 +1,10 @@
 import { Hono } from "hono";
-import type { Context } from "hono";
 import { z } from "zod";
-import { fetchUpstream } from "./utils/upstream";
+import {
+  createCachedUpstreamHandler,
+  getDefaultCache,
+  type CachedUpstreamResponse,
+} from "./utils/cached-upstream";
 
 const UPSTREAM_URL = "https://api.nthusa.tw/directory";
 const CACHE_KEY = "https://api.nthumods.com/internal/directory";
@@ -79,11 +82,10 @@ export interface DirectoryUnit {
   website: string | null;
 }
 
-export interface DirectoryResponse {
-  data: DirectoryUnit[];
-  source: typeof DIRECTORY_SOURCE;
-  error: boolean;
-}
+export type DirectoryResponse = CachedUpstreamResponse<
+  DirectoryUnit[],
+  typeof DIRECTORY_SOURCE
+>;
 
 const asNullable = (value: string | null | undefined): string | null =>
   value?.trim() || null;
@@ -112,81 +114,25 @@ export const normalizeDirectory = (payload: unknown): DirectoryUnit[] => {
   });
 };
 
-const getCache = (): Cache | undefined => {
-  try {
-    return typeof caches === "undefined" ? undefined : caches.default;
-  } catch {
-    return undefined;
-  }
-};
-
-const readCache = async (cache: Cache): Promise<Response | undefined> => {
-  try {
-    return await cache.match(new Request(CACHE_KEY));
-  } catch (error) {
-    console.error("Failed to read directory cache", error);
-    return undefined;
-  }
-};
-
-const writeCache = (c: Context, response: Response, cache: Cache): void => {
-  try {
-    const write = cache.put(new Request(CACHE_KEY), response.clone());
-    const guardedWrite = write.catch((error) => {
-      console.error("Failed to write directory cache", error);
-    });
-    try {
-      c.executionCtx.waitUntil(guardedWrite);
-    } catch {
-      void guardedWrite;
-    }
-  } catch {
-    console.error("Failed to start directory cache write");
-  }
-};
-
-const fetchDirectory = async (
-  fetcher: typeof fetch,
-): Promise<DirectoryUnit[]> => {
-  const response = await fetchUpstream(
-    UPSTREAM_URL,
-    {
-      headers: { Accept: "application/json" },
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-    },
-    { fetcher },
-  );
-  return normalizeDirectory(await response.json());
-};
-
 export const createDirectoryApp = (
   fetcher: typeof fetch = fetch,
-  cache: Cache | undefined = getCache(),
+  cache: Cache | undefined = getDefaultCache(),
 ) =>
-  new Hono().get("/", async (c) => {
-    const cached = cache ? await readCache(cache) : undefined;
-    if (cached) return cached;
-
-    let data: DirectoryUnit[] = [];
-    let error = false;
-    try {
-      data = await fetchDirectory(fetcher);
-    } catch (caught) {
-      error = true;
-      console.error("Failed to fetch directory data", caught);
-    }
-
-    const response = c.json<DirectoryResponse>(
-      { data, source: DIRECTORY_SOURCE, error },
-      200,
-      { "Cache-Control": error ? "no-store" : CACHE_CONTROL },
-    );
-
-    if (!error && cache) {
-      writeCache(c, response, cache);
-    }
-    return response;
-  });
+  new Hono().get(
+    "/",
+    createCachedUpstreamHandler({
+      upstreamUrl: UPSTREAM_URL,
+      cacheKey: CACHE_KEY,
+      cacheControl: CACHE_CONTROL,
+      requestTimeoutMs: REQUEST_TIMEOUT_MS,
+      source: DIRECTORY_SOURCE,
+      label: "directory",
+      fetcher,
+      cache,
+      emptyData: (): DirectoryUnit[] => [],
+      normalize: normalizeDirectory,
+    }),
+  );
 
 const directory = createDirectoryApp();
 
