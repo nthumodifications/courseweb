@@ -10,7 +10,7 @@ import {
   HTMLTableElement,
   parseHTML,
 } from "linkedom/worker";
-import { courseAudienceFacetValues } from "@courseweb/shared";
+import { courseAudienceFacetValues } from "./course-audience-tags";
 import type { Course, Department, SyncEnvironment } from "./types";
 import {
   diffCourseRows,

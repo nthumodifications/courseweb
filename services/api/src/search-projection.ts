@@ -1,5 +1,5 @@
 import type { Database } from "./types/supabase";
-import { courseAudienceFacetValues } from "@courseweb/shared";
+import { courseAudienceFacetValues } from "./utils/course-audience-tags";
 
 export type CourseRow = Database["public"]["Tables"]["courses"]["Row"];
 
