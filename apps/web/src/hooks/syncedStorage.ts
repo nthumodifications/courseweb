@@ -122,12 +122,9 @@ export const saveCourseBackup = <T>(namespace: string, value: T) => {
 
   try {
     const previous = listCourseBackups<T>(namespace);
-    const serializedValue = JSON.stringify(value);
     const next = [
       { savedAt: Date.now(), value },
-      ...previous.filter(
-        (backup) => JSON.stringify(backup.value) !== serializedValue,
-      ),
+      ...previous.filter((backup) => !valuesEqual(backup.value, value)),
     ].slice(0, COURSE_BACKUP_LIMIT);
     let serialized = JSON.stringify(next);
     while (
@@ -353,8 +350,87 @@ export const migrateLegacySyncedData = <T = unknown>(
 export const nextUpdatedAt = (previous: number, now = Date.now()) =>
   Math.max(now, previous + 1);
 
-export const valuesEqual = (left: unknown, right: unknown) =>
-  JSON.stringify(left) === JSON.stringify(right);
+const isJsonOmittedValue = (value: unknown) =>
+  value === undefined ||
+  typeof value === "function" ||
+  typeof value === "symbol";
+
+const normalizeJsonNumber = (value: number) =>
+  Number.isFinite(value) ? (Object.is(value, -0) ? 0 : value) : null;
+
+/**
+ * Compare values at the JSON storage boundary without depending on object key
+ * insertion order. Object members omitted by JSON.stringify remain omitted;
+ * array members omitted by JSON.stringify compare as null, and array order is
+ * significant.
+ */
+export const valuesEqual = (left: unknown, right: unknown): boolean => {
+  if (isJsonOmittedValue(left) || isJsonOmittedValue(right)) {
+    return isJsonOmittedValue(left) && isJsonOmittedValue(right);
+  }
+
+  if (typeof left === "number" || typeof right === "number") {
+    if (typeof left === "number" && typeof right === "number") {
+      return normalizeJsonNumber(left) === normalizeJsonNumber(right);
+    }
+    if (typeof left === "number" && !Number.isFinite(left)) {
+      return right === null;
+    }
+    if (typeof right === "number" && !Number.isFinite(right)) {
+      return left === null;
+    }
+    return false;
+  }
+
+  if (Object.is(left, right)) return true;
+
+  if (left instanceof Date || right instanceof Date) {
+    if (!(left instanceof Date) || !(right instanceof Date)) return false;
+    const leftTime = left.getTime();
+    const rightTime = right.getTime();
+    return (
+      leftTime === rightTime ||
+      (Number.isNaN(leftTime) && Number.isNaN(rightTime))
+    );
+  }
+
+  if (
+    typeof left !== "object" ||
+    left === null ||
+    typeof right !== "object" ||
+    right === null
+  ) {
+    return false;
+  }
+
+  if (Array.isArray(left) || Array.isArray(right)) {
+    if (!Array.isArray(left) || !Array.isArray(right)) return false;
+    if (left.length !== right.length) return false;
+
+    for (let index = 0; index < left.length; index += 1) {
+      const value = left[index];
+      const leftValue = isJsonOmittedValue(value) ? null : value;
+      const rightValue = isJsonOmittedValue(right[index]) ? null : right[index];
+      if (!valuesEqual(leftValue, rightValue)) return false;
+    }
+    return true;
+  }
+
+  const leftRecord = left as Record<string, unknown>;
+  const rightRecord = right as Record<string, unknown>;
+  const leftKeys = Object.keys(left).filter(
+    (key) => !isJsonOmittedValue(leftRecord[key]),
+  );
+  const rightKeys = Object.keys(right).filter(
+    (key) => !isJsonOmittedValue(rightRecord[key]),
+  );
+  if (leftKeys.length !== rightKeys.length) return false;
+
+  return leftKeys.every(
+    (key) =>
+      rightKeys.includes(key) && valuesEqual(leftRecord[key], rightRecord[key]),
+  );
+};
 
 export interface SyncedUpload {
   merge: boolean;

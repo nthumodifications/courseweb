@@ -560,6 +560,26 @@ describe("useSyncedStorage remote read states", () => {
     ]);
   });
 
+  test("deduplicates course backups with reordered semester keys", () => {
+    setupDom();
+    const namespace = "nthumods-storage-reordered";
+    const firestoreValue = {
+      "11410": ["COURSE-A"],
+      "11510": ["COURSE-B"],
+    };
+    const postgresValue = {
+      "11510": ["COURSE-B"],
+      "11410": ["COURSE-A"],
+    };
+
+    saveCourseBackup(namespace, firestoreValue);
+    saveCourseBackup(namespace, postgresValue);
+
+    expect(listCourseBackups(namespace).map((backup) => backup.value)).toEqual([
+      postgresValue,
+    ]);
+  });
+
   test("prunes oldest backups to keep the rolling array within 32 KB", () => {
     setupDom();
     const namespace = "nthumods-storage-anonymous";
