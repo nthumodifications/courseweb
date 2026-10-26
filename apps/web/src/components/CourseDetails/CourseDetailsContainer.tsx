@@ -71,6 +71,8 @@ import {
 } from "./courseDetailSections";
 import ReviewsSection from "@/components/Reviews/ReviewsSection";
 import { normaliseInstructorName } from "@/lib/instructors";
+import { parseCourseAudienceTags } from "@courseweb/shared";
+import CourseAudienceTags from "./CourseAudienceTags";
 
 const safeCreateModuleKey = (department: string, course: string) => {
   try {
@@ -486,6 +488,10 @@ const CourseDetailContainer = ({
   const missingSyllabus = course.course_syllabus == null;
   const bilingualNamesAreAligned =
     (course.teacher_zh?.length ?? 0) === (course.teacher_en?.length ?? 0);
+  const audienceTags = parseCourseAudienceTags({
+    note: course.note,
+    restrictions: course.restrictions,
+  });
   const teacherByCourse = new Map<string, readonly string[]>();
   for (const offering of [course, ...otherClasses]) {
     teacherByCourse.set(
@@ -1009,12 +1015,18 @@ const CourseDetailContainer = ({
                     )}
                   </CourseDetailSection>
                   <CourseDetailSection id="restrictions">
-                    {(course.restrictions ?? "").trim().length > 0 && (
+                    {((course.restrictions ?? "").trim().length > 0 ||
+                      audienceTags.length > 0) && (
                       <div className="flex flex-col gap-1">
-                        <h3 className="font-bold text-base">
-                          {dict.course.details.restrictions}
-                        </h3>
-                        <p className="text-sm">{course.restrictions}</p>
+                        {(course.restrictions ?? "").trim().length > 0 && (
+                          <>
+                            <h3 className="font-bold text-base">
+                              {dict.course.details.restrictions}
+                            </h3>
+                            <p className="text-sm">{course.restrictions}</p>
+                          </>
+                        )}
+                        <CourseAudienceTags tags={audienceTags} />
                       </div>
                     )}
                   </CourseDetailSection>
