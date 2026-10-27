@@ -14,6 +14,7 @@ export const isCodeLikeTerm = (value: string) =>
   /^[A-Z0-9]+$/i.test(value) && (/[A-Z]/.test(value) || /\d/.test(value));
 
 export type CourseCodeQuery = {
+  semester?: string;
   department: string;
   digits: string;
 };
@@ -23,13 +24,17 @@ export const parseCourseCodeQuery = (
   query: string,
 ): CourseCodeQuery | undefined => {
   const compact = query.normalize("NFKC").replace(/\s+/g, "");
-  const match = compact.match(/^(?:\d{5})?([A-Z]+)(\d+)$/i);
+  const match = compact.match(/^(?:(\d{5}))?([A-Z]+)(\d+)$/i);
   if (!match) return undefined;
   return {
-    department: match[1]!.toLocaleUpperCase("en-US"),
-    digits: match[2]!,
+    semester: match[1],
+    department: match[2]!.toLocaleUpperCase("en-US"),
+    digits: match[3]!,
   };
 };
+
+export const isSemesterOnlyQuery = (query: string) =>
+  /^\d{5}$/.test(query.normalize("NFKC").trim());
 
 const ordinalPattern = /(?:[一二三四五六七八九十]+|I{1,3})$/iu;
 const leadingOrdinalPattern = /^(?:[一二三四五六七八九十]+|I{1,3})/iu;
@@ -231,6 +236,7 @@ export const matchesLocalQueryTerms = (
   } = {},
 ) => {
   if (!terms.length) return true;
+  if (terms.length === 1 && isSemesterOnlyQuery(terms[0]!)) return false;
   if (options.courseCode && matchesCourseCode(record, options.courseCode)) {
     return true;
   }

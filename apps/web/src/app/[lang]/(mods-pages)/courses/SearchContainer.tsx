@@ -34,6 +34,7 @@ import { useSettings } from "@/hooks/contexts/settings";
 import { MinimalCourse } from "@/types/courses";
 import { courseEvents } from "@/lib/trackingEvents";
 import SearchDegradationBanner from "@/components/Search/SearchDegradationBanner";
+import LocalSearchLifecycle from "@/components/Search/LocalSearchLifecycle";
 import type { ResilientSearchClient } from "@/lib/search-client";
 import { useCourseTextHits } from "@/hooks/useCourseTextHits";
 import type { CourseSyllabusView } from "@/config/supabase";
@@ -191,6 +192,7 @@ const SearchContainer = memo(
 
     return (
       <div className="flex min-w-0 w-full gap-4">
+        <LocalSearchLifecycle searchClient={searchClient} semester={semester} />
         <div className="hidden md:flex flex-col gap-4 w-72 px-4">
           <div className="flex justify-between items-baseline">
             <span className="font-bold">{dict.course.refine.title}</span>

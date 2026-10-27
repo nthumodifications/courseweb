@@ -17,8 +17,11 @@ import PlannerFilters from "./PlannerFilters";
 import { CourseSyllabusView } from "@/config/supabase";
 import { useSettings } from "@/hooks/contexts/settings";
 import SearchDegradationBanner from "@/components/Search/SearchDegradationBanner";
+import LocalSearchLifecycle from "@/components/Search/LocalSearchLifecycle";
 import type { ResilientSearchClient } from "@/lib/search-client";
 import { useCourseTextHits } from "@/hooks/useCourseTextHits";
+import useCustomMenu from "@/app/[lang]/(mods-pages)/courses/useCustomMenu";
+import { lastSemester } from "@courseweb/shared";
 
 type SearchClient = ResilientSearchClient;
 type InfiniteHitsCache = ReturnType<
@@ -131,9 +134,13 @@ const SearchContainer = ({
   const { language } = useSettings();
   const { nbHits, processingTimeMS } = useStats();
   const { status } = useInstantSearch();
+  const { items: semesterItems } = useCustomMenu({ attribute: "semester" });
+  const semester =
+    semesterItems.find((item) => item.isRefined)?.value ?? lastSemester.id;
 
   return (
     <div className="flex w-full gap-4">
+      <LocalSearchLifecycle searchClient={searchClient} semester={semester} />
       <div className="hidden md:flex flex-col gap-4 w-72">
         <div className="flex justify-between items-end">
           <span className="text-xl">{dict.course.refine.title}</span>

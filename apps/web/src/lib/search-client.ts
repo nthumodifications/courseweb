@@ -33,6 +33,8 @@ export type ResilientSearchClient = Pick<
   getCourseText: (rawId: string) => SearchTextRecord | undefined;
   hasError: () => boolean;
   subscribe: (listener: () => void) => () => void;
+  subscribeLocalReady: (listener: (semester: string) => void) => () => void;
+  prefetch: (semester: string) => Promise<void>;
 };
 
 type SearchRequests = Parameters<AlgoliaSearchClient["search"]>[0];
@@ -74,6 +76,10 @@ export type ResilientSearchClientOptions = {
   localSearchTextTransform?: (text: string) => string;
   /** Test/embedded override for the already-configured remote chain. */
   remoteClient?: AlgoliaSearchClient;
+  /** Test-only override for exercising Algolia factory failures. */
+  remoteClientFactory?: typeof algoliasearch;
+  /** Test-only environment override for the configured remote tiers. */
+  remoteEnv?: Record<string, string | undefined>;
 };
 
 const STORAGE_KEY = "nthumods-search-backend";
@@ -303,7 +309,20 @@ const emptyFacetResponse = (): FacetResult => ({
   exhaustiveFacetsCount: true,
 });
 
-const configuredClients = () => {
+const failedRemoteClient = (error: unknown) =>
+  ({
+    search: () => {
+      throw error;
+    },
+    searchForFacetValues: () => {
+      throw error;
+    },
+  }) as unknown as AlgoliaSearchClient;
+
+const configuredClients = (
+  factory: typeof algoliasearch = algoliasearch,
+  env: Record<string, string | undefined> = viteEnv,
+) => {
   const clients: Array<{
     backend: Exclude<RemoteBackend, "fallback">;
     client: AlgoliaSearchClient;
@@ -312,30 +331,34 @@ const configuredClients = () => {
   // read timeout, so one unreachable application can hold up the first search
   // of a session for seconds before the next tier is even tried.
   const timeouts = { connect: 1, read: 2, write: 5 };
-  const primaryAppId = viteEnv.VITE_ALGOLIA_APP_ID;
-  const primaryKey = viteEnv.VITE_ALGOLIA_SEARCH_KEY;
-  const backupAppId = viteEnv.VITE_ALGOLIA_BACKUP_APP_ID;
-  const backupKey = viteEnv.VITE_ALGOLIA_BACKUP_SEARCH_KEY;
+  const primaryAppId = env.VITE_ALGOLIA_APP_ID;
+  const primaryKey = env.VITE_ALGOLIA_SEARCH_KEY;
+  const backupAppId = env.VITE_ALGOLIA_BACKUP_APP_ID;
+  const backupKey = env.VITE_ALGOLIA_BACKUP_SEARCH_KEY;
 
   if (primaryAppId?.trim() && primaryKey?.trim()) {
-    clients.push({
-      backend: "primary",
-      client: algoliasearch(primaryAppId.trim(), primaryKey.trim(), {
-        timeouts,
-      }),
-    });
+    try {
+      clients.push({
+        backend: "primary",
+        client: factory(primaryAppId.trim(), primaryKey.trim(), { timeouts }),
+      });
+    } catch (error) {
+      clients.push({ backend: "primary", client: failedRemoteClient(error) });
+    }
   }
   if (
     backupAppId?.trim() &&
     backupKey?.trim() &&
     backupAppId.trim() !== primaryAppId?.trim()
   ) {
-    clients.push({
-      backend: "backup",
-      client: algoliasearch(backupAppId.trim(), backupKey.trim(), {
-        timeouts,
-      }),
-    });
+    try {
+      clients.push({
+        backend: "backup",
+        client: factory(backupAppId.trim(), backupKey.trim(), { timeouts }),
+      });
+    } catch (error) {
+      clients.push({ backend: "backup", client: failedRemoteClient(error) });
+    }
   }
   return clients;
 };
@@ -345,7 +368,7 @@ export const createResilientSearchClient = (
 ): ResilientSearchClient => {
   const clients = options.remoteClient
     ? [{ backend: "primary" as const, client: options.remoteClient }]
-    : configuredClients();
+    : configuredClients(options.remoteClientFactory, options.remoteEnv);
   const shouldUseLocalSearch =
     options.localSearch !== undefined
       ? options.localSearch !== false
@@ -366,42 +389,105 @@ export const createResilientSearchClient = (
     | Extract<SearchBackend, "local" | "local-loading">
     | undefined;
   let version = 0;
+  let requestGeneration = 0;
+  const localReadyListeners = new Set<(semester: string) => void>();
+  type RequestState = {
+    generation: number;
+    semester?: string | null;
+    eligible: boolean;
+    localReady: boolean;
+    remoteDisplayed: boolean;
+    readyNotified: boolean;
+  };
+  let currentRequest: RequestState | undefined;
 
-  localClient?.subscribe(() => {
-    version += 1;
-    const status = localClient.getStatus();
-    if (status === "loading") localStatus = "local-loading";
-    else if (status === "ready") localStatus = "local";
-    else localStatus = undefined;
-    listeners.forEach((listener) => listener());
-  });
+  const isCurrentRequest = (generation: number) =>
+    currentRequest?.generation === generation;
 
-  if (localClient && typeof window !== "undefined") {
-    const schedule = (
-      window as Window & {
-        requestIdleCallback?: (callback: () => void) => number;
-      }
-    ).requestIdleCallback;
-    const prefetch = () => {
-      void localClient.prefetch(lastSemester.id).catch((error) => {
-        console.warn("Local course-search prefetch unavailable:", error);
-      });
-    };
-    if (schedule) schedule(prefetch);
-    else window.setTimeout(prefetch, 0);
-  }
-
-  const clearLocalStatus = () => {
-    if (localStatus === undefined) return;
-    localStatus = undefined;
+  const setLocalStatus = (
+    status: Extract<SearchBackend, "local" | "local-loading"> | undefined,
+    generation: number,
+  ) => {
+    if (!isCurrentRequest(generation) || localStatus === status) return;
+    localStatus = status;
     listeners.forEach((listener) => listener());
   };
 
-  const setLastError = (value: boolean) => {
+  const setLastError = (value: boolean, generation?: number) => {
+    if (generation !== undefined && !isCurrentRequest(generation)) return;
     if (lastError === value) return;
     lastError = value;
     listeners.forEach((listener) => listener());
   };
+
+  const announceLocalReady = (state: RequestState) => {
+    if (
+      !isCurrentRequest(state.generation) ||
+      !state.semester ||
+      !state.eligible ||
+      !state.localReady ||
+      !state.remoteDisplayed ||
+      state.readyNotified
+    ) {
+      return;
+    }
+    state.readyNotified = true;
+    setLocalStatus("local", state.generation);
+    setLastError(false, state.generation);
+    for (const listener of localReadyListeners) listener(state.semester);
+  };
+
+  const startRequest = (requests: readonly { params?: unknown }[]) => {
+    const generation = ++requestGeneration;
+    const semester = localClient?.getSemesterFor(
+      requests as Parameters<LocalSearchClient["getSemesterFor"]>[0],
+    );
+    const eligible = Boolean(
+      localClient?.isEligibleFor(
+        requests as Parameters<LocalSearchClient["isEligibleFor"]>[0],
+      ),
+    );
+    currentRequest = {
+      generation,
+      semester,
+      eligible,
+      localReady: Boolean(
+        localClient?.isReadyFor(
+          requests as Parameters<LocalSearchClient["isReadyFor"]>[0],
+        ),
+      ),
+      remoteDisplayed: false,
+      readyNotified: false,
+    };
+    return currentRequest;
+  };
+
+  const markRemoteDisplayed = (state: RequestState) => {
+    if (!isCurrentRequest(state.generation)) return;
+    state.remoteDisplayed = true;
+    announceLocalReady(state);
+  };
+
+  localClient?.subscribe(() => {
+    version += 1;
+    listeners.forEach((listener) => listener());
+  });
+
+  const clearLocalStatus = (generation: number) => {
+    if (!isCurrentRequest(generation) || localStatus === undefined) return;
+    localStatus = undefined;
+    listeners.forEach((listener) => listener());
+  };
+
+  localClient?.subscribeReady((semester) => {
+    version += 1;
+    const state = currentRequest;
+    if (state?.semester === semester) {
+      state.localReady = true;
+      announceLocalReady(state);
+    }
+    listeners.forEach((listener) => listener());
+  });
 
   const setWorkingState = (backend: RemoteBackend) =>
     setPersistedState(
@@ -436,6 +522,7 @@ export const createResilientSearchClient = (
     operation: (client: AlgoliaSearchClient) => Promise<T>,
     fallback: () => Promise<T>,
     empty: () => Promise<T>,
+    generation: number,
   ): Promise<T> => {
     const activeState = getActiveState();
     const runEmpty = () => empty();
@@ -444,7 +531,7 @@ export const createResilientSearchClient = (
         return await fallback();
       } catch (error) {
         console.error("Search fallback failed:", error);
-        setLastError(true);
+        setLastError(true, generation);
         return runEmpty();
       }
     };
@@ -466,7 +553,7 @@ export const createResilientSearchClient = (
 
       try {
         const result = await operation(client);
-        setLastError(false);
+        setLastError(false, generation);
         setWorkingState(backend);
         return { ok: true, result };
       } catch (error) {
@@ -486,33 +573,13 @@ export const createResilientSearchClient = (
     ) => {
       const result = await attempt(backend);
       if (result.ok) return result.result;
-      if (result.kind === "bug") {
-        setLastError(true);
-        setWorkingState(backend);
-        return runEmpty();
-      }
-      if (result.kind === "transient" && result.consecutiveFailures < 2) {
-        setFailureState(backend, result.consecutiveFailures);
-        return runEmpty();
-      }
 
       if (backend === "primary" && clientByBackend.has("backup")) {
         const backupResult = await attempt("backup");
         if (backupResult.ok) return backupResult.result;
-        if (
-          backupResult.kind === "transient" &&
-          backupResult.consecutiveFailures < 2
-        ) {
-          setFailureState("backup", backupResult.consecutiveFailures);
-          return runEmpty();
-        }
-        if (backupResult.kind === "bug") {
-          setLastError(true);
-          setWorkingState("primary");
-          return runEmpty();
-        }
       }
 
+      setFailureState(backend, result.consecutiveFailures);
       setFallback();
       return runFallback();
     };
@@ -533,11 +600,6 @@ export const createResilientSearchClient = (
         ? await attempt("primary")
         : undefined;
       if (primaryResult?.ok) return primaryResult.result;
-      if (primaryResult?.kind === "bug") {
-        setLastError(true);
-        setWorkingState("fallback");
-        return runEmpty();
-      }
 
       const canTryBackup =
         primaryResult === undefined ||
@@ -547,18 +609,6 @@ export const createResilientSearchClient = (
       if (canTryBackup && clientByBackend.has("backup")) {
         const backupResult = await attempt("backup");
         if (backupResult.ok) return backupResult.result;
-        if (
-          backupResult.kind === "transient" &&
-          backupResult.consecutiveFailures < 2
-        ) {
-          setFailureState("backup", backupResult.consecutiveFailures);
-          return runEmpty();
-        }
-        if (backupResult.kind === "bug") {
-          setLastError(true);
-          setWorkingState("fallback");
-          return runEmpty();
-        }
       } else if (primaryResult?.kind === "transient") {
         setPersistedState(
           "fallback",
@@ -580,57 +630,60 @@ export const createResilientSearchClient = (
     ) {
       const primaryResult = await attempt("primary");
       if (primaryResult.ok) return primaryResult.result;
-      if (primaryResult.kind === "bug") {
-        setLastError(true);
-        setWorkingState("backup");
-        return runEmpty();
-      }
       setWorkingState("backup");
     }
 
     return runCurrentBackend(activeState.backend);
   };
 
-  const tryLocalSearch = async <TObject>(requests: SearchRequests) => {
+  const tryLocalSearch = async <TObject>(
+    requests: SearchRequests,
+    state: RequestState,
+  ) => {
     if (!localClient) return undefined;
     try {
       const attempt = await localClient.trySearch(
         requests as unknown as readonly { params?: Record<string, unknown> }[],
       );
       if (!attempt.handled) {
-        clearLocalStatus();
+        state.localReady = false;
+        clearLocalStatus(state.generation);
         return undefined;
       }
-      setLastError(false);
-      localStatus = "local";
-      listeners.forEach((listener) => listener());
+      setLastError(false, state.generation);
+      setLocalStatus("local", state.generation);
       return attempt.result as unknown as SearchResults<TObject>;
     } catch (error) {
       // Manifest, cache, HTTP, and worker errors all deliberately fall through
       // to Algolia/Supabase. A build failure must not leave the UI frozen.
       console.error("Local course search unavailable:", error);
-      clearLocalStatus();
+      state.localReady = false;
+      clearLocalStatus(state.generation);
       return undefined;
     }
   };
 
-  const tryLocalFacetSearch = async (requests: FacetSearchRequests) => {
+  const tryLocalFacetSearch = async (
+    requests: FacetSearchRequests,
+    state: RequestState,
+  ) => {
     if (!localClient) return undefined;
     try {
       const attempt = await localClient.trySearchForFacetValues(
         requests as unknown as readonly { params?: Record<string, unknown> }[],
       );
       if (!attempt.handled) {
-        clearLocalStatus();
+        state.localReady = false;
+        clearLocalStatus(state.generation);
         return undefined;
       }
-      setLastError(false);
-      localStatus = "local";
-      listeners.forEach((listener) => listener());
+      setLastError(false, state.generation);
+      setLocalStatus("local", state.generation);
       return attempt.result as unknown as readonly FacetResult[];
     } catch (error) {
       console.error("Local course facet search unavailable:", error);
-      clearLocalStatus();
+      state.localReady = false;
+      clearLocalStatus(state.generation);
       return undefined;
     }
   };
@@ -639,14 +692,21 @@ export const createResilientSearchClient = (
     requests: SearchRequests,
     requestOptions?: Parameters<AlgoliaSearchClient["search"]>[1],
   ) => {
+    const state = startRequest(requests);
     if (localClient?.isReadyFor(requests)) {
-      const localResult = await tryLocalSearch<TObject>(requests);
+      const localResult = await tryLocalSearch<TObject>(requests, state);
       if (localResult) return localResult;
-    } else {
-      void tryLocalSearch<TObject>(requests);
+    } else if (localClient) {
+      void localClient
+        .warmUpFor(
+          requests as unknown as Parameters<LocalSearchClient["warmUpFor"]>[0],
+        )
+        .catch((error) => {
+          console.error("Local course-search warm-up unavailable:", error);
+        });
     }
-    clearLocalStatus();
-    return runWithFailover<SearchResults<TObject>>(
+    clearLocalStatus(state.generation);
+    const result = await runWithFailover<SearchResults<TObject>>(
       (client) =>
         Promise.resolve(
           client.search<TObject>(requests, requestOptions),
@@ -668,16 +728,16 @@ export const createResilientSearchClient = (
               } catch (error) {
                 console.error("Supabase fallback search failed:", error);
                 fallbackHadError = true;
-                setLastError(true);
+                setLastError(true, state.generation);
                 return emptySearchResponse<TObject>(request);
               }
             }),
           );
-          if (!fallbackHadError) setLastError(false);
+          if (!fallbackHadError) setLastError(false, state.generation);
           return { results };
         } catch (error) {
           console.error("Course search fallback failed:", error);
-          setLastError(true);
+          setLastError(true, state.generation);
           return {
             results: requests.map((request) =>
               emptySearchResponse<TObject>(request),
@@ -691,7 +751,10 @@ export const createResilientSearchClient = (
             emptySearchResponse<TObject>(request),
           ),
         }),
+      state.generation,
     );
+    markRemoteDisplayed(state);
+    return result;
   };
 
   const searchForFacetValues: AlgoliaSearchClient["searchForFacetValues"] =
@@ -701,14 +764,21 @@ export const createResilientSearchClient = (
         AlgoliaSearchClient["searchForFacetValues"]
       >[1],
     ) => {
+      const state = startRequest(requests);
       if (localClient?.isReadyFor(requests)) {
-        const localResult = await tryLocalFacetSearch(requests);
+        const localResult = await tryLocalFacetSearch(requests, state);
         if (localResult) return localResult;
-      } else {
-        void tryLocalFacetSearch(requests);
+      } else if (localClient) {
+        void localClient
+          .warmUpFor(
+            requests as unknown as Parameters<LocalSearchClient["warmUpFor"]>[0],
+          )
+          .catch((error) => {
+            console.error("Local course-search warm-up unavailable:", error);
+          });
       }
-      clearLocalStatus();
-      return runWithFailover<readonly FacetResult[]>(
+      clearLocalStatus(state.generation);
+      const result = await runWithFailover<readonly FacetResult[]>(
         (client) =>
           Promise.resolve(
             client.searchForFacetValues(requests, requestOptions),
@@ -724,16 +794,19 @@ export const createResilientSearchClient = (
               } catch (error) {
                 console.error("Supabase fallback facet search failed:", error);
                 fallbackHadError = true;
-                setLastError(true);
+                setLastError(true, state.generation);
                 return emptyFacetResponse();
               }
             }),
           );
-          if (!fallbackHadError) setLastError(false);
+          if (!fallbackHadError) setLastError(false, state.generation);
           return results;
         },
         () => Promise.resolve(requests.map(() => emptyFacetResponse())),
+        state.generation,
       );
+      markRemoteDisplayed(state);
+      return result;
     };
 
   return {
@@ -748,6 +821,11 @@ export const createResilientSearchClient = (
     getVersion: () => version,
     getCourseText: (rawId) => localClient?.getText(rawId),
     hasError: () => lastError,
+    subscribeLocalReady: (listener) => {
+      localReadyListeners.add(listener);
+      return () => localReadyListeners.delete(listener);
+    },
+    prefetch: (semester) => localClient?.prefetch(semester) ?? Promise.resolve(),
     subscribe: (listener) => {
       listeners.add(listener);
       return () => listeners.delete(listener);

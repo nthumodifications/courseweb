@@ -498,6 +498,7 @@ export class LocalSearchEngine {
   // screen. Views read deferred text back through getText instead.
   private readonly texts = new Map<string, SearchTextRecord>();
   private readonly listeners = new Set<() => void>();
+  private readonly readyListeners = new Set<(semester: string) => void>();
   private status: LocalSearchStatus = "idle";
   private readonly defaultSemester?: string;
   private readonly queryTransform: (query: string) => string;
@@ -523,7 +524,7 @@ export class LocalSearchEngine {
   getStatus = () => this.status;
 
   isReady = (semester: string) =>
-    this.status === "ready" && this.loadedChunks.has(semester);
+    this.loadedChunks.has(semester);
 
   getText = (rawId: string) => this.texts.get(rawId);
 
@@ -535,6 +536,11 @@ export class LocalSearchEngine {
   subscribe = (listener: () => void) => {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
+  };
+
+  subscribeReady = (listener: (semester: string) => void) => {
+    this.readyListeners.add(listener);
+    return () => this.readyListeners.delete(listener);
   };
 
   private setStatus(status: LocalSearchStatus) {
@@ -696,6 +702,7 @@ export class LocalSearchEngine {
     const source = await this.downloadChunk(semester);
     const chunk = await this.buildChunk(source);
     this.loadedChunks.set(semester, chunk);
+    for (const listener of this.readyListeners) listener(semester);
     this.setStatus("ready");
     const cachedText = await this.cachedTextChunk(semester, chunk.manifest);
     if (cachedText) this.mergeTextRecords(chunk, cachedText.texts);

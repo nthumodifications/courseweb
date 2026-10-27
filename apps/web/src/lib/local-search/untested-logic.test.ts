@@ -19,6 +19,7 @@ import {
 } from "./time-mask";
 import {
   matchesCourseCode,
+  isSemesterOnlyQuery,
   matchesLocalQuery,
   normalizeLatinWord,
   parseCourseCodeQuery,
@@ -27,6 +28,7 @@ import {
 } from "./tokenizer";
 import fixture from "./__fixtures__/courses-11510.json";
 import fullFixture from "./__fixtures__/courses-11510-full.json";
+import teacherFixture from "./__fixtures__/teacher-chen.json";
 
 const record = (overrides: Record<string, unknown> = {}) =>
   prepareSearchRecord({
@@ -113,6 +115,11 @@ describe("local-search tokenization", () => {
     const value = record({ department: "CS", course: "1355" });
     expect(matchesCourseCode(value, parseCourseCodeQuery("CS135500")!)).toBe(
       true,
+    );
+    expect(parseCourseCodeQuery("11510")).toBeUndefined();
+    expect(isSemesterOnlyQuery("11510")).toBe(true);
+    expect(fullRecords.filter((item) => matchesLocalQuery(item, "11510"))).toEqual(
+      [],
     );
   });
 });
@@ -202,6 +209,11 @@ describe("local-search projection and ranking", () => {
       ).toBe(true);
     },
   );
+
+  test("ranks a whole-token Chen teacher above incidental title matches", () => {
+    const records = teacherFixture.map((value) => prepareSearchRecord(value));
+    expect(rankLocalIds(records, [0, 1], "chen")).toEqual([1, 0]);
+  });
 
   const orderingRecords = [
     record({
