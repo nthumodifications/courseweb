@@ -56,6 +56,8 @@ model PushSubscription {
   lastCourseChangeId   BigInt   @default(0)
   lastDigestDate       String?
   failureCount         Int      @default(0)
+  testWindowStartedAt  DateTime? @db.Timestamptz(3)
+  testCount            Int      @default(0)
   createdAt            DateTime @default(now())
   lastSeenAt           DateTime @default(now())
   user                 User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
@@ -63,6 +65,14 @@ model PushSubscription {
   @@index([userId, lastSeenAt])
   @@index([courseChanges, lastCourseChangeId])
   @@map("push_subscriptions")
+}
+
+model PushNotifierLease {
+  id          Int      @id
+  lockedUntil DateTime @db.Timestamptz(3) @map("locked_until")
+  holder      String
+
+  @@map("push_notifier_lease")
 }
 
 model UserStorage {

@@ -95,12 +95,12 @@ describe("announcement schedule", () => {
   });
 });
 
-test("fetches one announcement response per language and records the digest date", async () => {
+test("fetches one announcement response per run and records the digest date", async () => {
   const current = new Date("2026-10-27T01:00:00Z");
   const subscription = (id: string, language: "zh" | "en") => ({
     id,
     userId: id,
-    endpoint: `https://push.example.test/${id}`,
+    endpoint: `https://fcm.googleapis.com/${id}`,
     p256dh: "key",
     auth: "auth",
     failureCount: 0,
@@ -135,14 +135,10 @@ test("fetches one announcement response per language and records the digest date
       update: async (args: unknown) => updated.push(args),
       deleteMany: async () => ({ count: 0 }),
     },
-    $queryRaw: async () => [{ locked: true }],
+    $queryRaw: async () => [{ id: 1 }],
   };
   const notifier = createPushNotifier({
-    db: {
-      $transaction: async (
-        callback: (value: typeof transaction) => Promise<unknown>,
-      ) => callback(transaction),
-    } as never,
+    db: transaction as never,
     vapid: {
       publicKey: "public",
       privateKey: "private",
@@ -153,10 +149,180 @@ test("fetches one announcement response per language and records the digest date
     now: () => current,
   });
   expect(await notifier.run()).toBe(true);
-  expect(fetcher).toHaveBeenCalledTimes(2);
+  expect(fetcher).toHaveBeenCalledTimes(1);
   expect(send).toHaveBeenCalledTimes(2);
   expect(updated).toHaveLength(2);
   expect(
     updated.every((value) => JSON.stringify(value).includes("2026-10-27")),
   ).toBe(true);
+});
+
+test("does not advance a course cursor after a retriable send failure", async () => {
+  const updated: unknown[] = [];
+  const transaction = {
+    pushSubscription: {
+      findMany: async () => [
+        {
+          id: "sub-1",
+          userId: "user-1",
+          endpoint: "https://fcm.googleapis.com/sub-1",
+          p256dh: "key",
+          auth: "auth",
+          failureCount: 0,
+          language: "en",
+          courseChanges: true,
+          announcementSources: [],
+          lastCourseChangeId: 7n,
+          lastDigestDate: null,
+        },
+      ],
+      update: async (args: unknown) => updated.push(args),
+      deleteMany: async () => ({ count: 0 }),
+    },
+    $queryRaw: async () => [{ id: 1 }],
+  };
+  const notifier = createPushNotifier({
+    db: transaction as never,
+    vapid: {
+      publicKey: "public",
+      privateKey: "private",
+      subject: "mailto:test@nthumods.com",
+    },
+    getCourseChanges: async () => [change({ id: 8 })],
+    getCourseNames: async () => new Map(),
+    userStore: {
+      get: async () => ({ value: { "11510": ["11510CS 100100"] } }),
+    } as never,
+    send: async () => ({ status: 503, ok: false }),
+    now: () => new Date("2026-10-27T01:00:00Z"),
+  });
+  expect(await notifier.run()).toBe(true);
+  expect(updated).toEqual([]);
+});
+
+test("does not mark a failed digest as sent", async () => {
+  const updated: unknown[] = [];
+  const transaction = {
+    pushSubscription: {
+      findMany: async () => [
+        {
+          id: "sub-1",
+          userId: "user-1",
+          endpoint: "https://fcm.googleapis.com/sub-1",
+          p256dh: "key",
+          auth: "auth",
+          failureCount: 0,
+          language: "en",
+          courseChanges: false,
+          announcementSources: ["source-a"],
+          lastCourseChangeId: 0n,
+          lastDigestDate: null,
+        },
+      ],
+      update: async (args: unknown) => updated.push(args),
+      deleteMany: async () => ({ count: 0 }),
+    },
+    $queryRaw: async () => [{ id: 1 }],
+  };
+  const notifier = createPushNotifier({
+    db: transaction as never,
+    vapid: {
+      publicKey: "public",
+      privateKey: "private",
+      subject: "mailto:test@nthumods.com",
+    },
+    fetcher: async () =>
+      new Response(
+        JSON.stringify({
+          articles: [
+            {
+              title: "A",
+              link: "https://example.test/a",
+              date: "2026-10-27",
+              sourceIds: ["source-a"],
+            },
+          ],
+        }),
+      ),
+    send: async () => ({ status: 503, ok: false }),
+    now: () => new Date("2026-10-27T01:00:00Z"),
+  });
+  expect(await notifier.run()).toBe(true);
+  expect(updated).toEqual([]);
+});
+
+test("starts at most eight subscription deliveries concurrently", async () => {
+  const rows = Array.from({ length: 9 }, (_, index) => ({
+    id: `sub-${index}`,
+    userId: `user-${index}`,
+    endpoint: `https://fcm.googleapis.com/${index}`,
+    p256dh: "key",
+    auth: "auth",
+    failureCount: 0,
+    language: "en" as const,
+    courseChanges: false,
+    announcementSources: ["source-a"],
+    lastCourseChangeId: 0n,
+    lastDigestDate: null,
+  }));
+  let inFlight = 0;
+  let maximum = 0;
+  const transaction = {
+    pushSubscription: {
+      findMany: async (args: unknown) => {
+        expect(args).toEqual(expect.objectContaining({ take: 500 }));
+        return rows;
+      },
+      update: async () => undefined,
+      deleteMany: async () => ({ count: 0 }),
+    },
+    $queryRaw: async () => [{ id: 1 }],
+  };
+  const notifier = createPushNotifier({
+    db: transaction as never,
+    vapid: {
+      publicKey: "public",
+      privateKey: "private",
+      subject: "mailto:test@nthumods.com",
+    },
+    fetcher: async () =>
+      new Response(
+        JSON.stringify({
+          articles: [
+            {
+              title: "A",
+              link: "https://example.test/a",
+              date: "2026-10-27",
+              sourceIds: ["source-a"],
+            },
+          ],
+        }),
+      ),
+    send: async () => {
+      inFlight += 1;
+      maximum = Math.max(maximum, inFlight);
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      inFlight -= 1;
+      return { status: 201, ok: true };
+    },
+    now: () => new Date("2026-10-27T01:00:00Z"),
+  });
+  await notifier.run();
+  expect(maximum).toBe(8);
+});
+
+test("uses calendar-day boundaries for the first digest", () => {
+  const articles = selectAnnouncementDigest(
+    {
+      articles: [
+        { title: "Older", link: "/older", date: "2026-10-25", sourceIds: ["source-a"] },
+        { title: "Yesterday", link: "/yesterday", date: "2026-10-26", sourceIds: ["source-a"] },
+        { title: "Today", link: "/today", date: "2026-10-27", sourceIds: ["source-a"] },
+      ],
+    },
+    ["source-a"],
+    null,
+    new Date("2026-10-27T01:00:00Z"),
+  );
+  expect(articles.map((article) => article.title)).toEqual(["Yesterday", "Today"]);
 });

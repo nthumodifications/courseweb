@@ -1,4 +1,5 @@
 import { zValidator } from "@hono/zod-validator";
+import { Prisma } from "@prisma/client";
 import { Hono } from "hono";
 import type { MiddlewareHandler } from "hono";
 import { bodyLimit } from "hono/body-limit";
@@ -14,6 +15,8 @@ import {
   type PushSubscriptionRecord,
 } from "../push/sender";
 import { buildTestNotification } from "../push/text";
+import { base64urlToBytes } from "../push/base64url";
+import { isAllowedPushEndpoint } from "../push/endpoint";
 import {
   MAX_REQUEST_BODY_BYTES,
   payloadTooLarge,
@@ -37,6 +40,8 @@ type PushSubscriptionRow = PushSubscriptionRecord & {
   lastDigestDate: string | null;
   createdAt: Date;
   lastSeenAt: Date;
+  testWindowStartedAt: Date | null;
+  testCount: number;
 };
 
 export type PushLanguage = "zh" | "en" | "zh-cn";
@@ -48,6 +53,7 @@ type PushRouteDatabase = PushDatabase & {
     findMany(args: unknown): Promise<PushSubscriptionRow[]>;
     upsert(args: unknown): Promise<PushSubscriptionRow>;
   };
+  $queryRaw<T>(query: unknown): Promise<T>;
 };
 
 type PushDependencies = {
@@ -63,7 +69,6 @@ type PushDependencies = {
     dependencies?: { db?: PushDatabase; vapid?: VapidConfig },
   ) => Promise<{ status: number; ok: boolean }>;
   now?: () => number;
-  testRateLimit?: MiddlewareHandler<PushEnv>;
 };
 
 const lazyRequireAuth = (scopes: string[]) =>
@@ -82,12 +87,8 @@ const httpsEndpoint = z
   .max(2048)
   .url()
   .refine((value) => {
-    try {
-      return new URL(value).protocol === "https:";
-    } catch {
-      return false;
-    }
-  }, "endpoint must use https");
+    return isAllowedPushEndpoint(value);
+  }, "endpoint must be a supported HTTPS push service");
 
 const base64url = (length: number) =>
   z
@@ -128,6 +129,23 @@ const endpointQuerySchema = z.object({ endpoint: httpsEndpoint }).strict();
 
 const defaultDatabase = prisma as unknown as PushRouteDatabase;
 
+const validP256dh = async (value: string) => {
+  try {
+    const bytes = base64urlToBytes(value);
+    if (bytes.byteLength !== 65 || bytes[0] !== 4) return false;
+    await crypto.subtle.importKey(
+      "raw",
+      bytes,
+      { name: "ECDH", namedCurve: "P-256" },
+      false,
+      [],
+    );
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 const preferences = (
   row: Pick<
     PushSubscriptionRow,
@@ -139,21 +157,6 @@ const preferences = (
   language: row.language,
 });
 
-const pushTestRateLimiter = (now: () => number): MiddlewareHandler<PushEnv> => {
-  const requests = new Map<string, number[]>();
-  return async (c, next) => {
-    const userId = c.var.user.userId;
-    const cutoff = now() - 10 * 60 * 1000;
-    const recent = (requests.get(userId) ?? []).filter(
-      (timestamp) => timestamp > cutoff,
-    );
-    if (recent.length >= 3) return c.json({ error: "rate_limited" }, 429);
-    recent.push(now());
-    requests.set(userId, recent);
-    await next();
-  };
-};
-
 export const createPushApp = (dependencies: PushDependencies = {}) => {
   const auth = dependencies.auth ?? lazyRequireAuth(["kv"]);
   const rateLimit = dependencies.rateLimit;
@@ -163,7 +166,6 @@ export const createPushApp = (dependencies: PushDependencies = {}) => {
     dependencies.getCurrentCourseChangeId ?? getCurrentCourseChangeId;
   const sendPush = dependencies.sendPush ?? defaultSendPush;
   const now = dependencies.now ?? Date.now;
-  const testRateLimit = dependencies.testRateLimit ?? pushTestRateLimiter(now);
 
   const app = new Hono<PushEnv>()
     .get("/config", (c) => {
@@ -188,11 +190,15 @@ export const createPushApp = (dependencies: PushDependencies = {}) => {
         const vapid = readVapid();
         if (!vapid) return c.json({ error: "push_not_configured" }, 503);
         const body = c.req.valid("json");
+        if (!(await validP256dh(body.subscription.keys.p256dh))) {
+          return c.json({ error: "invalid_subscription_keys" }, 400);
+        }
         const existing = await db.pushSubscription.findUnique({
           where: { endpoint: body.subscription.endpoint },
           select: { userId: true, lastCourseChangeId: true },
         });
         const sameOwner = existing?.userId === c.var.user.userId;
+        const ownerChanged = Boolean(existing && !sameOwner);
         const cursor =
           sameOwner && existing
             ? existing.lastCourseChangeId
@@ -217,7 +223,19 @@ export const createPushApp = (dependencies: PushDependencies = {}) => {
             language: body.prefs.language,
             courseChanges: body.prefs.courseChanges,
             announcementSources: body.prefs.announcementSources,
-            ...(sameOwner ? {} : { lastCourseChangeId: cursor }),
+            ...(sameOwner
+              ? {}
+              : {
+                  lastCourseChangeId: cursor,
+                  ...(ownerChanged
+                    ? {
+                        lastDigestDate: null,
+                        failureCount: 0,
+                        testWindowStartedAt: null,
+                        testCount: 0,
+                      }
+                    : {}),
+                }),
             lastSeenAt: new Date(now()),
           },
         });
@@ -273,7 +291,6 @@ export const createPushApp = (dependencies: PushDependencies = {}) => {
       zValidator("json", endpointBodySchema, zodValidationError),
       auth,
       rateLimit ?? (async (_c, next) => await next()),
-      testRateLimit,
       async (c) => {
         const vapid = readVapid();
         if (!vapid) return c.json({ error: "push_not_configured" }, 503);
@@ -282,6 +299,31 @@ export const createPushApp = (dependencies: PushDependencies = {}) => {
           where: { endpoint, userId: c.var.user.userId },
         });
         if (!row) return c.json({ error: "not_found" }, 404);
+        const current = new Date(now());
+        const cutoff = new Date(current.getTime() - 10 * 60 * 1000);
+        const claimed = await db.$queryRaw<{ id: string }[]>(Prisma.sql`
+          UPDATE "push_subscriptions"
+          SET
+            "testCount" = CASE
+              WHEN "testWindowStartedAt" IS NULL OR "testWindowStartedAt" < ${cutoff}
+                THEN 1
+              ELSE "testCount" + 1
+            END,
+            "testWindowStartedAt" = CASE
+              WHEN "testWindowStartedAt" IS NULL OR "testWindowStartedAt" < ${cutoff}
+                THEN ${current}
+              ELSE "testWindowStartedAt"
+            END
+          WHERE "id" = ${row.id}
+            AND "userId" = ${c.var.user.userId}
+            AND (
+              "testWindowStartedAt" IS NULL
+              OR "testWindowStartedAt" < ${cutoff}
+              OR "testCount" < 3
+            )
+          RETURNING "id"
+        `);
+        if (claimed.length === 0) return c.json({ error: "rate_limited" }, 429);
         const payload: PushPayload = buildTestNotification(row.language);
         const result = await sendPush(
           row,

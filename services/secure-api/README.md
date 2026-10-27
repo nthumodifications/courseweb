@@ -66,10 +66,16 @@ bun run services/secure-api/scripts/generate-vapid-keys.ts
 
 Set `VAPID_PUBLIC_KEY` to the uncompressed 65-byte public point and
 `VAPID_PRIVATE_KEY` to the 32-byte private scalar, both base64url encoded.
-`VAPID_SUBJECT` is the contact URI sent to push services. Set
+`VAPID_SUBJECT` is the contact URI sent to push services and must use `mailto:`
+or `https:`. The service verifies that the public and private keys match before
+enabling push. Set
 `PUSH_NOTIFIER_ENABLED=true` to start the ten-minute course-change and daily
 announcement scheduler. The scheduler uses the existing `kv` scope; no new
 OAuth scope is required.
+
+Announcement digests use calendar-day semantics in `Asia/Taipei`: the first
+digest includes articles dated yesterday or today, and later digests include
+articles dated after the stored `lastDigestDate`.
 
 The `/api/push/config` endpoint is public. Authenticated clients use
 `/api/push/subscription` to create, inspect, or remove their own subscription,

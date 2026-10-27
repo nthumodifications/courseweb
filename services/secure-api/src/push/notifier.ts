@@ -8,6 +8,7 @@ import {
 } from "./courseChanges";
 import {
   sendPush,
+  isRetriablePushResult,
   type PushDatabase,
   type PushPayload,
   type PushSendOptions,
@@ -48,15 +49,9 @@ type NotifierPushStore = PushDatabase["pushSubscription"] & {
   update(args: unknown): Promise<unknown>;
 };
 
-type NotifierTransaction = Omit<PushDatabase, "pushSubscription"> & {
+type NotifierDatabase = {
   pushSubscription: NotifierPushStore;
   $queryRaw<T>(query: unknown): Promise<T>;
-};
-
-type NotifierDatabase = NotifierTransaction & {
-  $transaction<T>(
-    callback: (transaction: NotifierTransaction) => Promise<T>,
-  ): Promise<T>;
 };
 
 type NotifierDependencies = {
@@ -66,6 +61,8 @@ type NotifierDependencies = {
   fetcher?: typeof fetch;
   send?: typeof sendPush;
   now?: () => Date;
+  getCourseChanges?: typeof getCourseChanges;
+  getCourseNames?: typeof getCourseNames;
 };
 
 type AnnouncementResponse = {
@@ -153,6 +150,8 @@ export const selectAnnouncementDigest = (
   lastDigestDate: string | null,
   now: Date,
 ) => {
+  // Dates are calendar days in Asia/Taipei: the first digest includes yesterday
+  // and today, while later digests include dates strictly after lastDigestDate.
   const today = dateParts(now).date;
   const previousDate =
     lastDigestDate ??
@@ -218,12 +217,79 @@ const fetchAnnouncements = async (
 
 const pushOptions = (ttl: number): PushSendOptions => ({ ttl });
 
+const SUBSCRIPTION_PAGE_SIZE = 500;
+const DELIVERY_CONCURRENCY = 8;
+const LEASE_DURATION_MS = 9 * 60 * 1000;
+const LEASE_MARGIN_MS = 60 * 1000;
+
+const updateCursor = async (
+  db: NotifierDatabase,
+  subscription: NotifierSubscription,
+  lastCourseChangeId: bigint,
+) => {
+  if (lastCourseChangeId <= subscription.lastCourseChangeId) return;
+  try {
+    await db.pushSubscription.update({
+      where: { id: subscription.id },
+      data: { lastCourseChangeId },
+    });
+  } catch (error) {
+    console.error(
+      "Failed to advance push course cursor",
+      error instanceof Error ? error.message : error,
+    );
+  }
+};
+
+const updateDigestDate = async (
+  db: NotifierDatabase,
+  subscription: NotifierSubscription,
+  lastDigestDate: string,
+) => {
+  try {
+    await db.pushSubscription.update({
+      where: { id: subscription.id },
+      data: { lastDigestDate },
+    });
+  } catch (error) {
+    console.error(
+      "Failed to advance push digest date",
+      error instanceof Error ? error.message : error,
+    );
+  }
+};
+
+const runWithConcurrency = async <T>(
+  values: readonly T[],
+  limit: number,
+  canStart: () => boolean,
+  worker: (value: T) => Promise<void>,
+): Promise<boolean> => {
+  let next = 0;
+  const runWorker = async () => {
+    while (canStart()) {
+      const index = next++;
+      if (index >= values.length) return;
+      await worker(values[index]);
+    }
+  };
+  await Promise.all(
+    Array.from(
+      { length: Math.min(limit, values.length) },
+      () => runWorker(),
+    ),
+  );
+  return next >= values.length;
+};
+
 export const createPushNotifier = (dependencies: NotifierDependencies = {}) => {
   const db = dependencies.db ?? defaultDatabase;
   const vapid = dependencies.vapid ?? getVapidConfig();
   const fetcher = dependencies.fetcher ?? fetch;
   const send = dependencies.send ?? sendPush;
   const now = dependencies.now ?? (() => new Date());
+  const readCourseChanges = dependencies.getCourseChanges ?? getCourseChanges;
+  const readCourseNames = dependencies.getCourseNames ?? getCourseNames;
   const userStore =
     dependencies.userStore ??
     createUserStorageStore({
@@ -232,82 +298,80 @@ export const createPushNotifier = (dependencies: NotifierDependencies = {}) => {
     });
   let running = false;
 
-  const runUnlocked = async (transaction: NotifierTransaction) => {
+  const runUnlocked = async (deadline: number) => {
     if (!vapid) return;
-    const subscriptions = await transaction.pushSubscription.findMany({});
-    const currentTime = now();
-    const courseSubscriptions = subscriptions.filter(
-      (subscription) => subscription.courseChanges,
-    );
-    const courseCursor =
-      courseSubscriptions.length === 0
-        ? null
-        : courseSubscriptions.reduce(
-            (minimum, subscription) =>
-              subscription.lastCourseChangeId < minimum
-                ? subscription.lastCourseChangeId
-                : minimum,
-            courseSubscriptions[0].lastCourseChangeId,
-          );
-    const changes =
-      courseCursor === null
-        ? []
-        : await getCourseChanges(courseCursor, COURSE_CHANGE_BATCH_SIZE);
-    const courseNames = await getCourseNames([
-      ...new Set(changes.map((change) => change.raw_id)),
-    ]);
-    const timetableCache = new Map<string, Record<string, string[]>>();
-    const announcementCache = new Map<
-      PushLanguage,
-      Promise<AnnouncementResponse>
+    const timetablePromises = new Map<
+      string,
+      Promise<Record<string, string[]> | null>
     >();
+    let announcementPromise: Promise<AnnouncementResponse> | undefined;
 
-    for (const subscription of subscriptions) {
-      const language = languageOf(subscription.language);
-      if (subscription.courseChanges && changes.length > 0) {
-        let timetable = timetableCache.get(subscription.userId);
-        if (!timetable) {
-          try {
-            timetable = asTimetable(
-              (await userStore.get(subscription.userId, "courses"))?.value,
-            );
-          } catch (error) {
+    const readTimetable = (userId: string) => {
+      let promise = timetablePromises.get(userId);
+      if (!promise) {
+        promise = userStore
+          .get(userId, "courses")
+          .then((value) => asTimetable(value?.value))
+          .catch((error) => {
             console.error(
               "Failed to read timetable for push notification",
               error instanceof Error ? error.message : error,
             );
-            timetable = {};
-          }
-        }
-        timetableCache.set(subscription.userId, timetable);
-        const matchingChanges = selectCourseChanges(
-          changes,
-          timetable,
-          subscription.lastCourseChangeId,
-        );
-        try {
+            return null;
+          });
+        timetablePromises.set(userId, promise);
+      }
+      return promise;
+    };
+
+    const readAnnouncements = () => {
+      announcementPromise ??= fetchAnnouncements(fetcher);
+      return announcementPromise;
+    };
+
+    const processSubscription = async (
+      subscription: NotifierSubscription,
+      changes: CourseChangeRow[],
+      courseNames: Map<string, CourseName>,
+      currentTime: Date,
+    ) => {
+      const language = languageOf(subscription.language);
+      if (subscription.courseChanges && changes.length > 0) {
+        const timetable = await readTimetable(subscription.userId);
+        if (timetable !== null) {
+          const matchingChanges = selectCourseChanges(
+            changes,
+            timetable,
+            subscription.lastCourseChangeId,
+          );
+          let retriableFailure = false;
           for (const notification of buildCourseNotifications(
             matchingChanges,
             courseNames,
             language,
           )) {
-            await send(
-              subscription,
-              notification as PushPayload,
-              pushOptions(24 * 60 * 60),
-              { db: transaction, vapid },
-            );
+            try {
+              const result = await send(
+                subscription,
+                notification as PushPayload,
+                pushOptions(24 * 60 * 60),
+                { db, vapid },
+              );
+              retriableFailure ||= isRetriablePushResult(result);
+            } catch (error) {
+              retriableFailure = true;
+              console.error(
+                "Push course delivery failed",
+                error instanceof Error ? error.message : error,
+              );
+            }
           }
-        } finally {
-          const maxId = changes.reduce((maximum, change) => {
-            const id = BigInt(change.id);
-            return id > maximum ? id : maximum;
-          }, subscription.lastCourseChangeId);
-          if (maxId > subscription.lastCourseChangeId) {
-            await transaction.pushSubscription.update({
-              where: { id: subscription.id },
-              data: { lastCourseChangeId: maxId },
-            });
+          if (!retriableFailure) {
+            const maxId = changes.reduce((maximum, change) => {
+              const id = BigInt(change.id);
+              return id > maximum ? id : maximum;
+            }, subscription.lastCourseChangeId);
+            await updateCursor(db, subscription, maxId);
           }
         }
       }
@@ -316,60 +380,118 @@ export const createPushNotifier = (dependencies: NotifierDependencies = {}) => {
         !subscription.announcementSources.length ||
         !shouldSendAnnouncementDigest(subscription.lastDigestDate, currentTime)
       ) {
-        continue;
+        return;
       }
       const today = dateParts(currentTime).date;
+      let digestSucceeded = false;
       try {
-        const cached =
-          announcementCache.get(language) ?? fetchAnnouncements(fetcher);
-        announcementCache.set(language, cached);
-        const response = await cached;
+        const response = await readAnnouncements();
         const articles = selectAnnouncementDigest(
           response,
           subscription.announcementSources,
           subscription.lastDigestDate,
           currentTime,
         );
+        digestSucceeded = true;
         if (articles.length > 0) {
-          await send(
+          const result = await send(
             subscription,
             buildAnnouncementNotification(articles, language) as PushPayload,
             pushOptions(12 * 60 * 60),
-            { db: transaction, vapid },
+            { db, vapid },
           );
+          digestSucceeded = !isRetriablePushResult(result);
         }
       } catch (error) {
         console.error(
           "Failed to prepare announcement digest",
           error instanceof Error ? error.message : error,
         );
-      } finally {
-        await transaction.pushSubscription.update({
-          where: { id: subscription.id },
-          data: { lastDigestDate: today },
-        });
       }
+      if (digestSucceeded) await updateDigestDate(db, subscription, today);
+    };
+
+    let cursor: string | undefined;
+    while (now().getTime() < deadline - LEASE_MARGIN_MS) {
+      const subscriptions = await db.pushSubscription.findMany(
+        cursor
+          ? {
+              take: SUBSCRIPTION_PAGE_SIZE,
+              skip: 1,
+              cursor: { id: cursor },
+              orderBy: { id: "asc" },
+            }
+          : {
+              take: SUBSCRIPTION_PAGE_SIZE,
+              orderBy: { id: "asc" },
+            },
+      );
+      if (subscriptions.length === 0) break;
+      const currentTime = now();
+      const courseSubscriptions = subscriptions.filter(
+        (subscription) => subscription.courseChanges,
+      );
+      let changes: CourseChangeRow[] = [];
+      let courseNames = new Map<string, CourseName>();
+      if (courseSubscriptions.length > 0) {
+        const courseCursor = courseSubscriptions.reduce(
+          (minimum, subscription) =>
+            subscription.lastCourseChangeId < minimum
+              ? subscription.lastCourseChangeId
+              : minimum,
+          courseSubscriptions[0].lastCourseChangeId,
+        );
+        try {
+          changes = await readCourseChanges(
+            courseCursor,
+            COURSE_CHANGE_BATCH_SIZE,
+          );
+          courseNames = await readCourseNames([
+            ...new Set(changes.map((change) => change.raw_id)),
+          ]);
+        } catch (error) {
+          console.error(
+            "Failed to prepare course change notifications",
+            error instanceof Error ? error.message : error,
+          );
+          changes = [];
+        }
+      }
+      const completed = await runWithConcurrency(
+        subscriptions,
+        DELIVERY_CONCURRENCY,
+        () => now().getTime() < deadline - LEASE_MARGIN_MS,
+        (subscription) =>
+          processSubscription(subscription, changes, courseNames, currentTime),
+      );
+      if (!completed) break;
+      if (subscriptions.length < SUBSCRIPTION_PAGE_SIZE) break;
+      cursor = subscriptions[subscriptions.length - 1]?.id;
     }
   };
 
   const run = async () => {
     if (running) return false;
     running = true;
+    const holder = crypto.randomUUID();
     try {
-      return await db.$transaction(async (transaction) => {
-        const result = await transaction.$queryRaw<{ locked: boolean }[]>(
-          Prisma.sql`SELECT pg_try_advisory_lock(hashtext('nthumods:push-notifier')) AS locked`,
-        );
-        if (!result[0]?.locked) return false;
-        try {
-          await runUnlocked(transaction);
-          return true;
-        } finally {
-          await transaction.$queryRaw(
-            Prisma.sql`SELECT pg_advisory_unlock(hashtext('nthumods:push-notifier'))`,
-          );
-        }
-      });
+      const result = await db.$queryRaw<{ id: number }[]>(Prisma.sql`
+        UPDATE "push_notifier_lease"
+        SET "locked_until" = now() + interval '9 minutes', "holder" = ${holder}
+        WHERE "id" = 1 AND "locked_until" < now()
+        RETURNING "id"
+      `);
+      if (result.length === 0) return false;
+      try {
+        await runUnlocked(now().getTime() + LEASE_DURATION_MS);
+        return true;
+      } finally {
+        await db.$queryRaw(Prisma.sql`
+          UPDATE "push_notifier_lease"
+          SET "locked_until" = now()
+          WHERE "id" = 1 AND "holder" = ${holder}
+        `);
+      }
     } finally {
       running = false;
     }

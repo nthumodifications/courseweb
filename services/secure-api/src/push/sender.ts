@@ -1,6 +1,7 @@
 import prisma from "../client";
 import { getVapidConfig, type VapidConfig } from "../config/push";
 import { base64urlToBytes, bytesToBase64url } from "./base64url";
+import { isAllowedPushEndpoint } from "./endpoint";
 import { encryptWebPushPayload } from "./encryption";
 import { createVapidJwt } from "./vapid";
 
@@ -49,22 +50,29 @@ const recordFailure = async (
   subscription: PushSubscriptionRecord,
   db: PushDatabase,
 ) => {
-  const nextFailureCount = subscription.failureCount + 1;
   try {
-    if (nextFailureCount >= 5) {
+    const result = (await db.pushSubscription.update({
+      where: { id: subscription.id },
+      data: { failureCount: { increment: 1 } },
+      select: { failureCount: true },
+    })) as { failureCount?: unknown };
+    if (
+      typeof result.failureCount === "number" &&
+      result.failureCount >= 5
+    ) {
       await db.pushSubscription.deleteMany({
         where: { id: subscription.id },
       });
-      return;
     }
-    await db.pushSubscription.update({
-      where: { id: subscription.id },
-      data: { failureCount: nextFailureCount },
-    });
   } catch (error) {
     console.error("Failed to record push delivery failure", error);
   }
 };
+
+export const isRetriablePushResult = (result: PushSendResult) =>
+  result.status === 0 ||
+  result.status === 429 ||
+  (result.status >= 500 && result.status <= 599);
 
 const recordSuccess = async (
   subscription: PushSubscriptionRecord,
@@ -93,8 +101,8 @@ export const sendPush = async (
   let endpoint: URL;
   try {
     endpoint = new URL(subscription.endpoint);
-    if (endpoint.protocol !== "https:")
-      throw new Error("Endpoint must use HTTPS");
+    if (!isAllowedPushEndpoint(subscription.endpoint))
+      throw new Error("Endpoint is not an allowed push service");
   } catch {
     return { status: 400, ok: false };
   }
@@ -120,15 +128,24 @@ export const sendPush = async (
       method: "POST",
       headers,
       body,
+      redirect: "error",
+      signal: AbortSignal.timeout(10_000),
     });
     const result = { status: response.status, ok: response.ok };
     if (response.status === 404 || response.status === 410) {
-      await db.pushSubscription.deleteMany({
-        where: { id: subscription.id },
-      });
+      try {
+        await db.pushSubscription.deleteMany({
+          where: { id: subscription.id },
+        });
+      } catch (error) {
+        console.error(
+          "Failed to remove gone push subscription",
+          error instanceof Error ? error.message : error,
+        );
+      }
     } else if (response.ok) {
       await recordSuccess(subscription, db);
-    } else {
+    } else if (isRetriablePushResult(result)) {
       await recordFailure(subscription, db);
     }
     return result;
