@@ -55,6 +55,26 @@ The supported values are exactly `firestore`, `dual`, and `postgres`. Any
 other non-empty value prevents the service from serving requests. The Docker
 Compose default is also `firestore`.
 
+### Web Push notifications
+
+Web Push is disabled unless all three VAPID values are configured. Generate a
+fresh P-256 signing pair with:
+
+```bash
+bun run services/secure-api/scripts/generate-vapid-keys.ts
+```
+
+Set `VAPID_PUBLIC_KEY` to the uncompressed 65-byte public point and
+`VAPID_PRIVATE_KEY` to the 32-byte private scalar, both base64url encoded.
+`VAPID_SUBJECT` is the contact URI sent to push services. Set
+`PUSH_NOTIFIER_ENABLED=true` to start the ten-minute course-change and daily
+announcement scheduler. The scheduler uses the existing `kv` scope; no new
+OAuth scope is required.
+
+The `/api/push/config` endpoint is public. Authenticated clients use
+`/api/push/subscription` to create, inspect, or remove their own subscription,
+and `/api/push/test` to send a rate-limited test notification.
+
 Run the backfill in its safe, read-only default mode with:
 
 ```bash
