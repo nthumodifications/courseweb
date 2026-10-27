@@ -33,6 +33,7 @@ export type PushViewStatus =
   | "ready";
 
 export const PUSH_ANNOUNCEMENT_DIGEST_KEY = "push_announcement_digest";
+export const PUSH_COURSE_CHANGES_KEY = "push_course_changes";
 
 export const statusFromError = (error: unknown): PushViewStatus => {
   if (error instanceof PushClientError) {
@@ -71,7 +72,8 @@ export const usePushNotifications = () => {
   );
   const [announcementDigestEnabled, setAnnouncementDigestEnabled] =
     useLocalStorage<boolean>(PUSH_ANNOUNCEMENT_DIGEST_KEY, true);
-  const announcementSourcesLoaded = announcements?.sources !== undefined;
+  const [courseChangesEnabled, setCourseChangesEnabled] =
+    useLocalStorage<boolean>(PUSH_COURSE_CHANGES_KEY, true);
   const announcementSources = useMemo(() => {
     return getEffectiveFollowIds(
       storedFollowIds,
@@ -81,14 +83,19 @@ export const usePushNotifications = () => {
   }, [announcements?.sources, language, storedFollowIds]);
   const defaultPreferences = useMemo<PushPreferences>(
     () => ({
-      courseChanges: false,
+      courseChanges: courseChangesEnabled,
       announcementSources: getAnnouncementSourcesForPush(
         announcementDigestEnabled,
         announcementSources,
       ),
       language,
     }),
-    [announcementDigestEnabled, announcementSources, language],
+    [
+      announcementDigestEnabled,
+      announcementSources,
+      courseChangesEnabled,
+      language,
+    ],
   );
   const [status, setStatus] = useState<PushViewStatus>("loading");
   const [subscribed, setSubscribed] = useState(false);
@@ -171,9 +178,12 @@ export const usePushNotifications = () => {
         announcementSources: currentAnnouncementSources,
         defaultPreferences: currentDefaultPreferences,
       } = defaultsRef.current;
-      const loadedPreferences = device.prefs ?? currentDefaultPreferences;
       const nextPreferences = {
-        ...loadedPreferences,
+        ...currentDefaultPreferences,
+        ...device.prefs,
+        courseChanges:
+          device.prefs?.courseChanges ??
+          currentDefaultPreferences.courseChanges,
         announcementSources: getAnnouncementSourcesForPush(
           currentDigestEnabled,
           currentAnnouncementSources,
@@ -220,7 +230,7 @@ export const usePushNotifications = () => {
   );
 
   const subscribe = useCallback(async () => {
-    if (!token || !announcementSourcesLoaded) return;
+    if (!token) return;
     const generation = ++generationRef.current;
     const isCurrent = () => generationRef.current === generation;
     setIsBusy(true);
@@ -239,7 +249,7 @@ export const usePushNotifications = () => {
     } finally {
       if (isCurrent()) setIsBusy(false);
     }
-  }, [announcementSourcesLoaded, applyError, currentPreferences, token]);
+  }, [applyError, currentPreferences, token]);
 
   const unsubscribe = useCallback(async () => {
     if (!token) return;
@@ -330,10 +340,13 @@ export const usePushNotifications = () => {
     retry: load,
     subscribe,
     unsubscribe,
-    setCourseChanges: (enabled: boolean) =>
-      void changePreferences({ courseChanges: enabled }),
+    setCourseChanges: (enabled: boolean) => (
+      setCourseChangesEnabled(enabled),
+      void changePreferences({ courseChanges: enabled })
+    ),
     setAnnouncementDigest: (enabled: boolean) => (
-      setAnnouncementDigestEnabled(enabled), void changePreferences({}, enabled)
+      setAnnouncementDigestEnabled(enabled),
+      void changePreferences({}, enabled)
     ),
     sendTest: sendTestNotification,
   };
@@ -347,6 +360,10 @@ export const usePushAnnouncementPreferences = (
   const token = usePushAuthToken();
   const [announcementDigestEnabled] = useLocalStorage<boolean>(
     PUSH_ANNOUNCEMENT_DIGEST_KEY,
+    true,
+  );
+  const [courseChangesEnabled] = useLocalStorage<boolean>(
+    PUSH_COURSE_CHANGES_KEY,
     true,
   );
   const previousSignature = useRef<string>();
@@ -380,7 +397,8 @@ export const usePushAnnouncementPreferences = (
           }
           await updatePrefs(
             {
-              courseChanges: device.prefs?.courseChanges ?? false,
+              courseChanges:
+                device.prefs?.courseChanges ?? courseChangesEnabled,
               announcementSources: getAnnouncementSourcesForPush(
                 announcementDigestEnabled,
                 announcementSources,
@@ -401,6 +419,7 @@ export const usePushAnnouncementPreferences = (
   }, [
     announcementDigestEnabled,
     announcementSources,
+    courseChangesEnabled,
     language,
     signature,
     sourcesLoaded,
