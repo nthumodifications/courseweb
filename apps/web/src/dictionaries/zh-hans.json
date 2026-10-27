@@ -1230,6 +1230,8 @@
         "description": "用可自订的小工具格取代今日页面",
         "columns": "栏数",
         "widgets": "小工具",
+        "manage_widgets": "管理小工具",
+        "empty": "没有小工具",
         "view_full_page": "查看完整页面",
         "widget_options": {
           "schedule": {
