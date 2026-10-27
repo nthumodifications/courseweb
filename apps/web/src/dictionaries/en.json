@@ -1227,6 +1227,7 @@
         "columns": "Columns",
         "widgets": "Widgets",
         "manage_widgets": "Manage widgets",
+        "manage_widgets_description": "Choose which widgets appear on Today.",
         "empty": "No widgets",
         "view_full_page": "View full page",
         "widget_options": {

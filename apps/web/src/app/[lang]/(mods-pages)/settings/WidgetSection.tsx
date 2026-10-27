@@ -24,9 +24,11 @@ import useDictionary from "@/dictionaries/useDictionary";
 const SortableWidgetRow = ({
   widget,
   onToggle,
+  disableDrawerDrag,
 }: {
   widget: WidgetConfig;
   onToggle: (id: string, val: boolean) => void;
+  disableDrawerDrag?: boolean;
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: widget.id });
@@ -45,6 +47,7 @@ const SortableWidgetRow = ({
         {...attributes}
         {...listeners}
         type="button"
+        data-vaul-no-drag={disableDrawerDrag ? "" : undefined}
         className="flex min-h-10 min-w-10 cursor-grab items-center justify-center rounded-md text-muted-foreground touch-none active:cursor-grabbing"
         aria-label={dict.settings.move_item}
       >
@@ -62,7 +65,11 @@ const SortableWidgetRow = ({
   );
 };
 
-export const WidgetSection = () => {
+export const WidgetSection = ({
+  disableDrawerDrag = false,
+}: {
+  disableDrawerDrag?: boolean;
+}) => {
   const dict = useDictionary();
   const [config, setConfig] = useDashboardConfig();
 
@@ -141,12 +148,16 @@ export const WidgetSection = () => {
             items={sorted.map((w) => w.id)}
             strategy={verticalListSortingStrategy}
           >
-            <div className="divide-y divide-border">
+            <div
+              className="divide-y divide-border"
+              data-vaul-no-drag={disableDrawerDrag ? "" : undefined}
+            >
               {sorted.map((widget) => (
                 <SortableWidgetRow
                   key={widget.id}
                   widget={widget}
                   onToggle={handleToggle}
+                  disableDrawerDrag={disableDrawerDrag}
                 />
               ))}
             </div>

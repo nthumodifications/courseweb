@@ -1227,6 +1227,7 @@
         "columns": "欄數",
         "widgets": "小工具",
         "manage_widgets": "管理小工具",
+        "manage_widgets_description": "選擇要顯示在今日頁面的小工具。",
         "empty": "沒有小工具",
         "view_full_page": "查看完整頁面",
         "widget_options": {

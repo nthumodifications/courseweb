@@ -192,7 +192,7 @@ const WidgetGrid: FC = () => {
               />
             ))
           ) : (
-            <p className="text-sm text-muted-foreground">
+            <p className="col-span-full text-sm text-muted-foreground">
               {dict.settings.calendar.widget_dashboard.empty}
             </p>
           )}

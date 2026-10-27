@@ -1,4 +1,4 @@
-import { act, createElement, type ReactNode } from "react";
+import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeAll, describe, expect, mock, test } from "bun:test";
 import zh from "@/dictionaries/zh.json";
@@ -6,8 +6,18 @@ import { DEFAULT_DASHBOARD_CONFIG, type DashboardConfig } from "@/types/widget";
 import { captureGlobalState } from "@/test-utils/global-state";
 import { installTestDom } from "@/testDom";
 
-const stubWidget = (name: string) => () =>
-  createElement("div", { "data-widget": name }, name);
+const stubWidget =
+  (name: string) =>
+  ({ onRemove }: { onRemove?: () => void }) =>
+    createElement(
+      "div",
+      { "data-widget": name },
+      name,
+      createElement("button", {
+        "data-widget-remove": name,
+        onClick: onRemove,
+      }),
+    );
 
 const widgetModules = [
   ["./ScheduleWidget", "schedule"],
@@ -34,29 +44,6 @@ for (const [moduleName, widgetName] of widgetModules) {
 mock.module("@/dictionaries/useDictionary", () => ({
   default: () => zh,
 }));
-
-mock.module(
-  "@/app/[lang]/(mods-pages)/student/planner/components/responsive-dialog",
-  () => ({
-    ResponsiveDialog: ({
-      open,
-      title,
-      children,
-    }: {
-      open: boolean;
-      title: ReactNode;
-      children: ReactNode;
-    }) =>
-      open
-        ? createElement(
-            "div",
-            { role: "dialog" },
-            createElement("h2", null, title),
-            children,
-          )
-        : null,
-  }),
-);
 
 let WidgetGrid: typeof import("./WidgetGrid").default;
 let activeDom: ReturnType<typeof installTestDom> | undefined;
@@ -126,16 +113,29 @@ describe("WidgetGrid management", () => {
     );
     expect(manageButton).not.toBeUndefined();
 
-    await act(async () => manageButton!.click());
-    expect(container.querySelector('[role="dialog"]')).not.toBeNull();
+    await act(async () => {
+      manageButton!.click();
+      await import("./WidgetManagementPanel");
+    });
+    expect(document.body.querySelector('[role="dialog"]')).not.toBeNull();
 
-    const busSwitch = container.querySelector(
+    const busSwitch = document.body.querySelector(
       `button[aria-label="${zh.settings.calendar.widget_dashboard.widget_options.bus.title}"]`,
     );
     expect(busSwitch).not.toBeNull();
 
     await act(async () => (busSwitch as HTMLButtonElement).click());
     expect(container.querySelector('[data-widget="bus"]')).not.toBeNull();
+
+    await act(async () =>
+      (
+        container.querySelector(
+          '[data-widget-remove="bus"]',
+        ) as HTMLButtonElement
+      ).click(),
+    );
+    expect(container.querySelector('[data-widget="bus"]')).toBeNull();
+    expect(busSwitch.getAttribute("aria-checked")).toBe("false");
   });
 
   test("shows an empty state and keeps widget management available", async () => {
@@ -145,6 +145,7 @@ describe("WidgetGrid management", () => {
       zh.settings.calendar.widget_dashboard.empty,
     );
     expect(container.querySelector("[data-widget]")).toBeNull();
+    expect(container.querySelector("p")?.className).toContain("col-span-full");
     expect(container.textContent).toContain(
       zh.settings.calendar.widget_dashboard.manage_widgets,
     );

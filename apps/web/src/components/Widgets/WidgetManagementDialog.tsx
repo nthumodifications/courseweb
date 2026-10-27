@@ -1,11 +1,20 @@
-import { useState } from "react";
-import { WidgetSection } from "@/app/[lang]/(mods-pages)/settings/WidgetSection";
-import { ResponsiveDialog } from "@/app/[lang]/(mods-pages)/student/planner/components/responsive-dialog";
+import { Suspense, useState } from "react";
 import useDictionary from "@/dictionaries/useDictionary";
+import { lazyWithRetry } from "@/lib/chunk-recovery";
+
+const WidgetManagementPanel = lazyWithRetry(
+  () => import("./WidgetManagementPanel"),
+);
 
 export const WidgetManagementDialog = () => {
-  const dict = useDictionary();
   const [open, setOpen] = useState(false);
+  const [hasOpened, setHasOpened] = useState(false);
+  const dict = useDictionary();
+
+  const handleOpen = () => {
+    setHasOpened(true);
+    setOpen(true);
+  };
 
   return (
     <>
@@ -13,18 +22,15 @@ export const WidgetManagementDialog = () => {
         type="button"
         className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
         aria-expanded={open}
-        onClick={() => setOpen(true)}
+        onClick={handleOpen}
       >
         {dict.settings.calendar.widget_dashboard.manage_widgets}
       </button>
-      <ResponsiveDialog
-        open={open}
-        onOpenChange={setOpen}
-        title={dict.settings.calendar.widget_dashboard.title}
-        contentClassName="sm:max-w-2xl max-h-[85vh] overflow-y-auto"
-      >
-        <WidgetSection />
-      </ResponsiveDialog>
+      {hasOpened && (
+        <Suspense fallback={null}>
+          <WidgetManagementPanel open={open} onOpenChange={setOpen} />
+        </Suspense>
+      )}
     </>
   );
 };
