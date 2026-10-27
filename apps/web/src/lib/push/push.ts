@@ -8,6 +8,11 @@ export interface PushPreferences {
   language: PushLanguage;
 }
 
+export const getAnnouncementSourcesForPush = (
+  digestEnabled: boolean,
+  effectiveFollowIds: readonly string[],
+) => (digestEnabled ? [...effectiveFollowIds] : []);
+
 export interface PushConfig {
   enabled: boolean;
   publicKey?: string;
@@ -166,7 +171,7 @@ const hasSameApplicationServerKey = (
       }
     )?.applicationServerKey,
   );
-  if (!actual) return true;
+  if (!actual) return false;
   return (
     actual.length === expected.length &&
     actual.every((value, index) => value === expected[index])
@@ -183,6 +188,20 @@ const getRegistration = async () => {
 const getCurrentSubscription = async () => {
   const registration = await getRegistration();
   return registration.pushManager.getSubscription();
+};
+
+const updateServiceWorkerBeforeSubscribe = async (
+  registration: ServiceWorkerRegistration,
+) => {
+  // `ready` confirms the registration has settled, but cannot prove that an
+  // old cached worker was replaced; that residual rollout risk is bounded here.
+  await Promise.race([
+    registration
+      .update()
+      .then(() => navigator.serviceWorker.ready)
+      .catch(() => undefined),
+    new Promise<void>((resolve) => setTimeout(resolve, 5000)),
+  ]);
 };
 
 const serializeSubscription = (
@@ -237,6 +256,21 @@ const putSubscription = async (
     token,
   );
 
+const deleteSubscription = async (
+  endpoint: string,
+  token: string,
+  signal?: AbortSignal,
+) =>
+  request<{ ok: true }>(
+    "/subscription",
+    {
+      method: "DELETE",
+      body: JSON.stringify({ endpoint }),
+      signal,
+    },
+    token,
+  );
+
 export const subscribeThisDevice = async (
   prefs: PushPreferences,
   token?: string,
@@ -260,10 +294,12 @@ export const subscribeThisDevice = async (
     subscription &&
     !hasSameApplicationServerKey(subscription, applicationServerKey)
   ) {
+    await deleteSubscription(subscription.endpoint, accessToken);
     await subscription.unsubscribe();
     subscription = null;
   }
   if (!subscription) {
+    await updateServiceWorkerBeforeSubscribe(registration);
     subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey,
@@ -278,16 +314,37 @@ export const unsubscribeThisDevice = async (token?: string) => {
   const subscription = await getCurrentSubscription();
   if (!subscription) return { ok: true as const };
 
-  await request<{ ok: true }>(
-    "/subscription",
-    {
-      method: "DELETE",
-      body: JSON.stringify({ endpoint: subscription.endpoint }),
-    },
-    accessToken,
-  );
+  await deleteSubscription(subscription.endpoint, accessToken);
   await subscription.unsubscribe();
   return { ok: true as const };
+};
+
+export const cleanupPushSubscriptionOnLogout = async (token?: string) => {
+  const cleanup = async () => {
+    let subscription: PushSubscription | null;
+    try {
+      subscription = await getCurrentSubscription();
+    } catch {
+      return;
+    }
+    if (!subscription) return;
+
+    await Promise.all([
+      token
+        ? deleteSubscription(subscription.endpoint, token).catch(() => {
+            // Logout must continue even when the server cannot authenticate.
+          })
+        : Promise.resolve(),
+      Promise.resolve(subscription.unsubscribe()).catch(() => {
+        // Local cleanup is best effort too.
+      }),
+    ]);
+  };
+
+  await Promise.race([
+    cleanup(),
+    new Promise<void>((resolve) => setTimeout(resolve, 3000)),
+  ]);
 };
 
 export const updatePrefs = async (prefs: PushPreferences, token?: string) => {

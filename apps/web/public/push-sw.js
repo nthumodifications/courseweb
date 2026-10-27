@@ -1,18 +1,33 @@
 const PUSH_ICON = "/images/icons/icon-192x192.png";
 const PUSH_BADGE = "/images/icons/icon-72x72.png";
 
-const safeNotificationUrl = (value) =>
-  typeof value === "string" && value.startsWith("/") && !value.startsWith("//")
+function safeNotificationUrl(value) {
+  if (typeof value !== "string" || value.includes("\\")) return null;
+  try {
+    const resolved = new URL(value, self.location.origin);
+    return resolved.origin === self.location.origin ? resolved.href : null;
+  } catch {
+    return null;
+  }
+}
+
+function normalizePushPayload(value) {
+  if (value === null || typeof value !== "object") return {};
+  if (Object.prototype.toString.call(value) !== "[object Object]") return {};
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === null || Object.getPrototypeOf(prototype) === null
     ? value
-    : null;
+    : {};
+}
 
 self.addEventListener("push", (event) => {
-  let payload = {};
+  let parsedPayload;
   try {
-    payload = event.data ? event.data.json() : {};
+    parsedPayload = event.data ? event.data.json() : null;
   } catch {
-    return;
+    parsedPayload = null;
   }
+  const payload = normalizePushPayload(parsedPayload);
 
   const title = typeof payload.title === "string" ? payload.title : "NTHUMods";
   const body = typeof payload.body === "string" ? payload.body : "";

@@ -115,7 +115,7 @@ export const NotificationsSection = () => {
         ]}
         control={
           <Switch
-            checked={notifications.preferences.announcementSources.length > 0}
+            checked={notifications.announcementDigestEnabled}
             disabled={dependentControlsDisabled}
             onCheckedChange={notifications.setAnnouncementDigest}
           />

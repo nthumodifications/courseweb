@@ -85,7 +85,11 @@ const AnnouncementsPage = () => {
     () => getEffectiveFollowIds(storedFollowIds, sources, language),
     [language, sources, storedFollowIds],
   );
-  usePushAnnouncementPreferences(followIds, language);
+  usePushAnnouncementPreferences(
+    followIds,
+    language,
+    data?.sources !== undefined,
+  );
   useEffect(() => {
     if (sources.length > 0 && !isValidFollowIds(storedFollowIds)) {
       setStoredFollowIds(followIds);

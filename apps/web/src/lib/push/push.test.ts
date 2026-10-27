@@ -4,8 +4,10 @@ process.env.VITE_NTHUMODS_AUTH_URL ??= "https://auth.example.test";
 
 import {
   detectPushSupport,
+  getAnnouncementSourcesForPush,
   getPushConfig,
   getThisDeviceStatus,
+  cleanupPushSubscriptionOnLogout,
   sendTest,
   subscribeThisDevice,
   unsubscribeThisDevice,
@@ -53,10 +55,14 @@ const installBrowser = (
     getSubscription: mock(async () => subscription),
     subscribe: mock(async () => subscribe),
   };
+  const registration = {
+    pushManager,
+    update: mock(async () => undefined),
+  };
   Object.defineProperty(globalThis, "navigator", {
     configurable: true,
     value: {
-      serviceWorker: { ready: Promise.resolve({ pushManager }) },
+      serviceWorker: { ready: Promise.resolve(registration) },
       userAgent: "Mozilla/5.0",
       platform: "Win32",
       maxTouchPoints: 0,
@@ -79,7 +85,7 @@ const installBrowser = (
       matchMedia: () => ({ matches: false }),
     },
   });
-  return pushManager;
+  return { pushManager, registration };
 };
 
 const jsonResponse = (body: unknown, status = 200) =>
@@ -105,6 +111,14 @@ afterEach(() => {
 });
 
 describe("push API client", () => {
+  test("keeps the digest disabled after announcement follow changes", () => {
+    expect(getAnnouncementSourcesForPush(false, ["academic"])).toEqual([]);
+    expect(getAnnouncementSourcesForPush(false, ["student"])).toEqual([]);
+    expect(getAnnouncementSourcesForPush(true, ["student"])).toEqual([
+      "student",
+    ]);
+  });
+
   test("recognizes iOS Safari outside an installed PWA", () => {
     installBrowser(null);
     Object.defineProperty(globalThis.navigator, "userAgent", {
@@ -145,7 +159,7 @@ describe("push API client", () => {
 
   test("requests permission from subscribe and sends the contract payload", async () => {
     const { subscription } = makeSubscription();
-    const pushManager = installBrowser(null, subscription);
+    const { pushManager, registration } = installBrowser(null, subscription);
     const order: string[] = [];
     Object.defineProperty(globalThis, "Notification", {
       configurable: true,
@@ -174,6 +188,7 @@ describe("push API client", () => {
       applicationServerKey: expect.any(Uint8Array),
     });
     expect(order[0]).toBe("permission");
+    expect(registration.update).toHaveBeenCalledTimes(1);
     expect(requests.map((request) => request.url)).toEqual([
       "https://auth.example.test/api/push/config",
       "https://auth.example.test/api/push/subscription",
@@ -193,12 +208,14 @@ describe("push API client", () => {
   test("replaces a browser subscription created with a different VAPID key", async () => {
     const old = makeSubscription(new Uint8Array(65).fill(1));
     const replacement = makeSubscription(new Uint8Array(65).fill(7));
-    const pushManager = installBrowser(
+    const { pushManager } = installBrowser(
       old.subscription,
       replacement.subscription,
     );
+    const requests: Request[] = [];
     globalThis.fetch = mock(async (input, init) => {
       const request = new Request(input, init);
+      requests.push(request);
       return request.url.endsWith("/config")
         ? jsonResponse({ enabled: true, publicKey })
         : jsonResponse({ ok: true, prefs });
@@ -208,6 +225,38 @@ describe("push API client", () => {
 
     expect(old.subscription.unsubscribe).toHaveBeenCalledTimes(1);
     expect(pushManager.subscribe).toHaveBeenCalledTimes(1);
+    expect(requests.map((request) => request.method)).toEqual([
+      "GET",
+      "DELETE",
+      "PUT",
+    ]);
+  });
+
+  test("replaces a subscription when its application key is unreadable", async () => {
+    const old = makeSubscription(null);
+    const replacement = makeSubscription(new Uint8Array(65).fill(7));
+    const { pushManager } = installBrowser(
+      old.subscription,
+      replacement.subscription,
+    );
+    const requests: Request[] = [];
+    globalThis.fetch = mock(async (input, init) => {
+      const request = new Request(input, init);
+      requests.push(request);
+      return request.url.endsWith("/config")
+        ? jsonResponse({ enabled: true, publicKey })
+        : jsonResponse({ ok: true, prefs });
+    });
+
+    await subscribeThisDevice(prefs, "access-token");
+
+    expect(old.subscription.unsubscribe).toHaveBeenCalledTimes(1);
+    expect(pushManager.subscribe).toHaveBeenCalledTimes(1);
+    expect(requests.map((request) => request.method)).toEqual([
+      "GET",
+      "DELETE",
+      "PUT",
+    ]);
   });
 
   test("deletes the server record before unsubscribing the browser", async () => {
@@ -223,6 +272,18 @@ describe("push API client", () => {
 
     expect(requests[0]?.method).toBe("DELETE");
     expect(events).toEqual(["unsubscribe"]);
+  });
+
+  test("unsubscribes locally when logout cleanup cannot delete the server row", async () => {
+    const { subscription } = makeSubscription();
+    installBrowser(subscription);
+    globalThis.fetch = mock(async () =>
+      jsonResponse({ error: "unauthorized" }, 401),
+    );
+
+    await cleanupPushSubscriptionOnLogout("access-token");
+
+    expect(subscription.unsubscribe).toHaveBeenCalledTimes(1);
   });
 
   test("gets this device status with the encoded endpoint", async () => {
@@ -243,6 +304,18 @@ describe("push API client", () => {
       `https://auth.example.test/api/push/subscription?endpoint=${encodeURIComponent(endpoint)}`,
     );
     expect(request?.headers.get("Authorization")).toBe("Bearer access-token");
+  });
+
+  test("preserves unauthorized responses for the hook to classify", async () => {
+    const { subscription } = makeSubscription();
+    installBrowser(subscription);
+    globalThis.fetch = mock(async () =>
+      jsonResponse({ error: "unauthorized" }, 401),
+    );
+
+    await expect(getThisDeviceStatus("access-token")).rejects.toMatchObject({
+      status: 401,
+    });
   });
 
   test("updates preferences and sends a test to the current endpoint", async () => {
