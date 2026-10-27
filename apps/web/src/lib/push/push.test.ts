@@ -94,6 +94,35 @@ const jsonResponse = (body: unknown, status = 200) =>
     headers: { "Content-Type": "application/json" },
   });
 
+const expectSubscriptionReplacement = async (
+  oldApplicationServerKey: Uint8Array | null,
+) => {
+  const old = makeSubscription(oldApplicationServerKey);
+  const replacement = makeSubscription(new Uint8Array(65).fill(7));
+  const { pushManager } = installBrowser(
+    old.subscription,
+    replacement.subscription,
+  );
+  const requests: Request[] = [];
+  globalThis.fetch = mock(async (input, init) => {
+    const request = new Request(input, init);
+    requests.push(request);
+    return request.url.endsWith("/config")
+      ? jsonResponse({ enabled: true, publicKey })
+      : jsonResponse({ ok: true, prefs });
+  });
+
+  await subscribeThisDevice(prefs, "access-token");
+
+  expect(old.subscription.unsubscribe).toHaveBeenCalledTimes(1);
+  expect(pushManager.subscribe).toHaveBeenCalledTimes(1);
+  expect(requests.map((request) => request.method)).toEqual([
+    "GET",
+    "DELETE",
+    "PUT",
+  ]);
+};
+
 afterEach(() => {
   globalThis.fetch = originalFetch;
   Object.defineProperty(globalThis, "navigator", {
@@ -206,57 +235,11 @@ describe("push API client", () => {
   });
 
   test("replaces a browser subscription created with a different VAPID key", async () => {
-    const old = makeSubscription(new Uint8Array(65).fill(1));
-    const replacement = makeSubscription(new Uint8Array(65).fill(7));
-    const { pushManager } = installBrowser(
-      old.subscription,
-      replacement.subscription,
-    );
-    const requests: Request[] = [];
-    globalThis.fetch = mock(async (input, init) => {
-      const request = new Request(input, init);
-      requests.push(request);
-      return request.url.endsWith("/config")
-        ? jsonResponse({ enabled: true, publicKey })
-        : jsonResponse({ ok: true, prefs });
-    });
-
-    await subscribeThisDevice(prefs, "access-token");
-
-    expect(old.subscription.unsubscribe).toHaveBeenCalledTimes(1);
-    expect(pushManager.subscribe).toHaveBeenCalledTimes(1);
-    expect(requests.map((request) => request.method)).toEqual([
-      "GET",
-      "DELETE",
-      "PUT",
-    ]);
+    await expectSubscriptionReplacement(new Uint8Array(65).fill(1));
   });
 
   test("replaces a subscription when its application key is unreadable", async () => {
-    const old = makeSubscription(null);
-    const replacement = makeSubscription(new Uint8Array(65).fill(7));
-    const { pushManager } = installBrowser(
-      old.subscription,
-      replacement.subscription,
-    );
-    const requests: Request[] = [];
-    globalThis.fetch = mock(async (input, init) => {
-      const request = new Request(input, init);
-      requests.push(request);
-      return request.url.endsWith("/config")
-        ? jsonResponse({ enabled: true, publicKey })
-        : jsonResponse({ ok: true, prefs });
-    });
-
-    await subscribeThisDevice(prefs, "access-token");
-
-    expect(old.subscription.unsubscribe).toHaveBeenCalledTimes(1);
-    expect(pushManager.subscribe).toHaveBeenCalledTimes(1);
-    expect(requests.map((request) => request.method)).toEqual([
-      "GET",
-      "DELETE",
-      "PUT",
-    ]);
+    await expectSubscriptionReplacement(null);
   });
 
   test("deletes the server record before unsubscribing the browser", async () => {

@@ -26,3 +26,15 @@ paths = [
 regexes = [
   '''^\s*(account_id|namespace_id)\s*='''
 ]
+
+[[allowlists]]
+description = "Public RFC 8291 Appendix A test vectors"
+condition = "AND"
+regexTarget = "line"
+paths = [
+  '''^services/secure-api/src/(push|config)/[^/]+\.test\.ts$'''
+]
+regexes = [
+  '''^\s*(const\s+(privateKey|RFC_SERVER_PRIVATE)\s*=\s*|privateKey:\s*)"yfWPiYE-n46HLnH0KqZOF1fJJU3MYrct3AELtAQ-oRw"\s*[,;]?\s*$''',
+  '''^\s*(const\s+RFC_AUTH\s*=\s*|auth:\s*)"BTBZMqHH6r4Tts7J_aSIgg"\s*[,;]?\s*$'''
+]

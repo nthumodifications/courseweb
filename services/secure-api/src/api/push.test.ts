@@ -5,11 +5,10 @@ import { bytesToBase64url } from "../push/base64url";
 const endpoint = "https://fcm.googleapis.com/subscription/abc";
 const p256dh = bytesToBase64url(
   Uint8Array.from([
-    4, 37, 113, 178, 190, 205, 253, 227, 96, 85, 26, 175, 30, 208, 244, 205,
-    54, 108, 17, 206, 190, 85, 95, 137, 188, 183, 177, 134, 165, 51, 57, 23,
-    49, 104, 236, 226, 235, 224, 24, 89, 123, 211, 4, 121, 184, 110, 60, 143,
-    142, 206, 213, 119, 202, 89, 24, 126, 146, 70, 153, 13, 182, 130, 0, 139,
-    14,
+    4, 37, 113, 178, 190, 205, 253, 227, 96, 85, 26, 175, 30, 208, 244, 205, 54,
+    108, 17, 206, 190, 85, 95, 137, 188, 183, 177, 134, 165, 51, 57, 23, 49,
+    104, 236, 226, 235, 224, 24, 89, 123, 211, 4, 121, 184, 110, 60, 143, 142,
+    206, 213, 119, 202, 89, 24, 126, 146, 70, 153, 13, 182, 130, 0, 139, 14,
   ]),
 );
 const auth = bytesToBase64url(new Uint8Array(16).fill(2));
@@ -39,6 +38,43 @@ const authMiddleware: MiddlewareHandler<any> = async (c, next) => {
 };
 
 const noRateLimit: MiddlewareHandler<any> = async (_c, next) => await next();
+
+const requestSubscription = async (
+  upsert: unknown,
+  subscription: { endpoint: string; p256dh: string },
+) => {
+  const { createPushApp } = await import("./push");
+  const app = createPushApp({
+    auth: authMiddleware,
+    rateLimit: noRateLimit,
+    getVapidConfig: () => ({
+      publicKey: "public",
+      privateKey: "private",
+      subject: "mailto:test@nthumods.com",
+    }),
+    db: {
+      pushSubscription: {
+        findUnique: mock(() => Promise.resolve(null)),
+        findFirst: mock(() => Promise.resolve(null)),
+        findMany: mock(() => Promise.resolve([])),
+        upsert,
+        update: mock(() => Promise.resolve(row())),
+        deleteMany: mock(() => Promise.resolve({ count: 0 })),
+      },
+    } as never,
+  });
+  return app.request("http://test/subscription", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      subscription: {
+        endpoint: subscription.endpoint,
+        keys: { p256dh: subscription.p256dh, auth },
+      },
+      prefs: { courseChanges: true, announcementSources: [], language: "en" },
+    }),
+  });
+};
 
 test("upserts an owned subscription, initializes a new cursor, and trims old rows", async () => {
   const findUnique = mock(() => Promise.resolve(null));
@@ -182,36 +218,9 @@ test("concurrent subscription upserts converge to ten rows with one delete state
 
 test("rejects non-push-service endpoints before upserting", async () => {
   const upsert = mock(() => Promise.resolve(row()));
-  const { createPushApp } = await import("./push");
-  const app = createPushApp({
-    auth: authMiddleware,
-    rateLimit: noRateLimit,
-    getVapidConfig: () => ({
-      publicKey: "public",
-      privateKey: "private",
-      subject: "mailto:test@nthumods.com",
-    }),
-    db: {
-      pushSubscription: {
-        findUnique: mock(() => Promise.resolve(null)),
-        findFirst: mock(() => Promise.resolve(null)),
-        findMany: mock(() => Promise.resolve([])),
-        upsert,
-        update: mock(() => Promise.resolve(row())),
-        deleteMany: mock(() => Promise.resolve({ count: 0 })),
-      },
-    } as never,
-  });
-  const response = await app.request("http://test/subscription", {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      subscription: {
-        endpoint: "https://127.0.0.1/internal",
-        keys: { p256dh, auth },
-      },
-      prefs: { courseChanges: true, announcementSources: [], language: "en" },
-    }),
+  const response = await requestSubscription(upsert, {
+    endpoint: "https://127.0.0.1/internal",
+    p256dh,
   });
   expect(response.status).toBe(400);
   expect(upsert).not.toHaveBeenCalled();
@@ -219,36 +228,9 @@ test("rejects non-push-service endpoints before upserting", async () => {
 
 test("rejects a 65-byte value that is not an importable P-256 point", async () => {
   const upsert = mock(() => Promise.resolve(row()));
-  const { createPushApp } = await import("./push");
-  const app = createPushApp({
-    auth: authMiddleware,
-    rateLimit: noRateLimit,
-    getVapidConfig: () => ({
-      publicKey: "public",
-      privateKey: "private",
-      subject: "mailto:test@nthumods.com",
-    }),
-    db: {
-      pushSubscription: {
-        findUnique: mock(() => Promise.resolve(null)),
-        findFirst: mock(() => Promise.resolve(null)),
-        findMany: mock(() => Promise.resolve([])),
-        upsert,
-        update: mock(() => Promise.resolve(row())),
-        deleteMany: mock(() => Promise.resolve({ count: 0 })),
-      },
-    } as never,
-  });
-  const response = await app.request("http://test/subscription", {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      subscription: {
-        endpoint,
-        keys: { p256dh: bytesToBase64url(new Uint8Array(65)), auth },
-      },
-      prefs: { courseChanges: true, announcementSources: [], language: "en" },
-    }),
+  const response = await requestSubscription(upsert, {
+    endpoint,
+    p256dh: bytesToBase64url(new Uint8Array(65)),
   });
   expect(response.status).toBe(400);
   expect(upsert).not.toHaveBeenCalled();

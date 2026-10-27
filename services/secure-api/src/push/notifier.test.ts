@@ -20,6 +20,74 @@ const change = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
+type TestNotifierOptions = Parameters<typeof createPushNotifier>[0];
+type TestMethod = (...args: never[]) => unknown;
+
+const createTestNotifier = (options: Omit<TestNotifierOptions, "vapid">) =>
+  createPushNotifier({
+    vapid: {
+      publicKey: "public",
+      privateKey: "private",
+      subject: "mailto:test@nthumods.com",
+    },
+    ...options,
+  });
+
+type CourseNotifierOptions = Omit<
+  TestNotifierOptions,
+  "vapid" | "getCourseChanges" | "getCourseNames" | "userStore"
+> & {
+  getCourseChanges?: TestNotifierOptions["getCourseChanges"];
+};
+
+const createCourseNotifier = ({
+  getCourseChanges = async () => [change()],
+  ...options
+}: CourseNotifierOptions) =>
+  createTestNotifier({
+    getCourseChanges,
+    getCourseNames: async () => new Map(),
+    userStore: {
+      get: async () => ({ value: { "11510": ["11510CS 100100"] } }),
+    } as never,
+    ...options,
+  });
+
+const createTransaction = ({
+  findMany,
+  update,
+  updateMany,
+  aggregate,
+}: {
+  findMany: TestMethod;
+  update: TestMethod;
+  updateMany?: TestMethod;
+  aggregate: TestMethod;
+}) => ({
+  pushSubscription: {
+    findMany,
+    update,
+    ...(updateMany ? { updateMany } : {}),
+    deleteMany: async () => ({ count: 0 }),
+    aggregate,
+  },
+  $queryRaw: async () => [{ id: 1 }],
+});
+
+const announcementResponse = () =>
+  new Response(
+    JSON.stringify({
+      articles: [
+        {
+          title: "A",
+          link: "https://example.test/a",
+          date: "2026-10-27",
+          sourceIds: ["source-a"],
+        },
+      ],
+    }),
+  );
+
 test("selects timetable changes after a cursor once per course", () => {
   const selected = selectCourseChanges(
     [
@@ -160,41 +228,28 @@ test("fetches one announcement response per run and records the digest date", as
 
 test("does not advance a course cursor after a retriable send failure", async () => {
   const updated: unknown[] = [];
-  const transaction = {
-    pushSubscription: {
-      findMany: async () => [
-        {
-          id: "sub-1",
-          userId: "user-1",
-          endpoint: "https://fcm.googleapis.com/sub-1",
-          p256dh: "key",
-          auth: "auth",
-          failureCount: 0,
-          language: "en",
-          courseChanges: true,
-          announcementSources: [],
-          lastCourseChangeId: 7n,
-          lastDigestDate: null,
-        },
-      ],
-      update: async (args: unknown) => updated.push(args),
-      deleteMany: async () => ({ count: 0 }),
-      aggregate: async () => ({ _min: { lastCourseChangeId: 7n } }),
-    },
-    $queryRaw: async () => [{ id: 1 }],
-  };
-  const notifier = createPushNotifier({
+  const transaction = createTransaction({
+    findMany: async () => [
+      {
+        id: "sub-1",
+        userId: "user-1",
+        endpoint: "https://fcm.googleapis.com/sub-1",
+        p256dh: "key",
+        auth: "auth",
+        failureCount: 0,
+        language: "en",
+        courseChanges: true,
+        announcementSources: [],
+        lastCourseChangeId: 7n,
+        lastDigestDate: null,
+      },
+    ],
+    update: async (args: unknown) => updated.push(args),
+    aggregate: async () => ({ _min: { lastCourseChangeId: 7n } }),
+  });
+  const notifier = createCourseNotifier({
     db: transaction as never,
-    vapid: {
-      publicKey: "public",
-      privateKey: "private",
-      subject: "mailto:test@nthumods.com",
-    },
     getCourseChanges: async () => [change({ id: 8 })],
-    getCourseNames: async () => new Map(),
-    userStore: {
-      get: async () => ({ value: { "11510": ["11510CS 100100"] } }),
-    } as never,
     send: async () => ({ status: 503, ok: false }),
     now: () => new Date("2026-10-27T01:00:00Z"),
   });
@@ -219,42 +274,29 @@ test("keeps an intervening higher course cursor", async () => {
     }
     return { count: 0 };
   });
-  const transaction = {
-    pushSubscription: {
-      findMany: async () => [
-        {
-          id: "sub-1",
-          userId: "user-1",
-          endpoint: "https://fcm.googleapis.com/sub-1",
-          p256dh: "key",
-          auth: "auth",
-          failureCount: 0,
-          language: "en",
-          courseChanges: true,
-          announcementSources: [],
-          lastCourseChangeId: 7n,
-          lastDigestDate: null,
-        },
-      ],
-      update,
-      updateMany,
-      deleteMany: async () => ({ count: 0 }),
-      aggregate: async () => ({ _min: { lastCourseChangeId: 7n } }),
-    },
-    $queryRaw: async () => [{ id: 1 }],
-  };
-  const notifier = createPushNotifier({
+  const transaction = createTransaction({
+    findMany: async () => [
+      {
+        id: "sub-1",
+        userId: "user-1",
+        endpoint: "https://fcm.googleapis.com/sub-1",
+        p256dh: "key",
+        auth: "auth",
+        failureCount: 0,
+        language: "en",
+        courseChanges: true,
+        announcementSources: [],
+        lastCourseChangeId: 7n,
+        lastDigestDate: null,
+      },
+    ],
+    update,
+    updateMany,
+    aggregate: async () => ({ _min: { lastCourseChangeId: 7n } }),
+  });
+  const notifier = createCourseNotifier({
     db: transaction as never,
-    vapid: {
-      publicKey: "public",
-      privateKey: "private",
-      subject: "mailto:test@nthumods.com",
-    },
     getCourseChanges: async () => [change({ id: 8 })],
-    getCourseNames: async () => new Map(),
-    userStore: {
-      get: async () => ({ value: { "11510": ["11510CS 100100"] } }),
-    } as never,
     send: async () => ({ status: 201, ok: true }),
     now: () => new Date("2026-10-27T01:00:00Z"),
   });
@@ -268,49 +310,28 @@ test("keeps an intervening higher course cursor", async () => {
 
 test("does not mark a failed digest as sent", async () => {
   const updated: unknown[] = [];
-  const transaction = {
-    pushSubscription: {
-      findMany: async () => [
-        {
-          id: "sub-1",
-          userId: "user-1",
-          endpoint: "https://fcm.googleapis.com/sub-1",
-          p256dh: "key",
-          auth: "auth",
-          failureCount: 0,
-          language: "en",
-          courseChanges: false,
-          announcementSources: ["source-a"],
-          lastCourseChangeId: 0n,
-          lastDigestDate: null,
-        },
-      ],
-      update: async (args: unknown) => updated.push(args),
-      deleteMany: async () => ({ count: 0 }),
-      aggregate: async () => ({ _min: { lastCourseChangeId: null } }),
-    },
-    $queryRaw: async () => [{ id: 1 }],
-  };
-  const notifier = createPushNotifier({
+  const transaction = createTransaction({
+    findMany: async () => [
+      {
+        id: "sub-1",
+        userId: "user-1",
+        endpoint: "https://fcm.googleapis.com/sub-1",
+        p256dh: "key",
+        auth: "auth",
+        failureCount: 0,
+        language: "en",
+        courseChanges: false,
+        announcementSources: ["source-a"],
+        lastCourseChangeId: 0n,
+        lastDigestDate: null,
+      },
+    ],
+    update: async (args: unknown) => updated.push(args),
+    aggregate: async () => ({ _min: { lastCourseChangeId: null } }),
+  });
+  const notifier = createTestNotifier({
     db: transaction as never,
-    vapid: {
-      publicKey: "public",
-      privateKey: "private",
-      subject: "mailto:test@nthumods.com",
-    },
-    fetcher: async () =>
-      new Response(
-        JSON.stringify({
-          articles: [
-            {
-              title: "A",
-              link: "https://example.test/a",
-              date: "2026-10-27",
-              sourceIds: ["source-a"],
-            },
-          ],
-        }),
-      ),
+    fetcher: async () => announcementResponse(),
     send: async () => ({ status: 503, ok: false }),
     now: () => new Date("2026-10-27T01:00:00Z"),
   });
@@ -334,38 +355,17 @@ test("starts at most eight subscription deliveries concurrently", async () => {
   }));
   let inFlight = 0;
   let maximum = 0;
-  const transaction = {
-    pushSubscription: {
-      findMany: async (args: unknown) => {
-        expect(args).toEqual(expect.objectContaining({ take: 500 }));
-        return rows;
-      },
-      update: async () => undefined,
-      deleteMany: async () => ({ count: 0 }),
-      aggregate: async () => ({ _min: { lastCourseChangeId: null } }),
+  const transaction = createTransaction({
+    findMany: async (args: unknown) => {
+      expect(args).toEqual(expect.objectContaining({ take: 500 }));
+      return rows;
     },
-    $queryRaw: async () => [{ id: 1 }],
-  };
-  const notifier = createPushNotifier({
+    update: async () => undefined,
+    aggregate: async () => ({ _min: { lastCourseChangeId: null } }),
+  });
+  const notifier = createTestNotifier({
     db: transaction as never,
-    vapid: {
-      publicKey: "public",
-      privateKey: "private",
-      subject: "mailto:test@nthumods.com",
-    },
-    fetcher: async () =>
-      new Response(
-        JSON.stringify({
-          articles: [
-            {
-              title: "A",
-              link: "https://example.test/a",
-              date: "2026-10-27",
-              sourceIds: ["source-a"],
-            },
-          ],
-        }),
-      ),
+    fetcher: async () => announcementResponse(),
     send: async () => {
       inFlight += 1;
       maximum = Math.max(maximum, inFlight);
@@ -398,28 +398,14 @@ test("does not start a subscription with less than three minutes of lease remain
     },
   ]);
   const send = mock(async () => ({ status: 201, ok: true }));
-  const transaction = {
-    pushSubscription: {
-      findMany,
-      update: async () => undefined,
-      updateMany: async () => ({ count: 1 }),
-      deleteMany: async () => ({ count: 0 }),
-      aggregate: async () => ({ _min: { lastCourseChangeId: 0n } }),
-    },
-    $queryRaw: async () => [{ id: 1 }],
-  };
-  const notifier = createPushNotifier({
+  const transaction = createTransaction({
+    findMany,
+    update: async () => undefined,
+    updateMany: async () => ({ count: 1 }),
+    aggregate: async () => ({ _min: { lastCourseChangeId: 0n } }),
+  });
+  const notifier = createCourseNotifier({
     db: transaction as never,
-    vapid: {
-      publicKey: "public",
-      privateKey: "private",
-      subject: "mailto:test@nthumods.com",
-    },
-    getCourseChanges: async () => [change()],
-    getCourseNames: async () => new Map(),
-    userStore: {
-      get: async () => ({ value: { "11510": ["11510CS 100100"] } }),
-    } as never,
     send,
     now: () => {
       nowCalls += 1;
@@ -450,44 +436,31 @@ test("continues after the last row of a page is deleted and reads course changes
   const queries: unknown[] = [];
   const processed: string[] = [];
   let courseChangeReads = 0;
-  const transaction = {
-    pushSubscription: {
-      findMany: async (args: unknown) => {
-        queries.push(args);
-        const value = args as {
-          where?: { id?: { gt?: string } };
-          take: number;
-          cursor?: unknown;
-          skip?: unknown;
-        };
-        if (value.cursor !== undefined || value.skip !== undefined) {
-          throw new Error("cursor paging is not supported");
-        }
-        const lastId = value.where?.id?.gt ?? "";
-        return rows.filter((row) => row.id > lastId).slice(0, value.take);
-      },
-      update: async () => undefined,
-      updateMany: async () => ({ count: 1 }),
-      deleteMany: async () => ({ count: 0 }),
-      aggregate: async () => ({ _min: { lastCourseChangeId: 0n } }),
+  const transaction = createTransaction({
+    findMany: async (args: unknown) => {
+      queries.push(args);
+      const value = args as {
+        where?: { id?: { gt?: string } };
+        take: number;
+        cursor?: unknown;
+        skip?: unknown;
+      };
+      if (value.cursor !== undefined || value.skip !== undefined) {
+        throw new Error("cursor paging is not supported");
+      }
+      const lastId = value.where?.id?.gt ?? "";
+      return rows.filter((row) => row.id > lastId).slice(0, value.take);
     },
-    $queryRaw: async () => [{ id: 1 }],
-  };
-  const notifier = createPushNotifier({
+    update: async () => undefined,
+    updateMany: async () => ({ count: 1 }),
+    aggregate: async () => ({ _min: { lastCourseChangeId: 0n } }),
+  });
+  const notifier = createCourseNotifier({
     db: transaction as never,
-    vapid: {
-      publicKey: "public",
-      privateKey: "private",
-      subject: "mailto:test@nthumods.com",
-    },
     getCourseChanges: async () => {
       courseChangeReads += 1;
       return [change()];
     },
-    getCourseNames: async () => new Map(),
-    userStore: {
-      get: async () => ({ value: { "11510": ["11510CS 100100"] } }),
-    } as never,
     send: async (subscription) => {
       processed.push(subscription.id);
       return subscription.id === "sub-500"
@@ -517,14 +490,32 @@ test("uses calendar-day boundaries for the first digest", () => {
   const articles = selectAnnouncementDigest(
     {
       articles: [
-        { title: "Older", link: "/older", date: "2026-10-25", sourceIds: ["source-a"] },
-        { title: "Yesterday", link: "/yesterday", date: "2026-10-26", sourceIds: ["source-a"] },
-        { title: "Today", link: "/today", date: "2026-10-27", sourceIds: ["source-a"] },
+        {
+          title: "Older",
+          link: "/older",
+          date: "2026-10-25",
+          sourceIds: ["source-a"],
+        },
+        {
+          title: "Yesterday",
+          link: "/yesterday",
+          date: "2026-10-26",
+          sourceIds: ["source-a"],
+        },
+        {
+          title: "Today",
+          link: "/today",
+          date: "2026-10-27",
+          sourceIds: ["source-a"],
+        },
       ],
     },
     ["source-a"],
     null,
     new Date("2026-10-27T01:00:00Z"),
   );
-  expect(articles.map((article) => article.title)).toEqual(["Yesterday", "Today"]);
+  expect(articles.map((article) => article.title)).toEqual([
+    "Yesterday",
+    "Today",
+  ]);
 });
