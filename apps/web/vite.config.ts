@@ -75,13 +75,15 @@ export default defineConfig(({ mode }) => ({
       workbox: {
         disableDevLogs: true,
         navigateFallback: "/index.html",
+        navigateFallbackDenylist: [/^\/push-sw\.js$/],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         // Keep the optional Three.js experience out of the PWA install path.
         // The route remains available online and is cached by the browser after use.
-        globIgnores: ["**/campus-map-*.js"],
+        globIgnores: ["**/campus-map-*.js", "**/push-sw.js"],
+        importScripts: ["/push-sw.js"],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,

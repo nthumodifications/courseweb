@@ -5,6 +5,7 @@ export const SETTINGS_SECTION_IDS = [
   "timetable",
   "ai",
   "account",
+  "notifications",
   "privacy",
   "advanced",
 ] as const;
@@ -24,6 +25,10 @@ export const SETTINGS_SETTING_IDS = [
   "setting-account",
   "setting-sync-status",
   "setting-restore-backup",
+  "setting-notifications-device",
+  "setting-notifications-course-changes",
+  "setting-notifications-announcement-digest",
+  "setting-notifications-test",
   "setting-analytics",
   "setting-custom-css",
 ] as const;

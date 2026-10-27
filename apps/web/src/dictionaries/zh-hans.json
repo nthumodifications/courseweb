@@ -1119,6 +1119,36 @@
       "keepLocalData": "在此设备保留数据",
       "logout": "登出"
     },
+    "notifications": {
+      "title": "通知",
+      "device": {
+        "title": "在此设备打开通知"
+      },
+      "course_changes": {
+        "title": "课表中的课程变更",
+        "description": "教室、时间或取消的变更。"
+      },
+      "announcement_digest": {
+        "title": "已追踪公告每日摘要",
+        "description": "使用您在公告页面追踪的单位。",
+        "announcements_link": "打开公告"
+      },
+      "test": {
+        "title": "发送测试通知",
+        "action": "发送测试",
+        "sent": "测试通知已发送"
+      },
+      "states": {
+        "signed_out": "登录以取得通知",
+        "unsupported": "此浏览器不支持通知",
+        "ios_not_installed": "请先将 NTHUMods 加入主画面",
+        "permission_denied": "通知已在浏览器设置中封锁",
+        "not_configured": "尚未提供",
+        "error": "无法加载通知设置",
+        "loading": "正在检查通知支持状态"
+      },
+      "retry": "重试"
+    },
     "display": {
       "title": "显示",
       "dark_mode": {

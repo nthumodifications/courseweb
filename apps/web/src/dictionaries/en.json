@@ -1115,6 +1115,36 @@
       "keepLocalData": "Keep data locally",
       "logout": "Logout"
     },
+    "notifications": {
+      "title": "Notifications",
+      "device": {
+        "title": "Notifications on this device"
+      },
+      "course_changes": {
+        "title": "Course changes in my timetable",
+        "description": "Room, time, or cancellation changes."
+      },
+      "announcement_digest": {
+        "title": "Daily digest from followed announcements",
+        "description": "Uses the offices you follow on the announcements page.",
+        "announcements_link": "Open announcements"
+      },
+      "test": {
+        "title": "Send a test notification",
+        "action": "Send test",
+        "sent": "Test notification sent"
+      },
+      "states": {
+        "signed_out": "Sign in to get notifications",
+        "unsupported": "Notifications are not supported in this browser",
+        "ios_not_installed": "Add NTHUMods to your Home Screen first",
+        "permission_denied": "Notifications are blocked in your browser settings",
+        "not_configured": "Not available yet",
+        "error": "Could not load notification settings",
+        "loading": "Checking notification support"
+      },
+      "retry": "Retry"
+    },
     "display": {
       "title": "Display",
       "dark_mode": {
