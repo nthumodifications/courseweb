@@ -982,6 +982,88 @@ describe("local-first resilient client", () => {
     expect(client.getStatus()).toBe("ready");
   });
 
+  test("answers from remote immediately while a cold local build continues", async () => {
+    let releaseManifest!: () => void;
+    const manifestStarted = new Promise<void>((resolve) => {
+      releaseManifest = resolve;
+    });
+    let remoteCalls = 0;
+    const remoteWithCount = {
+      ...remote,
+      search: async () => {
+        remoteCalls += 1;
+        return remoteResponse;
+      },
+    } as unknown as AlgoliaSearchClient;
+    const { state, cache } = createEngine();
+    const client = createResilientSearchClient({
+      remoteClient: remoteWithCount,
+      localSearch: {
+        cache,
+        fetch: async (input, init) => {
+          if (String(input).endsWith("/search/chunk/manifest")) {
+            const response = makeFetch(state)(input, init);
+            await manifestStarted;
+            return response;
+          }
+          return makeFetch(state)(input, init);
+        },
+        baseUrl: "https://api.example.test",
+        defaultSemester: "11510",
+        workerFactory: () => new FakeWorker(),
+      },
+    });
+
+    const result = await Promise.race([
+      client.search([request({ query: "CS" })] as never),
+      new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new Error("remote search waited on local")),
+          100,
+        ),
+      ),
+    ]);
+    expect(remoteCalls).toBe(1);
+    expect(
+      (result as { results: Array<{ hits: Array<{ objectID: string }> }> })
+        .results[0].hits[0]?.objectID,
+    ).toBe("remote");
+
+    releaseManifest();
+    for (
+      let attempt = 0;
+      attempt < 20 && client.getStatus() !== "local";
+      attempt += 1
+    ) {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+    expect(client.getStatus()).toBe("local");
+  });
+
+  test("uses ready local results without touching a failed remote", async () => {
+    const { engine } = createEngine();
+    await engine.search("11510", request({ query: "CS" }));
+    let remoteCalls = 0;
+    const remoteDown = {
+      ...remote,
+      search: async () => {
+        remoteCalls += 1;
+        throw new Error("remote unavailable");
+      },
+    } as unknown as AlgoliaSearchClient;
+    const client = createResilientSearchClient({
+      remoteClient: remoteDown,
+      localSearch: { engine, defaultSemester: "11510" },
+    });
+
+    const result = await client.search([request({ query: "CS" })] as never);
+    expect(remoteCalls).toBe(0);
+    expect(
+      (result as { results: Array<{ hits: unknown[] }> }).results[0]?.hits
+        .length,
+    ).toBeGreaterThan(0);
+  });
+
   test("returns handled:false for cross-semester requests", async () => {
     const { state, cache } = createEngine();
     const client = createLocalSearchClient({
@@ -1089,6 +1171,13 @@ describe("local-first resilient client", () => {
     };
     expect(remoteCalls).toBe(1);
     expect(result.results[0].hits[0].objectID).toBe("remote");
+    for (
+      let attempt = 0;
+      attempt < 20 && !failedWorker?.terminated;
+      attempt += 1
+    ) {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
     expect(failedWorker?.terminated).toBe(true);
 
     await client.retry();
@@ -1097,7 +1186,16 @@ describe("local-first resilient client", () => {
       (recovered as { results: Array<{ hits: unknown[] }> }).results[0]?.hits
         .length,
     ).toBeGreaterThan(0);
-    expect(remoteCalls).toBe(1);
+    expect(remoteCalls).toBe(2);
+    for (
+      let attempt = 0;
+      attempt < 20 && client.getStatus() !== "local";
+      attempt += 1
+    ) {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+    await client.search([request({ query: "CS" })] as never);
+    expect(remoteCalls).toBe(2);
   });
 
   test("evicts and terminates a worker after a fatal query error", async () => {

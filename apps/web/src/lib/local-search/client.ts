@@ -25,8 +25,10 @@ export type LocalSearchClient = {
     requests: readonly LocalSearchRequest[],
   ) => Promise<LocalSearchAttempt<readonly LocalFacetResult[]>>;
   getStatus: () => ReturnType<LocalSearchEngine["getStatus"]>;
+  isReadyFor: (requests: readonly LocalSearchRequest[]) => boolean;
   getText: LocalSearchEngine["getText"];
   subscribe: (listener: () => void) => () => void;
+  prefetch: (semester?: string) => Promise<void>;
   clear: (semester?: string) => Promise<void>;
 };
 
@@ -86,8 +88,14 @@ export const createLocalSearchClient = (
       }
     },
     getStatus: engine.getStatus,
+    isReadyFor: (requests) => {
+      const semester = uniqueSemester(requests, defaultSemester);
+      return semester ? engine.isReady(semester) : false;
+    },
     getText: engine.getText,
     subscribe: engine.subscribe,
+    prefetch: (semester = defaultSemester) =>
+      semester ? engine.prefetch(semester) : Promise.resolve(),
     clear: engine.clear.bind(engine),
   };
 };

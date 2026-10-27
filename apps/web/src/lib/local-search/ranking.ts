@@ -2,12 +2,34 @@ import {
   searchableFieldValues,
   type SearchProjectionRecord,
 } from "./projection";
-import { isCjkCharacter, queryTerms, searchableTokenGroups } from "./tokenizer";
+import {
+  cjkTermMatchScore,
+  isCjkCharacter,
+  matchesCourseCode,
+  parseCourseCodeQuery,
+  queryTerms,
+  searchableTokenGroups,
+  tokenizeCjk,
+} from "./tokenizer";
 
 /** Searchable-field order with code fields ahead of titles and teachers. */
 const RANK_FIELDS = [0, 1, 2, 3, 5, 4, 6] as const;
 const CODE_FIELDS = new Set([0, 1, 2]);
 const TITLE_FIELDS = new Set([3, 5]);
+const TEACHER_FIELDS = new Set([4, 6]);
+
+const hasWholeTeacherName = (
+  values: readonly string[],
+  terms: readonly string[],
+) =>
+  values.some((value) => {
+    const tokens = tokenizeCjk(value);
+    return terms.every((term) =>
+      [...term].some(isCjkCharacter)
+        ? cjkTermMatchScore(value, term) === 3
+        : tokens.includes(term),
+    );
+  });
 
 const fieldWeight = (field: number) => {
   if (field === 0) return 700;
@@ -23,9 +45,7 @@ const termMatchScore = (
   term: string,
 ) => {
   if ([...term].some(isCjkCharacter)) {
-    if (values.some((value) => value === term)) return 3;
-    if (values.some((value) => value.startsWith(term))) return 2;
-    return values.some((value) => value.includes(term)) ? 1 : 0;
+    return Math.max(...values.map((value) => cjkTermMatchScore(value, term)));
   }
   if (tokens.some((token) => token === term)) return 3;
   if (term.length >= 2 && tokens.some((token) => token.startsWith(term))) {
@@ -42,10 +62,21 @@ const scoreField = (
   terms: readonly string[],
 ) => {
   const base = fieldWeight(field);
+  const termScores = terms.map((term) => termMatchScore(values, tokens, term));
+  if (
+    TEACHER_FIELDS.has(field) &&
+    termScores.length > 0 &&
+    hasWholeTeacherName(values, terms)
+  ) {
+    return (
+      1_800 +
+      base +
+      termScores.reduce<number>((sum, score) => sum + score, 0) * 25
+    );
+  }
   if (values.some((value) => value === query)) return 1_000 + base;
   if (values.some((value) => value.startsWith(query))) return 800 + base;
 
-  const termScores = terms.map((term) => termMatchScore(values, tokens, term));
   if (termScores.every((score) => score > 0)) {
     return (
       600 +
@@ -65,6 +96,8 @@ export const remoteRankScore = (
 
   const values = searchableFieldValues(record);
   const tokenGroups = searchableTokenGroups(record);
+  const courseCode = parseCourseCodeQuery(query);
+  if (courseCode && matchesCourseCode(record, courseCode)) return 3_000;
   const fieldScores = RANK_FIELDS.map((field) =>
     scoreField(
       field,
@@ -95,7 +128,7 @@ export const rankLocalIdsByTerms = (
 ): readonly number[] => {
   if (!terms.length) return ids;
 
-  return ids
+  const ranked = ids
     .map((id) => ({
       id,
       score: remoteRankScore(records[id]!, terms),
@@ -108,6 +141,27 @@ export const rankLocalIdsByTerms = (
       );
     })
     .map(({ id }) => id);
+
+  if (parseCourseCodeQuery(terms.join(" "))) return ranked;
+
+  const firstSections: number[] = [];
+  const remainingSections: number[] = [];
+  const seenCourses = new Set<string>();
+  for (const id of ranked) {
+    const record = records[id]!;
+    const department = record.department
+      .normalize("NFKC")
+      .replace(/\s+/g, "")
+      .toLocaleUpperCase("en-US");
+    const course = record.course.normalize("NFKC").replace(/\s+/g, "");
+    const key = `${department}\u0000${course || record.objectID}`;
+    if (seenCourses.has(key)) remainingSections.push(id);
+    else {
+      seenCourses.add(key);
+      firstSections.push(id);
+    }
+  }
+  return [...firstSections, ...remainingSections];
 };
 
 export const rankLocalIds = (

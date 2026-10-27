@@ -7,6 +7,7 @@ import {
 } from "./local-search/client";
 import type { SearchTextRecord } from "./local-search/cache";
 import { fetchJsonWithDeadline } from "./local-search/deadline";
+import { isLocalSearchEnabled } from "./local-search/feature-flags";
 import { lastSemester } from "@courseweb/shared";
 import { cleanSyllabusFields } from "@/lib/syllabus-text";
 
@@ -85,13 +86,8 @@ const viteEnv =
   ).env ?? {};
 
 const API_BASE = (viteEnv.VITE_COURSEWEB_API_URL ?? "").replace(/\/$/, "");
-export const isLocalSearchEnabled = (
-  env: Record<string, string | undefined> = viteEnv,
-) =>
-  !["0", "false"].includes(
-    env.VITE_ENABLE_LOCAL_SEARCH?.trim().toLowerCase() ?? "",
-  );
-const localSearchEnabled = isLocalSearchEnabled();
+export { isLocalSearchEnabled } from "./local-search/feature-flags";
+const localSearchEnabled = isLocalSearchEnabled(viteEnv);
 
 type PersistedState = {
   backend: RemoteBackend;
@@ -380,6 +376,21 @@ export const createResilientSearchClient = (
     listeners.forEach((listener) => listener());
   });
 
+  if (localClient && typeof window !== "undefined") {
+    const schedule = (
+      window as Window & {
+        requestIdleCallback?: (callback: () => void) => number;
+      }
+    ).requestIdleCallback;
+    const prefetch = () => {
+      void localClient.prefetch(lastSemester.id).catch((error) => {
+        console.warn("Local course-search prefetch unavailable:", error);
+      });
+    };
+    if (schedule) schedule(prefetch);
+    else window.setTimeout(prefetch, 0);
+  }
+
   const clearLocalStatus = () => {
     if (localStatus === undefined) return;
     localStatus = undefined;
@@ -628,8 +639,12 @@ export const createResilientSearchClient = (
     requests: SearchRequests,
     requestOptions?: Parameters<AlgoliaSearchClient["search"]>[1],
   ) => {
-    const localResult = await tryLocalSearch<TObject>(requests);
-    if (localResult) return localResult;
+    if (localClient?.isReadyFor(requests)) {
+      const localResult = await tryLocalSearch<TObject>(requests);
+      if (localResult) return localResult;
+    } else {
+      void tryLocalSearch<TObject>(requests);
+    }
     clearLocalStatus();
     return runWithFailover<SearchResults<TObject>>(
       (client) =>
@@ -686,8 +701,12 @@ export const createResilientSearchClient = (
         AlgoliaSearchClient["searchForFacetValues"]
       >[1],
     ) => {
-      const localResult = await tryLocalFacetSearch(requests);
-      if (localResult) return localResult;
+      if (localClient?.isReadyFor(requests)) {
+        const localResult = await tryLocalFacetSearch(requests);
+        if (localResult) return localResult;
+      } else {
+        void tryLocalFacetSearch(requests);
+      }
       clearLocalStatus();
       return runWithFailover<readonly FacetResult[]>(
         (client) =>

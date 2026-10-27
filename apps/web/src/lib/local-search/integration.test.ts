@@ -234,6 +234,8 @@ describe("local search against the real in-process search-chunk API", () => {
   });
 
   test("fills hits InstantSearch already copied when the text tier lands", async () => {
+    const engine = createEngine();
+    await engine.search("11510", request());
     const resilient = createResilientSearchClient({
       remoteClient: {
         search: async () => {
@@ -241,7 +243,7 @@ describe("local search against the real in-process search-chunk API", () => {
         },
         searchForFacetValues: async () => [],
       } as unknown as AlgoliaSearchClient,
-      localSearch: engineOptions(appFetch),
+      localSearch: { ...engineOptions(appFetch), engine },
     });
     let notified = 0;
     resilient.subscribe(() => {
@@ -479,6 +481,9 @@ describe("local search against the real in-process search-chunk API", () => {
     };
     expect(remoteCalls).toBe(1);
     expect(remoteResult.results[0]?.hits[0]?.objectID).toBe("remote");
+    for (let attempt = 0; attempt < 20 && courseLoadCalls === 4; attempt += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
     expect(courseLoadCalls).toBe(5);
   });
 });

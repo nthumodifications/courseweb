@@ -31,6 +31,8 @@ import {
   isCodeLikeTerm,
   isCjkCharacter,
   matchesLocalQueryTerms,
+  needsShortGapCjkRecall,
+  parseCourseCodeQuery,
   queryTerms,
   searchableTokenGroups,
 } from "./tokenizer";
@@ -520,7 +522,15 @@ export class LocalSearchEngine {
 
   getStatus = () => this.status;
 
+  isReady = (semester: string) =>
+    this.status === "ready" && this.loadedChunks.has(semester);
+
   getText = (rawId: string) => this.texts.get(rawId);
+
+  async prefetch(semester = this.defaultSemester): Promise<void> {
+    if (!semester) return;
+    await this.getChunk(semester);
+  }
 
   subscribe = (listener: () => void) => {
     this.listeners.add(listener);
@@ -887,9 +897,10 @@ export class LocalSearchEngine {
         : 20;
     const terms = queryTerms(query);
     const hasSearchTerms = terms.length > 0;
+    const courseCode = parseCourseCodeQuery(originalQuery);
     const refinementMatcher = compileRefinements(params);
     let indexedIds: readonly (string | number)[];
-    if (hasSearchTerms) {
+    if (hasSearchTerms && !courseCode && !needsShortGapCjkRecall(query)) {
       try {
         indexedIds = await chunk.index.search(query, chunk.records.length);
       } catch (error) {
@@ -935,6 +946,7 @@ export class LocalSearchEngine {
                   .trim()
                   .split(/\s+/)
                   .some(isCodeLikeTerm),
+                courseCode,
               })) &&
           refinementMatcher(chunk.records[id])
         ) {

@@ -32,7 +32,7 @@ const remoteSearch = async (
     `https://api.nthumods.com/search/fallback?${serialize({
       q: parityCase.query,
       page: 0,
-      hitsPerPage: 100,
+      hitsPerPage: parityCase.ids.length,
       facetFilters: [
         ["semester:11510"],
         ...(parityCase.params?.facetFilters ?? []),
@@ -228,7 +228,7 @@ parityTest(
           const params = {
             ...parityCase.params,
             query: parityCase.query,
-            hitsPerPage: 100,
+            hitsPerPage: parityCase.ids.length,
             facetFilters: [
               ["semester:11510"],
               ...(parityCase.params?.facetFilters ?? []),
@@ -239,6 +239,12 @@ parityTest(
             remoteSearch(parityCase),
           ]);
           const localIds = local.hits.map((hit) => hit.objectID);
+          if (!parityCase.holdout) {
+            expect(
+              new Set(localIds),
+              `${parityCase.name}: local IDs differ from the recorded expected set`,
+            ).toEqual(new Set(parityCase.ids));
+          }
           return classifyOutcome(
             parityCase,
             { nbHits: local.nbHits, ids: localIds },
@@ -249,9 +255,8 @@ parityTest(
       outcomes.push(...batchOutcomes);
     }
 
-    for (const outcome of outcomes.filter(
-      (item) => item.classification !== "same",
-    )) {
+    for (const outcome of outcomes) {
+      if (!outcome.holdout && outcome.classification === "same") continue;
       console.log(
         `[local-search parity] ${outcome.holdout ? "hold-out" : "tuned"} ${outcome.name}: ${outcome.classification} missing=${outcome.missing.length} extra=${outcome.extra.length}`,
       );
@@ -269,10 +274,7 @@ parityTest(
       );
     }
     expect(outcomes).toHaveLength(LOCAL_PARITY_CASES.length);
-    expect(LOCAL_PARITY_CASES).toHaveLength(65);
-    expect(
-      outcomes.filter((outcome) => outcome.sameSet).length,
-    ).toBeGreaterThanOrEqual(20);
+    expect(LOCAL_PARITY_CASES).toHaveLength(73);
   },
   120_000,
 );

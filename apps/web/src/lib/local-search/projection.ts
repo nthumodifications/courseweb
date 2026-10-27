@@ -163,7 +163,11 @@ export const searchableFieldValues = (record: SearchProjectionRecord) => {
     const value = record[field];
     return (Array.isArray(value) ? value : [value])
       .filter(Boolean)
-      .map((item) => stripHtmlTags(String(item)).toLocaleLowerCase("zh-TW"));
+      .map((item) =>
+        stripHtmlTags(String(item))
+          .normalize("NFKC")
+          .toLocaleLowerCase("zh-TW"),
+      );
   });
   searchableFieldValuesCache.set(record, values);
   return values;

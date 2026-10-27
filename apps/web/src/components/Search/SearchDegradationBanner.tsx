@@ -1,5 +1,6 @@
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Alert, AlertDescription, Button, X, Info } from "@courseweb/ui";
+import { useInstantSearch } from "react-instantsearch";
 import useDictionary from "@/dictionaries/useDictionary";
 import type { ResilientSearchClient } from "@/lib/search-client";
 
@@ -10,11 +11,18 @@ const SearchDegradationBanner = ({
 }) => {
   const dict = useDictionary();
   const [dismissed, setDismissed] = useState(false);
+  const { refresh } = useInstantSearch();
   const backend = useSyncExternalStore(
     searchClient.subscribe,
     searchClient.getStatus,
     () => "primary" as const,
   );
+  const previousBackend = useRef(backend);
+  useEffect(() => {
+    const wasLoading = previousBackend.current === "local-loading";
+    previousBackend.current = backend;
+    if (backend === "local" && wasLoading) refresh();
+  }, [backend, refresh]);
   if (backend !== "fallback" || dismissed) return null;
 
   return (
