@@ -38,7 +38,12 @@ const widgetModules = [
 ] as const;
 
 for (const [moduleName, widgetName] of widgetModules) {
-  mock.module(moduleName, () => ({ default: stubWidget(widgetName) }));
+  mock.module(moduleName, () => ({
+    default: stubWidget(widgetName),
+    ...(moduleName === "./CountdownWidget"
+      ? { NextUpLine: () => null }
+      : {}),
+  }));
 }
 
 mock.module("@/dictionaries/useDictionary", () => ({
