@@ -23,13 +23,14 @@ const payload = {
 };
 
 const database = (failureCount = 0) => {
+  let currentFailureCount = failureCount;
   const update = mock(({ data }: { data: { failureCount?: unknown } }) =>
-    Promise.resolve({
-      failureCount:
-        typeof data.failureCount === "object"
-          ? failureCount + 1
-          : data.failureCount,
-    }));
+    Promise.resolve(
+      typeof data.failureCount === "object"
+        ? { failureCount: ++currentFailureCount }
+        : { failureCount: (currentFailureCount = data.failureCount as number) },
+    ),
+  );
   const deleteMany = mock(() => Promise.resolve({ count: 1 }));
   return {
     db: { pushSubscription: { update, deleteMany } } as PushDatabase,
@@ -142,5 +143,23 @@ test("increments failures and removes a subscription on its fifth failure", asyn
     data: { failureCount: { increment: 1 } },
     select: { failureCount: true },
   });
+  expect(state.deleteMany).toHaveBeenCalledWith({ where: { id: "push-id" } });
+});
+
+test("counts five permanent client failures and removes the subscription", async () => {
+  const state = database();
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    await sendPush(
+      state.subscription,
+      payload,
+      { ttl: 60 },
+      {
+        db: state.db,
+        vapid,
+        fetcher: async () => new Response(null, { status: 400 }),
+      },
+    );
+  }
+  expect(state.update).toHaveBeenCalledTimes(5);
   expect(state.deleteMany).toHaveBeenCalledWith({ where: { id: "push-id" } });
 });

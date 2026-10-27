@@ -4,6 +4,7 @@ import { getVapidConfig, type VapidConfig } from "../config/push";
 import {
   getCourseChanges,
   getCourseNames,
+  withTimeout,
   type CourseChangeRow,
 } from "./courseChanges";
 import {
@@ -47,6 +48,10 @@ export type NotifierSubscription = PushSubscriptionRecord & {
 type NotifierPushStore = PushDatabase["pushSubscription"] & {
   findMany(args: unknown): Promise<NotifierSubscription[]>;
   update(args: unknown): Promise<unknown>;
+  updateMany(args: unknown): Promise<unknown>;
+  aggregate(args: unknown): Promise<{
+    _min: { lastCourseChangeId: bigint | null };
+  }>;
 };
 
 type NotifierDatabase = {
@@ -220,7 +225,7 @@ const pushOptions = (ttl: number): PushSendOptions => ({ ttl });
 const SUBSCRIPTION_PAGE_SIZE = 500;
 const DELIVERY_CONCURRENCY = 8;
 const LEASE_DURATION_MS = 9 * 60 * 1000;
-const LEASE_MARGIN_MS = 60 * 1000;
+const LEASE_MARGIN_MS = 3 * 60 * 1000;
 
 const updateCursor = async (
   db: NotifierDatabase,
@@ -229,8 +234,11 @@ const updateCursor = async (
 ) => {
   if (lastCourseChangeId <= subscription.lastCourseChangeId) return;
   try {
-    await db.pushSubscription.update({
-      where: { id: subscription.id },
+    await db.pushSubscription.updateMany({
+      where: {
+        id: subscription.id,
+        lastCourseChangeId: { lt: lastCourseChangeId },
+      },
       data: { lastCourseChangeId },
     });
   } catch (error) {
@@ -309,8 +317,7 @@ export const createPushNotifier = (dependencies: NotifierDependencies = {}) => {
     const readTimetable = (userId: string) => {
       let promise = timetablePromises.get(userId);
       if (!promise) {
-        promise = userStore
-          .get(userId, "courses")
+        promise = withTimeout(userStore.get(userId, "courses"))
           .then((value) => asTimetable(value?.value))
           .catch((error) => {
             console.error(
@@ -411,52 +418,41 @@ export const createPushNotifier = (dependencies: NotifierDependencies = {}) => {
       if (digestSucceeded) await updateDigestDate(db, subscription, today);
     };
 
-    let cursor: string | undefined;
-    while (now().getTime() < deadline - LEASE_MARGIN_MS) {
-      const subscriptions = await db.pushSubscription.findMany(
-        cursor
-          ? {
-              take: SUBSCRIPTION_PAGE_SIZE,
-              skip: 1,
-              cursor: { id: cursor },
-              orderBy: { id: "asc" },
-            }
-          : {
-              take: SUBSCRIPTION_PAGE_SIZE,
-              orderBy: { id: "asc" },
-            },
+    if (now().getTime() >= deadline - LEASE_MARGIN_MS) return;
+
+    let changes: CourseChangeRow[] = [];
+    let courseNames = new Map<string, CourseName>();
+    try {
+      const result = await db.pushSubscription.aggregate({
+        where: { courseChanges: true },
+        _min: { lastCourseChangeId: true },
+      });
+      const courseCursor = result._min.lastCourseChangeId;
+      if (courseCursor !== null) {
+        changes = await readCourseChanges(
+          courseCursor,
+          COURSE_CHANGE_BATCH_SIZE,
+        );
+        courseNames = await readCourseNames([
+          ...new Set(changes.map((change) => change.raw_id)),
+        ]);
+      }
+    } catch (error) {
+      console.error(
+        "Failed to prepare course change notifications",
+        error instanceof Error ? error.message : error,
       );
+    }
+
+    let lastId = "";
+    while (now().getTime() < deadline - LEASE_MARGIN_MS) {
+      const subscriptions = await db.pushSubscription.findMany({
+        where: { id: { gt: lastId } },
+        orderBy: { id: "asc" },
+        take: SUBSCRIPTION_PAGE_SIZE,
+      });
       if (subscriptions.length === 0) break;
       const currentTime = now();
-      const courseSubscriptions = subscriptions.filter(
-        (subscription) => subscription.courseChanges,
-      );
-      let changes: CourseChangeRow[] = [];
-      let courseNames = new Map<string, CourseName>();
-      if (courseSubscriptions.length > 0) {
-        const courseCursor = courseSubscriptions.reduce(
-          (minimum, subscription) =>
-            subscription.lastCourseChangeId < minimum
-              ? subscription.lastCourseChangeId
-              : minimum,
-          courseSubscriptions[0].lastCourseChangeId,
-        );
-        try {
-          changes = await readCourseChanges(
-            courseCursor,
-            COURSE_CHANGE_BATCH_SIZE,
-          );
-          courseNames = await readCourseNames([
-            ...new Set(changes.map((change) => change.raw_id)),
-          ]);
-        } catch (error) {
-          console.error(
-            "Failed to prepare course change notifications",
-            error instanceof Error ? error.message : error,
-          );
-          changes = [];
-        }
-      }
       const completed = await runWithConcurrency(
         subscriptions,
         DELIVERY_CONCURRENCY,
@@ -466,7 +462,7 @@ export const createPushNotifier = (dependencies: NotifierDependencies = {}) => {
       );
       if (!completed) break;
       if (subscriptions.length < SUBSCRIPTION_PAGE_SIZE) break;
-      cursor = subscriptions[subscriptions.length - 1]?.id;
+      lastId = subscriptions[subscriptions.length - 1]?.id ?? lastId;
     }
   };
 

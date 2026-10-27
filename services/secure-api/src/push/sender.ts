@@ -145,7 +145,7 @@ export const sendPush = async (
       }
     } else if (response.ok) {
       await recordSuccess(subscription, db);
-    } else if (isRetriablePushResult(result)) {
+    } else {
       await recordFailure(subscription, db);
     }
     return result;

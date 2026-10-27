@@ -15,6 +15,26 @@ export type CourseNameRow = {
   name_en: string;
 };
 
+export const withTimeout = async <T>(
+  operation: PromiseLike<T>,
+  timeoutMs = 10_000,
+): Promise<T> => {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      operation,
+      new Promise<T>((_, reject) => {
+        timer = setTimeout(
+          () => reject(new Error(`Operation timed out after ${timeoutMs} ms`)),
+          timeoutMs,
+        );
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+};
+
 const asCourseChangeRow = (value: unknown): CourseChangeRow | null => {
   if (!value || typeof value !== "object") return null;
   const row = value as Record<string, unknown>;
@@ -44,11 +64,13 @@ const asCourseChangeRow = (value: unknown): CourseChangeRow | null => {
 
 export const getCurrentCourseChangeId = async (): Promise<bigint> => {
   const { default: supabase } = await import("../config/supabase");
-  const { data, error } = await supabase
-    .from("course_changes")
-    .select("id")
-    .order("id", { ascending: false })
-    .limit(1);
+  const { data, error } = await withTimeout(
+    supabase
+      .from("course_changes")
+      .select("id")
+      .order("id", { ascending: false })
+      .limit(1),
+  );
   if (error)
     throw new Error(`Failed to read course change cursor: ${error.message}`);
   const id = data?.[0]?.id;
@@ -60,12 +82,14 @@ export const getCourseChanges = async (
   limit: number,
 ): Promise<CourseChangeRow[]> => {
   const { default: supabase } = await import("../config/supabase");
-  const { data, error } = await supabase
-    .from("course_changes")
-    .select("id,raw_id,semester,field,kind,old_value,new_value,detected_at")
-    .gt("id", afterId.toString())
-    .order("id", { ascending: true })
-    .limit(limit);
+  const { data, error } = await withTimeout(
+    supabase
+      .from("course_changes")
+      .select("id,raw_id,semester,field,kind,old_value,new_value,detected_at")
+      .gt("id", afterId.toString())
+      .order("id", { ascending: true })
+      .limit(limit),
+  );
   if (error) throw new Error(`Failed to read course changes: ${error.message}`);
   return (data ?? []).flatMap((row) => {
     const parsed = asCourseChangeRow(row);
@@ -78,10 +102,12 @@ export const getCourseNames = async (
 ): Promise<Map<string, CourseNameRow>> => {
   if (rawIds.length === 0) return new Map();
   const { default: supabase } = await import("../config/supabase");
-  const { data, error } = await supabase
-    .from("courses")
-    .select("raw_id,name_zh,name_en")
-    .in("raw_id", [...new Set(rawIds)]);
+  const { data, error } = await withTimeout(
+    supabase
+      .from("courses")
+      .select("raw_id,name_zh,name_en")
+      .in("raw_id", [...new Set(rawIds)]),
+  );
   if (error) throw new Error(`Failed to read course names: ${error.message}`);
   return new Map(
     (data ?? []).flatMap((row) =>

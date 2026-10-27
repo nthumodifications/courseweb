@@ -54,6 +54,7 @@ type PushRouteDatabase = PushDatabase & {
     upsert(args: unknown): Promise<PushSubscriptionRow>;
   };
   $queryRaw<T>(query: unknown): Promise<T>;
+  $executeRaw(query: unknown): Promise<number>;
 };
 
 type PushDependencies = {
@@ -239,22 +240,17 @@ export const createPushApp = (dependencies: PushDependencies = {}) => {
             lastSeenAt: new Date(now()),
           },
         });
-        const userRows = await db.pushSubscription.findMany({
-          where: { userId: c.var.user.userId },
-          orderBy: { lastSeenAt: "asc" },
-          select: { id: true },
-        });
-        if (userRows.length > 10) {
-          await db.pushSubscription.deleteMany({
-            where: {
-              id: {
-                in: userRows
-                  .slice(0, userRows.length - 10)
-                  .map((item) => item.id),
-              },
-            },
-          });
-        }
+        await db.$executeRaw(Prisma.sql`
+          DELETE FROM "push_subscriptions"
+          WHERE "userId" = ${c.var.user.userId}
+            AND "id" NOT IN (
+              SELECT "id"
+              FROM "push_subscriptions"
+              WHERE "userId" = ${c.var.user.userId}
+              ORDER BY "lastSeenAt" DESC
+              LIMIT 10
+            )
+        `);
         return c.json({ ok: true, prefs: preferences(row) });
       },
     )

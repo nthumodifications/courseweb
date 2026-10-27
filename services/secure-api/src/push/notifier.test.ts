@@ -134,6 +134,7 @@ test("fetches one announcement response per run and records the digest date", as
       findMany: async () => rows,
       update: async (args: unknown) => updated.push(args),
       deleteMany: async () => ({ count: 0 }),
+      aggregate: async () => ({ _min: { lastCourseChangeId: null } }),
     },
     $queryRaw: async () => [{ id: 1 }],
   };
@@ -178,6 +179,7 @@ test("does not advance a course cursor after a retriable send failure", async ()
       ],
       update: async (args: unknown) => updated.push(args),
       deleteMany: async () => ({ count: 0 }),
+      aggregate: async () => ({ _min: { lastCourseChangeId: 7n } }),
     },
     $queryRaw: async () => [{ id: 1 }],
   };
@@ -198,6 +200,70 @@ test("does not advance a course cursor after a retriable send failure", async ()
   });
   expect(await notifier.run()).toBe(true);
   expect(updated).toEqual([]);
+});
+
+test("keeps an intervening higher course cursor", async () => {
+  let persistedCursor = 9n;
+  const update = async (args: unknown) => {
+    const value = args as { data: { lastCourseChangeId: bigint } };
+    persistedCursor = value.data.lastCourseChangeId;
+  };
+  const updateMany = mock(async (args: unknown) => {
+    const value = args as {
+      where: { lastCourseChangeId: { lt: bigint } };
+      data: { lastCourseChangeId: bigint };
+    };
+    if (persistedCursor < value.where.lastCourseChangeId.lt) {
+      persistedCursor = value.data.lastCourseChangeId;
+      return { count: 1 };
+    }
+    return { count: 0 };
+  });
+  const transaction = {
+    pushSubscription: {
+      findMany: async () => [
+        {
+          id: "sub-1",
+          userId: "user-1",
+          endpoint: "https://fcm.googleapis.com/sub-1",
+          p256dh: "key",
+          auth: "auth",
+          failureCount: 0,
+          language: "en",
+          courseChanges: true,
+          announcementSources: [],
+          lastCourseChangeId: 7n,
+          lastDigestDate: null,
+        },
+      ],
+      update,
+      updateMany,
+      deleteMany: async () => ({ count: 0 }),
+      aggregate: async () => ({ _min: { lastCourseChangeId: 7n } }),
+    },
+    $queryRaw: async () => [{ id: 1 }],
+  };
+  const notifier = createPushNotifier({
+    db: transaction as never,
+    vapid: {
+      publicKey: "public",
+      privateKey: "private",
+      subject: "mailto:test@nthumods.com",
+    },
+    getCourseChanges: async () => [change({ id: 8 })],
+    getCourseNames: async () => new Map(),
+    userStore: {
+      get: async () => ({ value: { "11510": ["11510CS 100100"] } }),
+    } as never,
+    send: async () => ({ status: 201, ok: true }),
+    now: () => new Date("2026-10-27T01:00:00Z"),
+  });
+  await notifier.run();
+  expect(persistedCursor).toBe(9n);
+  expect(updateMany).toHaveBeenCalledWith({
+    where: { id: "sub-1", lastCourseChangeId: { lt: 8n } },
+    data: { lastCourseChangeId: 8n },
+  });
 });
 
 test("does not mark a failed digest as sent", async () => {
@@ -221,6 +287,7 @@ test("does not mark a failed digest as sent", async () => {
       ],
       update: async (args: unknown) => updated.push(args),
       deleteMany: async () => ({ count: 0 }),
+      aggregate: async () => ({ _min: { lastCourseChangeId: null } }),
     },
     $queryRaw: async () => [{ id: 1 }],
   };
@@ -275,6 +342,7 @@ test("starts at most eight subscription deliveries concurrently", async () => {
       },
       update: async () => undefined,
       deleteMany: async () => ({ count: 0 }),
+      aggregate: async () => ({ _min: { lastCourseChangeId: null } }),
     },
     $queryRaw: async () => [{ id: 1 }],
   };
@@ -309,6 +377,140 @@ test("starts at most eight subscription deliveries concurrently", async () => {
   });
   await notifier.run();
   expect(maximum).toBe(8);
+});
+
+test("does not start a subscription with less than three minutes of lease remaining", async () => {
+  const base = new Date("2026-10-27T01:00:00Z");
+  let nowCalls = 0;
+  const findMany = mock(async () => [
+    {
+      id: "sub-1",
+      userId: "user-1",
+      endpoint: "https://fcm.googleapis.com/sub-1",
+      p256dh: "key",
+      auth: "auth",
+      failureCount: 0,
+      language: "en" as const,
+      courseChanges: true,
+      announcementSources: [],
+      lastCourseChangeId: 0n,
+      lastDigestDate: null,
+    },
+  ]);
+  const send = mock(async () => ({ status: 201, ok: true }));
+  const transaction = {
+    pushSubscription: {
+      findMany,
+      update: async () => undefined,
+      updateMany: async () => ({ count: 1 }),
+      deleteMany: async () => ({ count: 0 }),
+      aggregate: async () => ({ _min: { lastCourseChangeId: 0n } }),
+    },
+    $queryRaw: async () => [{ id: 1 }],
+  };
+  const notifier = createPushNotifier({
+    db: transaction as never,
+    vapid: {
+      publicKey: "public",
+      privateKey: "private",
+      subject: "mailto:test@nthumods.com",
+    },
+    getCourseChanges: async () => [change()],
+    getCourseNames: async () => new Map(),
+    userStore: {
+      get: async () => ({ value: { "11510": ["11510CS 100100"] } }),
+    } as never,
+    send,
+    now: () => {
+      nowCalls += 1;
+      return new Date(
+        base.getTime() + (nowCalls === 1 ? 0 : 6 * 60 * 1000 + 1_000),
+      );
+    },
+  });
+  await notifier.run();
+  expect(findMany).not.toHaveBeenCalled();
+  expect(send).not.toHaveBeenCalled();
+});
+
+test("continues after the last row of a page is deleted and reads course changes once", async () => {
+  const rows = Array.from({ length: 501 }, (_, index) => ({
+    id: `sub-${String(index + 1).padStart(3, "0")}`,
+    userId: "user-1",
+    endpoint: `https://fcm.googleapis.com/${index + 1}`,
+    p256dh: "key",
+    auth: "auth",
+    failureCount: 0,
+    language: "en" as const,
+    courseChanges: true,
+    announcementSources: [],
+    lastCourseChangeId: 0n,
+    lastDigestDate: null,
+  }));
+  const queries: unknown[] = [];
+  const processed: string[] = [];
+  let courseChangeReads = 0;
+  const transaction = {
+    pushSubscription: {
+      findMany: async (args: unknown) => {
+        queries.push(args);
+        const value = args as {
+          where?: { id?: { gt?: string } };
+          take: number;
+          cursor?: unknown;
+          skip?: unknown;
+        };
+        if (value.cursor !== undefined || value.skip !== undefined) {
+          throw new Error("cursor paging is not supported");
+        }
+        const lastId = value.where?.id?.gt ?? "";
+        return rows.filter((row) => row.id > lastId).slice(0, value.take);
+      },
+      update: async () => undefined,
+      updateMany: async () => ({ count: 1 }),
+      deleteMany: async () => ({ count: 0 }),
+      aggregate: async () => ({ _min: { lastCourseChangeId: 0n } }),
+    },
+    $queryRaw: async () => [{ id: 1 }],
+  };
+  const notifier = createPushNotifier({
+    db: transaction as never,
+    vapid: {
+      publicKey: "public",
+      privateKey: "private",
+      subject: "mailto:test@nthumods.com",
+    },
+    getCourseChanges: async () => {
+      courseChangeReads += 1;
+      return [change()];
+    },
+    getCourseNames: async () => new Map(),
+    userStore: {
+      get: async () => ({ value: { "11510": ["11510CS 100100"] } }),
+    } as never,
+    send: async (subscription) => {
+      processed.push(subscription.id);
+      return subscription.id === "sub-500"
+        ? { status: 410, ok: false }
+        : { status: 201, ok: true };
+    },
+    now: () => new Date("2026-10-27T01:00:00Z"),
+  });
+  await notifier.run();
+  expect(processed).toContain("sub-501");
+  expect(queries).toEqual([
+    {
+      where: { id: { gt: "" } },
+      orderBy: { id: "asc" },
+      take: 500,
+    },
+    {
+      where: { id: { gt: "sub-500" } },
+      orderBy: { id: "asc" },
+      take: 500,
+    },
+  ]);
+  expect(courseChangeReads).toBe(1);
 });
 
 test("uses calendar-day boundaries for the first digest", () => {

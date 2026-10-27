@@ -45,6 +45,7 @@ test("upserts an owned subscription, initializes a new cursor, and trims old row
   const upsert = mock(() => Promise.resolve(row()));
   const findMany = mock(() => Promise.resolve([{ id: "subscription-id" }]));
   const deleteMany = mock(() => Promise.resolve({ count: 0 }));
+  const executeRaw = mock(() => Promise.resolve(0));
   const { createPushApp } = await import("./push");
   const app = createPushApp({
     auth: authMiddleware,
@@ -64,6 +65,7 @@ test("upserts an owned subscription, initializes a new cursor, and trims old row
         update: mock(() => Promise.resolve(row())),
         deleteMany,
       },
+      $executeRaw: executeRaw,
     } as never,
   });
   const response = await app.request("http://test/subscription", {
@@ -93,6 +95,89 @@ test("upserts an owned subscription, initializes a new cursor, and trims old row
     }),
   );
   expect(deleteMany).not.toHaveBeenCalled();
+  expect(executeRaw).toHaveBeenCalledTimes(1);
+});
+
+test("concurrent subscription upserts converge to ten rows with one delete statement each", async () => {
+  const rows: { id: string; userId: string; lastSeenAt: Date }[] = [];
+  let timestamp = 0;
+  const upsert = mock(async (args: unknown) => {
+    const value = args as {
+      create: { endpoint: string; userId: string; lastSeenAt: Date };
+    };
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    const stored = {
+      id: value.create.endpoint,
+      userId: value.create.userId,
+      lastSeenAt: value.create.lastSeenAt,
+    };
+    rows.push(stored);
+    return row({
+      id: stored.id,
+      endpoint: stored.id,
+      userId: stored.userId,
+      lastSeenAt: stored.lastSeenAt,
+    });
+  });
+  const executeRaw = mock(async (_query: unknown) => {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    const keep = new Set(
+      rows
+        .filter((item) => item.userId === "user-1")
+        .sort(
+          (left, right) =>
+            right.lastSeenAt.getTime() - left.lastSeenAt.getTime(),
+        )
+        .slice(0, 10)
+        .map((item) => item.id),
+    );
+    for (let index = rows.length - 1; index >= 0; index -= 1) {
+      if (!keep.has(rows[index].id)) rows.splice(index, 1);
+    }
+    return 0;
+  });
+  const { createPushApp } = await import("./push");
+  const app = createPushApp({
+    auth: authMiddleware,
+    rateLimit: noRateLimit,
+    getVapidConfig: () => ({
+      publicKey: "public",
+      privateKey: "private",
+      subject: "mailto:test@nthumods.com",
+    }),
+    now: () => ++timestamp,
+    getCurrentCourseChangeId: async () => 7n,
+    db: {
+      pushSubscription: {
+        findUnique: mock(() => Promise.resolve(null)),
+        findFirst: mock(() => Promise.resolve(row())),
+        findMany: mock(async () => rows.map((item) => ({ id: item.id }))),
+        upsert,
+        update: mock(() => Promise.resolve(row())),
+        deleteMany: mock(() => Promise.resolve({ count: 0 })),
+      },
+      $executeRaw: executeRaw,
+    } as never,
+  });
+  const request = (index: number) =>
+    app.request("http://test/subscription", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        subscription: {
+          endpoint: `https://fcm.googleapis.com/subscription/${index}`,
+          keys: { p256dh, auth },
+        },
+        prefs: {
+          courseChanges: true,
+          announcementSources: [],
+          language: "zh",
+        },
+      }),
+    });
+  await Promise.all(Array.from({ length: 12 }, (_, index) => request(index)));
+  expect(executeRaw).toHaveBeenCalledTimes(12);
+  expect(rows).toHaveLength(10);
 });
 
 test("rejects non-push-service endpoints before upserting", async () => {
@@ -201,6 +286,7 @@ test("resets delivery state when an endpoint is reassigned", async () => {
         update: mock(() => Promise.resolve(row())),
         deleteMany: mock(() => Promise.resolve({ count: 0 })),
       },
+      $executeRaw: mock(() => Promise.resolve(0)),
     } as never,
   });
   const response = await app.request("http://test/subscription", {
