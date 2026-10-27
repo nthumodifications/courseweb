@@ -36,6 +36,7 @@ import {
 } from "@/lib/announcements";
 import { hasDeepLinkRequestChanged } from "@/lib/deep-links/deep-link";
 import { parseAnnouncementsDeepLink } from "./deep-link";
+import { usePushAnnouncementPreferences } from "@/lib/push/usePushNotifications";
 
 const sourceMatches = (source: AnnouncementSource, search: string) => {
   const query = search.trim().toLocaleLowerCase();
@@ -83,6 +84,11 @@ const AnnouncementsPage = () => {
   const followIds = useMemo(
     () => getEffectiveFollowIds(storedFollowIds, sources, language),
     [language, sources, storedFollowIds],
+  );
+  usePushAnnouncementPreferences(
+    followIds,
+    language,
+    data?.sources !== undefined,
   );
   useEffect(() => {
     if (sources.length > 0 && !isValidFollowIds(storedFollowIds)) {
