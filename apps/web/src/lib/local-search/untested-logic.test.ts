@@ -68,11 +68,20 @@ describe("local-search tokenization", () => {
     expect(normalizeLatinWord(value)).toBe(expected);
   });
 
-  test("matches CJK phrases and one-character latin prefixes without fuzzy expansion", () => {
+  test("matches CJK phrases and word prefixes without mid-word expansion", () => {
     const value = record();
     expect(matchesLocalQuery(value, "環境微生物")).toBe(true);
-    expect(matchesLocalQuery(value, "env")).toBe(false);
+    expect(matchesLocalQuery(value, "env")).toBe(true);
     expect(matchesLocalQuery(value, "wang")).toBe(true);
+    expect(
+      matchesLocalQuery(record({ name_en: "Artificial Intelligence" }), "art"),
+    ).toBe(true);
+    expect(matchesLocalQuery(record({ name_en: "Air Pollution" }), "AI")).toBe(
+      false,
+    );
+    expect(matchesLocalQuery(record({ department: "EECS" }), "EECS")).toBe(
+      true,
+    );
   });
 });
 
@@ -97,6 +106,31 @@ describe("local-search projection and ranking", () => {
       remoteRankScore(prefix, ["450"]),
     );
     expect(rankLocalIds([prefix, exact], [0, 1], "450")).toEqual([1, 0]);
+  });
+
+  test("ranks department codes before exact titles and exact titles before prefixes", () => {
+    const code = record({
+      raw_id: "11510ART 100100",
+      objectID: "11510ART 100100",
+      department: "ART",
+      name_en: "Art Basics",
+    });
+    const exactTitle = record({
+      raw_id: "11510ZZZ 200100",
+      objectID: "11510ZZZ 200100",
+      department: "ZZZ",
+      name_en: "Art",
+    });
+    const titlePrefix = record({
+      raw_id: "11510ZZZ 300100",
+      objectID: "11510ZZZ 300100",
+      department: "ZZZ",
+      name_en: "Artificial Intelligence",
+    });
+
+    expect(
+      rankLocalIds([titlePrefix, exactTitle, code], [0, 1, 2], "art"),
+    ).toEqual([2, 1, 0]);
   });
 
   const orderingRecords = [

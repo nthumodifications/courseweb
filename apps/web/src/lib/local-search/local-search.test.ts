@@ -639,6 +639,19 @@ describe("local course search", () => {
 });
 
 describe("chunk cache, conditional requests, and worker lifecycle", () => {
+  test("fetches a semester course payload once while it remains loaded", async () => {
+    const { engine, state } = createEngine();
+    await engine.search("11510", request({ query: "CS" }));
+    const firstRequestCount = state.calls.length;
+
+    await engine.search("11510", request({ query: "微積分" }));
+
+    expect(state.calls).toHaveLength(firstRequestCount);
+    expect(
+      state.calls.filter((call) => call.url.endsWith("/search/chunk/11510")),
+    ).toHaveLength(1);
+  });
+
   test("loads a cache miss, reuses a hash-matched 304 entry, and invalidates a stale hash", async () => {
     const { engine, cache, state } = createEngine();
     await engine.search("11510", request({ query: "CS" }));
@@ -935,11 +948,12 @@ describe("local-first resilient client", () => {
     searchForFacetValues: async () => [],
   } as unknown as AlgoliaSearchClient;
 
-  test("keeps local search disabled unless its Vite flag is enabled", () => {
-    expect(isLocalSearchEnabled({})).toBe(false);
+  test("enables local search unless its Vite flag opts out", () => {
+    expect(isLocalSearchEnabled({})).toBe(true);
     expect(isLocalSearchEnabled({ VITE_ENABLE_LOCAL_SEARCH: "false" })).toBe(
       false,
     );
+    expect(isLocalSearchEnabled({ VITE_ENABLE_LOCAL_SEARCH: "0" })).toBe(false);
     expect(isLocalSearchEnabled({ VITE_ENABLE_LOCAL_SEARCH: "true" })).toBe(
       true,
     );

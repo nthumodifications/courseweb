@@ -269,7 +269,7 @@ parityTest(
       );
     }
     expect(outcomes).toHaveLength(LOCAL_PARITY_CASES.length);
-    expect(LOCAL_PARITY_CASES).toHaveLength(60);
+    expect(LOCAL_PARITY_CASES).toHaveLength(65);
     expect(
       outcomes.filter((outcome) => outcome.sameSet).length,
     ).toBeGreaterThanOrEqual(20);

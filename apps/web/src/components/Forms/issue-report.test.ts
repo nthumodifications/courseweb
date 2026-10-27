@@ -124,6 +124,10 @@ describe("issue report helpers", () => {
     expect(
       getEnabledLocalFeatureFlags({ VITE_ENABLE_LOCAL_SEARCH: "false" }),
     ).toEqual([]);
+    expect(getEnabledLocalFeatureFlags({})).toEqual(["local-search"]);
+    expect(
+      getEnabledLocalFeatureFlags({ VITE_ENABLE_LOCAL_SEARCH: "0" }),
+    ).toEqual([]);
   });
 
   it("keeps diagnostics opt-in and omits them when opted out", () => {

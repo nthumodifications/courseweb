@@ -28,6 +28,7 @@ import {
 import { searchWithoutWorker } from "./fallback-index";
 import { rankLocalIdsByTerms } from "./ranking";
 import {
+  isCodeLikeTerm,
   isCjkCharacter,
   matchesLocalQueryTerms,
   queryTerms,
@@ -929,7 +930,12 @@ export class LocalSearchEngine {
         if (
           (shortLatinPrefix
             ? shortLatinPrefix.has(id)
-            : matchesLocalQueryTerms(chunk.searchRecords[id], terms)) &&
+            : matchesLocalQueryTerms(chunk.searchRecords[id], terms, {
+                allowShortLatinPrefixes: !originalQuery
+                  .trim()
+                  .split(/\s+/)
+                  .some(isCodeLikeTerm),
+              })) &&
           refinementMatcher(chunk.records[id])
         ) {
           ids.push(id);

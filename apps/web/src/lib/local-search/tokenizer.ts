@@ -10,6 +10,8 @@ export const isCjkCharacter = (character: string) =>
   );
 
 const isWordCharacter = (character: string) => /[\p{L}\p{N}]/u.test(character);
+export const isCodeLikeTerm = (value: string) =>
+  /^[A-Z0-9]+$/.test(value) && /[A-Z]/.test(value);
 
 /**
  * FlexSearch's forward tokenizer does not segment Chinese by itself. Index
@@ -55,8 +57,10 @@ export const tokenizeCjk = (value: unknown): string[] => {
 
 /** Apply only deterministic word-form normalization; this is not fuzzy search. */
 export const normalizeLatinWord = (value: string) => {
+  const preservesCodeForm = /^[A-Z0-9]+$/.test(value) && /[A-Z]/.test(value);
   const word = value.toLocaleLowerCase("zh-TW");
   if (!/^[a-z]+$/.test(word) || word.length < 4) return word;
+  if (preservesCodeForm) return word;
   if (word.endsWith("ies") && word.length > 4) {
     return `${word.slice(0, -3)}y`;
   }
@@ -70,7 +74,6 @@ export const normalizeLatinWord = (value: string) => {
 
 export const queryTerms = (query: string) =>
   query
-    .toLocaleLowerCase("zh-TW")
     .trim()
     .split(/\s+/)
     .filter(Boolean)
@@ -78,8 +81,10 @@ export const queryTerms = (query: string) =>
       // CJK phrases remain one query term so the final matcher can require
       // the same contiguous phrase as the remote fallback.
       return [...term].some(isCjkCharacter)
-        ? [term]
-        : tokenizeCjk(term).map(normalizeLatinWord);
+        ? [term.toLocaleLowerCase("zh-TW")]
+        : tokenizeCjk(term).map((token) =>
+            normalizeLatinWord(isCodeLikeTerm(term) ? term : token),
+          );
     });
 
 /** Query text sent to FlexSearch after the same light word-form normalization. */
@@ -114,8 +119,10 @@ export const searchableLatinTokenGroups = (record: SearchProjectionRecord) => {
 export const matchesLocalQueryTerms = (
   record: SearchProjectionRecord,
   terms: readonly string[],
+  options: { allowShortLatinPrefixes?: boolean } = {},
 ) => {
   if (!terms.length) return true;
+  const allowShortLatinPrefixes = options.allowShortLatinPrefixes ?? true;
   const fields = searchableFields(record);
   const tokenGroups = searchableTokenGroups(record);
   return terms.every((term) => {
@@ -123,8 +130,14 @@ export const matchesLocalQueryTerms = (
       return fields.some((field) => field.includes(term));
     }
     return tokenGroups.some((tokens) =>
-      tokens.some((token) =>
-        term.length === 1 ? token.startsWith(term) : token === term,
+      tokens.some(
+        (token) =>
+          token === term ||
+          (term.length === 2 &&
+            allowShortLatinPrefixes &&
+            token.startsWith(term)) ||
+          (term.length >= 3 && token.startsWith(term)) ||
+          (term.length === 1 && token.startsWith(term)),
       ),
     );
   });
@@ -133,4 +146,7 @@ export const matchesLocalQueryTerms = (
 export const matchesLocalQuery = (
   record: SearchProjectionRecord,
   query: string,
-) => matchesLocalQueryTerms(record, queryTerms(query));
+) =>
+  matchesLocalQueryTerms(record, queryTerms(query), {
+    allowShortLatinPrefixes: !query.trim().split(/\s+/).some(isCodeLikeTerm),
+  });

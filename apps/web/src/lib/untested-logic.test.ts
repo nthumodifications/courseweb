@@ -19,7 +19,8 @@ describe("search client boundary behavior", () => {
     [{ VITE_ENABLE_LOCAL_SEARCH: "1" }, true],
     [{ VITE_ENABLE_LOCAL_SEARCH: " TRUE " }, true],
     [{ VITE_ENABLE_LOCAL_SEARCH: "0" }, false],
-    [{}, false],
+    [{ VITE_ENABLE_LOCAL_SEARCH: "false" }, false],
+    [{}, true],
   ])("reads local-search flag %j", (env, expected) => {
     expect(isLocalSearchEnabled(env)).toBe(expected);
   });

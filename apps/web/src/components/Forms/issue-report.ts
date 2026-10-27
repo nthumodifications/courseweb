@@ -196,9 +196,11 @@ export const getViewportSize = (width: number, height: number) =>
 export const getEnabledLocalFeatureFlags = (env: {
   VITE_ENABLE_LOCAL_SEARCH?: string;
 }): string[] =>
-  env.VITE_ENABLE_LOCAL_SEARCH?.trim().toLowerCase() === "true"
-    ? ["local-search"]
-    : [];
+  ["0", "false"].includes(
+    env.VITE_ENABLE_LOCAL_SEARCH?.trim().toLowerCase() ?? "",
+  )
+    ? []
+    : ["local-search"];
 
 const getBrowserLabel = (
   userAgent: string,

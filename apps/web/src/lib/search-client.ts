@@ -88,7 +88,7 @@ const API_BASE = (viteEnv.VITE_COURSEWEB_API_URL ?? "").replace(/\/$/, "");
 export const isLocalSearchEnabled = (
   env: Record<string, string | undefined> = viteEnv,
 ) =>
-  ["1", "true"].includes(
+  !["0", "false"].includes(
     env.VITE_ENABLE_LOCAL_SEARCH?.trim().toLowerCase() ?? "",
   );
 const localSearchEnabled = isLocalSearchEnabled();
