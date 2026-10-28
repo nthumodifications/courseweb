@@ -1,4 +1,5 @@
 import { useState, useSyncExternalStore } from "react";
+import { useInstantSearch } from "react-instantsearch";
 import { Alert, AlertDescription, Button, X, Info } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
 import type { ResilientSearchClient } from "@/lib/search-client";
@@ -15,7 +16,12 @@ const SearchDegradationBanner = ({
     searchClient.getStatus,
     () => "fallback" as const,
   );
-  const hasError = searchClient.hasError();
+  const hasError = useSyncExternalStore(
+    searchClient.subscribe,
+    searchClient.hasError,
+    () => false,
+  );
+  const { refresh } = useInstantSearch();
   if (backend !== "fallback" || dismissed) return null;
 
   return (
@@ -31,7 +37,7 @@ const SearchDegradationBanner = ({
             variant="ghost"
             size="sm"
             className="shrink-0"
-            onClick={() => void searchClient.retry()}
+            onClick={refresh}
           >
             {dict.common.try_again}
           </Button>

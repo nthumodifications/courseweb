@@ -409,8 +409,18 @@ const rankCourse = (course: CourseHit, query: string) => {
 
 type SyllabusText = Pick<
   Database["public"]["Tables"]["course_syllabus"]["Row"],
-  "brief" | "keywords" | "content"
->;
+  "brief" | "keywords"
+> &
+  Partial<
+    Pick<Database["public"]["Tables"]["course_syllabus"]["Row"], "content">
+  >;
+type SyllabusTextRow = Pick<
+  Database["public"]["Tables"]["course_syllabus"]["Row"],
+  "raw_id" | "brief" | "keywords"
+> &
+  Partial<
+    Pick<Database["public"]["Tables"]["course_syllabus"]["Row"], "content">
+  >;
 
 /**
  * Syllabus text lives in course_syllabus, not courses, so a plain courses
@@ -419,23 +429,30 @@ type SyllabusText = Pick<
 const loadSyllabusText = async (
   c: Parameters<typeof supabase_server>[0],
   rawIds: string[],
+  includeContent: boolean,
 ) => {
   const texts = new Map<string, SyllabusText>();
   if (rawIds.length === 0) return texts;
-  const { data, error } = await supabase_server(c)
-    .from("course_syllabus")
-    .select("raw_id,brief,keywords,content")
-    .in("raw_id", rawIds);
+  const result = includeContent
+    ? await supabase_server(c)
+        .from("course_syllabus")
+        .select("raw_id,brief,keywords,content")
+        .in("raw_id", rawIds)
+    : await supabase_server(c)
+        .from("course_syllabus")
+        .select("raw_id,brief,keywords")
+        .in("raw_id", rawIds);
+  const { data, error } = result;
   if (error) {
     // Cards still render without syllabus text; don't fail the search.
     console.error("Fallback syllabus text failed:", error.message);
     return texts;
   }
-  for (const row of data ?? []) {
+  for (const row of (data as SyllabusTextRow[] | null) ?? []) {
     texts.set(row.raw_id, {
       brief: row.brief,
       keywords: row.keywords,
-      content: row.content,
+      ...(includeContent ? { content: row.content } : {}),
     });
   }
   return texts;
@@ -701,6 +718,7 @@ export const searchSupabase = async (
   const texts = await loadSyllabusText(
     c,
     pageCourses.map((course) => course.raw_id),
+    options.attributesToRetrieve?.includes("content") ?? false,
   );
   const hits = pageCourses.map((course) => {
     const projected = options.useSearchProjection
@@ -712,7 +730,6 @@ export const searchSupabase = async (
         ...(texts.get(course.raw_id) ?? {
           brief: null,
           keywords: null,
-          content: null,
         }),
       },
       options.attributesToRetrieve,

@@ -85,13 +85,19 @@ const syllabusIn = mock(async (_column: string, rawIds: string[]) => ({
   })),
   error: null,
 }));
+const syllabusSelects: string[] = [];
 
 mock.module("./config/supabase_server", () =>
   createSupabaseServerMock(() => ({
     rpc: supabaseRpc,
     from: (table: string) => {
       if (table !== "course_syllabus") throw new Error(`unexpected ${table}`);
-      return { select: () => ({ in: syllabusIn }) };
+      return {
+        select: (columns: string) => {
+          syllabusSelects.push(columns);
+          return { in: syllabusIn };
+        },
+      };
     },
   })),
 );
@@ -215,6 +221,28 @@ describe("Supabase-backed public search", () => {
       () =>
         postSearch({
           query: "machine learning",
+        }),
+    ],
+    ["GET", () => search.request("/?q=machine%20learning", {}, env)],
+  ] as const)(
+    "keeps content out of default %s responses and selects only brief/keywords",
+    async (_method, request) => {
+      syllabusSelects.length = 0;
+      const response = await request();
+      const payload = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(payload.data.hits[0]).not.toHaveProperty("content");
+      expect(syllabusSelects).toEqual(["raw_id,brief,keywords"]);
+    },
+  );
+
+  test.each([
+    [
+      "POST",
+      () =>
+        postSearch({
+          query: "machine learning",
           attributesToRetrieve: ["content"],
         }),
     ],
@@ -230,6 +258,7 @@ describe("Supabase-backed public search", () => {
   ] as const)(
     "accepts content in %s attribute requests",
     async (_method, request) => {
+      syllabusSelects.length = 0;
       const response = await request();
       const payload = await response.json();
 
@@ -238,6 +267,7 @@ describe("Supabase-backed public search", () => {
         objectID: "11510CS 535100",
         content: "Course syllabus content.",
       });
+      expect(syllabusSelects).toEqual(["raw_id,brief,keywords,content"]);
     },
   );
 

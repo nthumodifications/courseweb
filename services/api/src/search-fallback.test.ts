@@ -29,6 +29,7 @@ type QueryCall = { method: string; args: unknown[] };
 let courseRows = [course];
 const courseQueryCalls: QueryCall[] = [];
 const rpcQueryCalls: QueryCall[] = [];
+const syllabusSelects: string[] = [];
 let rpcError: { message: string; code: string } | null = null;
 
 const createCourseQueryBuilder = (
@@ -98,7 +99,12 @@ mock.module("./config/supabase_server", () =>
         return createCourseQueryBuilder(courseRows, courseQueryCalls);
       }
       if (table !== "course_syllabus") throw new Error(`unexpected ${table}`);
-      return { select: () => ({ in: syllabusIn }) };
+      return {
+        select: (columns: string) => {
+          syllabusSelects.push(columns);
+          return { in: syllabusIn };
+        },
+      };
     },
   })),
 );
@@ -129,6 +135,7 @@ afterEach(() => {
   courseRows = [course];
   courseQueryCalls.length = 0;
   rpcQueryCalls.length = 0;
+  syllabusSelects.length = 0;
   rpcError = null;
   console.error = originalConsoleError;
 });
@@ -163,26 +170,48 @@ describe("search fallback zero-hit pagination", () => {
 });
 
 describe("search fallback syllabus text", () => {
-  test("returns brief and keywords from course_syllabus on each hit", async () => {
-    const response = await fallbackSearch.fetch(
-      new Request("http://localhost/?q=calculus&hitsPerPage=20"),
-      {
-        SUPABASE_URL: "https://supabase.example",
-        SUPABASE_SERVICE_ROLE_KEY: "test",
-      },
-    );
-    const payload = (await response.json()) as {
-      data: { hits: Array<Record<string, unknown>> };
-    };
+  test.each([
+    ["by default", "", false],
+    [
+      "when content is explicitly requested",
+      `&attributesToRetrieve=${encodeURIComponent(JSON.stringify(["content"]))}`,
+      true,
+    ],
+  ] as const)(
+    "returns syllabus text %s without over-selecting content",
+    async (_caseName, attributes, includesContent) => {
+      const response = await fallbackSearch.fetch(
+        new Request(`http://localhost/?q=calculus&hitsPerPage=20${attributes}`),
+        {
+          SUPABASE_URL: "https://supabase.example",
+          SUPABASE_SERVICE_ROLE_KEY: "test",
+        },
+      );
+      const payload = (await response.json()) as {
+        data: { hits: Array<Record<string, unknown>> };
+      };
 
-    expect(response.status).toBe(200);
-    expect(payload.data.hits[0]).toMatchObject({
-      raw_id: course.raw_id,
-      brief: "Limits, derivatives and integrals.",
-      keywords: ["calculus", "analysis"],
-      content: "Limits, derivatives and integrals in detail.",
-    });
-  });
+      expect(response.status).toBe(200);
+      expect(syllabusSelects).toEqual([
+        includesContent
+          ? "raw_id,brief,keywords,content"
+          : "raw_id,brief,keywords",
+      ]);
+      if (includesContent) {
+        expect(payload.data.hits[0]).toEqual({
+          objectID: course.raw_id,
+          content: "Limits, derivatives and integrals in detail.",
+        });
+      } else {
+        expect(payload.data.hits[0]).toMatchObject({
+          raw_id: course.raw_id,
+          brief: "Limits, derivatives and integrals.",
+          keywords: ["calculus", "analysis"],
+        });
+        expect(payload.data.hits[0]).not.toHaveProperty("content");
+      }
+    },
+  );
 });
 
 describe("search fallback facet-value refinements", () => {
