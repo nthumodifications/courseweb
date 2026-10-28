@@ -12,7 +12,12 @@
             "zh": "校車分頁。",
             "en": "Campus bus tab."
           },
-          "values": ["north_gate", "tsmc", "nanda", "city"],
+          "values": [
+            "north_gate",
+            "tsmc",
+            "nanda",
+            "city"
+          ],
           "example": "nanda"
         },
         {
@@ -103,7 +108,9 @@
           }
         }
       ],
-      "examples": ["/zh/bus/main/green?stop=%E7%B6%9C%E4%BA%8C"]
+      "examples": [
+        "/zh/bus/main/green?stop=%E7%B6%9C%E4%BA%8C"
+      ]
     },
     {
       "route": "/bus/nanda/:line",
@@ -204,7 +211,9 @@
           "runtime": true
         }
       ],
-      "examples": ["/zh/bus/city/83?direction=HSZ000801&stop=HSZ303582"]
+      "examples": [
+        "/zh/bus/city/83?direction=HSZ000801&stop=HSZ303582"
+      ]
     },
     {
       "route": "/laundry",
@@ -289,7 +298,9 @@
           "example": "jen_m"
         }
       ],
-      "examples": ["/zh/laundry?dorm=jen&area=jen_m"]
+      "examples": [
+        "/zh/laundry?dorm=jen&area=jen_m"
+      ]
     },
     {
       "route": "/library",
@@ -301,7 +312,13 @@
             "zh": "圖書館分館。",
             "en": "Library branch."
           },
-          "values": ["all", "moonlight", "main", "hss", "ctm"],
+          "values": [
+            "all",
+            "moonlight",
+            "main",
+            "hss",
+            "ctm"
+          ],
           "example": "moonlight"
         },
         {
@@ -322,13 +339,17 @@
           "example": "carrel"
         }
       ],
-      "examples": ["/en/library?branch=moonlight&category=carrel"]
+      "examples": [
+        "/en/library?branch=moonlight&category=carrel"
+      ]
     },
     {
       "route": "/directory",
       "duplicates": "ignored",
       "params": [],
-      "examples": ["/en/directory"]
+      "examples": [
+        "/en/directory"
+      ]
     },
     {
       "route": "/shops",
@@ -618,7 +639,10 @@
           "example": "osm-relation-3927538-0"
         }
       ],
-      "examples": ["/zh/map?building=delta", "/en/map?venue=Delta%20Hall"]
+      "examples": [
+        "/zh/map?building=delta",
+        "/en/map?venue=Delta%20Hall"
+      ]
     },
     {
       "route": "/youbike",
@@ -630,7 +654,12 @@
             "zh": "YouBike 篩選分頁。",
             "en": "YouBike filter tab."
           },
-          "values": ["all", "main", "nanda", "mine"],
+          "values": [
+            "all",
+            "main",
+            "nanda",
+            "mine"
+          ],
           "example": "main"
         },
         {
@@ -646,7 +675,9 @@
           "runtime": true
         }
       ],
-      "examples": ["/zh/youbike?tab=main&station=500401008"]
+      "examples": [
+        "/zh/youbike?tab=main&station=500401008"
+      ]
     },
     {
       "route": "/sports-venues",
@@ -663,7 +694,9 @@
           "runtime": true
         }
       ],
-      "examples": ["/zh/sports-venues?facility=%E9%AB%94%E8%82%B2%E9%A4%A8"]
+      "examples": [
+        "/zh/sports-venues?facility=%E9%AB%94%E8%82%B2%E9%A4%A8"
+      ]
     },
     {
       "route": "/calendar",
@@ -686,11 +719,17 @@
             "zh": "行事曆檢視模式。",
             "en": "Calendar display mode."
           },
-          "values": ["week", "month", "upcoming"],
+          "values": [
+            "week",
+            "month",
+            "upcoming"
+          ],
           "example": "month"
         }
       ],
-      "examples": ["/zh/calendar?date=2026-10-24&view=month"]
+      "examples": [
+        "/zh/calendar?date=2026-10-24&view=month"
+      ]
     },
     {
       "route": "/announcements",
@@ -707,7 +746,9 @@
           "runtime": true
         }
       ],
-      "examples": ["/zh/announcements?source=source-academic"]
+      "examples": [
+        "/zh/announcements?source=source-academic"
+      ]
     },
     {
       "route": "/courses/changes",
@@ -719,7 +760,11 @@
             "zh": "顯示最近幾天的課程變更。",
             "en": "The number of recent days of course changes to show."
           },
-          "values": ["7", "14", "30"],
+          "values": [
+            "7",
+            "14",
+            "30"
+          ],
           "example": "7"
         },
         {
@@ -903,7 +948,9 @@
           "example": "CS"
         }
       ],
-      "examples": ["/zh/courses/changes?days=7&department=CS"]
+      "examples": [
+        "/zh/courses/changes?days=7&department=CS"
+      ]
     },
     {
       "route": "/settings",
@@ -944,7 +991,10 @@
           "example": "account"
         }
       ],
-      "examples": ["/zh/settings#account", "/en/settings#setting-dark-mode"]
+      "examples": [
+        "/zh/settings#account",
+        "/en/settings#setting-dark-mode"
+      ]
     },
     {
       "route": "/reviews/past",
@@ -962,7 +1012,9 @@
           "example": "11420"
         }
       ],
-      "examples": ["/zh/reviews/past?semester=11420"]
+      "examples": [
+        "/zh/reviews/past?semester=11420"
+      ]
     },
     {
       "route": "/courses/modules",
@@ -978,7 +1030,9 @@
           "example": "computer"
         }
       ],
-      "examples": ["/en/courses/modules?q=computer"]
+      "examples": [
+        "/en/courses/modules?q=computer"
+      ]
     },
     {
       "route": "/courses/module/:moduleKey",
@@ -1019,7 +1073,9 @@
             "zh": "使用 CCXP 匯入模式時為 ccxp。",
             "en": "Use ccxp to select CCXP import mode."
           },
-          "values": ["ccxp"],
+          "values": [
+            "ccxp"
+          ],
           "example": "ccxp"
         }
       ],
