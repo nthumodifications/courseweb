@@ -112,7 +112,7 @@ export const BusListingItem = ({
   return (
     <div
       className={cn(
-        compact ? "flex flex-col gap-2 py-2" : "flex flex-col gap-4 py-4",
+        "flex flex-col gap-4 py-4",
         arrival === dict.bus.service_over ? "opacity-30" : "",
       )}
     >
@@ -165,34 +165,36 @@ export const BusListingItem = ({
           <ChevronRight className="h-4 w-4" />
         </div>
       </div>
-      <div className="flex flex-row flex-wrap gap-2">
-        <div
-          className="inline-flex cursor-pointer items-center justify-center gap-2"
-          onClick={openSchedule}
-        >
-          <Timer className="h-4 w-4" />
-          <div className="text-center text-sm font-medium">
-            {dict.bus.schedule}
-          </div>
-        </div>
-        {notes.map((note) => (
+      {!compact && (
+        <div className="flex flex-row flex-wrap gap-2">
           <div
-            className="inline-flex items-center justify-center gap-2"
-            key={note}
+            className="inline-flex cursor-pointer items-center justify-center gap-2"
+            onClick={openSchedule}
           >
+            <Timer className="h-4 w-4" />
             <div className="text-center text-sm font-medium">
-              ・{localizeData(note)}
+              {dict.bus.schedule}
             </div>
           </div>
-        ))}
-        {sourceLabel && (
-          <div className="inline-flex items-center justify-center gap-2">
-            <div className="text-center text-sm font-medium text-muted-foreground">
-              ・{localizeData(sourceLabel)}
+          {notes.map((note) => (
+            <div
+              className="inline-flex items-center justify-center gap-2"
+              key={note}
+            >
+              <div className="text-center text-sm font-medium">
+                ・{localizeData(note)}
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          ))}
+          {sourceLabel && (
+            <div className="inline-flex items-center justify-center gap-2">
+              <div className="text-center text-sm font-medium text-muted-foreground">
+                ・{localizeData(sourceLabel)}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
