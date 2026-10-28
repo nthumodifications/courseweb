@@ -10,6 +10,7 @@ import {
   HTMLTableElement,
   parseHTML,
 } from "linkedom/worker";
+import { courseAudienceFacetValues } from "./course-audience-tags";
 import type { Course, Department, SyncEnvironment } from "./types";
 import {
   diffCourseRows,
@@ -895,6 +896,10 @@ export const scrapeSyllabus = async (
             s.match(/.{1,2}/g),
           ),
           courseLevel: course.course[0] + "000",
+          audience: courseAudienceFacetValues({
+            note: course.note,
+            restrictions: course.restrictions,
+          }),
         };
 
         const algolia = createAlgoliaClient(env);
@@ -991,6 +996,10 @@ export const syncCoursesToAlgolia = async (
             s.match(/.{1,2}/g),
           ),
           courseLevel: course.course[0] + "000",
+          audience: courseAudienceFacetValues({
+            note: course.note,
+            restrictions: course.restrictions,
+          }),
         }),
       );
 

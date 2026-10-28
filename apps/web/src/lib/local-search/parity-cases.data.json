@@ -213,6 +213,14 @@
     "query": "machine"
   },
   {
+    "ids": ["11510AIA 500700"],
+    "name": "audience-filter",
+    "params": {
+      "facetFilters": [["audience:exclusion:year-3:undergraduate"]]
+    },
+    "query": "Physical AI"
+  },
+  {
     "ids": ["11510AIA 200200"],
     "name": "credit-facet",
     "params": {

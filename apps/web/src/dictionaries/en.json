@@ -393,8 +393,9 @@
           "restrictions": "Restrictions",
           "course": "Course"
         },
-        "removed": "No longer listed",
-        "reappeared": "Listed again",
+        "removed": "Removed from the course list",
+        "reappeared": "Back in the course list",
+        "feed_link": "See all changes in this department",
         "empty": "None",
         "true_value": "Yes",
         "false_value": "No",
@@ -415,6 +416,57 @@
       "taken": "Taken",
       "restriction_prefix": "Restrictions: ",
       "note_prefix": "Notes: ",
+      "audience_tags": {
+        "title": "Audience",
+        "year_grade": {
+          "year-1": "Year 1",
+          "year-2": "Year 2",
+          "year-3": "Year 3",
+          "year-4": "Year 4"
+        },
+        "scoped_years": {
+          "undergraduate": {
+            "year-1": "Undergraduate Year 1",
+            "year-2": "Undergraduate Year 2",
+            "year-3": "Undergraduate Year 3",
+            "year-4": "Undergraduate Year 4"
+          },
+          "graduate": {
+            "year-1": "Graduate Year 1",
+            "year-2": "Graduate Year 2",
+            "year-3": "Graduate Year 3",
+            "year-4": "Graduate Year 4"
+          },
+          "master": {
+            "year-1": "Master's Year 1",
+            "year-2": "Master's Year 2",
+            "year-3": "Master's Year 3",
+            "year-4": "Master's Year 4"
+          },
+          "doctoral": {
+            "year-1": "Doctoral Year 1",
+            "year-2": "Doctoral Year 2",
+            "year-3": "Doctoral Year 3",
+            "year-4": "Doctoral Year 4"
+          }
+        },
+        "undergraduate": "Undergraduates",
+        "graduate": "Graduate students",
+        "master": "Master's",
+        "doctoral": "Doctoral",
+        "own_department": "Own department",
+        "male": "Male students",
+        "female": "Female students",
+        "international": "International students",
+        "restriction_suffix": "only",
+        "exclusion_prefix": "Excludes",
+        "priority_suffix": "first",
+        "groups": {
+          "restriction": "Only",
+          "exclusion": "Excluded",
+          "priority": "Priority"
+        }
+      },
       "prerequisites_available": "Prerequisites available",
       "semester_time_venue": "Semester / Time & Venue",
       "instructor": "Instructor",
@@ -691,6 +743,19 @@
       "research_portal": "Search the NTHU Research Portal"
     }
   },
+  "course_changes": {
+    "meta_title": "Course changes",
+    "meta_description": "See recent changes to NTHU courses, grouped by department and course.",
+    "title": "Course changes",
+    "days_label": "Recent changes",
+    "days_7": "7 days",
+    "days_14": "14 days",
+    "days_30": "30 days",
+    "department_label": "Department",
+    "all_departments": "All departments",
+    "no_results": "No course changes in this period.",
+    "course_fallback": "Course details unavailable"
+  },
   "navigation": {
     "today": "Today",
     "courses": "Courses",
@@ -797,7 +862,32 @@
     "load_error": "Failed to load library vacancy status",
     "try_again": "Try again",
     "data_source": "Data source:",
-    "source_name": "NTHU Library Booking System (libsms)"
+    "source_name": "NTHU Library Booking System (libsms)",
+    "lost_found_title": "Lost and found",
+    "lost_found_search_placeholder": "Search item, date, or location",
+    "lost_found_show_more": "Show more",
+    "lost_found_filter_type": "Filter by item type",
+    "lost_found_all_types": "All item types",
+    "lost_found_no_results": "No matching lost items found",
+    "lost_found_refresh": "Refresh lost and found",
+    "lost_found_load_error": "Lost-and-found data is unavailable",
+    "lost_found_data_source": "Lost-and-found data:",
+    "lost_found_source_name": "NTHU Library Lost and Found System"
+  },
+  "directory": {
+    "title": "Campus Directory",
+    "meta_title": "Campus Directory",
+    "meta_description": "Find NTHU unit phone numbers, extensions, and email addresses.",
+    "search_placeholder": "Search unit names",
+    "extension": "Ext.",
+    "copy": "Copy",
+    "website": "Unit website",
+    "refresh": "Refresh",
+    "load_error": "The campus directory is unavailable",
+    "try_again": "Try again",
+    "no_results": "No matching units found",
+    "data_source": "Data source:",
+    "source_name": "NTHU Telephone Directory"
   },
   "usage_forecast": {
     "learning": "Learning how busy these places usually get — predictions appear after about a week of data.",
@@ -876,10 +966,19 @@
     "meta_title": "Campus Announcements",
     "meta_description": "Follow NTHU offices and departments to keep up with campus deadlines and news.",
     "search_placeholder": "Search announcement titles",
+    "followed_tab": "Followed sources",
+    "matches_tab": "Matches",
     "filter_source": "Filter by followed source",
     "all_followed": "All followed sources",
     "manage_follows": "Manage follows",
     "manage_follows_description": "Choose the campus sources shown in your feed.",
+    "manage_keywords": "Manage keywords",
+    "manage_keywords_description": "Find matching announcements across all campus sources.",
+    "keyword_placeholder": "Add a keyword",
+    "add_keyword": "Add",
+    "remove_keyword": "Remove keyword",
+    "keyword_suggestions": "Suggested keywords",
+    "suggested_keywords": ["scholarship", "exchange", "internship", "jobs"],
     "source_search_placeholder": "Search sources",
     "source_language": {
       "zh_tw": "Chinese",
@@ -888,6 +987,9 @@
     "load_error": "Announcements are unavailable",
     "try_again": "Try again",
     "no_results": "No followed announcements found",
+    "no_keyword_matches": "No announcements match your keywords",
+    "no_keywords": "No keywords set",
+    "new_matches_count": "{count} new keyword matches since your last visit",
     "show_more": "Show more",
     "attribution_prefix": "Data:",
     "attribution_name": "NTHU-SA NTHU-Data-API"
@@ -1494,6 +1596,7 @@
     },
     "apps": {
       "courses": "Course Search",
+      "course-changes": "Course Changes",
       "modules": "Course Modules",
       "chat": "AI Course Assistant",
       "venues": "Venues",
@@ -1504,6 +1607,7 @@
       "sports-venues": "Sports Venue Occupancy",
       "library": "Library Vacancy",
       "announcements": "Campus Announcements",
+      "directory": "Campus Directory",
       "shops": "Shops",
       "calendar": "Calendar",
       "timetable-community": "Community Timetables",

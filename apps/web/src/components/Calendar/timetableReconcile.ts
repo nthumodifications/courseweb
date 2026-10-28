@@ -1,4 +1,5 @@
 import { CalendarEvent } from "./calendar.types";
+import { valuesEqual } from "@/hooks/syncedStorage";
 
 /**
  * The fields that are persisted for a timetable-generated event. The actual
@@ -59,7 +60,7 @@ const eventsEqual = (
 
   const leftComparable = comparableEvent(left);
   const rightComparable = comparableEvent(right);
-  return JSON.stringify(leftComparable) === JSON.stringify(rightComparable);
+  return valuesEqual(leftComparable, rightComparable);
 };
 
 /**

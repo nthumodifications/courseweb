@@ -18,6 +18,7 @@ const AuthCallbackPage = lazyWithRetry(
 // Main pages
 export const routeLoaders = {
   courses: () => import("@/app/[lang]/(mods-pages)/courses/page"),
+  courseChanges: () => import("@/app/[lang]/(mods-pages)/courses/changes/page"),
   courseDetail: () =>
     import("@/app/[lang]/(mods-pages)/courses/[courseId]/page"),
   module: () =>
@@ -39,6 +40,7 @@ const PastReviewsPage = lazyWithRetry(
   () => import("@/app/[lang]/reviews/past/page"),
 );
 const CoursesPage = lazyWithRetry(routeLoaders.courses);
+const CourseChangesFeedPage = lazyWithRetry(routeLoaders.courseChanges);
 const CourseDetailPage = lazyWithRetry(routeLoaders.courseDetail);
 const ModulePage = lazyWithRetry(routeLoaders.module);
 const InstructorPage = lazyWithRetry(routeLoaders.instructor);
@@ -62,6 +64,9 @@ const LibraryPage = lazyWithRetry(
 );
 const AnnouncementsPage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/announcements/page"),
+);
+const DirectoryPage = lazyWithRetry(
+  () => import("@/app/[lang]/(mods-pages)/directory/page"),
 );
 const BusRoutePage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/bus/[route]/page"),
@@ -279,6 +284,16 @@ export const appRoutes = [
                 },
               },
               {
+                path: ROUTE_PATHS.courseChanges,
+                element: <CourseChangesFeedPage />,
+                handle: {
+                  title: en.course_changes.meta_title,
+                  titleZh: zh.course_changes.meta_title,
+                  description: en.course_changes.meta_description,
+                  descriptionZh: zh.course_changes.meta_description,
+                },
+              },
+              {
                 path: ROUTE_PATHS.module,
                 element: <ModulePage />,
               },
@@ -405,6 +420,16 @@ export const appRoutes = [
                   titleZh: zh.announcements.meta_title,
                   description: en.announcements.meta_description,
                   descriptionZh: zh.announcements.meta_description,
+                },
+              },
+              {
+                path: "directory",
+                element: <DirectoryPage />,
+                handle: {
+                  title: en.directory.meta_title,
+                  titleZh: zh.directory.meta_title,
+                  description: en.directory.meta_description,
+                  descriptionZh: zh.directory.meta_description,
                 },
               },
               {

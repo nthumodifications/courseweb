@@ -3,12 +3,13 @@ import { useAuth } from "react-oidc-context";
 import { useEffect, useRef, useState } from "react";
 import { hasCalendarScope } from "@/config/rxdb";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
+import { valuesEqual } from "@/hooks/syncedStorage";
 import { useTimetableShare } from "@/hooks/useTimetableShare";
 import {
   getLiveTimetablePayload,
-  getLiveTimetablePayloadKey,
   getPublishedLiveTimetablePayload,
 } from "@/hooks/liveTimetableSync";
+import type { LiveTimetablePayload } from "@/hooks/liveTimetableSync";
 
 /** Publishes local timetable changes for every live share owned by the user. */
 const LiveTimetableSync = () => {
@@ -30,7 +31,7 @@ const LiveTimetableSync = () => {
     hasCalendarScope(auth.user?.scope);
   const [syncRevision, setSyncRevision] = useState(0);
   const inFlight = useRef(new Set<string>());
-  const lastPublished = useRef(new Map<string, string>());
+  const lastPublished = useRef(new Map<string, LiveTimetablePayload>());
 
   const { data: ownShares = [] } = useQuery({
     queryKey: ["own-shares", userId ?? "anonymous", authSessionKey],
@@ -65,14 +66,11 @@ const LiveTimetableSync = () => {
         courses,
         customItems,
       );
-      const payloadKey = getLiveTimetablePayloadKey(payload);
-      const publishedKey = getLiveTimetablePayloadKey(
-        getPublishedLiveTimetablePayload(share),
-      );
+      const publishedPayload = getPublishedLiveTimetablePayload(share);
 
       if (
-        payloadKey === publishedKey ||
-        lastPublished.current.get(share.id) === payloadKey
+        valuesEqual(payload, publishedPayload) ||
+        valuesEqual(lastPublished.current.get(share.id), payload)
       ) {
         continue;
       }
@@ -80,7 +78,7 @@ const LiveTimetableSync = () => {
       inFlight.current.add(share.id);
       void updateShare(share.id, payload)
         .then(() => {
-          lastPublished.current.set(share.id, payloadKey);
+          lastPublished.current.set(share.id, payload);
           // A local edit may have happened while the request was in flight.
           setSyncRevision((revision) => revision + 1);
         })

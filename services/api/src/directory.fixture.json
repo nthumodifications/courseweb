@@ -1,0 +1,52 @@
+[
+  {
+    "index": "01",
+    "name": "校長室",
+    "parent_name": null,
+    "url": "https://tel.net.nthu.edu.tw/nthusearch/dept.php?dd=01",
+    "details": {
+      "departments": [],
+      "contact": {
+        "extension": "62001",
+        "phone": "03-5162001",
+        "fax": "03-5162505",
+        "email": "presid@my.nthu.edu.tw",
+        "website": "http://president.site.nthu.edu.tw/?Lang=zh-tw"
+      },
+      "people": [
+        {
+          "name": "高為元",
+          "title": "校長",
+          "extension": "62001",
+          "note": null,
+          "email": "presid@my.nthu.edu.tw"
+        }
+      ]
+    }
+  },
+  {
+    "index": "04",
+    "name": "呂副校長室",
+    "parent_name": null,
+    "url": "https://tel.net.nthu.edu.tw/nthusearch/dept.php?dd=04",
+    "details": {
+      "departments": [],
+      "contact": {
+        "extension": "62473",
+        "phone": "03-5162473",
+        "fax": "03-5162509",
+        "email": null,
+        "website": "https://president.site.nthu.edu.tw/p/404-1067-232761.php?Lang=zh-tw"
+      },
+      "people": [
+        {
+          "name": "呂平江",
+          "title": "副校長",
+          "extension": "62372",
+          "note": null,
+          "email": "pclyu@mx.nthu.edu.tw"
+        }
+      ]
+    }
+  }
+]

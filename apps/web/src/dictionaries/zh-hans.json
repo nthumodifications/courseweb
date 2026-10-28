@@ -393,8 +393,9 @@
           "restrictions": "课程限制",
           "course": "课程"
         },
-        "removed": "不再列于课程数据",
+        "removed": "已从课程数据中移除",
         "reappeared": "重新出现在课程数据中",
+        "feed_link": "查看本系所有变更",
         "empty": "无",
         "true_value": "是",
         "false_value": "否",
@@ -415,6 +416,57 @@
       "taken": "已修课",
       "restriction_prefix": "限制：",
       "note_prefix": "备注：",
+      "audience_tags": {
+        "title": "适用对象",
+        "year_grade": {
+          "year-1": "一年级",
+          "year-2": "二年级",
+          "year-3": "三年级",
+          "year-4": "四年级"
+        },
+        "scoped_years": {
+          "undergraduate": {
+            "year-1": "大一",
+            "year-2": "大二",
+            "year-3": "大三",
+            "year-4": "大四"
+          },
+          "graduate": {
+            "year-1": "研究所一年级",
+            "year-2": "研究所二年级",
+            "year-3": "研究所三年级",
+            "year-4": "研究所四年级"
+          },
+          "master": {
+            "year-1": "硕一",
+            "year-2": "硕二",
+            "year-3": "硕三",
+            "year-4": "硕四"
+          },
+          "doctoral": {
+            "year-1": "博一",
+            "year-2": "博二",
+            "year-3": "博三",
+            "year-4": "博四"
+          }
+        },
+        "undergraduate": "大学部",
+        "graduate": "研究所",
+        "master": "硕士班",
+        "doctoral": "博士班",
+        "own_department": "本系",
+        "male": "男生",
+        "female": "女生",
+        "international": "外籍生",
+        "restriction_suffix": "限定",
+        "exclusion_prefix": "排除",
+        "priority_suffix": "优先",
+        "groups": {
+          "restriction": "限定",
+          "exclusion": "排除",
+          "priority": "优先"
+        }
+      },
       "prerequisites_available": "有挡修",
       "semester_time_venue": "学期／时间地点",
       "instructor": "授课教师",
@@ -695,6 +747,19 @@
       "research_portal": "搜索清华研究人才数据库"
     }
   },
+  "course_changes": {
+    "meta_title": "课程变更",
+    "meta_description": "依系所与课程查看清大近期的课程变更。",
+    "title": "课程变更",
+    "days_label": "近期变更",
+    "days_7": "7 天",
+    "days_14": "14 天",
+    "days_30": "30 天",
+    "department_label": "系所",
+    "all_departments": "所有系所",
+    "no_results": "这段期间没有课程变更。",
+    "course_fallback": "无法取得课程数据"
+  },
   "navigation": {
     "today": "今日",
     "courses": "课表",
@@ -801,7 +866,32 @@
     "load_error": "无法加载图书馆座位实时数据",
     "try_again": "重新尝试",
     "data_source": "数据源：",
-    "source_name": "国立清华大学图书馆座位管理系统 (libsms)"
+    "source_name": "国立清华大学图书馆座位管理系统 (libsms)",
+    "lost_found_title": "失物招领",
+    "lost_found_search_placeholder": "搜索物品、日期或地点",
+    "lost_found_show_more": "显示更多",
+    "lost_found_filter_type": "依物品类型筛选",
+    "lost_found_all_types": "全部物品类型",
+    "lost_found_no_results": "找不到符合的失物",
+    "lost_found_refresh": "刷新失物招领",
+    "lost_found_load_error": "目前无法取得失物招领数据",
+    "lost_found_data_source": "失物招领数据源：",
+    "lost_found_source_name": "国立清华大学图书馆失物招领系统"
+  },
+  "directory": {
+    "title": "校园通信录",
+    "meta_title": "校园通信录",
+    "meta_description": "查询清华各单位电话、分机与电子邮件。",
+    "search_placeholder": "搜索单位名称",
+    "extension": "分机",
+    "copy": "复制",
+    "website": "单位网站",
+    "refresh": "刷新",
+    "load_error": "无法取得校园通信录",
+    "try_again": "重新尝试",
+    "no_results": "找不到符合的单位",
+    "data_source": "数据源：",
+    "source_name": "清华通信录"
   },
   "usage_forecast": {
     "learning": "正在学习这些空间平常有多忙——累积约一周数据后会显示预测。",
@@ -880,10 +970,19 @@
     "meta_title": "校园公告",
     "meta_description": "追踪清大各处室与系所，掌握校园公告与重要时限。",
     "search_placeholder": "搜索公告标题",
+    "followed_tab": "追踪来源",
+    "matches_tab": "符合项目",
     "filter_source": "依追踪来源筛选",
     "all_followed": "所有追踪来源",
     "manage_follows": "管理追踪",
     "manage_follows_description": "选择要显示在公告列表中的校园来源。",
+    "manage_keywords": "管理关键字",
+    "manage_keywords_description": "在所有校园来源中寻找符合的公告。",
+    "keyword_placeholder": "添加关键字",
+    "add_keyword": "添加",
+    "remove_keyword": "移除关键字",
+    "keyword_suggestions": "建议关键字",
+    "suggested_keywords": ["奖学金", "交换", "实习", "征才"],
     "source_search_placeholder": "搜索来源",
     "source_language": {
       "zh_tw": "中文",
@@ -892,6 +991,9 @@
     "load_error": "目前无法取得校园公告",
     "try_again": "再试一次",
     "no_results": "没有符合的追踪公告",
+    "no_keyword_matches": "没有符合关键字的公告",
+    "no_keywords": "尚未设置关键字",
+    "new_matches_count": "上次造访后添加 {count} 则符合公告",
     "show_more": "显示更多",
     "attribution_prefix": "数据源：",
     "attribution_name": "NTHU-SA 清大学生会 NTHU-Data-API"
@@ -1498,6 +1600,7 @@
     },
     "apps": {
       "courses": "课程查询",
+      "course-changes": "课程变更",
       "modules": "课程模块",
       "chat": "AI 课程助手",
       "venues": "地点相关课程",
@@ -1508,6 +1611,7 @@
       "sports-venues": "体育场馆使用人数",
       "library": "图书馆实时座位",
       "announcements": "校园公告",
+      "directory": "校园通信录",
       "shops": "餐厅及服务",
       "calendar": "日历",
       "timetable-community": "社区课表",
