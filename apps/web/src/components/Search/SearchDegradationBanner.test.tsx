@@ -5,9 +5,15 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { Configure, InstantSearch } from "react-instantsearch";
 import { installTestDom } from "@/testDom";
 import type { ResilientSearchClient } from "@/lib/search-client";
-import SearchDegradationBanner from "./SearchDegradationBanner";
-import en from "@/dictionaries/en.json";
 import zh from "@/dictionaries/zh.json";
+
+mock.module("@/dictionaries/useDictionary", () => ({
+  default: () => zh,
+}));
+
+const { default: SearchDegradationBanner } = await import(
+  "./SearchDegradationBanner"
+);
 
 let root: Root | undefined;
 let restoreDom: (() => void) | undefined;
@@ -73,43 +79,28 @@ describe("SearchDegradationBanner", () => {
     } as unknown as ResilientSearchClient;
 
     const container = renderBanner(searchClient);
-    const loadErrors = [en.common.load_error, zh.common.load_error];
-    const tryAgainLabels = [en.common.try_again, zh.common.try_again];
-    const limitedModeLabels = [
-      en.course.search.limited_mode,
-      zh.course.search.limited_mode,
-    ];
+    const loadError = zh.common.load_error;
+    const tryAgain = zh.common.try_again;
+    const limitedMode = zh.course.search.limited_mode;
 
-    expect(
-      limitedModeLabels.some((label) => container.textContent?.includes(label)),
-    ).toBe(true);
-    expect(
-      loadErrors.some((label) => container.textContent?.includes(label)),
-    ).toBe(false);
+    expect(container.textContent).toContain(limitedMode);
+    expect(container.textContent).not.toContain(loadError);
 
     act(() => {
       hasError = true;
       listeners.forEach((listener) => listener());
     });
 
-    expect(
-      loadErrors.some((label) => container.textContent?.includes(label)),
-    ).toBe(true);
-    expect(
-      tryAgainLabels.some((label) => container.textContent?.includes(label)),
-    ).toBe(true);
+    expect(container.textContent).toContain(loadError);
+    expect(container.textContent).toContain(tryAgain);
 
     act(() => {
       hasError = false;
       listeners.forEach((listener) => listener());
     });
 
-    expect(
-      limitedModeLabels.some((label) => container.textContent?.includes(label)),
-    ).toBe(true);
-    expect(
-      loadErrors.some((label) => container.textContent?.includes(label)),
-    ).toBe(false);
+    expect(container.textContent).toContain(limitedMode);
+    expect(container.textContent).not.toContain(loadError);
   });
 
   test("refreshes InstantSearch on retry without clearing or using client retry", async () => {
@@ -127,10 +118,9 @@ describe("SearchDegradationBanner", () => {
     } as unknown as ResilientSearchClient;
 
     const container = renderBanner(searchClient);
-    const tryAgainLabels = [en.common.try_again, zh.common.try_again];
 
-    const button = [...container.querySelectorAll("button")].find((candidate) =>
-      tryAgainLabels.includes(candidate.textContent ?? ""),
+    const button = [...container.querySelectorAll("button")].find(
+      (candidate) => candidate.textContent === zh.common.try_again,
     );
     expect(button).toBeDefined();
     const searchesBeforeRetry = search.mock.calls.length;
