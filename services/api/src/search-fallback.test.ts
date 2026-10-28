@@ -27,6 +27,7 @@ const course = {
 type QueryCall = { method: string; args: unknown[] };
 
 let courseRows = [course];
+let responseRowCap = Number.POSITIVE_INFINITY;
 const courseQueryCalls: QueryCall[] = [];
 const rpcQueryCalls: QueryCall[] = [];
 const syllabusSelects: string[] = [];
@@ -50,6 +51,21 @@ const createCourseQueryBuilder = (
       );
       return builder;
     }),
+    ilike: mock((column: string, pattern: string) => {
+      calls.push({ method: "ilike", args: [column, pattern] });
+      const prefix = pattern.endsWith("%")
+        ? pattern.slice(0, -1).toLocaleLowerCase()
+        : undefined;
+      filteredRows = filteredRows.filter((row) => {
+        const value = String(
+          row[column as keyof typeof course],
+        ).toLocaleLowerCase();
+        return prefix === undefined
+          ? value === pattern.toLocaleLowerCase()
+          : value.startsWith(prefix);
+      });
+      return builder;
+    }),
     in: mock((column: string, values: string[]) => {
       calls.push({ method: "in", args: [column, values] });
       filteredRows = filteredRows.filter((row) =>
@@ -67,7 +83,10 @@ const createCourseQueryBuilder = (
         return { data: null, error: rpcError };
       }
       const [from, to] = args as [number, number];
-      return { data: filteredRows.slice(from, to + 1), error: null };
+      return {
+        data: filteredRows.slice(from, Math.min(to + 1, from + responseRowCap)),
+        error: null,
+      };
     }),
   };
   return builder;
@@ -133,6 +152,7 @@ const requestBooleanFilter = (filters: string) =>
 
 afterEach(() => {
   courseRows = [course];
+  responseRowCap = Number.POSITIVE_INFINITY;
   courseQueryCalls.length = 0;
   rpcQueryCalls.length = 0;
   syllabusSelects.length = 0;
@@ -335,6 +355,68 @@ describe("search fallback boolean filters", () => {
   });
 });
 
+describe("search fallback course-code queries", () => {
+  test.each([
+    ["cs1355", ["11510CS  135501", "11510CS  135502"]],
+    ["CS1355", ["11510CS  135501", "11510CS  135502"]],
+    ["EE 2310", ["11510EE  231001"]],
+    ["CS135500", ["11510CS  135501", "11510CS  135502"]],
+    ["calculus", ["11420MATH 101000"]],
+  ] as const)("matches %s with the database search", async (query, rawIds) => {
+    courseRows = [
+      {
+        ...course,
+        raw_id: "11510CS  135501",
+        course: "1355",
+        department: "CS",
+        semester: "11510",
+        name_en: "Computer Science I",
+      },
+      {
+        ...course,
+        raw_id: "11510CS  135502",
+        course: "1355",
+        department: "CS",
+        semester: "11510",
+        name_en: "Computer Science I",
+      },
+      {
+        ...course,
+        raw_id: "11510EE  231001",
+        course: "2310",
+        department: "EE",
+        semester: "11510",
+        name_en: "Signals and Systems",
+      },
+    ];
+    courseRows.push(course);
+
+    const response = await fallbackSearch.fetch(
+      new Request(`http://localhost/?q=${encodeURIComponent(query)}`),
+      {
+        SUPABASE_URL: "https://supabase.example",
+        SUPABASE_SERVICE_ROLE_KEY: "test",
+      },
+    );
+    const payload = (await response.json()) as {
+      data: { hits: Array<{ raw_id: string }>; nbHits: number };
+    };
+
+    expect(response.status).toBe(200);
+    expect(payload.data.nbHits).toBe(rawIds.length);
+    expect(payload.data.hits.map((hit) => hit.raw_id)).toEqual(
+      [...rawIds].sort((left, right) => right.localeCompare(left)),
+    );
+    if (query !== "calculus") {
+      expect(rpcQueryCalls).toEqual([]);
+      expect(courseQueryCalls).toContainEqual({
+        method: "eq",
+        args: ["department", query.replace(/\s|\d/g, "").toLocaleUpperCase()],
+      });
+    }
+  });
+});
+
 describe("search fallback database semester filters", () => {
   test("pushes a semester facet into PostgREST before range", async () => {
     const response = await fallbackSearch.fetch(
@@ -449,8 +531,65 @@ describe("search fallback database semester filters", () => {
     expect(payload.data.hits[0]?.raw_id).toBe(oldCourse.raw_id);
   });
 
+  test.each([
+    ["table", ""],
+    ["RPC", "calculus"],
+  ] as const)(
+    "pages through a response-capped %s scan without truncating",
+    async (_source, query) => {
+      responseRowCap = 4_000;
+      courseRows = Array.from({ length: 4_899 }, (_, index) => ({
+        ...course,
+        raw_id: `10810MATH ${String(index).padStart(6, "0")}`,
+        course: `MATH${index}`,
+        name_en: query ? "Calculus" : "New course",
+        semester: "10810",
+      }));
+
+      const response = await fallbackSearch.fetch(
+        new Request(
+          `http://localhost/?q=${query}&facetFilters=semester%3A10810`,
+        ),
+        {
+          SUPABASE_URL: "https://supabase.example",
+          SUPABASE_SERVICE_ROLE_KEY: "test",
+        },
+      );
+      const payload = (await response.json()) as {
+        data: { nbHits: number; warnings: string[] };
+      };
+      const calls = query ? rpcQueryCalls : courseQueryCalls;
+
+      expect(response.status).toBe(200);
+      expect(payload.data.nbHits).toBe(4_899);
+      expect(payload.data.warnings).not.toContain(
+        "Course search reached the 10,000-row scan limit; counts may be incomplete.",
+      );
+      expect(
+        calls
+          .filter((call) => call.method === "range")
+          .map((call) => call.args),
+      ).toEqual([
+        [0, 999],
+        [1_000, 1_999],
+        [2_000, 2_999],
+        [3_000, 3_999],
+        [4_000, 4_999],
+      ]);
+      expect(calls.filter((call) => call.method === "order")).toHaveLength(5);
+      expect(
+        calls.filter(
+          (call) =>
+            call.method === "eq" &&
+            (call.args as [string, string])[0] === "semester",
+        ),
+      ).toHaveLength(5);
+    },
+  );
+
   test("warns when the bounded database scan reaches its limit", async () => {
-    courseRows = Array.from({ length: 10_000 }, (_, index) => ({
+    responseRowCap = 4_000;
+    courseRows = Array.from({ length: 10_001 }, (_, index) => ({
       ...course,
       raw_id: `11420MATH ${String(index).padStart(6, "0")}`,
     }));

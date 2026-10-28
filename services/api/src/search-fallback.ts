@@ -18,12 +18,28 @@ type CourseHit = CourseRow & {
 };
 
 const MAX_SCAN_ROWS = 10_000;
+const SCAN_PAGE_SIZE = 1_000;
 const MAX_HITS_PER_PAGE = 100;
 const SCAN_LIMIT_WARNING =
   "Course search reached the 10,000-row scan limit; counts may be incomplete.";
 const INSTRUCTOR_MATCH_WARNING = "Instructor matching unavailable";
 const CACHE_CONTROL =
   "public, max-age=30, s-maxage=300, stale-while-revalidate=60";
+
+type CourseCodeQuery = {
+  department: string;
+  number: string;
+};
+
+const parseCourseCodeQuery = (query: string): CourseCodeQuery | undefined => {
+  const compact = query.normalize("NFKC").replace(/\s+/g, "");
+  const match = compact.match(/^([A-Z]+)(\d{4})(?:\d{2})?$/i);
+  if (!match) return undefined;
+  return {
+    department: match[1]!.toLocaleUpperCase("en-US"),
+    number: match[2]!,
+  };
+};
 
 type FilterCondition = {
   attribute: string;
@@ -386,6 +402,18 @@ const matchesQuery = (course: CourseHit, query: string) => {
   return terms.every((term) => searchable.includes(term));
 };
 
+const matchesCourseCode = (course: CourseHit, query: CourseCodeQuery) => {
+  const department = course.department
+    .normalize("NFKC")
+    .replace(/\s+/g, "")
+    .toLocaleUpperCase("en-US");
+  const number = course.course.normalize("NFKC").replace(/\D/g, "");
+  return (
+    department === query.department &&
+    (number.startsWith(query.number) || query.number.startsWith(number))
+  );
+};
+
 const rankCourse = (course: CourseHit, query: string) => {
   const normalizedQuery = query.toLocaleLowerCase().trim();
   if (!normalizedQuery) return 0;
@@ -492,9 +520,16 @@ const createCourseQuery = (
   c: Parameters<typeof supabase_server>[0],
   text?: string,
   filters: DatabaseEqualityFilters = {},
+  courseCode?: CourseCodeQuery,
+  from = 0,
+  to = from + SCAN_PAGE_SIZE - 1,
 ) => {
   let query = supabase_server(c).from("courses").select("*");
-  if (text) {
+  if (courseCode) {
+    query = query
+      .eq("department", courseCode.department)
+      .ilike("course", `${courseCode.number}%`);
+  } else if (text) {
     const escaped = escapePostgrestValue(text.trim());
     query = query.or(
       ["name_zh", "name_en", "course", "raw_id", "department"]
@@ -503,9 +538,7 @@ const createCourseQuery = (
     );
   }
   query = applyDatabaseEqualityFilters(query, filters);
-  return query
-    .order("raw_id", { ascending: false })
-    .range(0, MAX_SCAN_ROWS - 1);
+  return query.order("raw_id", { ascending: false }).range(from, to);
 };
 
 /**
@@ -522,18 +555,51 @@ const loadCoursesByRpc = (
   c: Parameters<typeof supabase_server>[0],
   keyword: string,
   filters: DatabaseEqualityFilters = {},
+  from = 0,
+  to = from + SCAN_PAGE_SIZE - 1,
 ) =>
   applyDatabaseEqualityFilters(
     supabase_server(c).rpc("search_courses", { keyword }),
     filters,
   )
     .order("raw_id", { ascending: false })
-    .range(0, MAX_SCAN_ROWS - 1);
+    .range(from, to);
 
 type LoadedCourses = {
   courses: CourseHit[];
   truncated: boolean;
   warnings: string[];
+};
+
+type CoursePage = {
+  data: unknown;
+  error: unknown;
+};
+
+const scanCoursePages = async (
+  loadPage: (from: number, to: number) => Promise<CoursePage>,
+): Promise<Omit<LoadedCourses, "warnings">> => {
+  const courses = new Map<string, CourseHit>();
+  let truncated = false;
+
+  for (let from = 0; from < MAX_SCAN_ROWS; from += SCAN_PAGE_SIZE) {
+    const requestedRows = Math.min(SCAN_PAGE_SIZE, MAX_SCAN_ROWS - from);
+    const { data, error } = await loadPage(from, from + requestedRows - 1);
+    if (error) throw error;
+
+    const scannedRows = Array.isArray(data) ? (data as CourseRow[]) : [];
+    for (const course of scannedRows.slice(0, requestedRows)) {
+      courses.set(course.raw_id, getCourseHit(course));
+    }
+
+    if (scannedRows.length < requestedRows) break;
+    if (from + requestedRows >= MAX_SCAN_ROWS) {
+      truncated = true;
+      break;
+    }
+  }
+
+  return { courses: [...courses.values()], truncated };
 };
 
 const loadCourses = async (
@@ -542,44 +608,39 @@ const loadCourses = async (
   filters: DatabaseEqualityFilters,
 ): Promise<LoadedCourses> => {
   const trimmed = query.trim();
-  const courses = new Map<string, CourseHit>();
-  let truncated = false;
-  const collect = (rows: unknown) => {
-    const scannedRows = Array.isArray(rows) ? (rows as CourseRow[]) : [];
-    truncated ||= scannedRows.length >= MAX_SCAN_ROWS;
-    for (const course of scannedRows.slice(0, MAX_SCAN_ROWS)) {
-      courses.set(course.raw_id, getCourseHit(course));
-    }
-  };
+  const courseCode = parseCourseCodeQuery(trimmed);
 
-  if (!trimmed) {
-    const { data, error } = await createCourseQuery(c, undefined, filters);
-    if (error) throw error;
-    collect(data);
-    return { courses: [...courses.values()], truncated, warnings: [] };
+  if (!trimmed || courseCode) {
+    const loaded = await scanCoursePages(async (from, to) =>
+      createCourseQuery(c, undefined, filters, courseCode, from, to),
+    );
+    return { ...loaded, warnings: [] };
   }
 
-  const { data, error } = await loadCoursesByRpc(c, trimmed, filters);
-  if (!error) {
-    collect(data);
-    return { courses: [...courses.values()], truncated, warnings: [] };
+  try {
+    const loaded = await scanCoursePages(async (from, to) =>
+      loadCoursesByRpc(c, trimmed, filters, from, to),
+    );
+    return { ...loaded, warnings: [] };
+  } catch (error) {
+    // Keep search answering even if the function is unavailable or rejects a
+    // query: degrade to the scalar `ilike` match rather than failing outright.
+    // Teacher matches are lost on this path, which is why it is not the default.
+    const errorDetails =
+      typeof error === "object" && error !== null ? error : undefined;
+    console.error("search_courses RPC failed, using ilike fallback:", {
+      message:
+        errorDetails && "message" in errorDetails
+          ? errorDetails.message
+          : "Unknown error",
+      code:
+        errorDetails && "code" in errorDetails ? errorDetails.code : undefined,
+    });
+    const scalar = await scanCoursePages(async (from, to) =>
+      createCourseQuery(c, trimmed, filters, undefined, from, to),
+    );
+    return { ...scalar, warnings: [INSTRUCTOR_MATCH_WARNING] };
   }
-
-  // Keep search answering even if the function is unavailable or rejects a
-  // query: degrade to the scalar `ilike` match rather than failing outright.
-  // Teacher matches are lost on this path, which is why it is not the default.
-  console.error("search_courses RPC failed, using ilike fallback:", {
-    message: error.message,
-    code: error.code,
-  });
-  const scalar = await createCourseQuery(c, trimmed, filters);
-  if (scalar.error) throw scalar.error;
-  collect(scalar.data);
-  return {
-    courses: [...courses.values()],
-    truncated,
-    warnings: [INSTRUCTOR_MATCH_WARNING],
-  };
 };
 
 const getRequestedFacets = (value?: string | string[]) => {
@@ -647,6 +708,9 @@ export const searchSupabase = async (
     filterGroups,
     options.facetName,
   );
+  const courseCode = options.facetName
+    ? undefined
+    : parseCourseCodeQuery(query);
   const { facets: requestedFacets, warnings } = getRequestedFacets(
     options.facets,
   );
@@ -668,7 +732,11 @@ export const searchSupabase = async (
       numericConditions.every((condition) =>
         matchesCondition(course, condition),
       ) &&
-      (options.facetName ? true : matchesQuery(course, query)),
+      (options.facetName
+        ? true
+        : courseCode
+          ? matchesCourseCode(course, courseCode)
+          : matchesQuery(course, query)),
   );
 
   const hitsPerPage = options.hitsPerPage ?? options.limit ?? 20;
