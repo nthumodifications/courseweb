@@ -117,8 +117,8 @@ const AnnouncementsWidget: FC<AnnouncementsWidgetProps> = (props) => {
             {articles.map((article) => {
               const articleSources = article.sourceIds
                 .map((sourceId) => sourceById.get(sourceId))
-                .filter(
-                  (source): source is AnnouncementSource => Boolean(source),
+                .filter((source): source is AnnouncementSource =>
+                  Boolean(source),
                 );
               const href = safeExternalUrl(article.link);
               const articleContent = (
@@ -127,31 +127,28 @@ const AnnouncementsWidget: FC<AnnouncementsWidgetProps> = (props) => {
                     {article.title}
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    {formatAnnouncementSourceGroups(articleSources, language)}{" "}
-                    ·{" "}
+                    {formatAnnouncementSourceGroups(articleSources, language)} ·{" "}
                     {formatAnnouncementDate(article.date, language)}
                   </span>
                 </>
               );
-              return (
-                href ? (
-                  <a
-                    className="flex flex-col gap-1 py-3"
-                    href={href}
-                    key={`${article.link}:${article.date}`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {articleContent}
-                  </a>
-                ) : (
-                  <div
-                    className="flex flex-col gap-1 py-3"
-                    key={`${article.link}:${article.date}`}
-                  >
-                    {articleContent}
-                  </div>
-                )
+              return href ? (
+                <a
+                  className="flex flex-col gap-1 py-3"
+                  href={href}
+                  key={`${article.link}:${article.date}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {articleContent}
+                </a>
+              ) : (
+                <div
+                  className="flex flex-col gap-1 py-3"
+                  key={`${article.link}:${article.date}`}
+                >
+                  {articleContent}
+                </div>
               );
             })}
           </div>

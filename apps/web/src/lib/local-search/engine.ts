@@ -28,8 +28,11 @@ import {
 import { searchWithoutWorker } from "./fallback-index";
 import { rankLocalIdsByTerms } from "./ranking";
 import {
+  isCodeLikeTerm,
   isCjkCharacter,
   matchesLocalQueryTerms,
+  needsShortGapCjkRecall,
+  parseCourseCodeQuery,
   queryTerms,
   searchableTokenGroups,
 } from "./tokenizer";
@@ -399,7 +402,7 @@ const hitAttributes = (record: SearchProjectionRecord, value: unknown) => {
   return hit;
 };
 
-/** Return one explicit semester only; multiple semesters must stay remote. */
+/** Return one explicit semester only; multiple semesters use the API fallback. */
 export const semesterFromRequest = (
   request: LocalSearchRequest,
   defaultSemester?: string,
@@ -495,6 +498,7 @@ export class LocalSearchEngine {
   // screen. Views read deferred text back through getText instead.
   private readonly texts = new Map<string, SearchTextRecord>();
   private readonly listeners = new Set<() => void>();
+  private readonly readyListeners = new Set<(semester: string) => void>();
   private status: LocalSearchStatus = "idle";
   private readonly defaultSemester?: string;
   private readonly queryTransform: (query: string) => string;
@@ -519,11 +523,23 @@ export class LocalSearchEngine {
 
   getStatus = () => this.status;
 
+  isReady = (semester: string) => this.loadedChunks.has(semester);
+
   getText = (rawId: string) => this.texts.get(rawId);
+
+  async prefetch(semester = this.defaultSemester): Promise<void> {
+    if (!semester) return;
+    await this.getChunk(semester);
+  }
 
   subscribe = (listener: () => void) => {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
+  };
+
+  subscribeReady = (listener: (semester: string) => void) => {
+    this.readyListeners.add(listener);
+    return () => this.readyListeners.delete(listener);
   };
 
   private setStatus(status: LocalSearchStatus) {
@@ -685,6 +701,7 @@ export class LocalSearchEngine {
     const source = await this.downloadChunk(semester);
     const chunk = await this.buildChunk(source);
     this.loadedChunks.set(semester, chunk);
+    for (const listener of this.readyListeners) listener(semester);
     this.setStatus("ready");
     const cachedText = await this.cachedTextChunk(semester, chunk.manifest);
     if (cachedText) this.mergeTextRecords(chunk, cachedText.texts);
@@ -886,9 +903,10 @@ export class LocalSearchEngine {
         : 20;
     const terms = queryTerms(query);
     const hasSearchTerms = terms.length > 0;
+    const courseCode = parseCourseCodeQuery(originalQuery);
     const refinementMatcher = compileRefinements(params);
     let indexedIds: readonly (string | number)[];
-    if (hasSearchTerms) {
+    if (hasSearchTerms && !courseCode && !needsShortGapCjkRecall(query)) {
       try {
         indexedIds = await chunk.index.search(query, chunk.records.length);
       } catch (error) {
@@ -929,7 +947,13 @@ export class LocalSearchEngine {
         if (
           (shortLatinPrefix
             ? shortLatinPrefix.has(id)
-            : matchesLocalQueryTerms(chunk.searchRecords[id], terms)) &&
+            : matchesLocalQueryTerms(chunk.searchRecords[id], terms, {
+                allowShortLatinPrefixes: !originalQuery
+                  .trim()
+                  .split(/\s+/)
+                  .some(isCodeLikeTerm),
+                courseCode,
+              })) &&
           refinementMatcher(chunk.records[id])
         ) {
           ids.push(id);

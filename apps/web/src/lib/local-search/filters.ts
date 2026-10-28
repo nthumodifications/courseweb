@@ -330,7 +330,7 @@ export type RefinementSpec = {
   filters?: unknown;
 };
 
-/** Apply Algolia's AND-of-OR facet groups plus filters/numericFilters. */
+/** Apply InstantSearch's AND-of-OR facet groups plus filters/numericFilters. */
 export const compileRefinements = (
   spec: RefinementSpec,
   excludedFacet?: string,

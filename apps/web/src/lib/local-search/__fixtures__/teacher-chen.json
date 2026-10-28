@@ -1,0 +1,24 @@
+[
+  {
+    "raw_id": "11510TEST 100100",
+    "semester": "11510",
+    "department": "TEST",
+    "course": "1001",
+    "class": "1",
+    "name_zh": "",
+    "name_en": "Chen inside a longer title",
+    "teacher_zh": ["王偉"],
+    "teacher_en": ["WANG, WEI"]
+  },
+  {
+    "raw_id": "11510TEST 100200",
+    "semester": "11510",
+    "department": "TEST",
+    "course": "1002",
+    "class": "1",
+    "name_zh": "",
+    "name_en": "An unrelated title",
+    "teacher_zh": ["陳俊銘"],
+    "teacher_en": ["CHEN, CHUN-MING"]
+  }
+]

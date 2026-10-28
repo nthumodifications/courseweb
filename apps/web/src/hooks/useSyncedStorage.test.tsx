@@ -154,9 +154,7 @@ const waitForResult = async (
 
 const renderAfterUploadFailure = async (remoteResponse: Response) => {
   get.mockImplementationOnce(async () => remoteResponse);
-  post.mockImplementationOnce(
-    async () => new Response(null, { status: 500 }),
-  );
+  post.mockImplementationOnce(async () => new Response(null, { status: 500 }));
 
   const rendered = await renderSyncedStorage(() =>
     useSyncedStorage("grades", { source: "default" }),
@@ -382,9 +380,7 @@ describe("useSyncedStorage remote read states", () => {
           JSON.stringify(legacyValue),
         );
         expect(
-          JSON.parse(
-            window.localStorage.getItem(getSyncedStorageKey(key))!,
-          ),
+          JSON.parse(window.localStorage.getItem(getSyncedStorageKey(key))!),
         ).toMatchObject({ value: expected[key] });
 
         authState.isAuthenticated = true;
@@ -857,8 +853,7 @@ describe("useSyncedStorage remote read states", () => {
     );
     await waitForResult(
       rendered.getResult,
-      (result) =>
-        JSON.stringify(result?.[0]) === JSON.stringify([]),
+      (result) => JSON.stringify(result?.[0]) === JSON.stringify([]),
     );
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 20));

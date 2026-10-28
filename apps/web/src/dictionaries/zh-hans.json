@@ -689,11 +689,7 @@
       "search_description": "跨学期搜索同一门课的开课纪录。",
       "search_placeholder": "搜索课号、课名或教师……",
       "search_prompt": "输入课号、课名或教师，寻找历年开课纪录。",
-      "search_examples": [
-        "微积分",
-        "程序",
-        "CS 1355"
-      ],
+      "search_examples": ["微积分", "程序", "CS 1355"],
       "search_no_results": "找不到符合的课程模块",
       "search_results": "个课程模块",
       "search_other_modules": "搜索其他课程",
@@ -1332,6 +1328,9 @@
         "description": "用可自订的小工具格取代今日页面",
         "columns": "栏数",
         "widgets": "小工具",
+        "manage_widgets": "管理小工具",
+        "manage_widgets_description": "选择要显示在今日页面的小工具。",
+        "empty": "没有小工具",
         "view_full_page": "查看完整页面",
         "widget_options": {
           "schedule": {

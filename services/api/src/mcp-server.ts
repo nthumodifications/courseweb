@@ -2,8 +2,8 @@ import { Hono } from "hono";
 import type { Context, Next } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
-import algolia from "./config/algolia";
 import supabase_server from "./config/supabase_server";
+import { searchSupabase } from "./search-fallback";
 import type { Bindings } from "./index";
 import { rateLimitMiddleware } from "./utils/rate-limit";
 import {
@@ -413,11 +413,12 @@ const app = new Hono<{ Bindings: Bindings }>()
                 const parsedArgs = parseToolArgs(searchCoursesArgsSchema, args);
                 const { query, limit } = parsedArgs;
                 const student = studentFromFilters(parsedArgs);
-                const index = algolia(c);
 
                 try {
-                  const { hits } = await index.search(query, {
+                  const { hits } = await searchSupabase(c, {
+                    query,
                     hitsPerPage: Math.min(limit, 50),
+                    useSearchProjection: true,
                   });
 
                   // Format results as structured JSON similar to CourseListItem
@@ -651,27 +652,27 @@ const app = new Hono<{ Bindings: Bindings }>()
                   bulkSearchArgsSchema,
                   args,
                 );
-                const index = algolia(c);
 
                 try {
-                  // Build Algolia filters if provided
-                  const algoliaFilters: string[] = [];
+                  const filterConditions: string[] = [];
                   if (filters.department) {
-                    algoliaFilters.push(`department:"${filters.department}"`);
+                    filterConditions.push(`department:"${filters.department}"`);
                   }
                   if (filters.language) {
-                    algoliaFilters.push(`language:"${filters.language}"`);
+                    filterConditions.push(`language:"${filters.language}"`);
                   }
                   if (filters.semester) {
-                    algoliaFilters.push(`semester:"${filters.semester}"`);
+                    filterConditions.push(`semester:"${filters.semester}"`);
                   }
                   const student = studentFromFilters(filters);
 
                   // Perform searches for each query
                   const searchPromises = queries.map((query: string) =>
-                    index.search(query, {
+                    searchSupabase(c, {
+                      query,
                       hitsPerPage: Math.min(limit, 20),
-                      filters: algoliaFilters.join(" AND ") || undefined,
+                      filters: filterConditions.join(" AND ") || undefined,
+                      useSearchProjection: true,
                     }),
                   );
 

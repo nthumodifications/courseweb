@@ -66,10 +66,9 @@ const buildExpectedTags = (shorthand: string): ExpectedTag[] =>
     : [];
 
 const parseCases = [
-  ...COURSE_AUDIENCE_PARSE_CASES.map(([source, shorthand]) => [
-    { note: source },
-    shorthand,
-  ] as const),
+  ...COURSE_AUDIENCE_PARSE_CASES.map(
+    ([source, shorthand]) => [{ note: source }, shorthand] as const,
+  ),
   ...COURSE_AUDIENCE_PARSE_TEXT_CASES,
 ];
 

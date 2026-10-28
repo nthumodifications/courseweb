@@ -1,8 +1,8 @@
 import { describe, expect, jest, test } from "bun:test";
-import type { SearchClient as AlgoliaSearchClient } from "algoliasearch/lite";
 import {
   createResilientSearchClient,
   isLocalSearchEnabled,
+  type SearchBackend,
 } from "../search-client";
 import {
   createLocalSearchClient,
@@ -26,6 +26,7 @@ import {
   SEARCHABLE_FIELDS,
   searchableText,
 } from "./client";
+import { LOCAL_SEARCH_CASES } from "./local-search-cases";
 import { fetchJsonWithIdleTimeout } from "./deadline";
 import type { WorkerRequest } from "./worker-protocol";
 import { normalizeSyllabusKeywords } from "../syllabus-text";
@@ -158,6 +159,15 @@ class FakeWorker implements SearchWorker {
   }
 
   terminate() {}
+}
+
+class CountingWorker extends FakeWorker {
+  searchCalls = 0;
+
+  override postMessage(message: WorkerRequest) {
+    if (message.type === "search") this.searchCalls += 1;
+    super.postMessage(message);
+  }
 }
 
 class FailingWorker extends FakeWorker {
@@ -664,6 +674,19 @@ describe("local course search", () => {
 });
 
 describe("chunk cache, conditional requests, and worker lifecycle", () => {
+  test("fetches a semester course payload once while it remains loaded", async () => {
+    const { engine, state } = createEngine();
+    await engine.search("11510", request({ query: "CS" }));
+    const firstRequestCount = state.calls.length;
+
+    await engine.search("11510", request({ query: "微積分" }));
+
+    expect(state.calls).toHaveLength(firstRequestCount);
+    expect(
+      state.calls.filter((call) => call.url.endsWith("/search/chunk/11510")),
+    ).toHaveLength(1);
+  });
+
   test("loads a cache miss, reuses a hash-matched 304 entry, and invalidates a stale hash", async () => {
     const { engine, cache, state } = createEngine();
     await engine.search("11510", request({ query: "CS" }));
@@ -937,48 +960,63 @@ describe("chunk cache, conditional requests, and worker lifecycle", () => {
   });
 });
 
+test("keeps local behavior fixtures strict in set and order", async () => {
+  const { engine } = createEngine({ records: fullFixture });
+  for (const localCase of LOCAL_SEARCH_CASES) {
+    const result = await engine.search(
+      "11510",
+      request({
+        ...localCase.params,
+        query: localCase.query,
+        hitsPerPage: localCase.ids.length,
+      }),
+    );
+    expect(
+      result.hits.map((hit) => hit.objectID),
+      `${localCase.name}: local fixture order changed`,
+    ).toEqual(localCase.ids);
+  }
+}, 30_000);
+
 describe("local-first resilient client", () => {
-  const remoteResponse = {
+  const fallbackResponse = {
     results: [
       {
-        hits: [{ objectID: "remote" }],
+        hits: [{ objectID: "fallback" }],
         nbHits: 1,
         page: 0,
         nbPages: 1,
         hitsPerPage: 20,
         processingTimeMS: 1,
         exhaustiveNbHits: true,
-        query: "remote",
+        query: "fallback",
         params: "",
         facets: {},
       },
     ],
   };
 
-  const remote = {
-    search: async () => remoteResponse,
-    searchForFacetValues: async () => [],
-  } as unknown as AlgoliaSearchClient;
+  const fallbackFetch = async (
+    _input?: RequestInfo | URL,
+    _init?: RequestInit,
+  ) =>
+    new Response(
+      JSON.stringify({ success: true, data: fallbackResponse.results[0] }),
+      { status: 200 },
+    );
 
-  test("keeps local search disabled unless its Vite flag is enabled", () => {
-    expect(isLocalSearchEnabled({})).toBe(false);
+  test("enables local search unless its Vite flag opts out", () => {
+    expect(isLocalSearchEnabled({})).toBe(true);
     expect(isLocalSearchEnabled({ VITE_ENABLE_LOCAL_SEARCH: "false" })).toBe(
       false,
     );
+    expect(isLocalSearchEnabled({ VITE_ENABLE_LOCAL_SEARCH: "0" })).toBe(false);
     expect(isLocalSearchEnabled({ VITE_ENABLE_LOCAL_SEARCH: "true" })).toBe(
       true,
     );
   });
 
-  test("slots local ahead of remote and waits during a local build", async () => {
-    let remoteCalls = 0;
-    const remoteWithCount = {
-      ...remote,
-      search: async () => {
-        remoteCalls += 1;
-        return remoteResponse;
-      },
-    } as unknown as AlgoliaSearchClient;
+  test("slots local ahead of the API fallback and waits during a local build", async () => {
     const { state, cache } = createEngine();
     const client = createLocalSearchClient({
       cache,
@@ -989,11 +1027,150 @@ describe("local-first resilient client", () => {
     });
     const result = await client.trySearch([request({ query: "CS" })]);
     expect(result.handled).toBe(true);
-    expect(remoteCalls).toBe(0);
     expect(client.getStatus()).toBe("ready");
   });
 
-  test("returns handled:false for cross-semester requests", async () => {
+  test("answers from the API fallback while a cold local build continues", async () => {
+    let releaseManifest!: () => void;
+    const manifestStarted = new Promise<void>((resolve) => {
+      releaseManifest = resolve;
+    });
+    let fallbackCalls = 0;
+    const { state, cache } = createEngine();
+    const client = createResilientSearchClient({
+      fallbackFetch: async (input, init) => {
+        fallbackCalls += 1;
+        return fallbackFetch(input, init);
+      },
+      localSearch: {
+        cache,
+        fetch: async (input, init) => {
+          if (String(input).endsWith("/search/chunk/manifest")) {
+            const response = makeFetch(state)(input, init);
+            await manifestStarted;
+            return response;
+          }
+          return makeFetch(state)(input, init);
+        },
+        baseUrl: "https://api.example.test",
+        defaultSemester: "11510",
+        workerFactory: () => new FakeWorker(),
+      },
+    });
+
+    const result = await Promise.race([
+      client.search([request({ query: "CS" })] as never),
+      new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new Error("API fallback waited on local")),
+          100,
+        ),
+      ),
+    ]);
+    expect(fallbackCalls).toBe(1);
+    expect(
+      (result as { results: Array<{ hits: Array<{ objectID: string }> }> })
+        .results[0].hits[0]?.objectID,
+    ).toBe("fallback");
+
+    releaseManifest();
+    for (
+      let attempt = 0;
+      attempt < 20 && client.getStatus() !== "local";
+      attempt += 1
+    ) {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+    expect(client.getStatus()).toBe("local");
+  });
+
+  test("warms one cold semester once without background local searches", async () => {
+    let releaseManifest!: () => void;
+    const manifestReady = new Promise<void>((resolve) => {
+      releaseManifest = resolve;
+    });
+    let releaseFallback!: () => void;
+    const fallbackReady = new Promise<void>((resolve) => {
+      releaseFallback = resolve;
+    });
+    let manifestCalls = 0;
+    let chunkCalls = 0;
+    let fallbackCalls = 0;
+    let worker: CountingWorker | undefined;
+    const { state, cache } = createEngine();
+    const client = createResilientSearchClient({
+      fallbackFetch: async (input, init) => {
+        fallbackCalls += 1;
+        await fallbackReady;
+        return fallbackFetch(input, init);
+      },
+      localSearch: {
+        cache,
+        fetch: async (input, init) => {
+          const url = String(input);
+          if (url.endsWith("/search/chunk/manifest")) {
+            manifestCalls += 1;
+            await manifestReady;
+          } else if (url.endsWith("/search/chunk/11510")) {
+            chunkCalls += 1;
+          }
+          return makeFetch(state)(input, init);
+        },
+        baseUrl: "https://api.example.test",
+        defaultSemester: "11510",
+        workerFactory: () => {
+          worker = new CountingWorker();
+          return worker;
+        },
+      },
+    });
+    const statuses: SearchBackend[] = [];
+    const readySemesters: string[] = [];
+    client.subscribe(() => statuses.push(client.getStatus()));
+    client.subscribeLocalReady((semester) => readySemesters.push(semester));
+
+    const searches = Array.from({ length: 5 }, (_, index) =>
+      client.search([request({ query: `CS ${index}` })] as never),
+    );
+    await Promise.resolve();
+    expect(manifestCalls).toBe(1);
+    expect(fallbackCalls).toBe(5);
+    expect(worker?.searchCalls ?? 0).toBe(0);
+
+    releaseManifest();
+    for (let attempt = 0; attempt < 20 && chunkCalls === 0; attempt += 1)
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(chunkCalls).toBe(1);
+    expect(worker?.searchCalls ?? 0).toBe(0);
+
+    releaseFallback();
+    await Promise.all(searches);
+    expect(readySemesters).toEqual(["11510"]);
+    expect(statuses.filter((status) => status === "local")).toHaveLength(1);
+    expect(worker?.searchCalls ?? 0).toBe(0);
+  });
+
+  test("uses ready local results without touching the API fallback", async () => {
+    const { engine } = createEngine();
+    await engine.search("11510", request({ query: "CS" }));
+    let fallbackCalls = 0;
+    const client = createResilientSearchClient({
+      fallbackFetch: async () => {
+        fallbackCalls += 1;
+        throw new Error("API fallback unavailable");
+      },
+      localSearch: { engine, defaultSemester: "11510" },
+    });
+
+    const result = await client.search([request({ query: "CS" })] as never);
+    expect(fallbackCalls).toBe(0);
+    expect(
+      (result as { results: Array<{ hits: unknown[] }> }).results[0]?.hits
+        .length,
+    ).toBeGreaterThan(0);
+  });
+
+  test("returns handled:false for multi-semester requests", async () => {
     const { state, cache } = createEngine();
     const client = createLocalSearchClient({
       cache,
@@ -1008,6 +1185,24 @@ describe("local-first resilient client", () => {
     ]);
     expect(result.handled).toBe(false);
   });
+
+  test.each(["11420CS1355", "11420 CS 1355", "11420CS  135500"])(
+    "handles a raw ID from another semester locally: %s",
+    async (query) => {
+      const { state, cache } = createEngine();
+      const local = createLocalSearchClient({
+        cache,
+        fetch: makeFetch(state),
+        baseUrl: "https://api.example.test",
+        defaultSemester: "11510",
+        workerFactory: () => new FakeWorker(),
+      });
+      const result = await local.trySearch([request({ query })]);
+      expect(result.handled).toBe(true);
+      if (!result.handled) return;
+      expect(result.result.results[0]?.hits).toEqual([]);
+    },
+  );
 
   test("retries a failed chunk load later in the same session", async () => {
     let fetchCalls = 0;
@@ -1065,19 +1260,15 @@ describe("local-first resilient client", () => {
   });
 
   test("retries locally after disposing a failed worker", async () => {
-    let remoteCalls = 0;
-    const remoteWithCount = {
-      ...remote,
-      search: async () => {
-        remoteCalls += 1;
-        return remoteResponse;
-      },
-    } as unknown as AlgoliaSearchClient;
+    let fallbackCalls = 0;
     const { state, cache } = createEngine();
     let workerAttempts = 0;
     let failedWorker: TrackedFailingWorker | undefined;
     const client = createResilientSearchClient({
-      remoteClient: remoteWithCount,
+      fallbackFetch: async (input, init) => {
+        fallbackCalls += 1;
+        return fallbackFetch(input, init);
+      },
       localSearch: {
         cache,
         fetch: makeFetch(state),
@@ -1098,8 +1289,15 @@ describe("local-first resilient client", () => {
     ] as never)) as {
       results: Array<{ hits: Array<{ objectID: string }> }>;
     };
-    expect(remoteCalls).toBe(1);
-    expect(result.results[0].hits[0].objectID).toBe("remote");
+    expect(fallbackCalls).toBe(1);
+    expect(result.results[0].hits[0].objectID).toBe("fallback");
+    for (
+      let attempt = 0;
+      attempt < 20 && !failedWorker?.terminated;
+      attempt += 1
+    ) {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
     expect(failedWorker?.terminated).toBe(true);
 
     await client.retry();
@@ -1108,7 +1306,16 @@ describe("local-first resilient client", () => {
       (recovered as { results: Array<{ hits: unknown[] }> }).results[0]?.hits
         .length,
     ).toBeGreaterThan(0);
-    expect(remoteCalls).toBe(1);
+    expect(fallbackCalls).toBe(2);
+    for (
+      let attempt = 0;
+      attempt < 20 && client.getStatus() !== "local";
+      attempt += 1
+    ) {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+    await client.search([request({ query: "CS" })] as never);
+    expect(fallbackCalls).toBe(2);
   });
 
   test("evicts and terminates a worker after a fatal query error", async () => {
@@ -1189,7 +1396,7 @@ describe("local-first resilient client", () => {
     expect(engine.getText(rawId)?.brief).toBe("new");
   });
 
-  test("falls through to the remote tier after a local timeout", async () => {
+  test("falls through to the API fallback after a local timeout", async () => {
     jest.useFakeTimers();
     try {
       let signal: AbortSignal | undefined;
@@ -1197,16 +1404,12 @@ describe("local-first resilient client", () => {
       const started = new Promise<void>((resolve) => {
         resolveStarted = resolve;
       });
-      let remoteCalls = 0;
-      const remoteWithCount = {
-        ...remote,
-        search: async () => {
-          remoteCalls += 1;
-          return remoteResponse;
-        },
-      } as unknown as AlgoliaSearchClient;
+      let fallbackCalls = 0;
       const client = createResilientSearchClient({
-        remoteClient: remoteWithCount,
+        fallbackFetch: async (input, init) => {
+          fallbackCalls += 1;
+          return fallbackFetch(input, init);
+        },
         localSearch: {
           baseUrl: "https://api.example.test",
           defaultSemester: "11510",
@@ -1227,8 +1430,8 @@ describe("local-first resilient client", () => {
       };
 
       expect(signal?.aborted).toBe(true);
-      expect(remoteCalls).toBe(1);
-      expect(result.results[0].hits[0].objectID).toBe("remote");
+      expect(fallbackCalls).toBe(1);
+      expect(result.results[0].hits[0].objectID).toBe("fallback");
     } finally {
       jest.useRealTimers();
     }
@@ -1250,5 +1453,51 @@ describe("local-first resilient client", () => {
     expect(result.result.results[0].hitsPerPage).toBe(0);
     expect(result.result.results[0].hits).toEqual([]);
     expect(result.result.results[0].nbHits).toBe(fixture.length);
+  });
+
+  test("uses the API fallback only when local search is disabled", async () => {
+    let fallbackCalls = 0;
+    const client = createResilientSearchClient({
+      localSearch: false,
+      fallbackFetch: async (input, init) => {
+        fallbackCalls += 1;
+        expect(String(input)).toContain("/search/fallback");
+        return fallbackFetch(input, init);
+      },
+    });
+
+    const result = await client.search([request({ query: "CS" })] as never);
+    expect(fallbackCalls).toBe(1);
+    expect(
+      (result as { results: Array<{ hits: Array<{ objectID: string }> }> })
+        .results[0]?.hits[0]?.objectID,
+    ).toBe("fallback");
+    expect(client.getStatus()).toBe("fallback");
+    expect(client.hasError()).toBe(false);
+  });
+
+  test("surfaces API fallback failures as an error", async () => {
+    const client = createResilientSearchClient({
+      localSearch: false,
+      fallbackFetch: async () =>
+        new Response(
+          JSON.stringify({
+            success: false,
+            error: { message: "fallback unavailable" },
+          }),
+          { status: 503 },
+        ),
+    });
+    let notifications = 0;
+    client.subscribe(() => {
+      notifications += 1;
+    });
+
+    await expect(
+      client.search([request({ query: "CS" })] as never),
+    ).rejects.toThrow("fallback unavailable");
+    expect(client.getStatus()).toBe("fallback");
+    expect(client.hasError()).toBe(true);
+    expect(notifications).toBeGreaterThan(0);
   });
 });

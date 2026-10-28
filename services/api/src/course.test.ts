@@ -324,9 +324,7 @@ describe("course ID list bounds", () => {
     expect(body).toHaveLength(manyChanges.length);
     expect(body.every((change) => change.course)).toBe(true);
     expect(inQuery.mock.calls.map(([, ids]) => ids.length)).toEqual([
-      100,
-      100,
-      1,
+      100, 100, 1,
     ]);
 
     courseChangeRows = changeRows;

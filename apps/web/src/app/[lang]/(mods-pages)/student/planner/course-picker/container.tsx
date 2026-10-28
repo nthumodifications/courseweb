@@ -136,7 +136,7 @@ const TakenCoursesPanel = ({
 };
 
 /**
- * Number of Algolia refinements currently active. The `semester` menu is
+ * Number of InstantSearch refinements currently active. The `semester` menu is
  * excluded since it always has a value selected (it's a required selector,
  * not an optional filter).
  */

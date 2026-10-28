@@ -1,18 +1,9 @@
 import algoliasearch, { type SearchIndex } from "algoliasearch";
-import type { Context } from "hono";
-import { env } from "hono/adapter";
 import { createFetchRequester } from "@algolia/requester-fetch";
 
 export type AlgoliaCredentials = {
   appId?: string;
   apiKey?: string;
-};
-
-type AlgoliaEnv = {
-  ALGOLIA_APP_ID?: string;
-  ALGOLIA_API_KEY?: string;
-  ALGOLIA_BACKUP_APP_ID?: string;
-  ALGOLIA_BACKUP_API_KEY?: string;
 };
 
 export type AlgoliaFailureKind = "immediate" | "transient" | "bug";
@@ -91,12 +82,6 @@ export const describeAlgoliaError = (error: unknown) => ({
   kind: classifyAlgoliaError(error),
 });
 
-const algolia = (c: Context) => {
-  const index = getAlgoliaClients(c)[0];
-  if (!index) throw new Error("Algolia credentials not found");
-  return index;
-};
-
 /**
  * Return configured course indexes in failover order. A pair is only used
  * when both values are present so a partially rotated credential cannot be
@@ -120,31 +105,14 @@ export const algoliaClientsWithEnv = (
     .map(({ appId, apiKey }) => algoliaWithEnv(appId, apiKey));
 };
 
-export const getAlgoliaClients = (c: Context) => {
-  const values = env<AlgoliaEnv>(c);
-
-  return algoliaClientsWithEnv(
-    { appId: values.ALGOLIA_APP_ID, apiKey: values.ALGOLIA_API_KEY },
-    {
-      appId: values.ALGOLIA_BACKUP_APP_ID,
-      apiKey: values.ALGOLIA_BACKUP_API_KEY,
-    },
-  );
-};
-
 // The return type is annotated explicitly: without it TypeScript infers a type
 // that can only be named through a deep path into @algolia/transporter, which
 // is not portable and fails with TS2742 whenever node_modules is reached
 // through a link (worktrees, hoisted installs, some CI layouts).
-export const algoliaWithEnv = (
-  appId: string,
-  apiKey: string,
-): SearchIndex => {
+export const algoliaWithEnv = (appId: string, apiKey: string): SearchIndex => {
   const client = algoliasearch(appId, apiKey, {
     requester: createFetchRequester(),
   });
   const index = client.initIndex("nthu_courses");
   return index;
 };
-
-export default algolia;

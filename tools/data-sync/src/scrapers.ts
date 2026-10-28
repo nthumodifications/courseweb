@@ -75,7 +75,8 @@ const readExistingCourseRows = async (
       .order("raw_id", { ascending: true })
       .range(offset, offset + CHANGE_LOG_PAGE_SIZE - 1);
 
-    if (error) throw new Error(`Failed to read previous courses: ${error.message}`);
+    if (error)
+      throw new Error(`Failed to read previous courses: ${error.message}`);
 
     rows.push(...((data ?? []) as unknown as CourseSnapshot[]));
     if (!data || data.length < CHANGE_LOG_PAGE_SIZE) break;
@@ -100,7 +101,10 @@ const readPreviouslyRemovedIds = async (
       .order("detected_at", { ascending: false })
       .range(offset, offset + CHANGE_LOG_PAGE_SIZE - 1);
 
-    if (error) throw new Error(`Failed to read previous course changes: ${error.message}`);
+    if (error)
+      throw new Error(
+        `Failed to read previous course changes: ${error.message}`,
+      );
 
     for (const row of data ?? []) {
       if (!latestKindById.has(row.raw_id)) {
@@ -132,7 +136,10 @@ const recordCourseChanges = async (
   const previousRows = await readExistingCourseRows(supabase, semester);
   if (previousRows.length === 0) return;
 
-  const previouslyRemovedIds = await readPreviouslyRemovedIds(supabase, semester);
+  const previouslyRemovedIds = await readPreviouslyRemovedIds(
+    supabase,
+    semester,
+  );
   const activePreviousRows = previousRows.filter(
     (course) => !previouslyRemovedIds.has(course.raw_id),
   );
@@ -148,7 +155,11 @@ const recordCourseChanges = async (
     currentRows as unknown as CourseSnapshot[],
     { previouslyRemovedIds },
   );
-  for (let offset = 0; offset < changes.length; offset += CHANGE_LOG_INSERT_CHUNK_SIZE) {
+  for (
+    let offset = 0;
+    offset < changes.length;
+    offset += CHANGE_LOG_INSERT_CHUNK_SIZE
+  ) {
     const chunk = changes
       .slice(offset, offset + CHANGE_LOG_INSERT_CHUNK_SIZE)
       .map((change) => ({ ...change, detected_at: detectedAt }));
@@ -247,9 +258,7 @@ export const syncCourseRows = async (
     );
   } catch (error) {
     if (error instanceof CourseChangeLogTimeoutError) {
-      console.warn(
-        `${error.message}; continuing with the course upsert`,
-      );
+      console.warn(`${error.message}; continuing with the course upsert`);
     } else {
       console.error(
         "Course change logging failed; continuing with the course upsert:",

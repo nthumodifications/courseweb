@@ -82,6 +82,7 @@ export const SEARCH_ATTRIBUTE_ALLOWLIST = [
   // These fields are present in the Algolia index from course_syllabus.
   "brief",
   "keywords",
+  "content",
 ] as const;
 
 /** Raw course columns emitted in the search chunk. */
