@@ -19,6 +19,7 @@ import {
 } from "./time-mask";
 import {
   matchesCourseCode,
+  cjkTermMatchScore,
   isSemesterOnlyQuery,
   matchesLocalQuery,
   normalizeLatinWord,
@@ -118,9 +119,9 @@ describe("local-search tokenization", () => {
     );
     expect(parseCourseCodeQuery("11510")).toBeUndefined();
     expect(isSemesterOnlyQuery("11510")).toBe(true);
-    expect(fullRecords.filter((item) => matchesLocalQuery(item, "11510"))).toEqual(
-      [],
-    );
+    expect(
+      fullRecords.filter((item) => matchesLocalQuery(item, "11510")),
+    ).toEqual([]);
   });
 });
 
@@ -178,6 +179,10 @@ describe("local-search projection and ranking", () => {
     expect(rankLocalIds([separated, contiguous], [0, 1], "微積分一")).toEqual([
       1, 0,
     ]);
+  });
+
+  test("checks later leading ordinal occurrences after a long first gap", () => {
+    expect(cjkTermMatchScore("一甲乙丙丁一微積", "一微積")).toBe(1);
   });
 
   test.each([

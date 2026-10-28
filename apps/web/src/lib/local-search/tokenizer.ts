@@ -67,7 +67,7 @@ const hasShortGapOrdinal = (value: string, term: string): boolean => {
   if (leading && leading[0].length < normalizedTerm.length) {
     const ordinal = leading[0];
     const core = normalizedTerm.slice(ordinal.length);
-    const ordinalStart = normalizedValue.indexOf(ordinal);
+    let ordinalStart = normalizedValue.indexOf(ordinal);
     while (ordinalStart >= 0) {
       const coreStart = normalizedValue.indexOf(
         core,
@@ -79,12 +79,7 @@ const hasShortGapOrdinal = (value: string, term: string): boolean => {
       ) {
         return true;
       }
-      const nextStart = normalizedValue.indexOf(ordinal, ordinalStart + 1);
-      if (nextStart < 0) break;
-      return hasShortGapOrdinal(
-        normalizedValue.slice(nextStart),
-        normalizedTerm,
-      );
+      ordinalStart = normalizedValue.indexOf(ordinal, ordinalStart + 1);
     }
   }
   return false;

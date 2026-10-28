@@ -40,9 +40,7 @@ const widgetModules = [
 for (const [moduleName, widgetName] of widgetModules) {
   mock.module(moduleName, () => ({
     default: stubWidget(widgetName),
-    ...(moduleName === "./CountdownWidget"
-      ? { NextUpLine: () => null }
-      : {}),
+    ...(moduleName === "./CountdownWidget" ? { NextUpLine: () => null } : {}),
   }));
 }
 
@@ -54,17 +52,20 @@ let WidgetGrid: typeof import("./WidgetGrid").default;
 let activeDom: ReturnType<typeof installTestDom> | undefined;
 let activeRoot: Root | undefined;
 let activeContainer: HTMLDivElement | undefined;
+let activeBodyStyle: string | null | undefined;
 
 const installWidgetTestDom = (url: string) => {
-  const restoreStorageEvent = captureGlobalState(["StorageEvent"]);
+  const restoreGlobals = captureGlobalState(["StorageEvent", "matchMedia"]);
   const installed = installTestDom(url);
+  installed.dom.window.scrollTo = () => undefined;
   Object.assign(globalThis, {
     StorageEvent: installed.dom.window.StorageEvent,
+    matchMedia: installed.dom.window.matchMedia,
   });
   return {
     ...installed,
     restore: () => {
-      restoreStorageEvent();
+      restoreGlobals();
       installed.restore();
     },
   };
@@ -76,16 +77,53 @@ beforeAll(async () => {
   dom.restore();
 });
 
-afterEach(() => {
-  act(() => activeRoot?.unmount());
+const flushPendingTimers = async () => {
+  await act(async () => {
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+  });
+};
+
+const closeActiveDialog = async () => {
+  const dialog = document.body.querySelector('[role="dialog"]');
+  if (!dialog) return;
+  await act(async () => {
+    dialog.dispatchEvent(
+      new KeyboardEvent("keydown", {
+        bubbles: true,
+        cancelable: true,
+        key: "Escape",
+      }),
+    );
+  });
+  for (let elapsed = 0; elapsed < 2_000; elapsed += 10) {
+    if (!document.body.querySelector('[role="dialog"]')) return;
+    await flushPendingTimers();
+    await new Promise<void>((resolve) => setTimeout(resolve, 10));
+  }
+};
+
+afterEach(async () => {
+  await closeActiveDialog();
+  const dom = activeDom?.dom;
+  await act(async () => activeRoot?.unmount());
+  if (dom) {
+    await new Promise<void>((resolve) => dom.window.setTimeout(resolve, 600));
+  }
+  await flushPendingTimers();
+  if (document.body && activeBodyStyle !== undefined) {
+    if (activeBodyStyle) document.body.setAttribute("style", activeBodyStyle);
+    else document.body.removeAttribute("style");
+  }
   activeRoot = undefined;
   activeContainer = undefined;
   activeDom?.restore();
   activeDom = undefined;
+  activeBodyStyle = undefined;
 });
 
 const renderWidgetGrid = async (config?: DashboardConfig) => {
   activeDom = installWidgetTestDom("/zh/today");
+  activeBodyStyle = document.body.getAttribute("style");
   if (config) {
     window.localStorage.setItem("widget_config_v1", JSON.stringify(config));
   }
@@ -96,6 +134,20 @@ const renderWidgetGrid = async (config?: DashboardConfig) => {
     activeRoot!.render(createElement(WidgetGrid));
   });
   return activeContainer;
+};
+
+const waitForWidgetDialog = async () => {
+  for (let elapsed = 0; elapsed < 2_000; elapsed += 10) {
+    const dialog = document.body.querySelector('[role="dialog"]');
+    if (dialog) {
+      await flushPendingTimers();
+      return document.body.querySelector('[role="dialog"]');
+    }
+    await act(async () => {
+      await new Promise<void>((resolve) => setTimeout(resolve, 10));
+    });
+  }
+  return document.body.querySelector('[role="dialog"]');
 };
 
 const allWidgetsDisabled: DashboardConfig = {
@@ -122,7 +174,7 @@ describe("WidgetGrid management", () => {
       manageButton!.click();
       await import("./WidgetManagementPanel");
     });
-    expect(document.body.querySelector('[role="dialog"]')).not.toBeNull();
+    expect(await waitForWidgetDialog()).not.toBeNull();
 
     const busSwitch = document.body.querySelector(
       `button[aria-label="${zh.settings.calendar.widget_dashboard.widget_options.bus.title}"]`,
