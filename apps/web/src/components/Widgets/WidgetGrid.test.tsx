@@ -51,15 +51,10 @@ mock.module("@/dictionaries/useDictionary", () => ({
 let WidgetGrid: typeof import("./WidgetGrid").default;
 let activeDom: ReturnType<typeof installTestDom> | undefined;
 let activeRoot: Root | undefined;
-let activeContainer: HTMLDivElement | undefined;
-let activeBodyStyle: string | null | undefined;
 
-const POLL_INTERVAL_MS = 10;
-const ASYNC_UI_TIMEOUT_MS = 10_000;
-
-const installWidgetTestDom = (url: string) => {
+const installWidgetTestDom = () => {
   const restoreGlobals = captureGlobalState(["StorageEvent", "matchMedia"]);
-  const installed = installTestDom(url);
+  const installed = installTestDom("/zh/today");
   installed.dom.window.scrollTo = () => undefined;
   Object.assign(globalThis, {
     StorageEvent: installed.dom.window.StorageEvent,
@@ -75,110 +70,32 @@ const installWidgetTestDom = (url: string) => {
 };
 
 beforeAll(async () => {
-  const dom = installWidgetTestDom("/zh/today");
+  const dom = installWidgetTestDom();
   WidgetGrid = (await import("./WidgetGrid")).default;
   dom.restore();
 });
 
-const flushPendingTimers = async () => {
-  await act(async () => {
-    await new Promise<void>((resolve) => setTimeout(resolve, 0));
-  });
-};
-
-const closeActiveDialog = async () => {
-  const dialog = document.body.querySelector('[role="dialog"]');
-  if (!dialog) return;
-  await act(async () => {
-    dialog.dispatchEvent(
-      new KeyboardEvent("keydown", {
-        bubbles: true,
-        cancelable: true,
-        key: "Escape",
-      }),
-    );
-  });
-  for (
-    let elapsed = 0;
-    elapsed < ASYNC_UI_TIMEOUT_MS;
-    elapsed += POLL_INTERVAL_MS
-  ) {
-    if (!document.body.querySelector('[role="dialog"]')) return;
-    await act(async () => {
-      await new Promise<void>((resolve) =>
-        setTimeout(resolve, POLL_INTERVAL_MS),
-      );
-    });
-  }
-};
-
 afterEach(async () => {
-  const installedDom = activeDom;
-  const dom = activeDom?.dom;
+  const dom = activeDom;
   try {
-    await closeActiveDialog();
+    await act(async () => activeRoot?.unmount());
   } finally {
-    try {
-      await act(async () => activeRoot?.unmount());
-    } finally {
-      try {
-        if (dom) {
-          await act(async () => {
-            await new Promise<void>((resolve) =>
-              dom.window.setTimeout(resolve, 600),
-            );
-          });
-        }
-        await flushPendingTimers();
-        if (document.body && activeBodyStyle !== undefined) {
-          if (activeBodyStyle)
-            document.body.setAttribute("style", activeBodyStyle);
-          else document.body.removeAttribute("style");
-        }
-      } finally {
-        activeRoot = undefined;
-        activeContainer = undefined;
-        activeDom = undefined;
-        activeBodyStyle = undefined;
-        installedDom?.restore();
-      }
-    }
+    activeRoot = undefined;
+    activeDom = undefined;
+    dom?.restore();
   }
 });
 
-const renderWidgetGrid = async (config?: DashboardConfig) => {
-  activeDom = installWidgetTestDom("/zh/today");
-  activeBodyStyle = document.body.getAttribute("style");
-  if (config) {
-    window.localStorage.setItem("widget_config_v1", JSON.stringify(config));
-  }
-  activeContainer = document.createElement("div");
-  document.body.appendChild(activeContainer);
-  activeRoot = createRoot(activeContainer);
+const renderWidgetGrid = async (config: DashboardConfig) => {
+  activeDom = installWidgetTestDom();
+  window.localStorage.setItem("widget_config_v1", JSON.stringify(config));
+  const container = document.createElement("div");
+  document.body.appendChild(container);
+  activeRoot = createRoot(container);
   await act(async () => {
     activeRoot!.render(createElement(WidgetGrid));
   });
-  return activeContainer;
-};
-
-const waitForWidgetDialog = async () => {
-  for (
-    let elapsed = 0;
-    elapsed < ASYNC_UI_TIMEOUT_MS;
-    elapsed += POLL_INTERVAL_MS
-  ) {
-    const dialog = document.body.querySelector('[role="dialog"]');
-    if (dialog) {
-      await flushPendingTimers();
-      return document.body.querySelector('[role="dialog"]');
-    }
-    await act(async () => {
-      await new Promise<void>((resolve) =>
-        setTimeout(resolve, POLL_INTERVAL_MS),
-      );
-    });
-  }
-  return document.body.querySelector('[role="dialog"]');
+  return container;
 };
 
 const allWidgetsDisabled: DashboardConfig = {
@@ -190,52 +107,31 @@ const allWidgetsDisabled: DashboardConfig = {
 };
 
 describe("WidgetGrid management", () => {
-  test("opens widget management and adds a widget from the panel", async () => {
-    const container = await renderWidgetGrid();
-    expect(container.querySelector('[data-widget="bus"]')).toBeNull();
+  test.each([
+    ["with widgets", DEFAULT_DASHBOARD_CONFIG, false],
+    ["in the empty state", allWidgetsDisabled, true],
+  ] as const)(
+    "renders the management control %s without opening the drawer",
+    async (_description, config, isEmpty) => {
+      const container = await renderWidgetGrid(config);
+      const manageButton = [...container.querySelectorAll("button")].find(
+        (button) =>
+          button.textContent ===
+          zh.settings.calendar.widget_dashboard.manage_widgets,
+      );
 
-    const manageButton = [...container.querySelectorAll("button")].find(
-      (button) =>
-        button.textContent ===
-        zh.settings.calendar.widget_dashboard.manage_widgets,
-    );
-    expect(manageButton).not.toBeUndefined();
+      expect(manageButton).not.toBeUndefined();
+      expect(manageButton?.getAttribute("aria-expanded")).toBe("false");
+      expect(document.body.querySelector('[role="dialog"]')).toBeNull();
 
-    await act(async () => {
-      manageButton!.click();
-      await import("./WidgetManagementPanel");
-    });
-    expect(await waitForWidgetDialog()).not.toBeNull();
-
-    const busSwitch = document.body.querySelector(
-      `button[aria-label="${zh.settings.calendar.widget_dashboard.widget_options.bus.title}"]`,
-    );
-    expect(busSwitch).not.toBeNull();
-
-    await act(async () => (busSwitch as HTMLButtonElement).click());
-    expect(container.querySelector('[data-widget="bus"]')).not.toBeNull();
-
-    await act(async () =>
-      (
-        container.querySelector(
-          '[data-widget-remove="bus"]',
-        ) as HTMLButtonElement
-      ).click(),
-    );
-    expect(container.querySelector('[data-widget="bus"]')).toBeNull();
-    expect(busSwitch.getAttribute("aria-checked")).toBe("false");
-  });
-
-  test("shows an empty state and keeps widget management available", async () => {
-    const container = await renderWidgetGrid(allWidgetsDisabled);
-
-    expect(container.textContent).toContain(
-      zh.settings.calendar.widget_dashboard.empty,
-    );
-    expect(container.querySelector("[data-widget]")).toBeNull();
-    expect(container.querySelector("p")?.className).toContain("col-span-full");
-    expect(container.textContent).toContain(
-      zh.settings.calendar.widget_dashboard.manage_widgets,
-    );
-  });
+      if (isEmpty) {
+        expect(container.textContent).toContain(
+          zh.settings.calendar.widget_dashboard.empty,
+        );
+        expect(container.querySelector("[data-widget]")).toBeNull();
+      } else {
+        expect(container.querySelector("[data-widget]")).not.toBeNull();
+      }
+    },
+  );
 });

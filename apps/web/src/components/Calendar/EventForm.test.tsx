@@ -32,9 +32,6 @@ let dom: JSDOM | undefined;
 let root: ReturnType<typeof createRoot> | undefined;
 let previousGlobals: Record<string, unknown> | undefined;
 
-const POLL_INTERVAL_MS = 10;
-const ASYNC_UI_TIMEOUT_MS = 10_000;
-
 const globalKeys = [
   "window",
   "document",
@@ -79,16 +76,14 @@ const installDom = (activeDom: JSDOM) => {
 
 const waitFor = async (
   predicate: () => boolean,
-  timeoutMs = ASYNC_UI_TIMEOUT_MS,
+  timeoutMs = 2000,
 ): Promise<void> => {
-  for (let elapsed = 0; elapsed < timeoutMs; elapsed += POLL_INTERVAL_MS) {
-    if (predicate()) return;
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
-    });
-  }
-  if (!predicate()) {
-    throw new Error("Timed out waiting for the condition");
+  const deadline = Date.now() + timeoutMs;
+  while (!predicate()) {
+    if (Date.now() >= deadline) {
+      throw new Error("Timed out waiting for the condition");
+    }
+    await new Promise((resolve) => setTimeout(resolve, 10));
   }
 };
 
@@ -105,24 +100,15 @@ const restoreGlobals = () => {
 
 afterEach(async () => {
   setSystemTime();
-  try {
-    await act(async () => {
-      root?.unmount();
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    });
-  } finally {
-    root = undefined;
-    try {
-      dom?.window.close();
-    } finally {
-      dom = undefined;
-      try {
-        restoreGlobals();
-      } finally {
-        restoreBootstrapEnvironment();
-      }
-    }
-  }
+  await act(async () => {
+    root?.unmount();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+  root = undefined;
+  dom?.window.close();
+  dom = undefined;
+  restoreGlobals();
+  restoreBootstrapEnvironment();
 });
 
 describe("calendar event repeat date", () => {
