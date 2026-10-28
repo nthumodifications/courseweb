@@ -25,69 +25,8 @@ import CityBusCatalogue, {
   CityBusSelectedLines,
 } from "@/features/bus/CityBusCatalogue";
 import { useBusPins, type CampusBusPin } from "@/features/bus/busPins";
-import type { CompleteBusData } from "@/libs/bus";
+import { selectedCampusBus } from "@/features/bus/selectedCampusBus";
 import { getSingleSearchParam } from "@/lib/deep-links/search-params";
-
-function selectedCampusBus(
-  pin: CampusBusPin,
-  busData: CompleteBusData,
-  time: Date,
-  weektype: "weekday" | "weekend",
-  dict: ReturnType<typeof useDictionary>,
-): Omit<BusListingItemProps, "refTime"> {
-  const mainDirection =
-    pin.direction === "up" ? "toward_TSMC_building" : "toward_main_gate";
-  const nandaDirection =
-    pin.direction === "up" ? "toward_south_campus" : "toward_main_campus";
-  const schedule =
-    pin.line === "red" || pin.line === "green"
-      ? busData.main[weektype][mainDirection].filter(
-          (bus) => bus.route === "校園公車" && bus.line === pin.line,
-        )
-      : busData.nanda[weektype][nandaDirection].filter(
-          (bus) => bus.type === pin.line,
-        );
-  const next = schedule
-    .filter((bus) => getTimeOnDate(time, bus.time).getTime() >= time.getTime())
-    .sort(
-      (a, b) =>
-        getTimeOnDate(time, a.time).getTime() -
-        getTimeOnDate(time, b.time).getTime(),
-    )[0];
-  const lineTitle =
-    pin.line === "red"
-      ? dict.bus.red_line
-      : pin.line === "green"
-        ? dict.bus.green_line
-        : pin.line === "route1"
-          ? dict.bus.route1_line
-          : dict.bus.route2_line;
-  const isNanda = pin.line === "route1" || pin.line === "route2";
-  let destination: string | undefined;
-  if (isNanda) {
-    destination =
-      pin.direction === "up" ? dict.bus.to_nanda : dict.bus.to_main_campus;
-  }
-  return {
-    tab: isNanda ? "nanda" : pin.direction === "up" ? "north_gate" : "tsmc",
-    startTime: next?.time ?? "0:00",
-    Icon:
-      pin.line === "red"
-        ? RedLineIcon
-        : pin.line === "green"
-          ? GreenLineIcon
-          : pin.line === "route1"
-            ? Route1LineIcon
-            : Route2LineIcon,
-    line: pin.line,
-    direction: pin.direction,
-    title: lineTitle,
-    destination,
-    notes: next?.description ? [next.description] : [],
-    arrival: next?.time ?? dict.bus.service_over,
-    pin,
-  };
-}
 
 const BusPage = () => {
   const { language } = useSettings();

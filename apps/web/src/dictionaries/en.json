@@ -1226,6 +1226,9 @@
         "description": "Replace Today page with a customizable widget grid",
         "columns": "Columns",
         "widgets": "Widgets",
+        "manage_widgets": "Manage widgets",
+        "manage_widgets_description": "Choose which widgets appear on Today.",
+        "empty": "No widgets",
         "view_full_page": "View full page",
         "widget_options": {
           "schedule": {
