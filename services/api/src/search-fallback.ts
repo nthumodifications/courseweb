@@ -3,7 +3,11 @@ import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import supabase_server from "./config/supabase_server";
 import type { Database } from "./types/supabase";
-import { deriveSearchFields, SUPPORTED_FACETS } from "./search-projection";
+import {
+  deriveSearchFields,
+  SUPPORTED_FACETS,
+  toSearchProjection,
+} from "./search-projection";
 
 type CourseRow = Database["public"]["Tables"]["courses"]["Row"];
 type CourseHit = CourseRow & {
@@ -24,7 +28,39 @@ type FilterCondition = {
   value: string;
 };
 
-type FacetFilterGroup = string[];
+export type FacetFilterGroup = string[];
+
+export type SupabaseSearchOptions = {
+  query?: string;
+  page?: number;
+  hitsPerPage?: number;
+  limit?: number;
+  filters?: string;
+  numericFilters?: string;
+  facetFilters?: FacetFilterGroup[];
+  facets?: string | string[];
+  maxValuesPerFacet?: number;
+  attributesToRetrieve?: string[];
+  facetName?: string;
+  facetQuery?: string;
+  maxFacetHits?: number;
+  params?: string;
+  useSearchProjection?: boolean;
+};
+
+export type SupabaseSearchResult = {
+  hits: unknown[];
+  nbHits: number;
+  page: number;
+  nbPages: number;
+  hitsPerPage: number;
+  processingTimeMS: number;
+  query: string;
+  params?: string;
+  facets: Record<string, Record<string, number>>;
+  warnings: string[];
+  facetHits?: Array<{ value: string; highlighted: string; count: number }>;
+};
 
 const MAX_FILTER_LENGTH = 2000;
 
@@ -72,8 +108,10 @@ const parseJsonParam = (value?: string): unknown => {
   }
 };
 
-const parseFacetFilterGroups = (value?: string): FacetFilterGroup[] => {
-  const parsed = parseJsonParam(value);
+export const parseFacetFilterGroups = (
+  value?: string | string[] | string[][],
+): FacetFilterGroup[] => {
+  const parsed = typeof value === "string" ? parseJsonParam(value) : value;
   if (typeof parsed === "string") {
     return parsed
       .split(",")
@@ -285,7 +323,7 @@ const loadSyllabusText = async (
 };
 
 const toSearchHit = (
-  course: CourseHit & Partial<SyllabusText>,
+  course: Record<string, unknown>,
   attributes?: string[],
 ) => {
   if (!attributes || attributes.length === 0 || attributes.includes("*")) {
@@ -294,8 +332,7 @@ const toSearchHit = (
 
   const hit: Record<string, unknown> = { objectID: course.objectID };
   for (const attribute of attributes) {
-    if (attribute in course)
-      hit[attribute] = course[attribute as keyof typeof course];
+    if (attribute in course) hit[attribute] = course[attribute];
   }
   return hit;
 };
@@ -375,8 +412,8 @@ const loadCourses = async (
   return [...courses.values()];
 };
 
-const getRequestedFacets = (value?: string) => {
-  const parsed = parseJsonParam(value);
+const getRequestedFacets = (value?: string | string[]) => {
+  const parsed = typeof value === "string" ? parseJsonParam(value) : value;
   let parsedValues: string[] = [];
   if (Array.isArray(parsed)) {
     parsedValues = parsed.filter(
@@ -425,6 +462,109 @@ const buildFacets = (
   return facets;
 };
 
+export const searchSupabase = async (
+  c: Parameters<typeof supabase_server>[0],
+  options: SupabaseSearchOptions,
+): Promise<SupabaseSearchResult> => {
+  const query = options.facetName
+    ? (options.facetQuery ?? "")
+    : (options.query ?? "");
+  const facetGroups = options.facetFilters ?? [];
+  const filterGroups = parseFilterGroups(options.filters);
+  const numericConditions = parseConditions(options.numericFilters);
+  const { facets: requestedFacets, warnings } = getRequestedFacets(
+    options.facets,
+  );
+  const courses = await loadCourses(c, options.facetName ? "" : query);
+  const filteredCourses = courses.filter(
+    (course) =>
+      matchesFacetGroups(course, facetGroups) &&
+      (filterGroups.length === 0 ||
+        filterGroups.some((group) =>
+          group.every((condition) => matchesCondition(course, condition)),
+        )) &&
+      numericConditions.every((condition) =>
+        matchesCondition(course, condition),
+      ) &&
+      (options.facetName ? true : matchesQuery(course, query)),
+  );
+
+  const hitsPerPage = options.hitsPerPage ?? options.limit ?? 20;
+  const page = options.page ?? 0;
+  const facets = options.facetName
+    ? buildFacets(
+        filteredCourses,
+        [options.facetName],
+        options.maxFacetHits ?? 20,
+      )
+    : buildFacets(
+        filteredCourses,
+        requestedFacets,
+        options.maxValuesPerFacet ?? 100,
+      );
+
+  if (options.facetName) {
+    const facetHits = Object.entries(facets[options.facetName] ?? {})
+      .filter(([value]) =>
+        value.toLocaleLowerCase().includes(query.toLocaleLowerCase()),
+      )
+      .slice(0, options.maxFacetHits ?? 20)
+      .map(([value, count]) => ({ value, highlighted: value, count }));
+
+    return {
+      hits: [],
+      nbHits: filteredCourses.length,
+      page,
+      nbPages: 0,
+      hitsPerPage,
+      processingTimeMS: 0,
+      query,
+      params: options.params,
+      facets,
+      warnings,
+      facetHits,
+    };
+  }
+
+  const sortedCourses = [...filteredCourses].sort(
+    (a, b) =>
+      rankCourse(b, query) - rankCourse(a, query) ||
+      b.raw_id.localeCompare(a.raw_id),
+  );
+  const start = page * hitsPerPage;
+  const pageCourses = sortedCourses.slice(start, start + hitsPerPage);
+  const texts = await loadSyllabusText(
+    c,
+    pageCourses.map((course) => course.raw_id),
+  );
+  const hits = pageCourses.map((course) => {
+    const projected = options.useSearchProjection
+      ? toSearchProjection(course)
+      : course;
+    return toSearchHit(
+      {
+        ...projected,
+        ...(texts.get(course.raw_id) ?? { brief: null, keywords: null }),
+      },
+      options.attributesToRetrieve,
+    );
+  });
+
+  return {
+    hits,
+    nbHits: sortedCourses.length,
+    page,
+    nbPages:
+      hitsPerPage === 0 ? 0 : Math.ceil(sortedCourses.length / hitsPerPage),
+    hitsPerPage,
+    processingTimeMS: 0,
+    query,
+    params: options.params,
+    facets,
+    warnings,
+  };
+};
+
 const fallbackQuerySchema = z.object({
   q: z.string().optional(),
   query: z.string().optional(),
@@ -451,11 +591,6 @@ const app = new Hono().get(
       ? (values.facetQuery ?? "")
       : (values.query ?? values.q ?? "");
     const facetGroups = parseFacetFilterGroups(values.facetFilters);
-    const filterGroups = parseFilterGroups(values.filters);
-    const numericConditions = parseConditions(values.numericFilters);
-    const { facets: requestedFacets, warnings } = getRequestedFacets(
-      values.facets,
-    );
     const attributes = values.attributesToRetrieve
       ? (parseJsonParam(values.attributesToRetrieve) as unknown)
       : undefined;
@@ -466,85 +601,36 @@ const app = new Hono().get(
       : undefined;
 
     try {
-      const courses = await loadCourses(c, values.facetName ? "" : query);
-      const filteredCourses = courses.filter(
-        (course) =>
-          matchesFacetGroups(course, facetGroups) &&
-          (filterGroups.length === 0 ||
-            filterGroups.some((group) =>
-              group.every((condition) => matchesCondition(course, condition)),
-            )) &&
-          numericConditions.every((condition) =>
-            matchesCondition(course, condition),
-          ) &&
-          (values.facetName ? true : matchesQuery(course, query)),
-      );
+      const result = await searchSupabase(c, {
+        query,
+        page: values.page,
+        hitsPerPage: values.hitsPerPage,
+        limit: values.limit,
+        filters: values.filters,
+        numericFilters: values.numericFilters,
+        facetFilters: facetGroups,
+        facets: values.facets,
+        maxValuesPerFacet: values.maxValuesPerFacet,
+        attributesToRetrieve,
+        facetName: values.facetName,
+        facetQuery: values.facetQuery,
+        maxFacetHits: values.maxFacetHits,
+        params: new URL(c.req.url).searchParams.toString(),
+      });
 
       if (values.facetName) {
-        const facetHits =
-          buildFacets(
-            filteredCourses,
-            [values.facetName],
-            values.maxFacetHits ?? 20,
-          )[values.facetName] ?? {};
-        const facetQuery = (values.facetQuery ?? "").toLocaleLowerCase();
-        const filteredFacetHits = Object.entries(facetHits)
-          .filter(([value]) => value.toLocaleLowerCase().includes(facetQuery))
-          .slice(0, values.maxFacetHits ?? 20)
-          .map(([value, count]) => ({ value, highlighted: value, count }));
-
         c.header("Cache-Control", CACHE_CONTROL);
         return c.json({
           success: true,
-          data: { facetHits: filteredFacetHits },
+          data: { facetHits: result.facetHits ?? [] },
         });
       }
-
-      const hitsPerPage = values.hitsPerPage ?? values.limit ?? 20;
-      const page = values.page;
-      const sortedCourses = [...filteredCourses].sort(
-        (a, b) =>
-          rankCourse(b, query) - rankCourse(a, query) ||
-          b.raw_id.localeCompare(a.raw_id),
-      );
-      const start = page * hitsPerPage;
-      const pageCourses = sortedCourses.slice(start, start + hitsPerPage);
-      const texts = await loadSyllabusText(
-        c,
-        pageCourses.map((course) => course.raw_id),
-      );
-      const hits = pageCourses.map((course) =>
-        toSearchHit(
-          {
-            ...course,
-            ...(texts.get(course.raw_id) ?? { brief: null, keywords: null }),
-          },
-          attributesToRetrieve,
-        ),
-      );
-      const processingTimeMS = 0;
 
       c.header("Cache-Control", CACHE_CONTROL);
       return c.json({
         success: true,
         data: {
-          hits,
-          nbHits: sortedCourses.length,
-          page,
-          nbPages:
-            hitsPerPage === 0
-              ? 0
-              : Math.ceil(sortedCourses.length / hitsPerPage),
-          hitsPerPage,
-          processingTimeMS,
-          query,
-          params: new URL(c.req.url).searchParams.toString(),
-          facets: buildFacets(
-            filteredCourses,
-            requestedFacets,
-            values.maxValuesPerFacet ?? 100,
-          ),
-          warnings,
+          ...result,
         },
       });
     } catch (error) {
