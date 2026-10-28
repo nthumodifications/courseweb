@@ -32,11 +32,15 @@ const course = {
   closed_mark: null,
 };
 
-const supabaseRpc = mock(() => ({
-  order: () => ({
+const supabaseRpc = mock(() => {
+  const builder = {
+    eq: () => builder,
+    in: () => builder,
+    order: () => builder,
     range: async () => ({ data: [course], error: null }),
-  }),
-}));
+  };
+  return builder;
+});
 
 mock.module("./config/supabase_server", () =>
   createSupabaseServerMock(() => ({

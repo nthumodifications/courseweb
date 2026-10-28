@@ -19,6 +19,8 @@ type CourseHit = CourseRow & {
 
 const MAX_SCAN_ROWS = 10_000;
 const MAX_HITS_PER_PAGE = 100;
+const SCAN_LIMIT_WARNING =
+  "Course search reached the 10,000-row scan limit; counts may be incomplete.";
 const CACHE_CONTROL =
   "public, max-age=30, s-maxage=300, stale-while-revalidate=60";
 
@@ -197,6 +199,87 @@ const parseFilterGroups = (value?: string): FilterCondition[][] => {
     .filter((group) => group.length > 0);
 };
 
+type DatabaseEqualityFilters = {
+  semester?: string[];
+};
+
+const uniqueValues = (values: string[]) => [...new Set(values)];
+
+const intersectValues = (left: string[], right: string[]) =>
+  left.filter((value) => right.includes(value));
+
+const getFacetSemesterValues = (groups: FacetFilterGroup[]) => {
+  let values: string[] | undefined;
+
+  for (const group of groups) {
+    const conditions = group
+      .map(parseFacetFilter)
+      .filter((condition): condition is FilterCondition => condition !== null);
+    const semesterValues = conditions
+      .filter(
+        (condition) =>
+          condition.attribute === "semester" &&
+          (condition.operator === ":" || condition.operator === "="),
+      )
+      .map((condition) => condition.value)
+      .filter(Boolean);
+
+    // A facet group is an OR expression. Only a group made entirely of
+    // semester equalities can safely become a database restriction.
+    if (
+      semesterValues.length === 0 ||
+      semesterValues.length !== conditions.length ||
+      conditions.length !== group.length
+    ) {
+      continue;
+    }
+
+    const groupValues = uniqueValues(semesterValues);
+    values = values ? intersectValues(values, groupValues) : groupValues;
+  }
+
+  return values;
+};
+
+const getFilterSemesterValues = (groups: FilterCondition[][]) => {
+  if (groups.length === 0) return undefined;
+
+  const values: string[] = [];
+  for (const group of groups) {
+    const semesterValues = group
+      .filter(
+        (condition) =>
+          condition.attribute === "semester" &&
+          (condition.operator === ":" || condition.operator === "="),
+      )
+      .map((condition) => condition.value)
+      .filter(Boolean);
+
+    // Filter groups are OR branches. Every branch must restrict semester for
+    // the union of their semester values to be a safe database restriction.
+    if (semesterValues.length === 0) return undefined;
+    values.push(...semesterValues);
+  }
+
+  return uniqueValues(values);
+};
+
+const getDatabaseEqualityFilters = (
+  facetGroups: FacetFilterGroup[],
+  filterGroups: FilterCondition[][],
+): DatabaseEqualityFilters => {
+  const facetSemesterValues = getFacetSemesterValues(facetGroups);
+  const filterSemesterValues = getFilterSemesterValues(filterGroups);
+  const semesterValues =
+    facetSemesterValues && filterSemesterValues
+      ? intersectValues(facetSemesterValues, filterSemesterValues)
+      : (facetSemesterValues ?? filterSemesterValues);
+
+  return semesterValues && semesterValues.length > 0
+    ? { semester: semesterValues }
+    : {};
+};
+
 export const getCourseHit = (course: CourseRow): CourseHit => ({
   ...course,
   ...deriveSearchFields(course),
@@ -337,9 +420,25 @@ const toSearchHit = (
   return hit;
 };
 
+const applyDatabaseEqualityFilters = <T>(
+  query: T,
+  filters: DatabaseEqualityFilters,
+) => {
+  if (!filters.semester || filters.semester.length === 0) return query;
+
+  const filterable = query as T & {
+    eq: (column: string, value: string) => T;
+    in: (column: string, values: string[]) => T;
+  };
+  return filters.semester.length === 1
+    ? filterable.eq("semester", filters.semester[0]!)
+    : filterable.in("semester", filters.semester);
+};
+
 const createCourseQuery = (
   c: Parameters<typeof supabase_server>[0],
   text?: string,
+  filters: DatabaseEqualityFilters = {},
 ) => {
   let query = supabase_server(c).from("courses").select("*");
   if (text) {
@@ -350,6 +449,7 @@ const createCourseQuery = (
         .join(","),
     );
   }
+  query = applyDatabaseEqualityFilters(query, filters);
   return query
     .order("raw_id", { ascending: false })
     .range(0, MAX_SCAN_ROWS - 1);
@@ -368,35 +468,47 @@ const createCourseQuery = (
 const loadCoursesByRpc = (
   c: Parameters<typeof supabase_server>[0],
   keyword: string,
+  filters: DatabaseEqualityFilters = {},
 ) =>
-  supabase_server(c)
-    .rpc("search_courses", { keyword })
+  applyDatabaseEqualityFilters(
+    supabase_server(c).rpc("search_courses", { keyword }),
+    filters,
+  )
     .order("raw_id", { ascending: false })
     .range(0, MAX_SCAN_ROWS - 1);
+
+type LoadedCourses = {
+  courses: CourseHit[];
+  truncated: boolean;
+};
 
 const loadCourses = async (
   c: Parameters<typeof supabase_server>[0],
   query: string,
-) => {
+  filters: DatabaseEqualityFilters,
+): Promise<LoadedCourses> => {
   const trimmed = query.trim();
   const courses = new Map<string, CourseHit>();
+  let truncated = false;
   const collect = (rows: unknown) => {
-    for (const course of (rows ?? []) as CourseRow[]) {
+    const scannedRows = Array.isArray(rows) ? (rows as CourseRow[]) : [];
+    truncated ||= scannedRows.length >= MAX_SCAN_ROWS;
+    for (const course of scannedRows.slice(0, MAX_SCAN_ROWS)) {
       courses.set(course.raw_id, getCourseHit(course));
     }
   };
 
   if (!trimmed) {
-    const { data, error } = await createCourseQuery(c);
+    const { data, error } = await createCourseQuery(c, undefined, filters);
     if (error) throw error;
     collect(data);
-    return [...courses.values()];
+    return { courses: [...courses.values()], truncated };
   }
 
-  const { data, error } = await loadCoursesByRpc(c, trimmed);
+  const { data, error } = await loadCoursesByRpc(c, trimmed, filters);
   if (!error) {
     collect(data);
-    return [...courses.values()];
+    return { courses: [...courses.values()], truncated };
   }
 
   // Keep search answering even if the function is unavailable or rejects a
@@ -406,10 +518,10 @@ const loadCourses = async (
     message: error.message,
     code: error.code,
   });
-  const scalar = await createCourseQuery(c, trimmed);
+  const scalar = await createCourseQuery(c, trimmed, filters);
   if (scalar.error) throw scalar.error;
   collect(scalar.data);
-  return [...courses.values()];
+  return { courses: [...courses.values()], truncated };
 };
 
 const getRequestedFacets = (value?: string | string[]) => {
@@ -472,10 +584,17 @@ export const searchSupabase = async (
   const facetGroups = options.facetFilters ?? [];
   const filterGroups = parseFilterGroups(options.filters);
   const numericConditions = parseConditions(options.numericFilters);
+  const databaseFilters = getDatabaseEqualityFilters(facetGroups, filterGroups);
   const { facets: requestedFacets, warnings } = getRequestedFacets(
     options.facets,
   );
-  const courses = await loadCourses(c, options.facetName ? "" : query);
+  const loaded = await loadCourses(
+    c,
+    options.facetName ? "" : query,
+    databaseFilters,
+  );
+  if (loaded.truncated) warnings.push(SCAN_LIMIT_WARNING);
+  const courses = loaded.courses;
   const filteredCourses = courses.filter(
     (course) =>
       matchesFacetGroups(course, facetGroups) &&
