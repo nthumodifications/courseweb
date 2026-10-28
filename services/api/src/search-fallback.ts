@@ -8,6 +8,7 @@ import {
   SUPPORTED_FACETS,
   toSearchProjection,
 } from "./search-projection";
+import { loadSearchManifest } from "./search-chunk";
 
 type CourseRow = Database["public"]["Tables"]["courses"]["Row"];
 type CourseHit = CourseRow & {
@@ -671,6 +672,16 @@ const getRequestedFacets = (value?: string | string[]) => {
   };
 };
 
+const limitFacetCounts = (
+  counts: Iterable<readonly [string, number]>,
+  maxValues: number,
+) =>
+  Object.fromEntries(
+    [...counts]
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .slice(0, maxValues),
+  );
+
 const buildFacets = (
   courses: CourseHit[],
   attributes: string[],
@@ -684,13 +695,20 @@ const buildFacets = (
         counts.set(value, (counts.get(value) ?? 0) + 1);
       }
     }
-    facets[attribute] = Object.fromEntries(
-      [...counts.entries()]
-        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-        .slice(0, maxValues),
-    );
+    facets[attribute] = limitFacetCounts(counts, maxValues);
   }
   return facets;
+};
+
+const loadSemesterManifestFacet = async (
+  c: Parameters<typeof loadSearchManifest>[0],
+  maxValues: number,
+) => {
+  const rows = await loadSearchManifest(c);
+  const counts = new Map(
+    rows.map((row) => [row.semester, Number(row.row_count)] as const),
+  );
+  return limitFacetCounts(counts, maxValues);
 };
 
 export const searchSupabase = async (
@@ -719,7 +737,37 @@ export const searchSupabase = async (
     options.facetName ? "" : query,
     databaseFilters,
   );
-  if (loaded.truncated) warnings.push(SCAN_LIMIT_WARNING);
+  const canUseSemesterManifest =
+    options.facetName === undefined &&
+    query.trim() === "" &&
+    facetGroups.length === 0 &&
+    filterGroups.length === 0 &&
+    numericConditions.length === 0 &&
+    requestedFacets.includes("semester");
+  let semesterManifestFacet: Record<string, number> | undefined;
+  if (canUseSemesterManifest) {
+    try {
+      semesterManifestFacet = await loadSemesterManifestFacet(
+        c,
+        options.maxValuesPerFacet ?? 100,
+      );
+    } catch (error) {
+      console.error(
+        "Search manifest semester facet failed, using scan fallback:",
+        error,
+      );
+    }
+  }
+  if (
+    loaded.truncated &&
+    !(
+      semesterManifestFacet &&
+      requestedFacets.length === 1 &&
+      requestedFacets[0] === "semester"
+    )
+  ) {
+    warnings.push(SCAN_LIMIT_WARNING);
+  }
   warnings.push(...loaded.warnings);
   const courses = loaded.courses;
   const filteredCourses = courses.filter(
@@ -741,17 +789,21 @@ export const searchSupabase = async (
 
   const hitsPerPage = options.hitsPerPage ?? options.limit ?? 20;
   const page = options.page ?? 0;
-  const facets = options.facetName
-    ? buildFacets(
-        filteredCourses,
-        [options.facetName],
-        options.maxFacetHits ?? 20,
-      )
-    : buildFacets(
-        filteredCourses,
-        requestedFacets,
-        options.maxValuesPerFacet ?? 100,
-      );
+  let facets: Record<string, Record<string, number>>;
+  if (options.facetName) {
+    facets = buildFacets(
+      filteredCourses,
+      [options.facetName],
+      options.maxFacetHits ?? 20,
+    );
+  } else {
+    facets = buildFacets(
+      filteredCourses,
+      requestedFacets,
+      options.maxValuesPerFacet ?? 100,
+    );
+    if (semesterManifestFacet) facets.semester = semesterManifestFacet;
+  }
 
   if (options.facetName) {
     const facetHits = Object.entries(facets[options.facetName] ?? {})

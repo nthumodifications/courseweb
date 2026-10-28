@@ -24,14 +24,28 @@ const course = {
   credits: 3,
 };
 
+const createCourseRows = (count: number, semester: string) =>
+  Array.from({ length: count }, (_, index) => ({
+    ...course,
+    raw_id: `${semester}MATH ${String(index).padStart(6, "0")}`,
+    course: `MATH${index}`,
+    semester,
+  }));
+
 type QueryCall = { method: string; args: unknown[] };
 
 let courseRows = [course];
 let responseRowCap = Number.POSITIVE_INFINITY;
 const courseQueryCalls: QueryCall[] = [];
 const rpcQueryCalls: QueryCall[] = [];
+const manifestQueryCalls: QueryCall[] = [];
 const syllabusSelects: string[] = [];
 let rpcError: { message: string; code: string } | null = null;
+let manifestError: { message: string; code: string } | null = null;
+const defaultManifestRows = [
+  { semester: "11420", row_count: 1, max_updated_at: null },
+];
+let manifestRows = defaultManifestRows;
 
 const createCourseQueryBuilder = (
   rows: (typeof course)[],
@@ -92,9 +106,13 @@ const createCourseQueryBuilder = (
   return builder;
 };
 
-const supabaseRpc = mock(() =>
-  createCourseQueryBuilder(courseRows, rpcQueryCalls),
-);
+const supabaseRpc = mock((functionName: string, ...args: unknown[]) => {
+  if (functionName === "search_manifest") {
+    manifestQueryCalls.push({ method: functionName, args });
+    return Promise.resolve({ data: manifestRows, error: manifestError });
+  }
+  return createCourseQueryBuilder(courseRows, rpcQueryCalls);
+});
 
 const syllabusIn = mock(async (_column: string, rawIds: string[]) => ({
   data: rawIds.includes(course.raw_id)
@@ -155,8 +173,11 @@ afterEach(() => {
   responseRowCap = Number.POSITIVE_INFINITY;
   courseQueryCalls.length = 0;
   rpcQueryCalls.length = 0;
+  manifestQueryCalls.length = 0;
   syllabusSelects.length = 0;
   rpcError = null;
+  manifestError = null;
+  manifestRows = defaultManifestRows;
   console.error = originalConsoleError;
 });
 
@@ -187,6 +208,95 @@ describe("search fallback zero-hit pagination", () => {
       expect(payload.data.facets.semester["11420"]).toBe(1);
     },
   );
+});
+
+describe("search fallback semester manifest facet", () => {
+  test("uses every manifest semester count without a scan warning", async () => {
+    manifestRows = [
+      { semester: "11410", row_count: 3, max_updated_at: null },
+      { semester: "11510", row_count: 11, max_updated_at: null },
+      { semester: "11420", row_count: 7, max_updated_at: null },
+    ];
+    courseRows = createCourseRows(10_001, "11510");
+
+    const response = await fallbackSearch.fetch(
+      new Request(
+        "http://localhost/?q=&page=0&hitsPerPage=1&facets=%5B%22semester%22%5D&maxValuesPerFacet=500",
+      ),
+      {
+        SUPABASE_URL: "https://supabase.example",
+        SUPABASE_SERVICE_ROLE_KEY: "test",
+      },
+    );
+    const payload = (await response.json()) as {
+      data: {
+        facets: { semester: Record<string, number> };
+        warnings: string[];
+      };
+    };
+
+    expect(response.status).toBe(200);
+    expect(payload.data.facets.semester).toEqual({
+      "11510": 11,
+      "11420": 7,
+      "11410": 3,
+    });
+    expect(manifestQueryCalls).toHaveLength(1);
+    expect(payload.data.warnings).not.toContain(
+      "Course search reached the 10,000-row scan limit; counts may be incomplete.",
+    );
+  });
+
+  test.each([
+    ["a query", "q=calculus"],
+    ["a filter", "filters=department%3AMATH"],
+  ] as const)("does not use the manifest for %s", async (_caseName, params) => {
+    const response = await fallbackSearch.fetch(
+      new Request(
+        `http://localhost/?${params}&facets=%5B%22semester%22%5D&maxValuesPerFacet=500`,
+      ),
+      {
+        SUPABASE_URL: "https://supabase.example",
+        SUPABASE_SERVICE_ROLE_KEY: "test",
+      },
+    );
+    const payload = (await response.json()) as {
+      data: { facets: { semester: Record<string, number> } };
+    };
+
+    expect(response.status).toBe(200);
+    expect(payload.data.facets.semester).toEqual({ "11420": 1 });
+    expect(manifestQueryCalls).toHaveLength(0);
+  });
+
+  test("falls back to the scan and keeps its warning when the manifest fails", async () => {
+    manifestError = { message: "manifest unavailable", code: "42883" };
+    courseRows = createCourseRows(10_001, "11420");
+    console.error = () => {};
+
+    const response = await fallbackSearch.fetch(
+      new Request(
+        "http://localhost/?q=&facets=%5B%22semester%22%5D&maxValuesPerFacet=500",
+      ),
+      {
+        SUPABASE_URL: "https://supabase.example",
+        SUPABASE_SERVICE_ROLE_KEY: "test",
+      },
+    );
+    const payload = (await response.json()) as {
+      data: {
+        facets: { semester: Record<string, number> };
+        warnings: string[];
+      };
+    };
+
+    expect(response.status).toBe(200);
+    expect(payload.data.facets.semester).toEqual({ "11420": 10_000 });
+    expect(payload.data.warnings).toContain(
+      "Course search reached the 10,000-row scan limit; counts may be incomplete.",
+    );
+    expect(manifestQueryCalls).toHaveLength(1);
+  });
 });
 
 describe("search fallback syllabus text", () => {
