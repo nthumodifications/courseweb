@@ -55,7 +55,7 @@ bun run --cwd services/api test
 
 `services/api/.dev.vars.example` documents only optional AI provider settings.
 The Worker also uses D1/AI/rate-limit bindings from `services/api/wrangler.toml`
-and may need Supabase, Algolia admin, OAuth, weather, calendar, GitHub,
+and may need Supabase, Algolia admin for course-index writes and backups, OAuth, weather, calendar, GitHub,
 Turnstile, KV, or OCR credentials depending on the route.
 
 ### Auth (`services/secure-api`) + data-sync

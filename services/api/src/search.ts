@@ -2,12 +2,10 @@ import { Hono } from "hono";
 import type { Context } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
-import {
-  describeAlgoliaError,
-  getAlgoliaClients,
-  isAlgoliaUnusableError,
-} from "./config/algolia";
-import fallbackSearch from "./search-fallback";
+import fallbackSearch, {
+  parseFacetFilterGroups,
+  searchSupabase,
+} from "./search-fallback";
 import searchChunk from "./search-chunk";
 import type { Bindings } from "./index";
 import { rateLimitMiddleware } from "./utils/rate-limit";
@@ -101,24 +99,40 @@ const getSearchSchema = z.object({
   attributesToRetrieve: z.string().optional(),
 });
 
-const searchAlgolia = async (c: Context, query: string, searchParams: any) => {
-  const clients = getAlgoliaClients(c);
-  let lastError: unknown;
-  for (const index of clients) {
-    try {
-      return await index.search(query, searchParams);
-    } catch (error) {
-      lastError = error;
-      if (!isAlgoliaUnusableError(error)) {
-        console.error(
-          "Algolia search request bug:",
-          describeAlgoliaError(error),
-        );
-        throw error;
-      }
-    }
-  }
-  throw lastError ?? new Error("Algolia credentials not found");
+const searchSupabaseWithProjection = (
+  c: Context<{ Bindings: Bindings }>,
+  options: Parameters<typeof searchSupabase>[1],
+) => searchSupabase(c, { ...options, useSearchProjection: true });
+
+const toSearchResponse = (
+  result: Awaited<ReturnType<typeof searchSupabase>>,
+  includeParams: boolean,
+) => ({
+  success: true as const,
+  data: {
+    hits: result.hits,
+    nbHits: result.nbHits,
+    page: result.page,
+    nbPages: result.nbPages,
+    hitsPerPage: result.hitsPerPage,
+    processingTimeMS: result.processingTimeMS,
+    query: result.query,
+    ...(includeParams ? { params: result.params ?? "" } : {}),
+  },
+});
+
+const searchFailure = (c: Context<{ Bindings: Bindings }>, error: unknown) => {
+  console.error("Search error:", error);
+  return c.json(
+    {
+      success: false,
+      error: {
+        message: "Search failed",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
+    },
+    500,
+  );
 };
 
 // Only the routes that cost something are limited; reads stay open.
@@ -129,55 +143,24 @@ const searchRateLimit = rateLimitMiddleware({
 
 const app = new Hono<{ Bindings: Bindings }>()
   .post("/", searchRateLimit, zValidator("json", searchSchema), async (c) => {
-    const {
-      query,
-      limit,
-      filters,
-      facetFilters,
-      attributesToRetrieve,
-      highlightPreTag,
-      highlightPostTag,
-    } = c.req.valid("json");
+    const { query, limit, filters, facetFilters, attributesToRetrieve } =
+      c.req.valid("json");
 
     try {
-      const searchParams: any = {
+      const result = await searchSupabaseWithProjection(c, {
+        query,
         hitsPerPage: limit,
-        highlightPreTag,
-        highlightPostTag,
-      };
-
-      if (filters) searchParams.filters = filters;
-      if (facetFilters) searchParams.facetFilters = facetFilters;
-      if (attributesToRetrieve)
-        searchParams.attributesToRetrieve = attributesToRetrieve;
-
-      const result = await searchAlgolia(c, query, searchParams);
-
-      return c.json({
-        success: true,
-        data: {
-          hits: result.hits,
-          nbHits: result.nbHits,
-          page: result.page,
-          nbPages: result.nbPages,
-          hitsPerPage: result.hitsPerPage,
-          processingTimeMS: result.processingTimeMS,
-          query: result.query,
-          params: result.params,
-        },
+        filters,
+        facetFilters: facetFilters
+          ? parseFacetFilterGroups(facetFilters)
+          : undefined,
+        attributesToRetrieve,
+        params: new URL(c.req.url).searchParams.toString(),
       });
+
+      return c.json(toSearchResponse(result, true));
     } catch (error) {
-      console.error("Search error:", describeAlgoliaError(error));
-      return c.json(
-        {
-          success: false,
-          error: {
-            message: "Search failed",
-            details: `Algolia request failed (${String(describeAlgoliaError(error).status)})`,
-          },
-        },
-        500,
-      );
+      return searchFailure(c, error);
     }
   })
   .get(
@@ -194,12 +177,6 @@ const app = new Hono<{ Bindings: Bindings }>()
       } = c.req.valid("query");
 
       try {
-        const searchParams: any = {
-          hitsPerPage: limit,
-          highlightPreTag: "<mark>",
-          highlightPostTag: "</mark>",
-        };
-
         const parsedFacetFilters = facetFilters
           ?.split(",")
           .map((item) => item.trim());
@@ -219,37 +196,19 @@ const app = new Hono<{ Bindings: Bindings }>()
           );
         }
 
-        if (filters) searchParams.filters = filters;
-        if (parsedFacetFilters) searchParams.facetFilters = parsedFacetFilters;
-        if (parsedAttributes)
-          searchParams.attributesToRetrieve = parsedAttributes;
-
-        const result = await searchAlgolia(c, query, searchParams);
-
-        return c.json({
-          success: true,
-          data: {
-            hits: result.hits,
-            nbHits: result.nbHits,
-            page: result.page,
-            nbPages: result.nbPages,
-            hitsPerPage: result.hitsPerPage,
-            processingTimeMS: result.processingTimeMS,
-            query: result.query,
-          },
+        const result = await searchSupabaseWithProjection(c, {
+          query,
+          hitsPerPage: limit,
+          filters,
+          facetFilters: parsedFacetFilters
+            ? parseFacetFilterGroups(parsedFacetFilters)
+            : undefined,
+          attributesToRetrieve: parsedAttributes,
+          params: new URL(c.req.url).searchParams.toString(),
         });
+        return c.json(toSearchResponse(result, false));
       } catch (error) {
-        console.error("Search error:", describeAlgoliaError(error));
-        return c.json(
-          {
-            success: false,
-            error: {
-              message: "Search failed",
-              details: `Algolia request failed (${String(describeAlgoliaError(error).status)})`,
-            },
-          },
-          500,
-        );
+        return searchFailure(c, error);
       }
     },
   )
@@ -258,7 +217,7 @@ const app = new Hono<{ Bindings: Bindings }>()
   .get("/info", (c) => {
     return c.json({
       name: "CourseWeb Search API",
-      description: "Full-text search API powered by Algolia for NTHU courses",
+      description: "Full-text search API backed by Supabase for NTHU courses",
       version: "1.0.0",
       endpoints: {
         search: {
@@ -270,7 +229,7 @@ const app = new Hono<{ Bindings: Bindings }>()
               limit:
                 "number (optional, default: 10, max: 50) - Number of results",
               filters:
-                "string (optional, max 500 characters, allowlisted attributes) - Algolia filters",
+                "string (optional, max 500 characters, allowlisted attributes) - Supabase filters",
               facetFilters:
                 "array (optional, max 20 entries of 120 characters each) - Allowlisted facet filters",
               attributesToRetrieve:
@@ -289,7 +248,7 @@ const app = new Hono<{ Bindings: Bindings }>()
               limit:
                 "number (optional, default: 10, max: 50) - Number of results",
               filters:
-                "string (optional, max 500 characters, allowlisted attributes) - Algolia filters",
+                "string (optional, max 500 characters, allowlisted attributes) - Supabase filters",
               facetFilters:
                 "string (optional, up to 20 comma-separated entries of 120 characters each) - Facet filters",
               attributesToRetrieve:

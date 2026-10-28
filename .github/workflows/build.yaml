@@ -59,8 +59,6 @@ jobs:
         env:
           VITE_SUPABASE_URL: https://cmzdlrqfpuktcczvsobs.supabase.co
           VITE_SUPABASE_ANON_KEY: layout-guard-placeholder
-          VITE_ALGOLIA_APP_ID: LAYOUTGUARD
-          VITE_ALGOLIA_SEARCH_KEY: layout-guard-placeholder
         run: |
           bun run build
 
@@ -240,10 +238,6 @@ jobs:
   #     # Create .env file with secrets
   #     - name: Create .env file
   #       run: |
-  #         echo "NEXT_PUBLIC_ALGOLIA_APP_ID=${{ secrets.NEXT_PUBLIC_ALGOLIA_APP_ID }}" >> .env
-  #         echo "NEXT_PUBLIC_ALGOLIA_SEARCH_KEY=${{ secrets.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY }}" >> .env
-  #         echo "NEXT_PUBLIC_ALGOLIA_TEMP_APP_ID=${{ secrets.NEXT_PUBLIC_ALGOLIA_TEMP_APP_ID }}" >> .env
-  #         echo "NEXT_PUBLIC_ALGOLIA_TEMP_SEARCH_KEY=${{ secrets.NEXT_PUBLIC_ALGOLIA_TEMP_SEARCH_KEY }}" >> .env
   #         echo "NEXT_PUBLIC_SENTRY_DSN=${{ secrets.NEXT_PUBLIC_SENTRY_DSN }}" >> .env
   #         echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" >> .env
   #         echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" >> .env
