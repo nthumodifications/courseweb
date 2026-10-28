@@ -12,12 +12,7 @@
             "zh": "校車分頁。",
             "en": "Campus bus tab."
           },
-          "values": [
-            "north_gate",
-            "tsmc",
-            "nanda",
-            "city"
-          ],
+          "values": ["north_gate", "tsmc", "nanda", "city"],
           "example": "nanda"
         },
         {
@@ -108,9 +103,7 @@
           }
         }
       ],
-      "examples": [
-        "/zh/bus/main/green?stop=%E7%B6%9C%E4%BA%8C"
-      ]
+      "examples": ["/zh/bus/main/green?stop=%E7%B6%9C%E4%BA%8C"]
     },
     {
       "route": "/bus/nanda/:line",
@@ -211,9 +204,7 @@
           "runtime": true
         }
       ],
-      "examples": [
-        "/zh/bus/city/83?direction=HSZ000801&stop=HSZ303582"
-      ]
+      "examples": ["/zh/bus/city/83?direction=HSZ000801&stop=HSZ303582"]
     },
     {
       "route": "/laundry",
@@ -298,9 +289,7 @@
           "example": "jen_m"
         }
       ],
-      "examples": [
-        "/zh/laundry?dorm=jen&area=jen_m"
-      ]
+      "examples": ["/zh/laundry?dorm=jen&area=jen_m"]
     },
     {
       "route": "/library",
@@ -312,13 +301,7 @@
             "zh": "圖書館分館。",
             "en": "Library branch."
           },
-          "values": [
-            "all",
-            "moonlight",
-            "main",
-            "hss",
-            "ctm"
-          ],
+          "values": ["all", "moonlight", "main", "hss", "ctm"],
           "example": "moonlight"
         },
         {
@@ -339,9 +322,13 @@
           "example": "carrel"
         }
       ],
-      "examples": [
-        "/en/library?branch=moonlight&category=carrel"
-      ]
+      "examples": ["/en/library?branch=moonlight&category=carrel"]
+    },
+    {
+      "route": "/directory",
+      "duplicates": "ignored",
+      "params": [],
+      "examples": ["/en/directory"]
     },
     {
       "route": "/shops",
@@ -631,10 +618,7 @@
           "example": "osm-relation-3927538-0"
         }
       ],
-      "examples": [
-        "/zh/map?building=delta",
-        "/en/map?venue=Delta%20Hall"
-      ]
+      "examples": ["/zh/map?building=delta", "/en/map?venue=Delta%20Hall"]
     },
     {
       "route": "/youbike",
@@ -646,12 +630,7 @@
             "zh": "YouBike 篩選分頁。",
             "en": "YouBike filter tab."
           },
-          "values": [
-            "all",
-            "main",
-            "nanda",
-            "mine"
-          ],
+          "values": ["all", "main", "nanda", "mine"],
           "example": "main"
         },
         {
@@ -667,9 +646,7 @@
           "runtime": true
         }
       ],
-      "examples": [
-        "/zh/youbike?tab=main&station=500401008"
-      ]
+      "examples": ["/zh/youbike?tab=main&station=500401008"]
     },
     {
       "route": "/sports-venues",
@@ -686,9 +663,7 @@
           "runtime": true
         }
       ],
-      "examples": [
-        "/zh/sports-venues?facility=%E9%AB%94%E8%82%B2%E9%A4%A8"
-      ]
+      "examples": ["/zh/sports-venues?facility=%E9%AB%94%E8%82%B2%E9%A4%A8"]
     },
     {
       "route": "/calendar",
@@ -711,17 +686,11 @@
             "zh": "行事曆檢視模式。",
             "en": "Calendar display mode."
           },
-          "values": [
-            "week",
-            "month",
-            "upcoming"
-          ],
+          "values": ["week", "month", "upcoming"],
           "example": "month"
         }
       ],
-      "examples": [
-        "/zh/calendar?date=2026-10-24&view=month"
-      ]
+      "examples": ["/zh/calendar?date=2026-10-24&view=month"]
     },
     {
       "route": "/announcements",
@@ -738,9 +707,203 @@
           "runtime": true
         }
       ],
-      "examples": [
-        "/zh/announcements?source=source-academic"
-      ]
+      "examples": ["/zh/announcements?source=source-academic"]
+    },
+    {
+      "route": "/courses/changes",
+      "duplicates": "first-value",
+      "params": [
+        {
+          "name": "days",
+          "description": {
+            "zh": "顯示最近幾天的課程變更。",
+            "en": "The number of recent days of course changes to show."
+          },
+          "values": ["7", "14", "30"],
+          "example": "7"
+        },
+        {
+          "name": "department",
+          "description": {
+            "zh": "系所代碼，例如 CS。",
+            "en": "A department code, such as CS."
+          },
+          "values": [
+            "AES",
+            "AIA",
+            "AIIM",
+            "AMEV",
+            "ANTH",
+            "ANTU",
+            "ASTR",
+            "BAI",
+            "BME",
+            "BMES",
+            "CF",
+            "CHE",
+            "CHEM",
+            "CHSS",
+            "CL",
+            "CLC",
+            "CLU",
+            "COM",
+            "CS",
+            "CSR",
+            "CTM",
+            "DL",
+            "DMS",
+            "E",
+            "EC",
+            "ECON",
+            "EE",
+            "EECS",
+            "EMBA",
+            "EMD",
+            "EMIM",
+            "EMM",
+            "EMS",
+            "ENE",
+            "ESS",
+            "EST",
+            "ESTU",
+            "FL",
+            "FLU",
+            "FMMI",
+            "GE",
+            "GEC",
+            "GEU",
+            "GLLB",
+            "GOM",
+            "GPTS",
+            "HBA",
+            "HIS",
+            "HSS",
+            "HSSU",
+            "IACS",
+            "IACU",
+            "IBP",
+            "ICMS",
+            "IEEM",
+            "IEM",
+            "IIMT",
+            "IIS",
+            "IMBA",
+            "IMS",
+            "IPE",
+            "IPHD",
+            "IPMT",
+            "IPNS",
+            "IPT",
+            "IPTH",
+            "ISA",
+            "ISS",
+            "JAC",
+            "JAD",
+            "JADN",
+            "JANT",
+            "JITA",
+            "JMU",
+            "JMUN",
+            "KCSN",
+            "KEC",
+            "KECN",
+            "KEE",
+            "KEEN",
+            "KEL",
+            "KELN",
+            "KENI",
+            "KES",
+            "KHCT",
+            "KIPE",
+            "KLST",
+            "KMS",
+            "KMSN",
+            "KPC",
+            "KPCN",
+            "KPE",
+            "KSEN",
+            "KSN",
+            "KSPE",
+            "KSS",
+            "KSSN",
+            "KTLT",
+            "KWEN",
+            "LANG",
+            "LE",
+            "LING",
+            "LMIP",
+            "LS",
+            "LSBI",
+            "LSBS",
+            "LSBT",
+            "LSC",
+            "LSIN",
+            "LSMC",
+            "LSMM",
+            "LSSN",
+            "LST",
+            "MATH",
+            "MATU",
+            "MBA",
+            "MCLC",
+            "MFB",
+            "MI",
+            "MPM",
+            "MS",
+            "NEMS",
+            "NES",
+            "NUCL",
+            "PE",
+            "PE1",
+            "PE3",
+            "PFMI",
+            "PHIL",
+            "PHYS",
+            "PHYU",
+            "PME",
+            "PMED",
+            "QF",
+            "QTAM",
+            "RADM",
+            "RDDM",
+            "RDIC",
+            "RDPE",
+            "S",
+            "SCI",
+            "SL",
+            "SLS",
+            "SNHC",
+            "SOC",
+            "STAT",
+            "STAU",
+            "TE",
+            "TEE",
+            "TEG",
+            "THC",
+            "THSM",
+            "TIGP",
+            "TL",
+            "TM",
+            "TSE",
+            "TSED",
+            "UPPP",
+            "VA",
+            "VGE",
+            "VM",
+            "W",
+            "WH",
+            "WW",
+            "WZ",
+            "X",
+            "XA",
+            "XZ",
+            "YZ",
+            "ZY"
+          ],
+          "example": "CS"
+        }
+      ],
+      "examples": ["/zh/courses/changes?days=7&department=CS"]
     },
     {
       "route": "/settings",
@@ -781,10 +944,7 @@
           "example": "account"
         }
       ],
-      "examples": [
-        "/zh/settings#account",
-        "/en/settings#setting-dark-mode"
-      ]
+      "examples": ["/zh/settings#account", "/en/settings#setting-dark-mode"]
     },
     {
       "route": "/reviews/past",
@@ -802,9 +962,7 @@
           "example": "11420"
         }
       ],
-      "examples": [
-        "/zh/reviews/past?semester=11420"
-      ]
+      "examples": ["/zh/reviews/past?semester=11420"]
     },
     {
       "route": "/courses/modules",
@@ -820,9 +978,7 @@
           "example": "computer"
         }
       ],
-      "examples": [
-        "/en/courses/modules?q=computer"
-      ]
+      "examples": ["/en/courses/modules?q=computer"]
     },
     {
       "route": "/courses/module/:moduleKey",
@@ -863,9 +1019,7 @@
             "zh": "使用 CCXP 匯入模式時為 ccxp。",
             "en": "Use ccxp to select CCXP import mode."
           },
-          "values": [
-            "ccxp"
-          ],
+          "values": ["ccxp"],
           "example": "ccxp"
         }
       ],

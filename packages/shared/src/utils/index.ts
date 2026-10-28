@@ -19,3 +19,4 @@ export { format, parseISO } from "date-fns";
 export * from "./prerequisites";
 export * from "./prerequisite-graph";
 export * from "./ptt";
+export * from "./course-audience-tags";

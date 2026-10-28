@@ -71,6 +71,8 @@ import {
 } from "./courseDetailSections";
 import ReviewsSection from "@/components/Reviews/ReviewsSection";
 import { normaliseInstructorName } from "@/lib/instructors";
+import { parseCourseAudienceTags } from "@courseweb/shared";
+import CourseAudienceTags from "./CourseAudienceTags";
 
 const safeCreateModuleKey = (department: string, course: string) => {
   try {
@@ -486,6 +488,10 @@ const CourseDetailContainer = ({
   const missingSyllabus = course.course_syllabus == null;
   const bilingualNamesAreAligned =
     (course.teacher_zh?.length ?? 0) === (course.teacher_en?.length ?? 0);
+  const audienceTags = parseCourseAudienceTags({
+    note: course.note,
+    restrictions: course.restrictions,
+  });
   const teacherByCourse = new Map<string, readonly string[]>();
   for (const offering of [course, ...otherClasses]) {
     teacherByCourse.set(
@@ -1018,6 +1024,9 @@ const CourseDetailContainer = ({
                       </div>
                     )}
                   </CourseDetailSection>
+                  {audienceTags.length > 0 && (
+                    <CourseAudienceTags tags={audienceTags} />
+                  )}
                   <CourseMembershipSection
                     id="compulsory-membership"
                     title={dict.course.details.compulsory}

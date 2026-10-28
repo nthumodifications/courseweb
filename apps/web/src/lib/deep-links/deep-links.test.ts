@@ -73,10 +73,7 @@ test("freshness comparison treats CRLF and LF as the same generated text", () =>
 });
 
 test.each([
-  [
-    'const [query] = useSearchParams(); query.get("variable")',
-    ["variable"],
-  ],
+  ['const [query] = useSearchParams(); query.get("variable")', ["variable"]],
   [
     'const [searchParams] = useSearchParams(); searchParams.getAll("all")',
     ["all"],
@@ -86,10 +83,7 @@ test.each([
     ["hasvar"],
   ],
   ['new URLSearchParams(location.search).get("direct")', ["direct"]],
-  [
-    'const [query] = useSearchParams(); query.get("custom")',
-    ["custom"],
-  ],
+  ['const [query] = useSearchParams(); query.get("custom")', ["custom"]],
   [
     'const params = new URLSearchParams(location.search); params.get("urlparam")',
     ["urlparam"],
@@ -99,9 +93,9 @@ test.each([
 });
 
 test("hash reads stay outside the query-parameter coverage scan", () => {
-  expect(extractDeepLinkParamNames('location.hash.includes("hash-section")')).toEqual(
-    [],
-  );
+  expect(
+    extractDeepLinkParamNames('location.hash.includes("hash-section")'),
+  ).toEqual([]);
 });
 
 test("registry declares route-specific duplicate handling", () => {
@@ -115,12 +109,14 @@ test("registry declares route-specific duplicate handling", () => {
     "/bus/city/:route": "first-value",
     "/laundry": "ignored",
     "/library": "ignored",
+    "/directory": "ignored",
     "/shops": "ignored",
     "/map": "first-value",
     "/youbike": "ignored",
     "/sports-venues": "ignored",
     "/calendar": "ignored",
     "/announcements": "ignored",
+    "/courses/changes": "first-value",
     "/settings": "first-value",
     "/reviews/past": "first-value",
     "/courses/modules": "first-value",
@@ -140,7 +136,9 @@ test.each([
   const param = route?.params.find((item) => item.name === "stop") as
     | (DeepLinkParam & { lineValues?: () => Readonly<Record<string, unknown>> })
     | undefined;
-  expect(param?.lineValues && Object.keys(param.lineValues())).toEqual(lineKeys);
+  expect(param?.lineValues && Object.keys(param.lineValues())).toEqual(
+    lineKeys,
+  );
 });
 
 test("registry and emitted line examples are accepted values", () => {
@@ -235,6 +233,7 @@ const resolveExample = (route: string, url: URL): unknown => {
   }
   if (route === "/laundry") return resolveLaundryDeepLink(params, null);
   if (route === "/library") return parseLibraryDeepLink(params);
+  if (route === "/directory") return {};
   if (route === "/shops") return resolveShopAreaDeepLink(params, SHOP_AREAS);
   if (route === "/map") {
     return {
@@ -256,6 +255,12 @@ const resolveExample = (route: string, url: URL): unknown => {
   if (route === "/announcements") {
     const source = params.get("source");
     return parseAnnouncementsDeepLink(params, source ? [source] : []);
+  }
+  if (route === "/courses/changes") {
+    return {
+      days: params.get("days"),
+      department: params.get("department"),
+    };
   }
   if (route === "/settings") {
     return getSectionIdFromHash(
@@ -280,9 +285,7 @@ describe("registry examples", () => {
   for (const route of DEEP_LINK_REGISTRY) {
     for (const example of route.examples) {
       const runtime = route.params.some((param) => param.runtime);
-      test(
-        `${route.route} ${runtime ? "runtime-data format" : "example resolves"}: ${example}`,
-        () => {
+      test(`${route.route} ${runtime ? "runtime-data format" : "example resolves"}: ${example}`, () => {
         const url = new URL(`https://nthumods.com${example}`);
         const state = resolveExample(route.route, url);
         if (runtime) {
@@ -303,12 +306,16 @@ describe("registry examples", () => {
         }
         if (route.route === "/bus") {
           expect(state).toEqual({
-            tab: url.searchParams.get("tab") === "nanda" ? "nanda" : "north_gate",
+            tab:
+              url.searchParams.get("tab") === "nanda" ? "nanda" : "north_gate",
             stop: url.searchParams.get("stop") ?? null,
           });
           return;
         }
-        if (route.route === "/bus/main/:line" || route.route === "/bus/nanda/:line") {
+        if (
+          route.route === "/bus/main/:line" ||
+          route.route === "/bus/nanda/:line"
+        ) {
           const line = url.pathname.split("/").at(-1)!;
           const lineData = linesDict[line];
           expect(lineData).toBeDefined();

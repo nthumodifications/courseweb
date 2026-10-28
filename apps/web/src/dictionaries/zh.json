@@ -393,8 +393,9 @@
           "restrictions": "課程限制",
           "course": "課程"
         },
-        "removed": "不再列於課程資料",
+        "removed": "已從課程資料中移除",
         "reappeared": "重新出現在課程資料中",
+        "feed_link": "查看本系所有變更",
         "empty": "無",
         "true_value": "是",
         "false_value": "否",
@@ -415,6 +416,57 @@
       "taken": "已修課",
       "restriction_prefix": "限制：",
       "note_prefix": "備註：",
+      "audience_tags": {
+        "title": "適用對象",
+        "year_grade": {
+          "year-1": "一年級",
+          "year-2": "二年級",
+          "year-3": "三年級",
+          "year-4": "四年級"
+        },
+        "scoped_years": {
+          "undergraduate": {
+            "year-1": "大一",
+            "year-2": "大二",
+            "year-3": "大三",
+            "year-4": "大四"
+          },
+          "graduate": {
+            "year-1": "研究所一年級",
+            "year-2": "研究所二年級",
+            "year-3": "研究所三年級",
+            "year-4": "研究所四年級"
+          },
+          "master": {
+            "year-1": "碩一",
+            "year-2": "碩二",
+            "year-3": "碩三",
+            "year-4": "碩四"
+          },
+          "doctoral": {
+            "year-1": "博一",
+            "year-2": "博二",
+            "year-3": "博三",
+            "year-4": "博四"
+          }
+        },
+        "undergraduate": "大學部",
+        "graduate": "研究所",
+        "master": "碩士班",
+        "doctoral": "博士班",
+        "own_department": "本系",
+        "male": "男生",
+        "female": "女生",
+        "international": "外籍生",
+        "restriction_suffix": "限定",
+        "exclusion_prefix": "排除",
+        "priority_suffix": "優先",
+        "groups": {
+          "restriction": "限定",
+          "exclusion": "排除",
+          "priority": "優先"
+        }
+      },
       "prerequisites_available": "有擋修",
       "semester_time_venue": "學期／時間地點",
       "instructor": "授課教師",
@@ -691,6 +743,19 @@
       "research_portal": "搜尋清華研究人才資料庫"
     }
   },
+  "course_changes": {
+    "meta_title": "課程變更",
+    "meta_description": "依系所與課程查看清大近期的課程變更。",
+    "title": "課程變更",
+    "days_label": "近期變更",
+    "days_7": "7 天",
+    "days_14": "14 天",
+    "days_30": "30 天",
+    "department_label": "系所",
+    "all_departments": "所有系所",
+    "no_results": "這段期間沒有課程變更。",
+    "course_fallback": "無法取得課程資料"
+  },
   "navigation": {
     "today": "今日",
     "courses": "課表",
@@ -797,7 +862,32 @@
     "load_error": "無法載入圖書館座位即時資料",
     "try_again": "重新嘗試",
     "data_source": "資料來源：",
-    "source_name": "國立清華大學圖書館座位管理系統 (libsms)"
+    "source_name": "國立清華大學圖書館座位管理系統 (libsms)",
+    "lost_found_title": "失物招領",
+    "lost_found_search_placeholder": "搜尋物品、日期或地點",
+    "lost_found_show_more": "顯示更多",
+    "lost_found_filter_type": "依物品類型篩選",
+    "lost_found_all_types": "全部物品類型",
+    "lost_found_no_results": "找不到符合的失物",
+    "lost_found_refresh": "重新整理失物招領",
+    "lost_found_load_error": "目前無法取得失物招領資料",
+    "lost_found_data_source": "失物招領資料來源：",
+    "lost_found_source_name": "國立清華大學圖書館失物招領系統"
+  },
+  "directory": {
+    "title": "校園通訊錄",
+    "meta_title": "校園通訊錄",
+    "meta_description": "查詢清華各單位電話、分機與電子郵件。",
+    "search_placeholder": "搜尋單位名稱",
+    "extension": "分機",
+    "copy": "複製",
+    "website": "單位網站",
+    "refresh": "重新整理",
+    "load_error": "無法取得校園通訊錄",
+    "try_again": "重新嘗試",
+    "no_results": "找不到符合的單位",
+    "data_source": "資料來源：",
+    "source_name": "清華通訊錄"
   },
   "usage_forecast": {
     "learning": "正在學習這些空間平常有多忙——累積約一週資料後會顯示預測。",
@@ -876,10 +966,19 @@
     "meta_title": "校園公告",
     "meta_description": "追蹤清大各處室與系所，掌握校園公告與重要時限。",
     "search_placeholder": "搜尋公告標題",
+    "followed_tab": "追蹤來源",
+    "matches_tab": "符合項目",
     "filter_source": "依追蹤來源篩選",
     "all_followed": "所有追蹤來源",
     "manage_follows": "管理追蹤",
     "manage_follows_description": "選擇要顯示在公告列表中的校園來源。",
+    "manage_keywords": "管理關鍵字",
+    "manage_keywords_description": "在所有校園來源中尋找符合的公告。",
+    "keyword_placeholder": "新增關鍵字",
+    "add_keyword": "新增",
+    "remove_keyword": "移除關鍵字",
+    "keyword_suggestions": "建議關鍵字",
+    "suggested_keywords": ["獎學金", "交換", "實習", "徵才"],
     "source_search_placeholder": "搜尋來源",
     "source_language": {
       "zh_tw": "中文",
@@ -888,6 +987,9 @@
     "load_error": "目前無法取得校園公告",
     "try_again": "再試一次",
     "no_results": "沒有符合的追蹤公告",
+    "no_keyword_matches": "沒有符合關鍵字的公告",
+    "no_keywords": "尚未設定關鍵字",
+    "new_matches_count": "上次造訪後新增 {count} 則符合公告",
     "show_more": "顯示更多",
     "attribution_prefix": "資料來源：",
     "attribution_name": "NTHU-SA 清大學生會 NTHU-Data-API"
@@ -1497,6 +1599,7 @@
     },
     "apps": {
       "courses": "課程查詢",
+      "course-changes": "課程變更",
       "modules": "課程模組",
       "chat": "AI 課程助手",
       "venues": "地點相關課程",
@@ -1507,6 +1610,7 @@
       "sports-venues": "體育場館使用人數",
       "library": "圖書館即時座位",
       "announcements": "校園公告",
+      "directory": "校園通訊錄",
       "shops": "餐廳及服務",
       "calendar": "日曆",
       "timetable-community": "社群課表",

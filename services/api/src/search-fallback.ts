@@ -16,6 +16,7 @@ type CourseHit = CourseRow & {
   courseLevel: string;
   separate_times: string[];
   for_class: string[];
+  audience: string[];
 };
 
 const MAX_SCAN_ROWS = 10_000;

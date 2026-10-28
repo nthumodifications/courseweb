@@ -91,14 +91,33 @@ describe("announcement list paging", () => {
     [
       3,
       { type: "search", value: "deadline" },
-      { page: 1, search: "deadline", sourceFilter: "all" },
+      {
+        page: 1,
+        search: "deadline",
+        sourceFilter: "all",
+        view: "followed",
+      },
     ],
     [
       3,
       { type: "sourceFilter", value: "academic" },
-      { page: 1, search: "", sourceFilter: "academic" },
+      {
+        page: 1,
+        search: "",
+        sourceFilter: "academic",
+        view: "followed",
+      },
     ],
-    [1, { type: "showMore" }, { page: 2, search: "", sourceFilter: "all" }],
+    [
+      1,
+      { type: "view", value: "matches" },
+      { page: 1, search: "", sourceFilter: "all", view: "matches" },
+    ],
+    [
+      1,
+      { type: "showMore" },
+      { page: 2, search: "", sourceFilter: "all", view: "followed" },
+    ],
   ] as const)("applies %s to the list state", (page, action, expected) => {
     expect(
       announcementListReducer(
@@ -142,18 +161,9 @@ describe("announcement source metadata", () => {
   ];
 
   test.each([
-    [
-      "zh",
-      "學務處學生住宿組(水木生活中心1樓) · 公告、宣導 · 教務處 · 公告",
-    ],
-    [
-      "zh-cn",
-      "學務處學生住宿組(水木生活中心1樓) · 公告、宣導 · 教務處 · 公告",
-    ],
-    [
-      "en",
-      "學務處學生住宿組(水木生活中心1樓) · 公告, 宣導 · 教務處 · 公告",
-    ],
+    ["zh", "學務處學生住宿組(水木生活中心1樓) · 公告、宣導 · 教務處 · 公告"],
+    ["zh-cn", "學務處學生住宿組(水木生活中心1樓) · 公告、宣導 · 教務處 · 公告"],
+    ["en", "學務處學生住宿組(水木生活中心1樓) · 公告, 宣導 · 教務處 · 公告"],
   ] as const)(
     "groups feed titles by department for %s",
     (language, expected) => {

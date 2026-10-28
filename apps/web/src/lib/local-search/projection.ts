@@ -3,6 +3,7 @@ import {
   cleanSyllabusFields,
   normalizeSyllabusKeywords,
 } from "@/lib/syllabus-text";
+import { courseAudienceFacetValues } from "@courseweb/shared";
 
 export const LOCAL_FACETS = [
   "courseLevel",
@@ -17,6 +18,7 @@ export const LOCAL_FACETS = [
   "semester",
   "separate_times",
   "tags",
+  "audience",
   "venues",
 ] as const;
 
@@ -54,6 +56,7 @@ export type SearchProjectionRecord = UnknownRecord & {
   reserve: number | null;
   enrolled: number;
   tags: string[];
+  audience: string[];
   ge_target: string | null;
   ge_type: string | null;
   brief: string | null;
@@ -128,6 +131,10 @@ export const prepareSearchRecord = (
     reserve: asNullableNumber(input.reserve),
     enrolled: asNullableNumber(input.enrolled) ?? 0,
     tags: asStringArray(input.tags),
+    audience: courseAudienceFacetValues({
+      note: asNullableString(input.note),
+      restrictions: asNullableString(input.restrictions),
+    }),
     ge_target: asNullableString(input.ge_target),
     ge_type: asNullableString(input.ge_type),
     brief: syllabus.brief,

@@ -4,7 +4,7 @@ import { GripVertical, X } from "lucide-react";
 import useDictionary from "@/dictionaries/useDictionary";
 
 interface WidgetShellProps {
-  title: string;
+  title: ReactNode;
   children: ReactNode;
   className?: string;
   onRemove?: () => void;
@@ -42,9 +42,7 @@ export const WidgetShell: FC<WidgetShellProps> = ({
               <GripVertical className="h-4 w-4" />
             </button>
           )}
-          <h3 className="text-sm font-bold text-card-foreground">
-            {title}
-          </h3>
+          <h3 className="text-sm font-bold text-card-foreground">{title}</h3>
         </div>
         {onRemove && (
           <button

@@ -3,6 +3,7 @@ import parityCasesData from "./parity-cases.data.json";
 export type LocalParityCase = {
   name: string;
   query: string;
+  ids?: readonly string[];
   baselineTop10Overlap: number;
   allowedDifferences: readonly string[];
   params?: {
@@ -15,6 +16,7 @@ export type LocalParityCase = {
 type LocalParityCaseData = {
   name: string;
   query: string;
+  ids?: string[];
   baselineTop10Overlap: number;
   allowedDifferences: string[];
   params?: {

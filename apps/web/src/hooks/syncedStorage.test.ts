@@ -10,6 +10,7 @@ import {
   nextUpdatedAt,
   normalizeSyncedData,
   reconcileSyncedData,
+  valuesEqual,
 } from "./syncedStorage";
 import type { SyncedData } from "./syncedStorage";
 
@@ -112,6 +113,85 @@ const expectMergedClear = (
   expect(reconciliation.persistLocal).toBe(persistLocal);
   expect(reconciliation.upload).toEqual({ merge: false });
 };
+
+describe("synced storage value equality", () => {
+  test("ignores object key order at every nesting level", () => {
+    expect(
+      valuesEqual(
+        {
+          course_color_map: {
+            "course-a": "#123456",
+            "course-b": "#654321",
+          },
+          preferences: {
+            visible: ["course-a", "course-b"],
+            options: { compact: true, showNames: false },
+          },
+        },
+        {
+          preferences: {
+            options: { showNames: false, compact: true },
+            visible: ["course-a", "course-b"],
+          },
+          course_color_map: {
+            "course-b": "#654321",
+            "course-a": "#123456",
+          },
+        },
+      ),
+    ).toBe(true);
+  });
+
+  test("keeps array order significant", () => {
+    expect(
+      valuesEqual(["course-a", "course-b"], ["course-b", "course-a"]),
+    ).toBe(false);
+  });
+
+  test("matches JSON.stringify handling of undefined object keys", () => {
+    expect(valuesEqual({ a: 1, b: undefined }, { a: 1 })).toBe(true);
+    expect(valuesEqual({ a: 1, b: undefined }, { a: 1, b: null })).toBe(false);
+  });
+
+  test("handles JSON values, numbers, and dates", () => {
+    expect(valuesEqual(null, null)).toBe(true);
+    expect(valuesEqual(null, undefined)).toBe(false);
+    expect(valuesEqual(1, 1)).toBe(true);
+    expect(valuesEqual(1, "1")).toBe(false);
+    expect(valuesEqual(new Date("2026-01-01"), new Date("2026-01-01"))).toBe(
+      true,
+    );
+    expect(valuesEqual(new Date("2026-01-01"), new Date("2026-01-02"))).toBe(
+      false,
+    );
+    expect(
+      valuesEqual(new Date("2026-01-01"), "2026-01-01T00:00:00.000Z"),
+    ).toBe(true);
+    expect(valuesEqual(new Date("not-a-date"), null)).toBe(true);
+  });
+
+  test("handles an own __proto__ key", () => {
+    const left = JSON.parse('{"__proto__":{"value":1}}');
+    const right = Object.create(null) as Record<string, unknown>;
+    right["__proto__"] = { value: 1 };
+
+    expect(valuesEqual(left, right)).toBe(true);
+    expect(valuesEqual(left, { __proto__: { value: 1 } })).toBe(false);
+  });
+
+  test("compares a large object efficiently", () => {
+    const left: Record<string, number> = {};
+    const right: Record<string, number> = {};
+    for (let index = 0; index < 5_000; index += 1) {
+      left[`key-${index}`] = index;
+      right[`key-${index}`] = index;
+    }
+
+    const started = performance.now();
+    expect(valuesEqual(left, right)).toBe(true);
+    expect(performance.now() - started).toBeLessThan(1_000);
+  });
+});
 
 describe("synced storage reconciliation", () => {
   test.each(courseMergeCases)("sign-in merge: $name", (scenario) => {
@@ -239,6 +319,42 @@ describe("synced storage reconciliation", () => {
     });
 
     expect(reconciliation.persistLocal).toBe(false);
+    expect(reconciliation.upload).toBeUndefined();
+  });
+
+  test("does not reconcile a Firestore value reordered by Postgres jsonb", () => {
+    const firestoreValue = {
+      course_color_map: {
+        "course-a": "#123456",
+        "course-b": "#654321",
+      },
+      timetable_display_preferences: {
+        englishNames: "add",
+        showCredits: true,
+      },
+    };
+    const postgresValue = {
+      timetable_display_preferences: {
+        showCredits: true,
+        englishNames: "add",
+      },
+      course_color_map: {
+        "course-b": "#654321",
+        "course-a": "#123456",
+      },
+    };
+
+    const reconciliation = reconcileSyncedData({
+      local: syncedRecord(firestoreValue, 100, "firestore-device"),
+      remote: syncedRecord(postgresValue, 100, "firestore-device"),
+      mergeData: (local) => local,
+      initial: true,
+      deviceId: "web-device",
+    });
+
+    expect(reconciliation.data.value).toEqual(postgresValue);
+    expect(reconciliation.persistLocal).toBe(false);
+    expect(reconciliation.backupLocal).toBeUndefined();
     expect(reconciliation.upload).toBeUndefined();
   });
 

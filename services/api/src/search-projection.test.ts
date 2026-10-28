@@ -22,12 +22,15 @@ describe("search projection contract", () => {
         times: ["W2W3W4"],
         elective_for: ["通識"],
         compulsory_for: ["原科院學士班112B"],
+        note: "本課程不開放大學部修習",
+        restrictions: "",
       } as never),
     ).toEqual({
       objectID: "11510AES 450100",
       courseLevel: "4000",
       separate_times: ["W2", "W3", "W4"],
       for_class: ["通識", "原科院學士班112B"],
+      audience: ["exclusion:undergraduate"],
     });
   });
 

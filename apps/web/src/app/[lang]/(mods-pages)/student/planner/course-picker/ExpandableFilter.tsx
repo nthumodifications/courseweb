@@ -4,6 +4,10 @@ import {
   Badge,
   Button,
   Checkbox,
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
   Input,
   Popover,
   PopoverContent,
@@ -15,6 +19,63 @@ import useDictionary from "@/dictionaries/useDictionary";
 import { activateOnKey } from "@/lib/activate-on-key";
 
 type ExpandableFilterMode = "checkbox" | "simple";
+
+export type RefinementItem = {
+  label: string;
+  value: string;
+  count: number;
+  isRefined: boolean;
+};
+
+export type ExpandableFilterGroup = {
+  group: string;
+  items: RefinementItem[];
+};
+
+export const getVisibleExpandableFilterItems = (
+  items: RefinementItem[],
+  hideZeroCount: boolean,
+) =>
+  hideZeroCount
+    ? items.filter((item) => item.count > 0 || item.isRefined)
+    : items;
+
+export const shouldHideExpandableFilter = (
+  items: RefinementItem[],
+  hideWhenEmpty: boolean,
+  hideZeroCount: boolean,
+) =>
+  hideWhenEmpty &&
+  getVisibleExpandableFilterItems(items, hideZeroCount).length === 0;
+
+export const getExpandableFilterLabel = (
+  item: RefinementItem,
+  synonyms: Record<string, string>,
+  synonymsOnly: boolean,
+) => {
+  const synonym = synonymsOnly
+    ? (synonyms[item.value] ?? synonyms[item.label])
+    : synonyms[item.label];
+  return synonym ?? item.label;
+};
+
+export const groupExpandableFilterItems = (
+  items: RefinementItem[],
+  groupBy: (item: RefinementItem) => string,
+  groupOrder?: readonly string[],
+): ExpandableFilterGroup[] => {
+  const groups = new Map<string, RefinementItem[]>();
+  items.forEach((item) => {
+    const group = groupBy(item);
+    const groupItems = groups.get(group) ?? [];
+    groupItems.push(item);
+    groups.set(group, groupItems);
+  });
+
+  return (groupOrder ?? [...groups.keys()])
+    .map((group) => ({ group, items: groups.get(group) ?? [] }))
+    .filter(({ items: groupItems }) => groupItems.length > 0);
+};
 
 type ExpandableFilterProps = {
   attribute: string;
@@ -32,6 +93,15 @@ type ExpandableFilterProps = {
   synonms?: Record<string, string>;
   placeholder?: string;
   isClassType?: boolean;
+  title?: string;
+  hideWhenEmpty?: boolean;
+  hideZeroCount?: boolean;
+  synonymsOnly?: boolean;
+  selectedFirst?: boolean;
+  sortFn?: (left: RefinementItem, right: RefinementItem) => number;
+  groupBy?: (item: RefinementItem) => string;
+  groupLabels?: Record<string, string>;
+  groupOrder?: readonly string[];
 };
 
 const ExpandableFilter = ({
@@ -44,6 +114,15 @@ const ExpandableFilter = ({
   synonms,
   placeholder,
   isClassType = false,
+  title,
+  hideWhenEmpty = false,
+  hideZeroCount = false,
+  synonymsOnly = false,
+  selectedFirst = false,
+  sortFn,
+  groupBy,
+  groupLabels = {},
+  groupOrder,
 }: ExpandableFilterProps) => {
   const dict = useDictionary();
   const resolvedSynonyms = synonyms ?? synonms ?? {};
@@ -96,24 +175,75 @@ const ExpandableFilter = ({
     }
   };
 
+  const visibleItems = useMemo(
+    () => getVisibleExpandableFilterItems(items, hideZeroCount),
+    [items, hideZeroCount],
+  );
+
   // Memoize the filtered items to prevent unnecessary re-renders
   const filteredItems = useMemo(() => {
     if (searchable && searchQuery) {
       const lowercaseQuery = searchQuery.toLowerCase();
-      return items.filter((item) => {
-        const itemLabel = resolvedSynonyms[item.label] || item.label;
+      return visibleItems.filter((item) => {
+        const itemLabel = getExpandableFilterLabel(
+          item,
+          resolvedSynonyms,
+          synonymsOnly,
+        );
         return itemLabel.toLowerCase().includes(lowercaseQuery);
       });
     }
-    return items;
-  }, [items, searchable, searchQuery, resolvedSynonyms]);
+    return visibleItems;
+  }, [searchable, searchQuery, resolvedSynonyms, synonymsOnly, visibleItems]);
 
-  // Memoize the refined items to prevent re-renders
+  const orderedItems = useMemo(() => {
+    if (!selectedFirst && !sortFn) return filteredItems;
+
+    return [...filteredItems].sort((left, right) => {
+      if (selectedFirst && left.isRefined !== right.isRefined) {
+        return left.isRefined ? -1 : 1;
+      }
+      return sortFn?.(left, right) ?? 0;
+    });
+  }, [filteredItems, selectedFirst, sortFn]);
+
+  const groupedItems = useMemo(
+    () =>
+      groupBy
+        ? groupExpandableFilterItems(orderedItems, groupBy, groupOrder)
+        : null,
+    [groupBy, groupOrder, orderedItems],
+  );
+
+  // Memoize the refined items to prevent unnecessary re-renders
   const refinedItems = useMemo(() => {
     return items.filter((item) => item.isRefined);
   }, [items]);
 
-  return (
+  if (shouldHideExpandableFilter(items, hideWhenEmpty, hideZeroCount)) {
+    return null;
+  }
+
+  const getItemLabel = (item: RefinementItem) =>
+    getExpandableFilterLabel(item, resolvedSynonyms, synonymsOnly);
+
+  const renderGroupedItem = (item: RefinementItem) => (
+    <CommandItem
+      key={item.value}
+      value={item.value}
+      className="flex items-center px-2 py-1.5 text-sm rounded-sm cursor-pointer w-full"
+      onSelect={() => handleClassTypeSelect(item.value)}
+    >
+      <div className="flex-1 break-words whitespace-normal">
+        {getItemLabel(item)}{" "}
+        <span className="text-muted-foreground whitespace-normal">
+          ({item.count})
+        </span>
+      </div>
+    </CommandItem>
+  );
+
+  const filter = (
     <Popover open={isOpen} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <button
@@ -128,7 +258,7 @@ const ExpandableFilter = ({
             {refinedItems.length > 0 ? (
               <div className="flex flex-wrap gap-1">
                 {refinedItems.map((item) => {
-                  const label = resolvedSynonyms[item.label] || item.label;
+                  const label = getItemLabel(item);
                   return (
                     <Badge
                       key={item.value}
@@ -178,77 +308,101 @@ const ExpandableFilter = ({
         align="start"
       >
         {filteredItems.length > 0 ? (
-          <div className="w-full">
-            {filteredItems.map((item) => {
-              const label = resolvedSynonyms[item.label] || item.label;
-              return mode === "checkbox" ? (
-                <div
-                  key={item.value}
-                  className={cn(
-                    "flex items-center px-2 py-1.5 text-sm rounded-sm w-full",
-                    item.isRefined
-                      ? "bg-primary/10 text-primary"
-                      : "hover:bg-muted",
-                  )}
-                >
-                  <div className="flex items-center space-x-2 w-full">
-                    <Checkbox
-                      id={`${attribute}-${item.value}`}
-                      checked={item.isRefined}
-                      onCheckedChange={() => handleClassTypeSelect(item.value)}
-                    />
-                    <label
-                      htmlFor={`${attribute}-${item.value}`}
-                      className="flex-1 cursor-pointer text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 break-words whitespace-normal py-1"
-                    >
+          groupedItems ? (
+            <Command
+              shouldFilter={false}
+              className="h-auto w-full overflow-visible rounded-none bg-transparent"
+            >
+              {groupedItems.length > 0 ? (
+                groupedItems.map(({ group, items: groupItems }) => (
+                  <CommandGroup
+                    key={group}
+                    heading={groupLabels[group] ?? group}
+                  >
+                    {groupItems.map(renderGroupedItem)}
+                  </CommandGroup>
+                ))
+              ) : (
+                <CommandEmpty>
+                  {dict.planner.coursePicker.noResultsFound}
+                </CommandEmpty>
+              )}
+            </Command>
+          ) : (
+            <div className="w-full">
+              {filteredItems.map((item) => {
+                const label = getItemLabel(item);
+                return mode === "checkbox" ? (
+                  <div
+                    key={item.value}
+                    className={cn(
+                      "flex items-center px-2 py-1.5 text-sm rounded-sm w-full",
+                      item.isRefined
+                        ? "bg-primary/10 text-primary"
+                        : "hover:bg-muted",
+                    )}
+                  >
+                    <div className="flex items-center space-x-2 w-full">
+                      <Checkbox
+                        id={`${attribute}-${item.value}`}
+                        checked={item.isRefined}
+                        onCheckedChange={() =>
+                          handleClassTypeSelect(item.value)
+                        }
+                      />
+                      <label
+                        htmlFor={`${attribute}-${item.value}`}
+                        className="flex-1 cursor-pointer text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 break-words whitespace-normal py-1"
+                      >
+                        {label}{" "}
+                        <span className="text-muted-foreground whitespace-normal">
+                          ({item.count})
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    key={item.value}
+                    className={cn(
+                      "flex items-center px-2 py-1.5 text-sm rounded-sm cursor-pointer w-full",
+                      item.isRefined
+                        ? "bg-primary/10 text-primary"
+                        : "hover:bg-muted",
+                    )}
+                    onClick={() => handleClassTypeSelect(item.value)}
+                    onKeyDown={activateOnKey(() =>
+                      handleClassTypeSelect(item.value),
+                    )}
+                    role="button"
+                    tabIndex={0}
+                  >
+                    <div className="flex-1 break-words whitespace-normal">
                       {label}{" "}
                       <span className="text-muted-foreground whitespace-normal">
                         ({item.count})
                       </span>
-                    </label>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <div
-                  key={item.value}
-                  className={cn(
-                    "flex items-center px-2 py-1.5 text-sm rounded-sm cursor-pointer w-full",
-                    item.isRefined
-                      ? "bg-primary/10 text-primary"
-                      : "hover:bg-muted",
-                  )}
-                  onClick={() => handleClassTypeSelect(item.value)}
-                  onKeyDown={activateOnKey(() =>
-                    handleClassTypeSelect(item.value),
-                  )}
-                  role="button"
-                  tabIndex={0}
+                );
+              })}
+              {canToggleShowMore && filteredItems.length > 5 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full mt-1"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleShowMore();
+                  }}
                 >
-                  <div className="flex-1 break-words whitespace-normal">
-                    {label}{" "}
-                    <span className="text-muted-foreground whitespace-normal">
-                      ({item.count})
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-            {canToggleShowMore && filteredItems.length > 5 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full mt-1"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleShowMore();
-                }}
-              >
-                {isShowingMore
-                  ? dict.planner.coursePicker.showLess
-                  : dict.planner.coursePicker.showMore}
-              </Button>
-            )}
-          </div>
+                  {isShowingMore
+                    ? dict.planner.coursePicker.showLess
+                    : dict.planner.coursePicker.showMore}
+                </Button>
+              )}
+            </div>
+          )
         ) : (
           <div className="p-2 text-sm text-center text-muted-foreground">
             {dict.planner.coursePicker.noResultsFound}
@@ -256,6 +410,15 @@ const ExpandableFilter = ({
         )}
       </PopoverContent>
     </Popover>
+  );
+
+  return title ? (
+    <div className="flex flex-col gap-2">
+      <span className="text-sm">{title}</span>
+      {filter}
+    </div>
+  ) : (
+    filter
   );
 };
 

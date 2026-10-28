@@ -1,4 +1,4 @@
-import { CAMPUS_BUILDING_IDENTITIES } from "@courseweb/shared";
+import { CAMPUS_BUILDING_IDENTITIES, departments } from "@courseweb/shared";
 import { LAUNDRY_AREAS, LAUNDRY_DORMS } from "@/const/laundry-machines";
 import {
   CAMPUS_BUS_STOP_NAMES,
@@ -230,6 +230,12 @@ export const DEEP_LINK_REGISTRY: readonly DeepLinkRoute[] = [
     examples: ["/en/library?branch=moonlight&category=carrel"],
   },
   {
+    route: "/directory",
+    duplicates: "ignored",
+    params: [],
+    examples: ["/en/directory"],
+  },
+  {
     route: "/shops",
     duplicates: "ignored",
     params: [
@@ -369,6 +375,31 @@ export const DEEP_LINK_REGISTRY: readonly DeepLinkRoute[] = [
       },
     ],
     examples: ["/zh/announcements?source=source-academic"],
+  },
+  {
+    route: "/courses/changes",
+    duplicates: "first-value",
+    params: [
+      {
+        name: "days",
+        description: {
+          zh: "顯示最近幾天的課程變更。",
+          en: "The number of recent days of course changes to show.",
+        },
+        values: values(["7", "14", "30"]),
+        example: "7",
+      },
+      {
+        name: "department",
+        description: {
+          zh: "系所代碼，例如 CS。",
+          en: "A department code, such as CS.",
+        },
+        values: values(departments.map((department) => department.code)),
+        example: "CS",
+      },
+    ],
+    examples: ["/zh/courses/changes?days=7&department=CS"],
   },
   {
     route: "/settings",

@@ -71,6 +71,7 @@ const loadProductionChunk = async () => {
 
 type ParityOutcome = {
   name: string;
+  sameSet: boolean;
   baselineTop10Overlap: number;
   top10Overlap: number;
   allowedDifferences: readonly string[];
@@ -113,6 +114,7 @@ const classifyOutcome = (
               : "order-only";
   return {
     name: parityCase.name,
+    sameSet,
     baselineTop10Overlap: parityCase.baselineTop10Overlap,
     top10Overlap,
     allowedDifferences: parityCase.allowedDifferences,
@@ -227,7 +229,7 @@ parityTest(
           const params = {
             ...parityCase.params,
             query: parityCase.query,
-             hitsPerPage: 10,
+            hitsPerPage: 10,
             facetFilters: [
               ["semester:11510"],
               ...(parityCase.params?.facetFilters ?? []),
@@ -238,6 +240,12 @@ parityTest(
             remoteSearch(parityCase),
           ]);
           const localIds = local.hits.map((hit) => hit.objectID);
+          if (parityCase.ids) {
+            expect(
+              new Set(localIds),
+              `${parityCase.name}: local IDs differ from the recorded expected set`,
+            ).toEqual(new Set(parityCase.ids));
+          }
           return classifyOutcome(
             parityCase,
             { nbHits: local.nbHits, ids: localIds },
@@ -258,7 +266,10 @@ parityTest(
       ).toBeGreaterThanOrEqual(outcome.baselineTop10Overlap);
     }
     expect(outcomes).toHaveLength(LOCAL_PARITY_CASES.length);
-    expect(LOCAL_PARITY_CASES).toHaveLength(43);
+    expect(LOCAL_PARITY_CASES).toHaveLength(44);
+    expect(
+      outcomes.filter((outcome) => outcome.sameSet).length,
+    ).toBeGreaterThanOrEqual(20);
   },
   120_000,
 );

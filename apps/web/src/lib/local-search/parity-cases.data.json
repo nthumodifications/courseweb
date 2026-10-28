@@ -1,45 +1,283 @@
 [
-  {"name":"course-code-cs1355","query":"CS1355","baselineTop10Overlap":0,"allowedDifferences":["remote code typo and fuzzy recall"]},
-  {"name":"course-code-cs1355-lower","query":"cs1355","baselineTop10Overlap":0,"allowedDifferences":["remote code typo and fuzzy recall"]},
-  {"name":"course-code-ee2310","query":"EE2310","baselineTop10Overlap":0,"allowedDifferences":["remote code typo and fuzzy recall"]},
-  {"name":"course-code-ee2310-spaced","query":"EE 2310","baselineTop10Overlap":0.2,"allowedDifferences":["remote code section order"]},
-  {"name":"course-code-cs135500","query":"CS 135500","baselineTop10Overlap":0,"allowedDifferences":["remote code typo and fuzzy recall"]},
-  {"name":"course-code-cs135500-compact","query":"CS135500","baselineTop10Overlap":0,"allowedDifferences":["remote code typo and fuzzy recall"]},
-  {"name":"course-code-cs135500-raw-spaced","query":"11510CS  135500","baselineTop10Overlap":0,"allowedDifferences":["remote code typo and fuzzy recall"]},
-  {"name":"course-code-cs135500-raw-compact","query":"11510CS135500","baselineTop10Overlap":0,"allowedDifferences":["remote code typo and fuzzy recall"]},
-  {"name":"latin-prefix-environment","query":"env","baselineTop10Overlap":0.7,"allowedDifferences":["remote broader prefix relevance"]},
-  {"name":"latin-prefix-art","query":"art","baselineTop10Overlap":0.5,"allowedDifferences":["remote broader prefix relevance"]},
-  {"name":"latin-prefix-physics","query":"phys","baselineTop10Overlap":0,"allowedDifferences":["remote broader prefix relevance"]},
-  {"name":"uppercase-department","query":"EECS","baselineTop10Overlap":0.9,"allowedDifferences":["remote department ranking"]},
-  {"name":"raw-id-course-prefix","query":"11510CS  1355","baselineTop10Overlap":0.2,"allowedDifferences":["remote section order"]},
-  {"name":"zh-name","query":"微積分","baselineTop10Overlap":0.2,"allowedDifferences":["remote section ranking and broader recall"]},
-  {"name":"en-name","query":"calculus","baselineTop10Overlap":0.2,"allowedDifferences":["remote section ranking and broader recall"]},
-  {"name":"en-mixed","query":"Machine Learning","baselineTop10Overlap":0.1,"allowedDifferences":["remote broader phrase and typo recall"]},
-  {"name":"teacher-en","query":"CHOU","baselineTop10Overlap":0,"allowedDifferences":["remote teacher ranking"]},
-  {"name":"teacher-zh","query":"周瑞賢","baselineTop10Overlap":0.1,"allowedDifferences":["remote teacher ranking"]},
-  {"name":"code-dept","query":"AIA 2002","baselineTop10Overlap":0.1,"allowedDifferences":["remote code section order"]},
-  {"name":"course-id","query":"11510MATH101001","baselineTop10Overlap":0.1,"allowedDifferences":["remote exact code ranking"]},
-  {"name":"en-stat","query":"statistics","baselineTop10Overlap":0.3,"allowedDifferences":["remote broader title and teacher recall"]},
-  {"name":"zh-stat","query":"統計","baselineTop10Overlap":0,"allowedDifferences":["remote broader CJK recall"]},
-  {"name":"mixed-english","query":"data governance","baselineTop10Overlap":0.1,"allowedDifferences":["remote phrase ranking"]},
-  {"name":"english-teaching","query":"programming","baselineTop10Overlap":0.2,"allowedDifferences":["remote broader title recall"]},
-  {"name":"teacher-prefix","query":"GEZMIS","baselineTop10Overlap":0.2,"allowedDifferences":["remote teacher ranking"]},
-  {"name":"zh-filter","query":"機器學習","params":{"facetFilters":[["department:AIA"]]},"baselineTop10Overlap":0.1,"allowedDifferences":["remote filtered ranking"]},
-  {"name":"en-filter","query":"calculus","params":{"facetFilters":[["language:英"]]},"baselineTop10Overlap":0.3,"allowedDifferences":["remote filtered section ranking"]},
-  {"name":"numeric-filter","query":"微積分","params":{"numericFilters":["credits>=4"]},"baselineTop10Overlap":1,"allowedDifferences":["remote filtered section ranking"]},
-  {"name":"time-filter","query":"微積分","params":{"facetFilters":[["separate_times:T3"],["separate_times:R3"]]},"baselineTop10Overlap":0.8,"allowedDifferences":["remote filtered section ranking"]},
-  {"name":"expression-filter","query":"calculus","params":{"filters":"department:MATH AND credits >= 3"},"baselineTop10Overlap":0.2,"allowedDifferences":["remote filtered section ranking"]},
-  {"name":"two-facet","query":"English","params":{"facetFilters":[["language:英"],["department:LANG"]]},"baselineTop10Overlap":0.1,"allowedDifferences":["remote filtered section ranking"]},
-  {"name":"language-filter","query":"machine","params":{"facetFilters":[["language:中"]]},"baselineTop10Overlap":0.1,"allowedDifferences":["remote filtered ranking"]},
-  {"name":"credit-facet","query":"程式","params":{"facetFilters":[["department:AIA"],["credits:3"]]},"baselineTop10Overlap":0.1,"allowedDifferences":["remote filtered ranking"]},
-  {"name":"level-facet","query":"MATH","params":{"facetFilters":[["courseLevel:1000"]]},"baselineTop10Overlap":0.3,"allowedDifferences":["remote filtered section ranking"]},
-  {"name":"teacher-filters","query":"CHEN","params":{"facetFilters":[["department:MATH"],["language:中"]]},"baselineTop10Overlap":0.3,"allowedDifferences":["remote filtered teacher ranking"]},
-  {"name":"department-facet","query":"NTU","params":{"facetFilters":[["department:AIA"]]},"baselineTop10Overlap":0.3,"allowedDifferences":["remote filtered ranking"]},
-  {"name":"zh-en-mixed","query":"微積分 calculus","baselineTop10Overlap":0,"allowedDifferences":["remote mixed-language query handling"]},
-  {"name":"zh-en-filtered","query":"數學系 calculus","baselineTop10Overlap":0,"allowedDifferences":["remote mixed-language query handling"]},
-  {"name":"dept-en","query":"AIA machine","baselineTop10Overlap":0,"allowedDifferences":["remote mixed-language query handling"]},
-  {"name":"time-language","query":"科技英文","params":{"facetFilters":[["separate_times:M3"],["language:英"]]},"baselineTop10Overlap":0.1,"allowedDifferences":["remote filtered ranking"]},
-  {"name":"number-filter","query":"2001","params":{"facetFilters":[["department:GE"]]},"baselineTop10Overlap":0.1,"allowedDifferences":["remote code-like ranking"]},
-  {"name":"physics-zh","query":"電磁","baselineTop10Overlap":0,"allowedDifferences":["remote broader CJK recall"]},
-  {"name":"computer-science","query":"computer science","baselineTop10Overlap":0,"allowedDifferences":["remote phrase recall"]}
+  {
+    "name": "course-code-cs1355",
+    "query": "CS1355",
+    "baselineTop10Overlap": 0,
+    "allowedDifferences": ["remote code typo and fuzzy recall"]
+  },
+  {
+    "name": "course-code-cs1355-lower",
+    "query": "cs1355",
+    "baselineTop10Overlap": 0,
+    "allowedDifferences": ["remote code typo and fuzzy recall"]
+  },
+  {
+    "name": "course-code-ee2310",
+    "query": "EE2310",
+    "baselineTop10Overlap": 0,
+    "allowedDifferences": ["remote code typo and fuzzy recall"]
+  },
+  {
+    "name": "course-code-ee2310-spaced",
+    "query": "EE 2310",
+    "baselineTop10Overlap": 0.2,
+    "allowedDifferences": ["remote code section order"]
+  },
+  {
+    "name": "course-code-cs135500",
+    "query": "CS 135500",
+    "baselineTop10Overlap": 0,
+    "allowedDifferences": ["remote code typo and fuzzy recall"]
+  },
+  {
+    "name": "course-code-cs135500-compact",
+    "query": "CS135500",
+    "baselineTop10Overlap": 0,
+    "allowedDifferences": ["remote code typo and fuzzy recall"]
+  },
+  {
+    "name": "course-code-cs135500-raw-spaced",
+    "query": "11510CS  135500",
+    "baselineTop10Overlap": 0,
+    "allowedDifferences": ["remote code typo and fuzzy recall"]
+  },
+  {
+    "name": "course-code-cs135500-raw-compact",
+    "query": "11510CS135500",
+    "baselineTop10Overlap": 0,
+    "allowedDifferences": ["remote code typo and fuzzy recall"]
+  },
+  {
+    "name": "latin-prefix-environment",
+    "query": "env",
+    "baselineTop10Overlap": 0.7,
+    "allowedDifferences": ["remote broader prefix relevance"]
+  },
+  {
+    "name": "latin-prefix-art",
+    "query": "art",
+    "baselineTop10Overlap": 0.5,
+    "allowedDifferences": ["remote broader prefix relevance"]
+  },
+  {
+    "name": "latin-prefix-physics",
+    "query": "phys",
+    "baselineTop10Overlap": 0,
+    "allowedDifferences": ["remote broader prefix relevance"]
+  },
+  {
+    "name": "uppercase-department",
+    "query": "EECS",
+    "baselineTop10Overlap": 0.9,
+    "allowedDifferences": ["remote department ranking"]
+  },
+  {
+    "name": "raw-id-course-prefix",
+    "query": "11510CS  1355",
+    "baselineTop10Overlap": 0.2,
+    "allowedDifferences": ["remote section order"]
+  },
+  {
+    "name": "zh-name",
+    "query": "微積分",
+    "baselineTop10Overlap": 0.2,
+    "allowedDifferences": ["remote section ranking and broader recall"]
+  },
+  {
+    "name": "en-name",
+    "query": "calculus",
+    "baselineTop10Overlap": 0.2,
+    "allowedDifferences": ["remote section ranking and broader recall"]
+  },
+  {
+    "name": "en-mixed",
+    "query": "Machine Learning",
+    "baselineTop10Overlap": 0.1,
+    "allowedDifferences": ["remote broader phrase and typo recall"]
+  },
+  {
+    "name": "teacher-en",
+    "query": "CHOU",
+    "baselineTop10Overlap": 0,
+    "allowedDifferences": ["remote teacher ranking"]
+  },
+  {
+    "name": "teacher-zh",
+    "query": "周瑞賢",
+    "baselineTop10Overlap": 0.1,
+    "allowedDifferences": ["remote teacher ranking"]
+  },
+  {
+    "name": "code-dept",
+    "query": "AIA 2002",
+    "baselineTop10Overlap": 0.1,
+    "allowedDifferences": ["remote code section order"]
+  },
+  {
+    "name": "course-id",
+    "query": "11510MATH101001",
+    "baselineTop10Overlap": 0.1,
+    "allowedDifferences": ["remote exact code ranking"]
+  },
+  {
+    "name": "en-stat",
+    "query": "statistics",
+    "baselineTop10Overlap": 0.3,
+    "allowedDifferences": ["remote broader title and teacher recall"]
+  },
+  {
+    "name": "zh-stat",
+    "query": "統計",
+    "baselineTop10Overlap": 0,
+    "allowedDifferences": ["remote broader CJK recall"]
+  },
+  {
+    "name": "mixed-english",
+    "query": "data governance",
+    "baselineTop10Overlap": 0.1,
+    "allowedDifferences": ["remote phrase ranking"]
+  },
+  {
+    "name": "english-teaching",
+    "query": "programming",
+    "baselineTop10Overlap": 0.2,
+    "allowedDifferences": ["remote broader title recall"]
+  },
+  {
+    "name": "teacher-prefix",
+    "query": "GEZMIS",
+    "baselineTop10Overlap": 0.2,
+    "allowedDifferences": ["remote teacher ranking"]
+  },
+  {
+    "name": "zh-filter",
+    "query": "機器學習",
+    "params": { "facetFilters": [["department:AIA"]] },
+    "baselineTop10Overlap": 0.1,
+    "allowedDifferences": ["remote filtered ranking"]
+  },
+  {
+    "name": "en-filter",
+    "query": "calculus",
+    "params": { "facetFilters": [["language:英"]] },
+    "baselineTop10Overlap": 0.3,
+    "allowedDifferences": ["remote filtered section ranking"]
+  },
+  {
+    "name": "numeric-filter",
+    "query": "微積分",
+    "params": { "numericFilters": ["credits>=4"] },
+    "baselineTop10Overlap": 1,
+    "allowedDifferences": ["remote filtered section ranking"]
+  },
+  {
+    "name": "time-filter",
+    "query": "微積分",
+    "params": {
+      "facetFilters": [["separate_times:T3"], ["separate_times:R3"]]
+    },
+    "baselineTop10Overlap": 0.8,
+    "allowedDifferences": ["remote filtered section ranking"]
+  },
+  {
+    "name": "expression-filter",
+    "query": "calculus",
+    "params": { "filters": "department:MATH AND credits >= 3" },
+    "baselineTop10Overlap": 0.2,
+    "allowedDifferences": ["remote filtered section ranking"]
+  },
+  {
+    "name": "two-facet",
+    "query": "English",
+    "params": { "facetFilters": [["language:英"], ["department:LANG"]] },
+    "baselineTop10Overlap": 0.1,
+    "allowedDifferences": ["remote filtered section ranking"]
+  },
+  {
+    "name": "language-filter",
+    "query": "machine",
+    "params": { "facetFilters": [["language:中"]] },
+    "baselineTop10Overlap": 0.1,
+    "allowedDifferences": ["remote filtered ranking"]
+  },
+  {
+    "ids": ["11510AIA 500700"],
+    "name": "audience-filter",
+    "params": { "facetFilters": [["audience:exclusion:year-3:undergraduate"]] },
+    "query": "Physical AI",
+    "baselineTop10Overlap": 1,
+    "allowedDifferences": ["remote audience facet ranking"]
+  },
+  {
+    "name": "credit-facet",
+    "query": "程式",
+    "params": { "facetFilters": [["department:AIA"], ["credits:3"]] },
+    "baselineTop10Overlap": 0.1,
+    "allowedDifferences": ["remote filtered ranking"]
+  },
+  {
+    "name": "level-facet",
+    "query": "MATH",
+    "params": { "facetFilters": [["courseLevel:1000"]] },
+    "baselineTop10Overlap": 0.3,
+    "allowedDifferences": ["remote filtered section ranking"]
+  },
+  {
+    "name": "teacher-filters",
+    "query": "CHEN",
+    "params": { "facetFilters": [["department:MATH"], ["language:中"]] },
+    "baselineTop10Overlap": 0.3,
+    "allowedDifferences": ["remote filtered teacher ranking"]
+  },
+  {
+    "name": "department-facet",
+    "query": "NTU",
+    "params": { "facetFilters": [["department:AIA"]] },
+    "baselineTop10Overlap": 0.3,
+    "allowedDifferences": ["remote filtered ranking"]
+  },
+  {
+    "name": "zh-en-mixed",
+    "query": "微積分 calculus",
+    "baselineTop10Overlap": 0,
+    "allowedDifferences": ["remote mixed-language query handling"]
+  },
+  {
+    "name": "zh-en-filtered",
+    "query": "數學系 calculus",
+    "baselineTop10Overlap": 0,
+    "allowedDifferences": ["remote mixed-language query handling"]
+  },
+  {
+    "name": "dept-en",
+    "query": "AIA machine",
+    "baselineTop10Overlap": 0,
+    "allowedDifferences": ["remote mixed-language query handling"]
+  },
+  {
+    "name": "time-language",
+    "query": "科技英文",
+    "params": { "facetFilters": [["separate_times:M3"], ["language:英"]] },
+    "baselineTop10Overlap": 0.1,
+    "allowedDifferences": ["remote filtered ranking"]
+  },
+  {
+    "name": "number-filter",
+    "query": "2001",
+    "params": { "facetFilters": [["department:GE"]] },
+    "baselineTop10Overlap": 0.1,
+    "allowedDifferences": ["remote code-like ranking"]
+  },
+  {
+    "name": "physics-zh",
+    "query": "電磁",
+    "baselineTop10Overlap": 0,
+    "allowedDifferences": ["remote broader CJK recall"]
+  },
+  {
+    "name": "computer-science",
+    "query": "computer science",
+    "baselineTop10Overlap": 0,
+    "allowedDifferences": ["remote phrase recall"]
+  }
 ]

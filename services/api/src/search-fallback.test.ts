@@ -22,6 +22,8 @@ const course = {
   second_specialization: [],
   cross_discipline: false,
   credits: 3,
+  note: "本課程不開放大學部修習",
+  restrictions: "",
 };
 
 const createCourseRows = (count: number, semester: string) =>
@@ -524,6 +526,37 @@ describe("search fallback course-code queries", () => {
         args: ["department", query.replace(/\s|\d/g, "").toLocaleUpperCase()],
       });
     }
+  });
+});
+
+describe("search fallback audience facet", () => {
+  test("derives, counts, and filters audience tags", async () => {
+    const params = new URLSearchParams({
+      q: "calculus",
+      facets: JSON.stringify(["audience"]),
+      facetFilters: JSON.stringify([["audience:exclusion:undergraduate"]]),
+    });
+    const response = await fallbackSearch.fetch(
+      new Request(`http://localhost/?${params}`),
+      {
+        SUPABASE_URL: "https://supabase.example",
+        SUPABASE_SERVICE_ROLE_KEY: "test",
+      },
+    );
+    const payload = (await response.json()) as {
+      data: {
+        hits: Array<Record<string, unknown>>;
+        nbHits: number;
+        facets: { audience: Record<string, number> };
+      };
+    };
+
+    expect(response.status).toBe(200);
+    expect(payload.data.nbHits).toBe(1);
+    expect(payload.data.hits[0]?.audience).toEqual(["exclusion:undergraduate"]);
+    expect(payload.data.facets.audience).toEqual({
+      "exclusion:undergraduate": 1,
+    });
   });
 });
 

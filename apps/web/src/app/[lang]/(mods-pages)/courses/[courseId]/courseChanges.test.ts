@@ -1,7 +1,9 @@
 import { expect, test } from "bun:test";
 import {
   COURSE_CHANGE_FIELDS,
+  filterCourseChanges,
   formatCourseChanges,
+  groupCourseChanges,
   parseCourseChanges,
   type CourseChangeLabels,
   type CourseChangeRecord,
@@ -52,6 +54,75 @@ test.each([
   ).toBe(expected);
 });
 
+test("filters initial empty-to-set synchronizer noise", () => {
+  expect(
+    filterCourseChanges([
+      change("note", "", "first note"),
+      change("capacity", 50, 60),
+      change("venues", [], ["人社院"]),
+    ]),
+  ).toEqual([change("capacity", 50, 60)]);
+});
+
+test("groups changes by department and raw course ID", () => {
+  const result = groupCourseChanges([
+    change("capacity", 50, 60, {
+      raw_id: "11510CS 101000",
+      course: {
+        raw_id: "11510CS 101000",
+        name_zh: "資料結構",
+        name_en: "Data Structures",
+        department: "CS",
+        course: "1010",
+        class: "00",
+      },
+    }),
+    change("note", "old", "new", {
+      id: 2,
+      raw_id: "11510MATH 101000",
+      course: {
+        raw_id: "11510MATH 101000",
+        name_zh: "微積分",
+        name_en: "Calculus",
+        department: "MATH",
+        course: "1010",
+        class: "00",
+      },
+    }),
+    change("credits", 2, 3, {
+      id: 3,
+      raw_id: "11510CS 101000",
+      course: {
+        raw_id: "11510CS 101000",
+        name_zh: "資料結構",
+        name_en: "Data Structures",
+        department: "CS",
+        course: "1010",
+        class: "00",
+      },
+    }),
+  ]);
+
+  expect(
+    result.map((department) => ({
+      department: department.department,
+      courses: department.courses.map((course) => ({
+        rawId: course.rawId,
+        changeIds: course.changes.map((item) => item.id),
+      })),
+    })),
+  ).toEqual([
+    {
+      department: "CS",
+      courses: [{ rawId: "11510CS 101000", changeIds: [1, 3] }],
+    },
+    {
+      department: "MATH",
+      courses: [{ rawId: "11510MATH 101000", changeIds: [2] }],
+    },
+  ]);
+});
+
 test.each(COURSE_CHANGE_FIELDS)("maps the tracked field %s", (field) => {
   expect(
     formatCourseChanges([change(field, "old", "new")], labels)[0].fieldLabel,
@@ -77,6 +148,7 @@ test.each([
     labels,
   )[0];
   expect(result.statusLabel).toBe(expected);
+  expect(result.isCourseStatus).toBe(true);
   expect(result.oldValue).toBeNull();
   expect(result.newValue).toBeNull();
 });

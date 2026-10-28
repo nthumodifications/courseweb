@@ -298,6 +298,7 @@ const request = (params: Record<string, unknown>) => ({
       "semester",
       "separate_times",
       "tags",
+      "audience",
       "venues",
     ],
     facetFilters: [["semester:11510"]],
@@ -476,7 +477,7 @@ describe("local course search", () => {
     expect(all.nbHits).toBe(fixture.length);
     expect(all.hits).toEqual([]);
     expect(all.nbPages).toBe(0);
-    expect(Object.keys(all.facets)).toHaveLength(13);
+    expect(Object.keys(all.facets)).toHaveLength(14);
 
     const beyond = await engine.search(
       "11510",
@@ -612,13 +613,37 @@ describe("local course search", () => {
     expect(prepareSearchRecord(synthetic).for_class).toEqual([]);
   });
 
+  test("derives, counts, and filters audience tags", async () => {
+    const audienceRecord = {
+      ...fixture[0],
+      raw_id: "11510AUDIENCE000000",
+      note: "本課程不開放大學部修習",
+      restrictions: "",
+    };
+    const prepared = prepareSearchRecord(audienceRecord);
+    expect(prepared.audience).toEqual(["exclusion:undergraduate"]);
+
+    const { engine } = createEngine({ records: [audienceRecord] });
+    const result = await engine.search(
+      "11510",
+      request({
+        query: "",
+        facetFilters: [["audience:exclusion:undergraduate"]],
+      }),
+    );
+
+    expect(result.nbHits).toBe(1);
+    expect(result.hits[0]?.objectID).toBe("11510AUDIENCE000000");
+    expect(result.facets.audience).toEqual({ "exclusion:undergraduate": 1 });
+  });
+
   test("computes all requested facet counts and truncates maxValuesPerFacet", async () => {
     const { engine } = createEngine();
     const result = await engine.search(
       "11510",
       request({ query: "", maxValuesPerFacet: 1 }),
     );
-    expect(Object.keys(result.facets)).toHaveLength(13);
+    expect(Object.keys(result.facets)).toHaveLength(14);
     for (const values of Object.values(result.facets)) {
       expect(Object.keys(values).length).toBeLessThanOrEqual(1);
     }
