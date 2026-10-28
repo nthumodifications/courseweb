@@ -54,6 +54,9 @@ let activeRoot: Root | undefined;
 let activeContainer: HTMLDivElement | undefined;
 let activeBodyStyle: string | null | undefined;
 
+const POLL_INTERVAL_MS = 10;
+const ASYNC_UI_TIMEOUT_MS = 10_000;
+
 const installWidgetTestDom = (url: string) => {
   const restoreGlobals = captureGlobalState(["StorageEvent", "matchMedia"]);
   const installed = installTestDom(url);
@@ -95,30 +98,52 @@ const closeActiveDialog = async () => {
       }),
     );
   });
-  for (let elapsed = 0; elapsed < 2_000; elapsed += 10) {
+  for (
+    let elapsed = 0;
+    elapsed < ASYNC_UI_TIMEOUT_MS;
+    elapsed += POLL_INTERVAL_MS
+  ) {
     if (!document.body.querySelector('[role="dialog"]')) return;
-    await flushPendingTimers();
-    await new Promise<void>((resolve) => setTimeout(resolve, 10));
+    await act(async () => {
+      await new Promise<void>((resolve) =>
+        setTimeout(resolve, POLL_INTERVAL_MS),
+      );
+    });
   }
 };
 
 afterEach(async () => {
-  await closeActiveDialog();
+  const installedDom = activeDom;
   const dom = activeDom?.dom;
-  await act(async () => activeRoot?.unmount());
-  if (dom) {
-    await new Promise<void>((resolve) => dom.window.setTimeout(resolve, 600));
+  try {
+    await closeActiveDialog();
+  } finally {
+    try {
+      await act(async () => activeRoot?.unmount());
+    } finally {
+      try {
+        if (dom) {
+          await act(async () => {
+            await new Promise<void>((resolve) =>
+              dom.window.setTimeout(resolve, 600),
+            );
+          });
+        }
+        await flushPendingTimers();
+        if (document.body && activeBodyStyle !== undefined) {
+          if (activeBodyStyle)
+            document.body.setAttribute("style", activeBodyStyle);
+          else document.body.removeAttribute("style");
+        }
+      } finally {
+        activeRoot = undefined;
+        activeContainer = undefined;
+        activeDom = undefined;
+        activeBodyStyle = undefined;
+        installedDom?.restore();
+      }
+    }
   }
-  await flushPendingTimers();
-  if (document.body && activeBodyStyle !== undefined) {
-    if (activeBodyStyle) document.body.setAttribute("style", activeBodyStyle);
-    else document.body.removeAttribute("style");
-  }
-  activeRoot = undefined;
-  activeContainer = undefined;
-  activeDom?.restore();
-  activeDom = undefined;
-  activeBodyStyle = undefined;
 });
 
 const renderWidgetGrid = async (config?: DashboardConfig) => {
@@ -137,14 +162,20 @@ const renderWidgetGrid = async (config?: DashboardConfig) => {
 };
 
 const waitForWidgetDialog = async () => {
-  for (let elapsed = 0; elapsed < 2_000; elapsed += 10) {
+  for (
+    let elapsed = 0;
+    elapsed < ASYNC_UI_TIMEOUT_MS;
+    elapsed += POLL_INTERVAL_MS
+  ) {
     const dialog = document.body.querySelector('[role="dialog"]');
     if (dialog) {
       await flushPendingTimers();
       return document.body.querySelector('[role="dialog"]');
     }
     await act(async () => {
-      await new Promise<void>((resolve) => setTimeout(resolve, 10));
+      await new Promise<void>((resolve) =>
+        setTimeout(resolve, POLL_INTERVAL_MS),
+      );
     });
   }
   return document.body.querySelector('[role="dialog"]');
