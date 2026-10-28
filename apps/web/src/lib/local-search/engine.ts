@@ -402,7 +402,7 @@ const hitAttributes = (record: SearchProjectionRecord, value: unknown) => {
   return hit;
 };
 
-/** Return one explicit semester only; multiple semesters must stay remote. */
+/** Return one explicit semester only; multiple semesters use the API fallback. */
 export const semesterFromRequest = (
   request: LocalSearchRequest,
   defaultSemester?: string,
@@ -523,8 +523,7 @@ export class LocalSearchEngine {
 
   getStatus = () => this.status;
 
-  isReady = (semester: string) =>
-    this.loadedChunks.has(semester);
+  isReady = (semester: string) => this.loadedChunks.has(semester);
 
   getText = (rawId: string) => this.texts.get(rawId);
 

@@ -13,7 +13,7 @@ const SearchDegradationBanner = ({
   const backend = useSyncExternalStore(
     searchClient.subscribe,
     searchClient.getStatus,
-    () => "primary" as const,
+    () => "fallback" as const,
   );
   if (backend !== "fallback" || dismissed) return null;
 
