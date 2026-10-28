@@ -29,6 +29,7 @@ type QueryCall = { method: string; args: unknown[] };
 let courseRows = [course];
 const courseQueryCalls: QueryCall[] = [];
 const rpcQueryCalls: QueryCall[] = [];
+let rpcError: { message: string; code: string } | null = null;
 
 const createCourseQueryBuilder = (
   rows: (typeof course)[],
@@ -61,6 +62,9 @@ const createCourseQueryBuilder = (
     }),
     range: mock(async (...args: unknown[]) => {
       calls.push({ method: "range", args });
+      if (calls === rpcQueryCalls && rpcError) {
+        return { data: null, error: rpcError };
+      }
       const [from, to] = args as [number, number];
       return { data: filteredRows.slice(from, to + 1), error: null };
     }),
@@ -79,6 +83,7 @@ const syllabusIn = mock(async (_column: string, rawIds: string[]) => ({
           raw_id: course.raw_id,
           brief: "Limits, derivatives and integrals.",
           keywords: ["calculus", "analysis"],
+          content: "Limits, derivatives and integrals in detail.",
         },
       ]
     : [],
@@ -124,7 +129,11 @@ afterEach(() => {
   courseRows = [course];
   courseQueryCalls.length = 0;
   rpcQueryCalls.length = 0;
+  rpcError = null;
+  console.error = originalConsoleError;
 });
+
+const originalConsoleError = console.error;
 
 describe("search fallback zero-hit pagination", () => {
   test.each(["hitsPerPage", "limit"] as const)(
@@ -171,7 +180,107 @@ describe("search fallback syllabus text", () => {
       raw_id: course.raw_id,
       brief: "Limits, derivatives and integrals.",
       keywords: ["calculus", "analysis"],
+      content: "Limits, derivatives and integrals in detail.",
     });
+  });
+});
+
+describe("search fallback facet-value refinements", () => {
+  test("ignores the requested facet group while retaining semester push-down", async () => {
+    courseRows = [
+      course,
+      {
+        ...course,
+        raw_id: "11420CS 101000",
+        course: "CS101",
+        department: "CS",
+      },
+    ];
+    const facetFilters = encodeURIComponent(
+      JSON.stringify([["department:CS"], ["semester:11420"]]),
+    );
+    const response = await fallbackSearch.fetch(
+      new Request(
+        `http://localhost/?facetName=department&facetQuery=&facetFilters=${facetFilters}`,
+      ),
+      {
+        SUPABASE_URL: "https://supabase.example",
+        SUPABASE_SERVICE_ROLE_KEY: "test",
+      },
+    );
+    const payload = (await response.json()) as {
+      data: { facetHits: Array<{ value: string }> };
+    };
+
+    expect(response.status).toBe(200);
+    expect(payload.data.facetHits.map((hit) => hit.value)).toEqual(
+      expect.arrayContaining(["CS", "MATH"]),
+    );
+    expect(courseQueryCalls).toContainEqual({
+      method: "eq",
+      args: ["semester", "11420"],
+    });
+  });
+
+  test("does not push the requested semester facet into the database", async () => {
+    courseRows = [
+      course,
+      {
+        ...course,
+        raw_id: "11510CS 101000",
+        course: "CS101",
+        semester: "11510",
+      },
+    ];
+    const facetFilters = encodeURIComponent(
+      JSON.stringify([["semester:11420"]]),
+    );
+    const response = await fallbackSearch.fetch(
+      new Request(
+        `http://localhost/?facetName=semester&facetQuery=&facetFilters=${facetFilters}`,
+      ),
+      {
+        SUPABASE_URL: "https://supabase.example",
+        SUPABASE_SERVICE_ROLE_KEY: "test",
+      },
+    );
+    const payload = (await response.json()) as {
+      data: { facetHits: Array<{ value: string }> };
+    };
+
+    expect(response.status).toBe(200);
+    expect(payload.data.facetHits.map((hit) => hit.value)).toEqual(
+      expect.arrayContaining(["11420", "11510"]),
+    );
+    expect(
+      courseQueryCalls.some((call) => ["eq", "in"].includes(call.method)),
+    ).toBe(false);
+  });
+});
+
+describe("search fallback RPC degradation", () => {
+  test("warns and logs when instructor matching falls back to scalar fields", async () => {
+    rpcError = { message: "function is unavailable", code: "42883" };
+    const logs: unknown[][] = [];
+    console.error = (...args: unknown[]) => logs.push(args);
+
+    const response = await fallbackSearch.fetch(
+      new Request("http://localhost/?q=calculus"),
+      {
+        SUPABASE_URL: "https://supabase.example",
+        SUPABASE_SERVICE_ROLE_KEY: "test",
+      },
+    );
+    const payload = (await response.json()) as {
+      data: { warnings: string[] };
+    };
+
+    expect(response.status).toBe(200);
+    expect(payload.data.warnings).toContain("Instructor matching unavailable");
+    expect(logs).toContainEqual([
+      "search_courses RPC failed, using ilike fallback:",
+      { message: "function is unavailable", code: "42883" },
+    ]);
   });
 });
 

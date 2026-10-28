@@ -104,6 +104,33 @@ const searchSupabaseWithProjection = (
   options: Parameters<typeof searchSupabase>[1],
 ) => searchSupabase(c, { ...options, useSearchProjection: true });
 
+const serializePostSearchParams = (options: {
+  query: string;
+  hitsPerPage: number;
+  filters?: string;
+  facetFilters?: string[];
+  attributesToRetrieve?: string[];
+  highlightPreTag: string;
+  highlightPostTag: string;
+}) => {
+  const params = new URLSearchParams();
+  params.set("query", options.query);
+  params.set("hitsPerPage", String(options.hitsPerPage));
+  if (options.filters) params.set("filters", options.filters);
+  if (options.facetFilters) {
+    params.set("facetFilters", JSON.stringify(options.facetFilters));
+  }
+  if (options.attributesToRetrieve) {
+    params.set(
+      "attributesToRetrieve",
+      JSON.stringify(options.attributesToRetrieve),
+    );
+  }
+  params.set("highlightPreTag", options.highlightPreTag);
+  params.set("highlightPostTag", options.highlightPostTag);
+  return params.toString();
+};
+
 const toSearchResponse = (
   result: Awaited<ReturnType<typeof searchSupabase>>,
   includeParams: boolean,
@@ -143,8 +170,15 @@ const searchRateLimit = rateLimitMiddleware({
 
 const app = new Hono<{ Bindings: Bindings }>()
   .post("/", searchRateLimit, zValidator("json", searchSchema), async (c) => {
-    const { query, limit, filters, facetFilters, attributesToRetrieve } =
-      c.req.valid("json");
+    const {
+      query,
+      limit,
+      filters,
+      facetFilters,
+      attributesToRetrieve,
+      highlightPreTag,
+      highlightPostTag,
+    } = c.req.valid("json");
 
     try {
       const result = await searchSupabaseWithProjection(c, {
@@ -155,7 +189,15 @@ const app = new Hono<{ Bindings: Bindings }>()
           ? parseFacetFilterGroups(facetFilters)
           : undefined,
         attributesToRetrieve,
-        params: new URL(c.req.url).searchParams.toString(),
+        params: serializePostSearchParams({
+          query,
+          hitsPerPage: limit,
+          filters,
+          facetFilters,
+          attributesToRetrieve,
+          highlightPreTag,
+          highlightPostTag,
+        }),
       });
 
       return c.json(toSearchResponse(result, true));

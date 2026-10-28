@@ -21,6 +21,7 @@ const MAX_SCAN_ROWS = 10_000;
 const MAX_HITS_PER_PAGE = 100;
 const SCAN_LIMIT_WARNING =
   "Course search reached the 10,000-row scan limit; counts may be incomplete.";
+const INSTRUCTOR_MATCH_WARNING = "Instructor matching unavailable";
 const CACHE_CONTROL =
   "public, max-age=30, s-maxage=300, stale-while-revalidate=60";
 
@@ -208,14 +209,20 @@ const uniqueValues = (values: string[]) => [...new Set(values)];
 const intersectValues = (left: string[], right: string[]) =>
   left.filter((value) => right.includes(value));
 
-const getFacetSemesterValues = (groups: FacetFilterGroup[]) => {
+const getFacetSemesterValues = (
+  groups: FacetFilterGroup[],
+  excludedAttribute?: string,
+) => {
   let values: string[] | undefined;
 
   for (const group of groups) {
     const conditions = group
       .map(parseFacetFilter)
       .filter((condition): condition is FilterCondition => condition !== null);
-    const semesterValues = conditions
+    const relevantConditions = conditions.filter(
+      (condition) => condition.attribute !== excludedAttribute,
+    );
+    const semesterValues = relevantConditions
       .filter(
         (condition) =>
           condition.attribute === "semester" &&
@@ -228,7 +235,7 @@ const getFacetSemesterValues = (groups: FacetFilterGroup[]) => {
     // semester equalities can safely become a database restriction.
     if (
       semesterValues.length === 0 ||
-      semesterValues.length !== conditions.length ||
+      semesterValues.length !== relevantConditions.length ||
       conditions.length !== group.length
     ) {
       continue;
@@ -241,12 +248,19 @@ const getFacetSemesterValues = (groups: FacetFilterGroup[]) => {
   return values;
 };
 
-const getFilterSemesterValues = (groups: FilterCondition[][]) => {
+const getFilterSemesterValues = (
+  groups: FilterCondition[][],
+  excludedAttribute?: string,
+) => {
   if (groups.length === 0) return undefined;
 
   const values: string[] = [];
   for (const group of groups) {
-    const semesterValues = group
+    const relevantConditions = group.filter(
+      (condition) => condition.attribute !== excludedAttribute,
+    );
+    if (relevantConditions.length === 0) return undefined;
+    const semesterValues = relevantConditions
       .filter(
         (condition) =>
           condition.attribute === "semester" &&
@@ -257,7 +271,12 @@ const getFilterSemesterValues = (groups: FilterCondition[][]) => {
 
     // Filter groups are OR branches. Every branch must restrict semester for
     // the union of their semester values to be a safe database restriction.
-    if (semesterValues.length === 0) return undefined;
+    if (
+      semesterValues.length === 0 ||
+      semesterValues.length !== relevantConditions.length
+    ) {
+      return undefined;
+    }
     values.push(...semesterValues);
   }
 
@@ -267,9 +286,16 @@ const getFilterSemesterValues = (groups: FilterCondition[][]) => {
 const getDatabaseEqualityFilters = (
   facetGroups: FacetFilterGroup[],
   filterGroups: FilterCondition[][],
+  excludedAttribute?: string,
 ): DatabaseEqualityFilters => {
-  const facetSemesterValues = getFacetSemesterValues(facetGroups);
-  const filterSemesterValues = getFilterSemesterValues(filterGroups);
+  const facetSemesterValues = getFacetSemesterValues(
+    facetGroups,
+    excludedAttribute,
+  );
+  const filterSemesterValues = getFilterSemesterValues(
+    filterGroups,
+    excludedAttribute,
+  );
   const semesterValues =
     facetSemesterValues && filterSemesterValues
       ? intersectValues(facetSemesterValues, filterSemesterValues)
@@ -325,13 +351,19 @@ const matchesCondition = (course: CourseHit, condition: FilterCondition) => {
   }
 };
 
-const matchesFacetGroups = (course: CourseHit, groups: FacetFilterGroup[]) =>
-  groups.every((group) =>
-    group.some((filter) => {
-      const condition = parseFacetFilter(filter);
-      return condition ? matchesCondition(course, condition) : false;
-    }),
-  );
+const matchesFacetGroups = (
+  course: CourseHit,
+  groups: FacetFilterGroup[],
+  excludedAttribute?: string,
+) =>
+  groups.every((group) => {
+    const conditions = group
+      .map(parseFacetFilter)
+      .filter((condition): condition is FilterCondition => condition !== null)
+      .filter((condition) => condition.attribute !== excludedAttribute);
+    if (excludedAttribute !== undefined && conditions.length === 0) return true;
+    return conditions.some((condition) => matchesCondition(course, condition));
+  });
 
 const searchableCourseFields = (course: CourseHit) =>
   [
@@ -377,12 +409,12 @@ const rankCourse = (course: CourseHit, query: string) => {
 
 type SyllabusText = Pick<
   Database["public"]["Tables"]["course_syllabus"]["Row"],
-  "brief" | "keywords"
+  "brief" | "keywords" | "content"
 >;
 
 /**
- * brief/keywords live in course_syllabus, not courses, so a plain courses
- * select returns cards without them. Load them for the returned page only.
+ * Syllabus text lives in course_syllabus, not courses, so a plain courses
+ * select returns cards without it. Load it for the returned page only.
  */
 const loadSyllabusText = async (
   c: Parameters<typeof supabase_server>[0],
@@ -392,7 +424,7 @@ const loadSyllabusText = async (
   if (rawIds.length === 0) return texts;
   const { data, error } = await supabase_server(c)
     .from("course_syllabus")
-    .select("raw_id,brief,keywords")
+    .select("raw_id,brief,keywords,content")
     .in("raw_id", rawIds);
   if (error) {
     // Cards still render without syllabus text; don't fail the search.
@@ -400,7 +432,11 @@ const loadSyllabusText = async (
     return texts;
   }
   for (const row of data ?? []) {
-    texts.set(row.raw_id, { brief: row.brief, keywords: row.keywords });
+    texts.set(row.raw_id, {
+      brief: row.brief,
+      keywords: row.keywords,
+      content: row.content,
+    });
   }
   return texts;
 };
@@ -480,6 +516,7 @@ const loadCoursesByRpc = (
 type LoadedCourses = {
   courses: CourseHit[];
   truncated: boolean;
+  warnings: string[];
 };
 
 const loadCourses = async (
@@ -502,13 +539,13 @@ const loadCourses = async (
     const { data, error } = await createCourseQuery(c, undefined, filters);
     if (error) throw error;
     collect(data);
-    return { courses: [...courses.values()], truncated };
+    return { courses: [...courses.values()], truncated, warnings: [] };
   }
 
   const { data, error } = await loadCoursesByRpc(c, trimmed, filters);
   if (!error) {
     collect(data);
-    return { courses: [...courses.values()], truncated };
+    return { courses: [...courses.values()], truncated, warnings: [] };
   }
 
   // Keep search answering even if the function is unavailable or rejects a
@@ -521,7 +558,11 @@ const loadCourses = async (
   const scalar = await createCourseQuery(c, trimmed, filters);
   if (scalar.error) throw scalar.error;
   collect(scalar.data);
-  return { courses: [...courses.values()], truncated };
+  return {
+    courses: [...courses.values()],
+    truncated,
+    warnings: [INSTRUCTOR_MATCH_WARNING],
+  };
 };
 
 const getRequestedFacets = (value?: string | string[]) => {
@@ -584,7 +625,11 @@ export const searchSupabase = async (
   const facetGroups = options.facetFilters ?? [];
   const filterGroups = parseFilterGroups(options.filters);
   const numericConditions = parseConditions(options.numericFilters);
-  const databaseFilters = getDatabaseEqualityFilters(facetGroups, filterGroups);
+  const databaseFilters = getDatabaseEqualityFilters(
+    facetGroups,
+    filterGroups,
+    options.facetName,
+  );
   const { facets: requestedFacets, warnings } = getRequestedFacets(
     options.facets,
   );
@@ -594,10 +639,11 @@ export const searchSupabase = async (
     databaseFilters,
   );
   if (loaded.truncated) warnings.push(SCAN_LIMIT_WARNING);
+  warnings.push(...loaded.warnings);
   const courses = loaded.courses;
   const filteredCourses = courses.filter(
     (course) =>
-      matchesFacetGroups(course, facetGroups) &&
+      matchesFacetGroups(course, facetGroups, options.facetName) &&
       (filterGroups.length === 0 ||
         filterGroups.some((group) =>
           group.every((condition) => matchesCondition(course, condition)),
@@ -663,7 +709,11 @@ export const searchSupabase = async (
     return toSearchHit(
       {
         ...projected,
-        ...(texts.get(course.raw_id) ?? { brief: null, keywords: null }),
+        ...(texts.get(course.raw_id) ?? {
+          brief: null,
+          keywords: null,
+          content: null,
+        }),
       },
       options.attributesToRetrieve,
     );

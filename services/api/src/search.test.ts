@@ -1,4 +1,4 @@
-import { describe, expect, it, mock } from "bun:test";
+import { describe, expect, it, mock, test } from "bun:test";
 import { createSupabaseServerMock } from "./test-helpers/module-mocks";
 
 const courses = [
@@ -81,6 +81,7 @@ const syllabusIn = mock(async (_column: string, rawIds: string[]) => ({
     raw_id,
     brief: "A course about statistical learning.",
     keywords: ["machine learning"],
+    content: "Course syllabus content.",
   })),
   error: null,
 }));
@@ -203,8 +204,42 @@ describe("Supabase-backed public search", () => {
       brief: "A course about statistical learning.",
     });
     expect(payload.data.hits[0].updated_at).toBeUndefined();
-    expect(payload.data.params).toBe("");
+    expect(payload.data.params).toBe(
+      "query=machine+learning&hitsPerPage=10&filters=department%3ACS&facetFilters=%5B%22language%3AEnglish%22%5D&highlightPreTag=%3Cmark%3E&highlightPostTag=%3C%2Fmark%3E",
+    );
   });
+
+  test.each([
+    [
+      "POST",
+      () =>
+        postSearch({
+          query: "machine learning",
+          attributesToRetrieve: ["content"],
+        }),
+    ],
+    [
+      "GET",
+      () =>
+        search.request(
+          "/?q=machine%20learning&attributesToRetrieve=content",
+          {},
+          env,
+        ),
+    ],
+  ] as const)(
+    "accepts content in %s attribute requests",
+    async (_method, request) => {
+      const response = await request();
+      const payload = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(payload.data.hits[0]).toEqual({
+        objectID: "11510CS 535100",
+        content: "Course syllabus content.",
+      });
+    },
+  );
 
   it("keeps pagination fields on GET searches", async () => {
     const response = await search.request(
