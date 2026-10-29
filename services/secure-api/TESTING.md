@@ -28,6 +28,12 @@ bun test src/utils/apiKeyValidation.test.ts
 bun test src/api/calendar.test.ts
 ```
 
+Web Push tests can be run without a database or upstream service:
+
+```bash
+bun test src/api/push.test.ts src/push/encryption.test.ts src/push/notifier.test.ts
+```
+
 ## Test Structure
 
 ### Mock Architecture

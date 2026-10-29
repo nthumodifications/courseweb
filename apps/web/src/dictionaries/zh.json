@@ -1217,6 +1217,36 @@
       "keepLocalData": "在此裝置保留資料",
       "logout": "登出"
     },
+    "notifications": {
+      "title": "通知",
+      "device": {
+        "title": "在此裝置開啟通知"
+      },
+      "course_changes": {
+        "title": "課表中的課程變更",
+        "description": "教室、時間或取消的變更。"
+      },
+      "announcement_digest": {
+        "title": "已追蹤公告每日摘要",
+        "description": "使用您在公告頁面追蹤的單位。",
+        "announcements_link": "開啟公告"
+      },
+      "test": {
+        "title": "發送測試通知",
+        "action": "發送測試",
+        "sent": "測試通知已發送"
+      },
+      "states": {
+        "signed_out": "登入以取得通知",
+        "unsupported": "此瀏覽器不支援通知",
+        "ios_not_installed": "請先將 NTHUMods 加入主畫面",
+        "permission_denied": "通知已在瀏覽器設定中封鎖",
+        "not_configured": "尚未提供",
+        "error": "無法載入通知設定",
+        "loading": "正在檢查通知支援狀態"
+      },
+      "retry": "重試"
+    },
     "display": {
       "title": "顯示",
       "dark_mode": {
