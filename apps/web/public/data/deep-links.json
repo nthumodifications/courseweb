@@ -969,6 +969,7 @@
             "timetable",
             "ai",
             "account",
+            "notifications",
             "privacy",
             "advanced",
             "setting-dark-mode",
@@ -985,6 +986,10 @@
             "setting-account",
             "setting-sync-status",
             "setting-restore-backup",
+            "setting-notifications-device",
+            "setting-notifications-course-changes",
+            "setting-notifications-announcement-digest",
+            "setting-notifications-test",
             "setting-analytics",
             "setting-custom-css"
           ],

@@ -41,6 +41,38 @@ model User {
   courseReviews         CourseReview[]
   reviewReports         CourseReviewReport[] @relation("CourseReviewReportReporter")
   resolvedReviewReports CourseReviewReport[] @relation("CourseReviewReportResolver")
+  pushSubscriptions     PushSubscription[]
+}
+
+model PushSubscription {
+  id                   String   @id @default(uuid())
+  userId               String
+  endpoint             String   @unique
+  p256dh               String
+  auth                 String
+  language             String
+  courseChanges        Boolean  @default(true)
+  announcementSources  String[] @default([])
+  lastCourseChangeId   BigInt   @default(0)
+  lastDigestDate       String?
+  failureCount         Int      @default(0)
+  testWindowStartedAt  DateTime? @db.Timestamptz(3)
+  testCount            Int      @default(0)
+  createdAt            DateTime @default(now())
+  lastSeenAt           DateTime @default(now())
+  user                 User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId, lastSeenAt])
+  @@index([courseChanges, lastCourseChangeId])
+  @@map("push_subscriptions")
+}
+
+model PushNotifierLease {
+  id          Int      @id
+  lockedUntil DateTime @db.Timestamptz(3) @map("locked_until")
+  holder      String
+
+  @@map("push_notifier_lease")
 }
 
 model UserStorage {

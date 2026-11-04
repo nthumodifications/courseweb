@@ -109,6 +109,21 @@ const withoutServerTimestamp = (value: StoredRecord) => {
 };
 
 describe("secure-api payload limits", () => {
+  test("applies the request body limit to push subscriptions", async () => {
+    const { createPushApp } = await import("./push");
+    const app = createPushApp({
+      auth: fakeAuth,
+      rateLimit: noRateLimit,
+      getVapidConfig: () => undefined,
+    });
+    const oversized = await app.request("http://test/subscription", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ value: "x".repeat(MAX_REQUEST_BODY_BYTES) }),
+    });
+    expect(oversized.status).toBe(413);
+  });
+
   test("rejects a request body over the Hono body limit with a 413 code", async () => {
     const { createKvStorageApp } = await import("./kv_storage");
     const app = createKvStorageApp({

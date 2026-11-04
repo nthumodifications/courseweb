@@ -195,7 +195,7 @@ Duplicate parameters: `first-value`.
 
 | Parameter | Description | Accepted values | Example |
 | --- | --- | --- | --- |
-| `#section` | 設定頁可定位的 section 或 setting hash。 A settings section or setting hash that the page can scroll to. | `appearance`, `display`, `calendar`, `timetable`, `ai`, `account`, `privacy`, `advanced`, `setting-dark-mode`, `setting-language`, `setting-compact-header`, `setting-academic-calendar`, `setting-experimental-calendar`, `setting-widget-dashboard`, `setting-default-view`, `setting-ai-department`, `setting-ai-entrance-year`, `setting-ai-api-key`, `setting-ai-api-key-value`, `setting-account`, `setting-sync-status`, `setting-restore-backup`, `setting-analytics`, `setting-custom-css` | `account` |
+| `#section` | 設定頁可定位的 section 或 setting hash。 A settings section or setting hash that the page can scroll to. | `appearance`, `display`, `calendar`, `timetable`, `ai`, `account`, `notifications`, `privacy`, `advanced`, `setting-dark-mode`, `setting-language`, `setting-compact-header`, `setting-academic-calendar`, `setting-experimental-calendar`, `setting-widget-dashboard`, `setting-default-view`, `setting-ai-department`, `setting-ai-entrance-year`, `setting-ai-api-key`, `setting-ai-api-key-value`, `setting-account`, `setting-sync-status`, `setting-restore-backup`, `setting-notifications-device`, `setting-notifications-course-changes`, `setting-notifications-announcement-digest`, `setting-notifications-test`, `setting-analytics`, `setting-custom-css` | `account` |
 
 Examples:
 

@@ -71,7 +71,8 @@ applies to it.
 
 Grant only what the integration needs. `openid`, `profile`, `email` and
 `offline_access` cover identity. `kv`, `calendar` and `planner` expose NTHUMods
-user data under `/api/*` and should stay with first-party clients.
+user data under `/api/*` and should stay with first-party clients. Web Push
+subscription routes use the existing `kv` scope and do not add a new scope.
 
 A scope the client was not granted is refused at `/authorize` with
 `invalid_scope`, before the user is sent to NTHU.

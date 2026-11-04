@@ -4,10 +4,9 @@ import { getFirestore } from "firebase-admin/firestore";
 import type { Context } from "hono";
 import { env } from "hono/adapter";
 
-export const getFirebaseAdmin = (c: Context) => {
-  const { FIREBASE_SERVICE_ACCOUNT } = env<{
-    FIREBASE_SERVICE_ACCOUNT: string;
-  }>(c);
+const getFirebaseAdminForServiceAccount = (
+  FIREBASE_SERVICE_ACCOUNT: string,
+) => {
   const serviceAccount = JSON.parse(
     Buffer.from(FIREBASE_SERVICE_ACCOUNT, "base64").toString(),
   );
@@ -24,4 +23,18 @@ export const getFirebaseAdmin = (c: Context) => {
   const adminFirestore = getFirestore(admin);
 
   return { admin, adminAuth, adminFirestore };
+};
+
+export const getFirebaseAdmin = (c: Context) => {
+  const { FIREBASE_SERVICE_ACCOUNT } = env<{
+    FIREBASE_SERVICE_ACCOUNT: string;
+  }>(c);
+  return getFirebaseAdminForServiceAccount(FIREBASE_SERVICE_ACCOUNT);
+};
+
+export const getFirebaseAdminFromProcessEnv = () => {
+  const serviceAccount = process.env["FIREBASE_SERVICE_ACCOUNT"];
+  if (!serviceAccount)
+    throw new Error("FIREBASE_SERVICE_ACCOUNT env var is not set");
+  return getFirebaseAdminForServiceAccount(serviceAccount);
 };
