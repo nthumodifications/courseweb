@@ -78,9 +78,10 @@ const waitFor = async (
   predicate: () => boolean,
   timeoutMs = 2000,
 ): Promise<void> => {
-  const deadline = Date.now() + timeoutMs;
+  // performance.now() keeps running while setSystemTime() freezes Date.now().
+  const deadline = performance.now() + timeoutMs;
   while (!predicate()) {
-    if (Date.now() >= deadline) {
+    if (performance.now() >= deadline) {
       throw new Error("Timed out waiting for the condition");
     }
     await new Promise((resolve) => setTimeout(resolve, 10));
@@ -174,6 +175,8 @@ describe("calendar event repeat date", () => {
       document.querySelector<HTMLButtonElement>("#repeat-date-value");
     if (!repeatDateTrigger) throw new Error(document.body.innerHTML);
     expect(repeatDateTrigger).not.toBeNull();
+    // The picker stays disabled until useWatch sees the "date" mode.
+    await waitFor(() => !repeatDateTrigger.disabled);
 
     await act(async () => {
       repeatDateTrigger?.click();
