@@ -53,7 +53,7 @@ let requestUser = authUser;
 
 mock.module("../client", () => ({ default: reviewDb }));
 mock.module("../utils/adminAudit", () => ({ recordAdminAction: audit }));
-const { createReviewsApp } = await import("./reviews");
+const { createReviewsApp, REVIEW_DAILY_LIMIT } = await import("./reviews");
 const { default: adminReviewsApp } = await import("./admin/reviews");
 
 const reviewAuth = async (c: any, next: () => Promise<void>) => {
@@ -318,11 +318,49 @@ describe("native course reviews", () => {
     );
   });
 
-  test("rate-limits the sixth review in a rolling day", async () => {
-    reviewCount.mockResolvedValue(5);
+  test("allows reviews below the rolling daily limit", async () => {
+    reviewFindFirst.mockResolvedValue(null);
+    reviewCount.mockResolvedValue(REVIEW_DAILY_LIMIT - 1);
+    reviewCreate.mockResolvedValue(makeReview({ userId: authUser.userId }));
+    const response = await authRequest("/", json(validInput));
+    expect(response.status).toBe(201);
+  });
+
+  test("rate-limits past the rolling daily limit and says when to retry", async () => {
+    reviewFindFirst.mockResolvedValue(null);
+    reviewCount.mockResolvedValue(REVIEW_DAILY_LIMIT);
+    const blockingCreatedAt = new Date(Date.now() - 20 * 60 * 60 * 1000);
+    reviewFindMany.mockResolvedValueOnce([{ createdAt: blockingCreatedAt }]);
     const response = await authRequest("/", json(validInput));
     expect(response.status).toBe(429);
-    expect(await response.json()).toEqual({ error: "rate_limited" });
+    const body = (await response.json()) as {
+      error: string;
+      retryAfter: number;
+    };
+    expect(body.error).toBe("rate_limited");
+    // About four hours remain until the blocking review leaves the window.
+    expect(body.retryAfter).toBeGreaterThan(4 * 60 * 60 - 60);
+    expect(body.retryAfter).toBeLessThanOrEqual(4 * 60 * 60);
+    expect(response.headers.get("Retry-After")).toBe(String(body.retryAfter));
+    expect(reviewFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orderBy: { createdAt: "desc" },
+        skip: REVIEW_DAILY_LIMIT - 1,
+        take: 1,
+      }),
+    );
+    expect(reviewCreate).not.toHaveBeenCalled();
+  });
+
+  test("reports a duplicate as 409 even when at the daily limit", async () => {
+    reviewFindFirst.mockResolvedValue({ id: "review-1" });
+    reviewCount.mockResolvedValue(REVIEW_DAILY_LIMIT);
+    const response = await authRequest("/", json(validInput));
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({
+      error: "already_reviewed",
+      id: "review-1",
+    });
     expect(reviewCreate).not.toHaveBeenCalled();
   });
 

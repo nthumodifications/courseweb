@@ -12,6 +12,9 @@ import type {
 import prisma from "../client";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+// New reviews per user in a rolling 24-hour window. Students catch up on a
+// backlog of past courses at once, so this only needs to stop bulk spam.
+export const REVIEW_DAILY_LIMIT = 20;
 
 const normalizePart = (value: string) =>
   value.normalize("NFKC").trim().replace(/\s+/gu, " ");
@@ -310,11 +313,6 @@ export const createReviewsApp = ({
             // Advisory locks return PostgreSQL void, which Prisma cannot deserialize via $queryRaw.
             await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${user.userId}))`;
 
-            const recent = await tx.courseReview.count({
-              where: { userId: user.userId, createdAt: { gte: since } },
-            });
-            if (recent >= 5) return { kind: "rate_limited" as const };
-
             const existing = await tx.courseReview.findFirst({
               where: {
                 userId: user.userId,
@@ -326,14 +324,45 @@ export const createReviewsApp = ({
             if (existing)
               return { kind: "duplicate" as const, id: existing.id };
 
+            const recentWhere = {
+              userId: user.userId,
+              createdAt: { gte: since },
+            };
+            const recent = await tx.courseReview.count({ where: recentWhere });
+            if (recent >= REVIEW_DAILY_LIMIT) {
+              // The window reopens once the REVIEW_DAILY_LIMIT-th newest review
+              // is older than a day, leaving room for one more.
+              const [oldestBlocking] = await tx.courseReview.findMany({
+                where: recentWhere,
+                orderBy: { createdAt: "desc" },
+                skip: REVIEW_DAILY_LIMIT - 1,
+                take: 1,
+                select: { createdAt: true },
+              });
+              const retryAt =
+                (oldestBlocking?.createdAt.getTime() ?? Date.now()) + DAY_MS;
+              return {
+                kind: "rate_limited" as const,
+                retryAfter: Math.max(
+                  1,
+                  Math.ceil((retryAt - Date.now()) / 1000),
+                ),
+              };
+            }
+
             const review = await tx.courseReview.create({
               data: { ...input, userId: user.userId },
             });
             return { kind: "created" as const, review };
           });
 
-          if (result.kind === "rate_limited")
-            return c.json({ error: "rate_limited" }, 429);
+          if (result.kind === "rate_limited") {
+            c.header("Retry-After", String(result.retryAfter));
+            return c.json(
+              { error: "rate_limited", retryAfter: result.retryAfter },
+              429,
+            );
+          }
           if (result.kind === "duplicate")
             return c.json({ error: "already_reviewed", id: result.id }, 409);
           return c.json({ review: toPublicReview(result.review, true) }, 201);

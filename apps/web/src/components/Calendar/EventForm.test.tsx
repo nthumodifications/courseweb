@@ -17,6 +17,13 @@ import {
   restoreBootstrapEnvironment,
 } from "./EventForm.test-setup";
 
+// Radix picks a no-op layout effect when it is first imported without a
+// document, and Portal only mounts from that effect. Bun shares modules across
+// test files, so an earlier file can load Radix before any DOM exists; pin the
+// real hook so the date popover renders regardless of file order.
+const { useLayoutEffect } = await import("react");
+mock.module("@radix-ui/react-use-layout-effect", () => ({ useLayoutEffect }));
+
 let structuredLanguage: "en" | "zh" = "zh";
 mock.module("@/dictionaries/useDictionary", () => ({
   default: () => (structuredLanguage === "en" ? en : zh),
@@ -78,9 +85,10 @@ const waitFor = async (
   predicate: () => boolean,
   timeoutMs = 2000,
 ): Promise<void> => {
-  const deadline = Date.now() + timeoutMs;
+  // performance.now() keeps running while setSystemTime() freezes Date.now().
+  const deadline = performance.now() + timeoutMs;
   while (!predicate()) {
-    if (Date.now() >= deadline) {
+    if (performance.now() >= deadline) {
       throw new Error("Timed out waiting for the condition");
     }
     await new Promise((resolve) => setTimeout(resolve, 10));
@@ -174,6 +182,8 @@ describe("calendar event repeat date", () => {
       document.querySelector<HTMLButtonElement>("#repeat-date-value");
     if (!repeatDateTrigger) throw new Error(document.body.innerHTML);
     expect(repeatDateTrigger).not.toBeNull();
+    // The picker stays disabled until useWatch sees the "date" mode.
+    await waitFor(() => !repeatDateTrigger.disabled);
 
     await act(async () => {
       repeatDateTrigger?.click();
