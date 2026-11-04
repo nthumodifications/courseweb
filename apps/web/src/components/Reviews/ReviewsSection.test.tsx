@@ -81,6 +81,7 @@ const {
   sortReviews,
   toggleExamStyles,
   validateReviewForm,
+  rateLimitedMessage,
   ReviewsSection,
 } = await import("@/components/Reviews/ReviewsSection");
 
@@ -140,6 +141,32 @@ const valid = {
   examStyle: ["written"] as const,
   body: "這是一段超過三十個字的心得，描述課程內容、授課方式與評量安排，讓其他同學能夠做出適合自己的選課決定。",
 };
+
+describe("review rate limit message", () => {
+  const reviews = zh.course.details.native_reviews;
+  const dict = zh as unknown as Parameters<typeof rateLimitedMessage>[1];
+
+  test("falls back to the generic copy without a retry time", () => {
+    expect(rateLimitedMessage({ error: "rate_limited" }, dict)).toBe(
+      reviews.error_rate_limited,
+    );
+    expect(rateLimitedMessage({ retryAfter: 0 }, dict)).toBe(
+      reviews.error_rate_limited,
+    );
+  });
+
+  test("rounds the retry time up to minutes or hours", () => {
+    expect(rateLimitedMessage({ retryAfter: 30 }, dict)).toBe(
+      reviews.error_rate_limited_minutes.replace("{count}", "1"),
+    );
+    expect(rateLimitedMessage({ retryAfter: 3599 }, dict)).toBe(
+      reviews.error_rate_limited_minutes.replace("{count}", "60"),
+    );
+    expect(rateLimitedMessage({ retryAfter: 3601 }, dict)).toBe(
+      reviews.error_rate_limited_hours.replace("{count}", "2"),
+    );
+  });
+});
 
 describe("review form validation", () => {
   test("accepts a complete review", () => {
@@ -432,9 +459,7 @@ describe("review render guards and summary", () => {
     });
     await waitFor(() =>
       Boolean(
-        container.textContent?.includes(
-          zh.course.details.native_reviews.write,
-        ),
+        container.textContent?.includes(zh.course.details.native_reviews.write),
       ),
     );
 
