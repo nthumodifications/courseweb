@@ -112,6 +112,17 @@ export const getClassMembership = (
     token,
   );
 
+export const leaveDroppedCourse = (
+  token: string,
+  semester: string,
+  courseId: string,
+) =>
+  request<{ ok: true }>(
+    `/membership/${encodeURIComponent(semester)}/${encodeURIComponent(courseId)}`,
+    token,
+    { method: "DELETE" },
+  );
+
 export const joinClassPage = (
   token: string,
   semester: string,

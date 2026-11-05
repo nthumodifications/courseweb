@@ -200,6 +200,7 @@ describe("class pages", () => {
       ["/memberships", json({ semester: "11510", courseId: "11510-CS101" })],
       ["/memberships/join-all", json({ semester: "11510" })],
       ["/membership/11510/11510-CS101"],
+      ["/membership/11510/11510-CS101", { method: "DELETE" }],
       ["/class/11510/11510-CS101"],
       [
         "/class/11510/11510-CS101/links",
@@ -376,6 +377,43 @@ describe("class pages", () => {
     fns.membershipFindUnique.mockResolvedValueOnce(null);
     expect((await request("/class/11510/11510-CS101")).status).toBe(404);
     expect(fns.membershipFindMany).not.toHaveBeenCalled();
+  });
+
+  test("a dropped course removes the caller's own membership and nobody else's", async () => {
+    const droppedApp = new Hono().route(
+      "/",
+      createClassPagesApp({
+        auth: requestAuth,
+        rateLimit,
+        db,
+        getTimetable: async () => ({ "11510": [] }),
+      }),
+    );
+    const expected = {
+      where: {
+        userId: "student-1",
+        semester: "11510",
+        courseId: "11510-CS101",
+      },
+    };
+
+    expect((await droppedApp.request("/class/11510/11510-CS101")).status).toBe(
+      404,
+    );
+    expect(fns.membershipDeleteMany).toHaveBeenLastCalledWith(expected);
+
+    fns.membershipDeleteMany.mockClear();
+    const lookup = await droppedApp.request("/membership/11510/11510-CS101");
+    expect(await lookup.json()).toEqual({ eligible: false, membership: null });
+    expect(fns.membershipDeleteMany).toHaveBeenLastCalledWith(expected);
+
+    fns.membershipDeleteMany.mockClear();
+    const leave = await request("/membership/11510/11510-CS101", {
+      method: "DELETE",
+    });
+    expect(leave.status).toBe(200);
+    expect(fns.membershipDeleteMany).toHaveBeenCalledTimes(1);
+    expect(fns.membershipDeleteMany).toHaveBeenLastCalledWith(expected);
   });
 
   test("link, report, and block writes all require membership in the shared offering", async () => {

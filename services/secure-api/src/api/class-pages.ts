@@ -153,6 +153,18 @@ export const createClassPagesApp = ({
     return (await store.get(userId, "courses"))?.value;
   },
 }: ClassPagesDependencies = {}) => {
+  // A member who drops the course from their timetable stops being a member
+  // the next time they look at that class page. Their links go with the
+  // membership (cascade), so the page never outlives their enrollment.
+  const pruneDroppedMembership = (
+    userId: string,
+    semester: string,
+    courseId: string,
+  ) =>
+    db.classPageMembership.deleteMany({
+      where: { userId, semester, courseId },
+    });
+
   const app = new Hono<SecureEnv>().use("*", bodyLimit({ maxSize: 16 * 1024 }));
 
   app.get("/profile", auth, async (c) => {
@@ -331,6 +343,20 @@ export const createClassPagesApp = ({
     },
   );
 
+  // Called by the web client when a course is removed from the timetable, so
+  // a dropped course leaves its class page right away. Idempotent.
+  app.delete(
+    "/membership/:semester/:courseId",
+    auth,
+    rateLimit,
+    zValidator("param", semesterCourse, invalidInput),
+    async (c) => {
+      const { semester, courseId } = c.req.valid("param");
+      await pruneDroppedMembership(c.get("user").userId, semester, courseId);
+      return c.json({ ok: true });
+    },
+  );
+
   app.get(
     "/membership/:semester/:courseId",
     auth,
@@ -339,6 +365,7 @@ export const createClassPagesApp = ({
       const userId = c.get("user").userId;
       const { semester, courseId } = c.req.valid("param");
       if (!ownsCourse(await getTimetable(userId, c), semester, courseId)) {
+        await pruneDroppedMembership(userId, semester, courseId);
         return c.json({ eligible: false, membership: null });
       }
       const membership = await db.classPageMembership.findUnique({
@@ -355,8 +382,10 @@ export const createClassPagesApp = ({
     courseId: string,
   ) => {
     const userId = c.get("user").userId;
-    if (!ownsCourse(await getTimetable(userId, c), semester, courseId))
+    if (!ownsCourse(await getTimetable(userId, c), semester, courseId)) {
+      await pruneDroppedMembership(userId, semester, courseId);
       return null;
+    }
     const membership = await db.classPageMembership.findUnique({
       where: { userId_semester_courseId: { userId, semester, courseId } },
     });
