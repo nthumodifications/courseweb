@@ -182,6 +182,7 @@ const AdminReviewsPage = lazyWithRetry(
 );
 const AdminClassPagesPage = lazyWithRetry(
   () => import("@/app/[lang]/admin/class-pages/page"),
+);
 const AdminCourseShortNamesPage = lazyWithRetry(
   () => import("@/app/[lang]/admin/course-short-names/page"),
 );
