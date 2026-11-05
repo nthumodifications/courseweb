@@ -321,9 +321,9 @@ const TimetableCourseListItem = ({
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex min-w-0 items-center gap-1 truncate font-bold">
-              <span className="truncate">{courseName}</span>
+              <span className="max-w-full shrink-0 truncate">{courseName}</span>
               {showEnglishName && (
-                <span className="truncate font-medium text-muted-foreground">
+                <span className="hidden min-w-0 truncate font-medium text-muted-foreground sm:inline">
                   {language === "en" ? " · " : " ・ "}
                   {course.name_en}
                 </span>
