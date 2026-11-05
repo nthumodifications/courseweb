@@ -1,13 +1,7 @@
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { JSDOM } from "jsdom";
-import {
-  afterEach,
-  describe,
-  expect,
-  mock,
-  test,
-} from "bun:test";
+import { afterEach, describe, expect, mock, test } from "bun:test";
 import { captureGlobalState } from "@/test-utils/global-state";
 
 const navigate = mock(() => {});
@@ -44,7 +38,7 @@ mock.module("@courseweb/ui", () => ({
 mock.module("lucide-react", () => ({
   ChevronRight: () => null,
   Star: () => null,
-  Timer: () => null,
+  Timer: actualIcons.Timer,
 }));
 
 const { BusListingItem } = await import("./BusListingItem");
