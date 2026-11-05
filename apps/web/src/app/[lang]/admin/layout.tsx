@@ -5,6 +5,7 @@ import { Badge, Button, cn } from "@courseweb/ui";
 import {
   Activity,
   ArrowLeft,
+  ClipboardList,
   KeyRound,
   Megaphone,
   MessageSquareWarning,
@@ -14,6 +15,7 @@ import {
   Users,
 } from "lucide-react";
 import { useAdminIdentity } from "./api";
+import useDictionary from "@/dictionaries/useDictionary";
 
 /**
  * The admin center's shell.
@@ -34,6 +36,7 @@ const NAV = [
     icon: MessageSquareWarning,
     end: false,
   },
+  { to: "class-pages", label: "", icon: ClipboardList, end: false },
   { to: "clients", label: "OAuth Clients", icon: KeyRound, superuser: true },
   { to: "audit", label: "Audit Log", icon: ScrollText, end: false },
 ] as const;
@@ -60,6 +63,7 @@ const CenteredNotice = ({
 const AdminLayout = () => {
   const { lang } = useParams<{ lang: string }>();
   const auth = useAuth();
+  const dict = useDictionary();
   const { data: identity, isError, status } = useAdminIdentity();
 
   // While signed in, "no answer yet" is not "not staff". The identity query is
@@ -163,7 +167,9 @@ const AdminLayout = () => {
                     }
                   >
                     <Icon className="h-4 w-4" aria-hidden />
-                    {item.label}
+                    {item.to === "class-pages"
+                      ? dict.admin.class_pages.nav
+                      : item.label}
                   </NavLink>
                 </li>
               );

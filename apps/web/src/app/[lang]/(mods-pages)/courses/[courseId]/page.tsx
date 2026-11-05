@@ -17,6 +17,8 @@ import {
   type CourseChangeLabels,
   type FormattedCourseChange,
 } from "./courseChanges";
+import ClassPageSection from "@/components/CourseDetails/ClassPageSection";
+import { getSemesterFromID } from "@/helpers/courses";
 
 const CourseChanges = ({
   changes,
@@ -140,6 +142,13 @@ const CourseDetailPage = () => {
         }
         hasCourseChanges={hasCourseChanges}
       />
+      {courseId.length >= 5 && (
+        <ClassPageSection
+          courseId={courseId}
+          semester={getSemesterFromID(courseId)}
+          lang={lang ?? "zh"}
+        />
+      )}
     </div>
   );
 };
