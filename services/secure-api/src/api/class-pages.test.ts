@@ -10,6 +10,7 @@ const fns = {
   membershipFindUnique: mock(),
   membershipFindFirst: mock(),
   membershipFindMany: mock(),
+  membershipGroupBy: mock(),
   membershipUpsert: mock(),
   membershipUpdate: mock(),
   membershipDeleteMany: mock(),
@@ -42,6 +43,7 @@ const db = {
     findUnique: fns.membershipFindUnique,
     findFirst: fns.membershipFindFirst,
     findMany: fns.membershipFindMany,
+    groupBy: fns.membershipGroupBy,
     upsert: fns.membershipUpsert,
     update: fns.membershipUpdate,
     deleteMany: fns.membershipDeleteMany,
@@ -199,6 +201,7 @@ describe("class pages", () => {
       ["/profile", { method: "DELETE" }],
       ["/memberships", json({ semester: "11510", courseId: "11510-CS101" })],
       ["/memberships/join-all", json({ semester: "11510" })],
+      ["/counts/11510"],
       ["/membership/11510/11510-CS101"],
       ["/membership/11510/11510-CS101", { method: "DELETE" }],
       ["/class/11510/11510-CS101"],
@@ -314,6 +317,75 @@ describe("class pages", () => {
     );
     expect(joined.status).toBe(200);
     expect(await joined.json()).toEqual({ joined: 1 });
+  });
+
+  test("counts only courses in the saved timetable, includes joined state, and excludes either-way blocks", async () => {
+    const countsApp = createClassPagesApp({
+      auth: requestAuth,
+      rateLimit,
+      db,
+      getTimetable: async () => ({ "11510": ["11510-CS101", "11510-EE202"] }),
+    });
+    fns.blockFindMany.mockResolvedValue([
+      { blockerId: "student-1", blockedId: "student-2" },
+      { blockerId: "student-3", blockedId: "student-1" },
+    ]);
+    fns.membershipGroupBy.mockResolvedValue([
+      { courseId: "11510-CS101", userId: "student-1", _count: { _all: 1 } },
+      { courseId: "11510-CS101", userId: "student-4", _count: { _all: 1 } },
+      { courseId: "11510-EE202", userId: "student-4", _count: { _all: 1 } },
+      { courseId: "11510-OUTSIDE", userId: "student-5", _count: { _all: 1 } },
+    ]);
+    const response = await new Hono()
+      .route("/", countsApp)
+      .request("/counts/11510");
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      counts: {
+        "11510-CS101": { members: 2, joined: true },
+        "11510-EE202": { members: 1, joined: false },
+      },
+    });
+    expect(fns.membershipGroupBy).toHaveBeenCalledTimes(1);
+    expect(fns.membershipGroupBy).toHaveBeenCalledWith({
+      by: ["courseId", "userId"],
+      where: {
+        semester: "11510",
+        courseId: { in: ["11510-CS101", "11510-EE202"] },
+        userId: { notIn: ["student-2", "student-3"] },
+      },
+      _count: { _all: true },
+    });
+  });
+
+  test("counts require auth and validate the semester", async () => {
+    const protectedApp = createClassPagesApp({
+      auth: authOnly,
+      rateLimit,
+      db,
+      getTimetable,
+    });
+    const protectedRoot = new Hono().route("/", protectedApp);
+    expect((await protectedRoot.request("/counts/11510")).status).toBe(401);
+    expect((await request("/counts/not-semester")).status).toBe(400);
+    expect(fns.membershipGroupBy).not.toHaveBeenCalled();
+  });
+
+  test("counts cap the stored timetable at 100 course IDs", async () => {
+    const tooManyCoursesApp = createClassPagesApp({
+      auth: requestAuth,
+      rateLimit,
+      db,
+      getTimetable: async () => ({
+        "11510": Array.from({ length: 101 }, (_, index) => `11510-C${index}`),
+      }),
+    });
+    const response = await new Hono()
+      .route("/", tooManyCoursesApp)
+      .request("/counts/11510");
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: "too_many_courses" });
+    expect(fns.membershipGroupBy).not.toHaveBeenCalled();
   });
 
   test("allows only an owner's own eligible membership to change partner seeking or leave", async () => {
@@ -460,7 +532,11 @@ describe("class pages", () => {
       },
       {
         id: U2,
-        user: { userId: "student-2", banned: false, classProfile: profile },
+        user: {
+          userId: "student-2",
+          banned: false,
+          classProfile: { ...profile, departmentVisible: true },
+        },
         lookingForPartners: true,
         selfDeclared: true,
       },
@@ -506,10 +582,101 @@ describe("class pages", () => {
     const body = JSON.parse(raw);
     expect(body.members.map((row: any) => row.id)).toEqual([U1, U4]);
     expect(body.members[0].department).toBeNull();
+    expect(body.locked).toEqual(["department"]);
     expect(body.links.map((row: any) => row.id)).toEqual([U5]);
     expect(raw).not.toContain("student-1");
     expect(raw).not.toContain("userId");
     expect(raw).not.toContain("authorId");
+  });
+
+  test("reciprocity gates each field by both profiles and reports fields locked by the viewer", async () => {
+    fns.profileFindUnique.mockResolvedValue({
+      ...profile,
+      departmentVisible: true,
+      contactsVisible: true,
+      contacts: [{ label: "LINE", value: "@viewer" }],
+    });
+    fns.membershipFindMany.mockResolvedValue([
+      {
+        id: U1,
+        user: {
+          userId: "student-1",
+          banned: false,
+          classProfile: { ...profile, departmentVisible: false },
+        },
+        lookingForPartners: false,
+        selfDeclared: true,
+      },
+      {
+        id: U2,
+        user: {
+          userId: "student-2",
+          banned: false,
+          classProfile: {
+            ...profile,
+            displayNameVisible: false,
+            departmentVisible: false,
+            contactsVisible: false,
+          },
+        },
+        lookingForPartners: false,
+        selfDeclared: true,
+      },
+    ]);
+    const response = await request("/class/11510/11510-CS101");
+    const body = await response.json();
+    const classmate = body.members.find((row: any) => row.id === U2);
+    expect(classmate).toEqual({
+      id: U2,
+      displayName: null,
+      department: null,
+      year: "3",
+      contacts: [],
+      lookingForPartners: false,
+      selfDeclared: true,
+    });
+    expect(body.locked).toEqual([]);
+
+    fns.profileFindUnique.mockResolvedValue({
+      ...profile,
+      displayNameVisible: false,
+      departmentVisible: true,
+      yearVisible: false,
+      contactsVisible: true,
+      contacts: [],
+    });
+    fns.membershipFindMany.mockResolvedValue([
+      {
+        id: U1,
+        user: {
+          userId: "student-1",
+          banned: false,
+          classProfile: profile,
+        },
+        lookingForPartners: false,
+        selfDeclared: true,
+      },
+      {
+        id: U2,
+        user: {
+          userId: "student-2",
+          banned: false,
+          classProfile: { ...profile, departmentVisible: true },
+        },
+        lookingForPartners: false,
+        selfDeclared: true,
+      },
+    ]);
+    const lockedResponse = await request("/class/11510/11510-CS101");
+    const lockedBody = await lockedResponse.json();
+    const reciprocityLocked = lockedBody.members.find(
+      (row: any) => row.id === U2,
+    );
+    expect(reciprocityLocked.displayName).toBeNull();
+    expect(reciprocityLocked.department).toBe("CS");
+    expect(reciprocityLocked.year).toBeNull();
+    expect(reciprocityLocked.contacts).toEqual([]);
+    expect(lockedBody.locked).toEqual(["displayName", "year", "contacts"]);
   });
 
   test("shared links require class access, an HTTPS URL, and author ownership for removal", async () => {

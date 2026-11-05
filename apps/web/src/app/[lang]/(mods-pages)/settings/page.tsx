@@ -31,7 +31,7 @@ import { SettingItem } from "./SettingItem";
 import { MobileQuickNav } from "./MobileQuickNav";
 import { useScrollTracking } from "./useScrollTracking";
 import { AccountSection } from "./AccountSection";
-import ClassPagesSettings from "./ClassPagesSettings";
+import ClassmatesSettingsLink from "@/features/classmates/ClassmatesSettingsLink";
 import { SETTINGS_SECTION_IDS, SETTINGS_SETTING_IDS } from "./sectionHash";
 import {
   SettingsSearchBar,
@@ -485,7 +485,7 @@ const SettingsPage = () => {
                 <SettingsSearchableBlock
                   keywords={Object.values(dict.settings.class_pages)}
                 >
-                  <ClassPagesSettings />
+                  <ClassmatesSettingsLink />
                 </SettingsSearchableBlock>
               </SettingsSection>
 

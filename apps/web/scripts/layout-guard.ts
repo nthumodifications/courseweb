@@ -6,7 +6,9 @@ import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
 const COURSE_ID = "11110EE  231001";
-const WIDTHS = [360, 390, 430, 640, 767, 768, 820, 900, 1024, 1100, 1280, 1440, 1920];
+const WIDTHS = [
+  360, 390, 430, 640, 767, 768, 820, 900, 1024, 1100, 1280, 1440, 1920,
+];
 const HEIGHT = 1000;
 const GLOBAL_DEADLINE_MS = 180_000;
 const API_ORIGIN = "https://api.nthumods.com";
@@ -30,7 +32,7 @@ type GuardRoute = {
   path: (language: Language) => string;
   languages: readonly Language[];
   fixture?: FixtureName;
-  assertion?: "course-title";
+  assertion?: "course-title" | "no-horizontal-overflow";
 };
 
 // Add future pages here. A route owns its path, language matrix, fixture, and optional assertions.
@@ -54,10 +56,27 @@ const ROUTES: readonly GuardRoute[] = [
     path: (language) => `/${language}/timetable`,
     languages: ["zh"],
   },
+  {
+    id: "classmates-profile",
+    path: (language) => `/${language}/classmates`,
+    languages: ["zh", "en"],
+    assertion: "no-horizontal-overflow",
+  },
+  {
+    id: "classmates-course",
+    path: (language) => `/${language}/classmates/11510/11510-CS101`,
+    languages: ["zh", "en"],
+    assertion: "no-horizontal-overflow",
+  },
 ];
 
 const readFixture = async (name: FixtureName): Promise<Fixture> =>
-  JSON.parse(await readFile(join(SCRIPT_DIR, "layout-guard", "fixtures", `${name}.json`), "utf8")) as Fixture;
+  JSON.parse(
+    await readFile(
+      join(SCRIPT_DIR, "layout-guard", "fixtures", `${name}.json`),
+      "utf8",
+    ),
+  ) as Fixture;
 
 const responseFor = (fixture: Fixture, path: string): unknown => {
   const encodedCoursePath = `/course/${encodeURIComponent(COURSE_ID)}`;
@@ -79,14 +98,20 @@ const responseFor = (fixture: Fixture, path: string): unknown => {
   }
 };
 
-const fulfillFixture = async (route: Route, fixture: Fixture): Promise<boolean> => {
+const fulfillFixture = async (
+  route: Route,
+  fixture: Fixture,
+): Promise<boolean> => {
   const requestUrl = new URL(route.request().url());
   const path = decodeURIComponent(requestUrl.pathname);
   let body: unknown;
 
   if (requestUrl.origin === API_ORIGIN) {
     body = responseFor(fixture, path);
-  } else if (requestUrl.origin === SUPABASE_ORIGIN && path === "/rest/v1/courses") {
+  } else if (
+    requestUrl.origin === SUPABASE_ORIGIN &&
+    path === "/rest/v1/courses"
+  ) {
     body = fixture.moduleHistory;
   }
 
@@ -104,16 +129,24 @@ const staticServer = async () => {
   try {
     await readFile(indexPath);
   } catch {
-    throw new Error(`Missing built app at ${join(DIST_DIR, "index.html")}; run bun run build first.`);
+    throw new Error(
+      `Missing built app at ${join(DIST_DIR, "index.html")}; run bun run build first.`,
+    );
   }
 
   const getFilePath = (requestPath: string) => {
     const requestedPath = decodeURIComponent(requestPath);
-    const candidatePath = requestedPath === "/" || !requestedPath.includes(".")
-      ? indexPath
-      : resolve(DIST_DIR, `.${requestedPath}`);
+    const candidatePath =
+      requestedPath === "/" || !requestedPath.includes(".")
+        ? indexPath
+        : resolve(DIST_DIR, `.${requestedPath}`);
     const relativePath = relative(DIST_DIR, candidatePath);
-    if (relativePath === ".." || relativePath.startsWith("..\\") || relativePath.startsWith("../") || /^[A-Za-z]:/.test(relativePath)) {
+    if (
+      relativePath === ".." ||
+      relativePath.startsWith("..\\") ||
+      relativePath.startsWith("../") ||
+      /^[A-Za-z]:/.test(relativePath)
+    ) {
       return undefined;
     }
     return candidatePath;
@@ -121,36 +154,58 @@ const staticServer = async () => {
 
   const contentTypeFor = (filePath: string) => {
     switch (extname(filePath).toLowerCase()) {
-      case ".css": return "text/css";
-      case ".html": return "text/html";
-      case ".js": return "text/javascript";
-      case ".json": return "application/json";
-      case ".map": return "application/json";
-      case ".svg": return "image/svg+xml";
-      case ".png": return "image/png";
+      case ".css":
+        return "text/css";
+      case ".html":
+        return "text/html";
+      case ".js":
+        return "text/javascript";
+      case ".json":
+        return "application/json";
+      case ".map":
+        return "application/json";
+      case ".svg":
+        return "image/svg+xml";
+      case ".png":
+        return "image/png";
       case ".jpg":
-      case ".jpeg": return "image/jpeg";
-      case ".webp": return "image/webp";
-      case ".woff": return "font/woff";
-      case ".woff2": return "font/woff2";
-      default: return "application/octet-stream";
+      case ".jpeg":
+        return "image/jpeg";
+      case ".webp":
+        return "image/webp";
+      case ".woff":
+        return "font/woff";
+      case ".woff2":
+        return "font/woff2";
+      default:
+        return "application/octet-stream";
     }
   };
 
   const server = createServer(async (request, response) => {
-    const candidatePath = getFilePath(new URL(request.url ?? "/", "http://127.0.0.1").pathname) ?? indexPath;
+    const candidatePath =
+      getFilePath(new URL(request.url ?? "/", "http://127.0.0.1").pathname) ??
+      indexPath;
     try {
-      response.writeHead(200, { "Content-Type": contentTypeFor(candidatePath) });
+      response.writeHead(200, {
+        "Content-Type": contentTypeFor(candidatePath),
+      });
       response.end(await readFile(candidatePath));
     } catch {
       response.writeHead(404);
       response.end("Not found");
     }
   });
-  await new Promise<void>((resolveServer) => server.listen(0, "127.0.0.1", resolveServer));
+  await new Promise<void>((resolveServer) =>
+    server.listen(0, "127.0.0.1", resolveServer),
+  );
   const address = server.address();
-  if (!address || typeof address === "string") throw new Error("Static server did not bind a port");
-  return { url: new URL(`http://127.0.0.1:${address.port}`), stop: () => server.close() };
+  if (!address || typeof address === "string")
+    throw new Error("Static server did not bind a port");
+  return {
+    url: new URL(`http://127.0.0.1:${address.port}`),
+    stop: () => server.close(),
+  };
 };
 
 const checkPage = async (page: Page, assertion?: GuardRoute["assertion"]) =>
@@ -170,7 +225,8 @@ const checkPage = async (page: Page, assertion?: GuardRoute["assertion"]) =>
 
     const failures: Array<Record<string, unknown>> = [];
     for (const element of document.querySelectorAll("*")) {
-      if (!visible(element) || element.closest("[data-layout-guard-ignore]")) continue;
+      if (!visible(element) || element.closest("[data-layout-guard-ignore]"))
+        continue;
       const directText = Array.from(element.childNodes)
         .filter((node) => node.nodeType === Node.TEXT_NODE)
         .map((node) => node.textContent ?? "")
@@ -181,11 +237,17 @@ const checkPage = async (page: Page, assertion?: GuardRoute["assertion"]) =>
 
       const style = getComputedStyle(element);
       const fontSize = Number.parseFloat(style.fontSize);
-      const lineHeight = style.lineHeight === "normal"
-        ? fontSize * 1.2
-        : Number.parseFloat(style.lineHeight);
+      const lineHeight =
+        style.lineHeight === "normal"
+          ? fontSize * 1.2
+          : Number.parseFloat(style.lineHeight);
       const box = element.getBoundingClientRect();
-      if (fontSize >= 14 && lineHeight > 0 && box.width < 4 * fontSize && box.height > 3 * lineHeight) {
+      if (
+        fontSize >= 14 &&
+        lineHeight > 0 &&
+        box.width < 4 * fontSize &&
+        box.height > 3 * lineHeight
+      ) {
         failures.push({
           kind: "crushed-text",
           tag: element.tagName.toLowerCase(),
@@ -198,14 +260,34 @@ const checkPage = async (page: Page, assertion?: GuardRoute["assertion"]) =>
       }
     }
 
+    if (
+      pageAssertion === "no-horizontal-overflow" &&
+      document.documentElement.scrollWidth > window.innerWidth
+    ) {
+      failures.push({
+        kind: "horizontal-overflow",
+        viewportWidth: window.innerWidth,
+        documentWidth: document.documentElement.scrollWidth,
+      });
+    }
+
     // The known regression is the in-between desktop band; narrow layouts stack
     // this content and wide layouts get enough room for the sibling chip rows.
-    if (pageAssertion === "course-title" && window.innerWidth >= 768 && window.innerWidth <= 1200) {
-      const header = document.querySelector('[data-course-detail-section="header"]');
+    if (
+      pageAssertion === "course-title" &&
+      window.innerWidth >= 768 &&
+      window.innerWidth <= 1200
+    ) {
+      const header = document.querySelector(
+        '[data-course-detail-section="header"]',
+      );
       const title = header?.querySelector("h1");
       const row = header?.querySelector(":scope > div");
       if (!title || !row) {
-        failures.push({ kind: "course-title-missing", selector: '[data-course-detail-section="header"] h1' });
+        failures.push({
+          kind: "course-title-missing",
+          selector: '[data-course-detail-section="header"] h1',
+        });
       } else {
         const titleBox = title.getBoundingClientRect();
         const rowBox = row.getBoundingClientRect();
@@ -215,8 +297,16 @@ const checkPage = async (page: Page, assertion?: GuardRoute["assertion"]) =>
             kind: "course-title-width",
             tag: title.tagName.toLowerCase(),
             classes: title.className || "",
-            text: (title.textContent ?? "").trim().replace(/\s+/g, " ").slice(0, 40),
-            box: { x: titleBox.x, y: titleBox.y, width: titleBox.width, height: titleBox.height },
+            text: (title.textContent ?? "")
+              .trim()
+              .replace(/\s+/g, " ")
+              .slice(0, 40),
+            box: {
+              x: titleBox.x,
+              y: titleBox.y,
+              width: titleBox.width,
+              height: titleBox.height,
+            },
             minimumWidth,
             headerWidth: rowBox.width,
           });
@@ -226,7 +316,8 @@ const checkPage = async (page: Page, assertion?: GuardRoute["assertion"]) =>
     return failures;
   }, assertion);
 
-const routeName = (route: GuardRoute, language: Language) => `${route.id}-${language}`;
+const routeName = (route: GuardRoute, language: Language) =>
+  `${route.id}-${language}`;
 
 const launchBrowser = async () => {
   const launchOptions = process.env.PLAYWRIGHT_CHROMIUM_PATH
@@ -234,11 +325,19 @@ const launchBrowser = async () => {
     : { channel: "chrome" as const, headless: true };
 
   const browser = await chromium.launch(launchOptions);
-  return { browser, close: async () => { await browser.close(); } };
+  return {
+    browser,
+    close: async () => {
+      await browser.close();
+    },
+  };
 };
 
 const main = async () => {
-  const [production, stress] = await Promise.all([readFixture("production"), readFixture("stress")]);
+  const [production, stress] = await Promise.all([
+    readFixture("production"),
+    readFixture("stress"),
+  ]);
   const fixtures: Record<FixtureName, Fixture> = { production, stress };
   serverHandle = await staticServer();
   const server = serverHandle;
@@ -263,7 +362,8 @@ const main = async () => {
           await route.continue();
           return;
         }
-        if (activeFixture && await fulfillFixture(route, activeFixture)) return;
+        if (activeFixture && (await fulfillFixture(route, activeFixture)))
+          return;
         await route.abort();
       });
 
@@ -274,14 +374,22 @@ const main = async () => {
             const page = await context.newPage();
             const name = routeName(route, language);
             try {
-              await page.goto(`${server.url.origin}${route.path(language)}`, { waitUntil: "domcontentloaded" });
+              await page.goto(`${server.url.origin}${route.path(language)}`, {
+                waitUntil: "domcontentloaded",
+              });
               if (route.assertion === "course-title") {
-                await page.waitForSelector('[data-course-detail-section="header"] h1', { state: "attached", timeout: 10_000 });
+                await page.waitForSelector(
+                  '[data-course-detail-section="header"] h1',
+                  { state: "attached", timeout: 10_000 },
+                );
               }
               const pageFailures = await checkPage(page, route.assertion);
               checked += 1;
               if (pageFailures.length > 0) {
-                const screenshotPath = join(ARTIFACT_DIR, `${name}-${width}.png`);
+                const screenshotPath = join(
+                  ARTIFACT_DIR,
+                  `${name}-${width}.png`,
+                );
                 await page.screenshot({ path: screenshotPath, fullPage: true });
                 for (const failure of pageFailures) {
                   const detail = JSON.stringify(failure);
@@ -292,7 +400,9 @@ const main = async () => {
               }
             } catch (error) {
               const screenshotPath = join(ARTIFACT_DIR, `${name}-${width}.png`);
-              await page.screenshot({ path: screenshotPath, fullPage: true }).catch(() => undefined);
+              await page
+                .screenshot({ path: screenshotPath, fullPage: true })
+                .catch(() => undefined);
               const message = `FAIL route=${name} width=${width} error=${error instanceof Error ? error.message : String(error)} screenshot=${screenshotPath}`;
               failures.push(message);
               console.error(message);
@@ -312,10 +422,14 @@ const main = async () => {
 
   const seconds = ((performance.now() - startedAt) / 1000).toFixed(1);
   if (failures.length > 0) {
-    console.error(`Layout guard failed: ${failures.length} invariant failure(s) across ${checked} page/width checks in ${seconds}s.`);
+    console.error(
+      `Layout guard failed: ${failures.length} invariant failure(s) across ${checked} page/width checks in ${seconds}s.`,
+    );
     process.exitCode = 1;
   } else {
-    console.log(`Layout guard passed: ${checked} page/width checks in ${seconds}s.`);
+    console.log(
+      `Layout guard passed: ${checked} page/width checks in ${seconds}s.`,
+    );
   }
 };
 

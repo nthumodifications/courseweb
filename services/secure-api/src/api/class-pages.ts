@@ -26,6 +26,7 @@ type ClassPagesDependencies = {
 };
 
 const semesterSchema = z.string().regex(/^\d{5}$/u);
+const semesterParam = z.object({ semester: semesterSchema });
 const courseIdSchema = z.string().trim().min(1).max(80);
 const semesterCourse = z.object({
   semester: semesterSchema,
@@ -118,16 +119,49 @@ const toProfile = (profile: any, blocks: any[] = []) =>
       }
     : null;
 
-const publicMember = (membership: any) => {
+const lockedFieldsFor = (profile: any) => {
+  if (!profile) return [];
+  const locked: Array<"displayName" | "department" | "year" | "contacts"> = [];
+  if (!profile.displayNameVisible) locked.push("displayName");
+  if (!profile.departmentVisible) locked.push("department");
+  if (!profile.yearVisible) locked.push("year");
+  if (
+    !profile.contactsVisible ||
+    !Array.isArray(profile.contacts) ||
+    profile.contacts.length === 0
+  ) {
+    locked.push("contacts");
+  }
+  return locked;
+};
+
+const publicMember = (
+  membership: any,
+  viewerId: string,
+  viewerProfile: any,
+) => {
   const profile = membership.user?.classProfile;
   if (!profile) return null;
+  const isSelf = membership.user.userId === viewerId;
+  const viewerLocked = new Set(lockedFieldsFor(viewerProfile));
   return {
     id: membership.id,
-    displayName: profile.displayNameVisible ? profile.displayName : null,
-    department: profile.departmentVisible ? profile.department : null,
-    year: profile.yearVisible ? profile.year : null,
+    displayName:
+      profile.displayNameVisible && (isSelf || !viewerLocked.has("displayName"))
+        ? profile.displayName
+        : null,
+    department:
+      profile.departmentVisible && (isSelf || !viewerLocked.has("department"))
+        ? profile.department
+        : null,
+    year:
+      profile.yearVisible && (isSelf || !viewerLocked.has("year"))
+        ? profile.year
+        : null,
     contacts:
-      profile.contactsVisible && Array.isArray(profile.contacts)
+      profile.contactsVisible &&
+      (isSelf || !viewerLocked.has("contacts")) &&
+      Array.isArray(profile.contacts)
         ? profile.contacts
         : [],
     lookingForPartners: membership.lookingForPartners,
@@ -376,6 +410,67 @@ export const createClassPagesApp = ({
     },
   );
 
+  app.get(
+    "/counts/:semester",
+    auth,
+    zValidator("param", semesterParam, invalidInput),
+    async (c) => {
+      const userId = c.get("user").userId;
+      const { semester } = c.req.valid("param");
+      const timetable = await getTimetable(userId, c);
+      const storedIds =
+        typeof timetable === "object" && timetable !== null
+          ? (timetable as Record<string, unknown>)[semester]
+          : undefined;
+      if (!Array.isArray(storedIds) || storedIds.length === 0) {
+        return c.json({
+          counts: {} as Record<string, { members: number; joined: boolean }>,
+        });
+      }
+      if (
+        storedIds.length > 100 ||
+        storedIds.some((id) => typeof id !== "string")
+      ) {
+        return c.json({ error: "too_many_courses" }, 400);
+      }
+      const courseIds = [...new Set(storedIds as string[])];
+      const counts: Record<string, { members: number; joined: boolean }> =
+        Object.fromEntries(
+          courseIds.map((courseId) => [
+            courseId,
+            { members: 0, joined: false },
+          ]),
+        );
+      const blocks = await db.classPageBlock.findMany({
+        where: {
+          OR: [{ blockerId: userId }, { blockedId: userId }],
+        },
+        select: { blockerId: true, blockedId: true },
+      });
+      const blockedUserIds = new Set(
+        blocks.map((block: any) =>
+          block.blockerId === userId ? block.blockedId : block.blockerId,
+        ),
+      );
+      const groups = await db.classPageMembership.groupBy({
+        by: ["courseId", "userId"],
+        where: {
+          semester,
+          courseId: { in: courseIds },
+          userId: { notIn: [...blockedUserIds] },
+        },
+        _count: { _all: true },
+      });
+      for (const group of groups) {
+        const count = counts[group.courseId];
+        if (!count) continue;
+        count.members += group._count._all;
+        if (group.userId === userId) count.joined = true;
+      }
+      return c.json({ counts });
+    },
+  );
+
   const requireClassAccess = async (
     c: Context<SecureEnv>,
     semester: string,
@@ -401,12 +496,15 @@ export const createClassPagesApp = ({
       const access = await requireClassAccess(c, semester, courseId);
       if (!access) return c.json({ error: "not_available" }, 404);
 
-      const blocks = await db.classPageBlock.findMany({
-        where: {
-          OR: [{ blockerId: access.userId }, { blockedId: access.userId }],
-        },
-        select: { blockerId: true, blockedId: true },
-      });
+      const [blocks, viewerProfile] = await Promise.all([
+        db.classPageBlock.findMany({
+          where: {
+            OR: [{ blockerId: access.userId }, { blockedId: access.userId }],
+          },
+          select: { blockerId: true, blockedId: true },
+        }),
+        db.classPageProfile.findUnique({ where: { userId: access.userId } }),
+      ]);
       const blockedUserIds = new Set(
         blocks.map((block: any) =>
           block.blockerId === access.userId ? block.blockedId : block.blockerId,
@@ -426,7 +524,11 @@ export const createClassPagesApp = ({
           (membership.user.userId === access.userId ||
             !blockedUserIds.has(membership.user.userId)),
       );
-      const members = visible.map(publicMember).filter(Boolean);
+      const members = visible
+        .map((membership: any) =>
+          publicMember(membership, access.userId, viewerProfile),
+        )
+        .filter(Boolean);
       const visibleMembershipIds = new Set(
         visible.map((membership: any) => membership.id),
       );
@@ -437,6 +539,7 @@ export const createClassPagesApp = ({
       });
       return c.json({
         members,
+        locked: lockedFieldsFor(viewerProfile),
         links: links
           .filter((link: any) => visibleMembershipIds.has(link.membershipId))
           .map((link: any) => ({

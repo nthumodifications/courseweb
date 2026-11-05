@@ -31,8 +31,15 @@ export type ClassPageLink = {
   authorMembershipId: string;
 };
 
+export type ClassPageLockedField =
+  | "displayName"
+  | "department"
+  | "year"
+  | "contacts";
+
 export type ClassPageData = {
   members: ClassPageMember[];
+  locked: ClassPageLockedField[];
   links: ClassPageLink[];
 };
 export type ClassPageMembership = {

@@ -12,7 +12,8 @@ The service uses the existing secure-api user storage path to check the signed-i
 
 - Only the profile owner can view or edit the complete profile and visibility settings.
 - A class member can see the opted-in members and visible shared links for a course only while that course is in their own server-stored timetable and they have joined that offering.
-- Classmates see only profile fields whose visibility flags are on. Hidden fields are omitted from the class-page response.
+- Each field uses reciprocity: a viewer sees a classmate's name, department, year, or contacts only when the classmate made that field visible and the viewer also made the same field visible. Contacts additionally require the viewer to have at least one contact. Otherwise the response uses `null` for scalar fields and an empty array for contacts. The response's `locked` list names fields the viewer has hidden (or has no contact to share).
+- Per-semester counts include only course IDs in the viewer's stored timetable, count memberships visible after blocks in either direction are applied, and mark whether the viewer has joined. The counts endpoint caps stored course IDs at 100 and uses one grouped membership query.
 - Class-page responses use opaque membership and link IDs. They do not return account IDs, student IDs, or email addresses.
 - A block hides both students from each other's member lists and removes their links from each other's class pages.
 - Admin staff can review report details and take moderation actions. Admin actions are recorded in `AdminAuditLog`.
