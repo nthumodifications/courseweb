@@ -709,10 +709,15 @@ export class LocalSearchEngine {
 
   private async loadChunk(semester: string): Promise<LoadedChunk> {
     this.setStatus("loading");
-    const source = await this.downloadChunk(semester);
+    // Start the optional alias request alongside the chunk download so a slow
+    // auth server never delays the first search by more than the chunk itself.
     if (this.loadShortNames) {
+      this.shortNamesPromise ??= this.loadShortNames();
+      this.shortNamesPromise.catch(() => {});
+    }
+    const source = await this.downloadChunk(semester);
+    if (this.shortNamesPromise) {
       try {
-        this.shortNamesPromise ??= this.loadShortNames();
         const aliases = await this.shortNamesPromise;
         const aliasMap = new Map<string, string[]>();
         for (const alias of aliases) {
