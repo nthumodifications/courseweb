@@ -21,6 +21,7 @@ import { ChevronRight, Eye, EyeOff, Plus, Trash2 } from "lucide-react";
 import useDictionary from "@/dictionaries/useDictionary";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
+import { toPrettySemester } from "@/helpers/semester";
 import {
   classPageKeys,
   classmatesPath,
@@ -33,6 +34,7 @@ import {
   type ClassPageContact,
   type ClassPageProfile,
 } from "@/lib/class-pages";
+import { getLinkHost } from "./classmatesLogic";
 
 type ProfileDraft = Omit<ClassPageProfile, "blocks">;
 type VisibilityKey =
@@ -68,11 +70,13 @@ const ProfileVisibility = ({
   label,
   enabled,
   onChange,
+  className,
 }: {
   visible: boolean;
   label: string;
   enabled: boolean;
   onChange: () => void;
+  className?: string;
 }) => {
   const copy = useDictionary().settings.class_pages;
   const Icon = visible ? Eye : EyeOff;
@@ -81,6 +85,7 @@ const ProfileVisibility = ({
       type="button"
       variant="ghost"
       size="icon"
+      className={className}
       disabled={!enabled}
       aria-label={`${visible ? copy.hide_field : copy.show_field}: ${label}`}
       title={`${visible ? copy.visible : copy.only_me}: ${label}`}
@@ -292,7 +297,10 @@ const ClassmatesProfilePage = () => {
                     className="rounded-full border border-border px-2 py-1 text-sm"
                     key={`${contact.label}-${index}`}
                   >
-                    {contact.label}
+                    {contact.label}{" "}
+                    {contact.value.startsWith("https://")
+                      ? getLinkHost(contact.value)
+                      : contact.value}
                   </span>
                 ))}
               </div>
@@ -440,6 +448,7 @@ const ClassmatesProfilePage = () => {
               label={copy.contacts}
               enabled={editing}
               onChange={() => setVisibility("contactsVisible")}
+              className={editing ? undefined : "h-6 w-10 self-start"}
             />
           </div>
         </div>
@@ -484,7 +493,9 @@ const ClassmatesProfilePage = () => {
       <section className="flex flex-col gap-2">
         <h2 className="font-bold">
           {copy.my_classes}{" "}
-          <span className="text-muted-foreground">{semester}</span>
+          <span className="text-muted-foreground">
+            {semester ? toPrettySemester(semester) : ""}
+          </span>
         </h2>
         {timetable.error ? (
           <div className="flex flex-wrap items-center gap-2 py-2">

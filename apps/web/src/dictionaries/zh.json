@@ -1488,6 +1488,7 @@
     },
     "class_pages": {
       "title": "課程同學",
+      "edit_profile": "編輯個人檔案",
       "signed_out": "登入以管理課程個人資料。",
       "loading": "載入中…",
       "error": "無法儲存資料，請再試一次。",

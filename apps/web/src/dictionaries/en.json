@@ -1488,6 +1488,7 @@
     },
     "class_pages": {
       "title": "Class pages",
+      "edit_profile": "Edit profile",
       "signed_out": "Sign in to manage your class profile.",
       "loading": "Loading…",
       "error": "Could not save this profile. Try again.",

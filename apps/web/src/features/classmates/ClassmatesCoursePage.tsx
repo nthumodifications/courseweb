@@ -41,6 +41,7 @@ import useDictionary from "@/dictionaries/useDictionary";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
 import client from "@/config/api";
+import { toPrettySemester } from "@/helpers/semester";
 import { classmatesPath } from "@/lib/class-pages";
 import {
   addClassPageLink,
@@ -464,6 +465,7 @@ const ClassmatesCoursePage = () => {
     [page?.members],
   );
   const course = courseQuery.data;
+  const courseCode = course ? course.department + " " + course.course : null;
   const courseName = course
     ? lang === "en"
       ? course.name_en || course.name_zh
@@ -510,16 +512,15 @@ const ClassmatesCoursePage = () => {
     <div className="flex flex-col gap-1 py-4">
       <h1 className="font-bold">{courseName}</h1>
       <p className="text-sm text-muted-foreground">
-        {courseId} · {semester}
-        {page &&
-          ` · ${copy.members_count.replace("{count}", String(page.members.length))}`}
+        {[
+          courseCode,
+          semester ? toPrettySemester(semester) : null,
+          page &&
+            copy.members_count.replace("{count}", String(page.members.length)),
+        ]
+          .filter(Boolean)
+          .join(" · ")}
       </p>
-      {courseQuery.error && (
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="text-sm text-destructive">{copy.error}</p>
-          {retryButton(() => courseQuery.refetch())}
-        </div>
-      )}
     </div>
   );
 
@@ -605,7 +606,6 @@ const ClassmatesCoursePage = () => {
     return (
       <div className="flex flex-col gap-2 px-4 md:px-6">
         {courseHeading}
-        <p className="text-sm text-muted-foreground">{copy.self_declared}</p>
         {joinMutation.error && (
           <p className="text-sm text-destructive">{copy.error}</p>
         )}
@@ -644,44 +644,49 @@ const ClassmatesCoursePage = () => {
   return (
     <div className="flex flex-col gap-4 px-4 md:px-6">
       {courseHeading}
-      <p className="text-sm text-muted-foreground">{copy.self_declared}</p>
 
-      <div className="flex flex-wrap items-center gap-4 border-y border-border py-2">
-        <span className="text-sm font-medium">{copy.joined_status}</span>
-        <label className="flex min-h-10 items-center gap-2 text-sm">
+      <div className="flex flex-col divide-y divide-border border-y border-border">
+        <label className="flex min-h-12 items-center justify-between gap-3 text-sm font-medium">
+          <span>{copy.looking_for_partners}</span>
           <Switch
             checked={membership?.lookingForPartners ?? false}
             onCheckedChange={(value) => partnerMutation.mutate(value)}
             disabled={partnerMutation.isPending}
+            aria-label={copy.looking_for_partners}
           />
-          <span>{copy.looking_for_partners}</span>
         </label>
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="ghost" disabled={leaveMutation.isPending}>
-              {copy.leave}
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle className="text-base">
-                {copy.leave_class_confirm_title}
-              </AlertDialogTitle>
-              <AlertDialogDescription className="leading-relaxed">
-                {copy.leave_class_confirm_description}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>{dict.common.cancel}</AlertDialogCancel>
-              <AlertDialogAction
-                className="bg-destructive text-destructive-foreground"
-                onClick={() => leaveMutation.mutate()}
+        <div className="flex min-h-12 items-center">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="ghost"
+                className="h-10 justify-start text-destructive hover:text-destructive"
+                disabled={leaveMutation.isPending}
               >
                 {copy.leave}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle className="text-base">
+                  {copy.leave_class_confirm_title}
+                </AlertDialogTitle>
+                <AlertDialogDescription className="leading-relaxed">
+                  {copy.leave_class_confirm_description}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>{dict.common.cancel}</AlertDialogCancel>
+                <AlertDialogAction
+                  className="bg-destructive text-destructive-foreground"
+                  onClick={() => leaveMutation.mutate()}
+                >
+                  {copy.leave}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
       </div>
       {(partnerMutation.error || leaveMutation.error) && (
         <p className="text-sm text-destructive">{copy.error}</p>
@@ -697,15 +702,15 @@ const ClassmatesCoursePage = () => {
             className="underline underline-offset-2"
             to={classmatesPath(lang)}
           >
-            {profileCopy.title}
+            {profileCopy.edit_profile}
           </Link>
         </p>
       )}
 
       <section className="flex flex-col gap-2">
         <h2 className="font-bold">{copy.members}</h2>
-        <div className="flex flex-col gap-2">
-          <label className="flex min-w-0 items-center">
+        <div className="flex flex-col gap-2 md:flex-row md:items-center">
+          <label className="flex min-w-0 items-center md:flex-1">
             <Input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
@@ -713,10 +718,11 @@ const ClassmatesCoursePage = () => {
               aria-label={copy.search_placeholder}
             />
           </label>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex min-w-0 flex-nowrap items-center gap-1 md:flex-none md:gap-2">
             <Button
               size="sm"
               variant={!partnersOnly ? "default" : "outline"}
+              className="whitespace-nowrap px-2 text-xs sm:px-3 sm:text-sm"
               aria-pressed={!partnersOnly}
               onClick={() => setPartnersOnly(false)}
             >
@@ -725,6 +731,7 @@ const ClassmatesCoursePage = () => {
             <Button
               size="sm"
               variant={partnersOnly ? "default" : "outline"}
+              className="whitespace-nowrap px-2 text-xs sm:px-3 sm:text-sm"
               aria-pressed={partnersOnly}
               onClick={() => setPartnersOnly(true)}
             >
@@ -732,7 +739,7 @@ const ClassmatesCoursePage = () => {
             </Button>
             {departments.length > 1 && (
               <select
-                className="h-10 min-w-32 rounded-md border border-border bg-background px-2 text-sm"
+                className="h-9 min-w-0 max-w-32 flex-1 rounded-md border border-border bg-background px-2 text-xs sm:h-10 sm:min-w-32 sm:flex-none sm:text-sm"
                 aria-label={copy.department_filter}
                 value={department}
                 onChange={(event) => setDepartment(event.target.value)}
@@ -745,7 +752,7 @@ const ClassmatesCoursePage = () => {
                 ))}
               </select>
             )}
-            <span className="ml-auto whitespace-nowrap text-sm text-muted-foreground">
+            <span className="ml-auto shrink-0 whitespace-nowrap text-xs text-muted-foreground sm:text-sm">
               {copy.results_count
                 .replace("{shown}", String(members.length))
                 .replace("{total}", String(page.members.length))}
@@ -771,6 +778,7 @@ const ClassmatesCoursePage = () => {
             ))}
           </div>
         )}
+        <p className="text-xs text-muted-foreground">{copy.self_declared}</p>
       </section>
 
       {selectedMember && (

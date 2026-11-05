@@ -35,6 +35,24 @@ const members: ClassPageMember[] = [
     lookingForPartners: true,
     selfDeclared: true,
   },
+  {
+    id: "d",
+    displayName: null,
+    department: "CS",
+    year: "1",
+    contacts: [],
+    lookingForPartners: false,
+    selfDeclared: true,
+  },
+  {
+    id: "e",
+    displayName: "Amy",
+    department: "CS",
+    year: "3",
+    contacts: [],
+    lookingForPartners: false,
+    selfDeclared: true,
+  },
 ];
 
 describe("classmate list logic", () => {
@@ -57,15 +75,15 @@ describe("classmate list logic", () => {
         department: "CS",
         hiddenName: "Classmate",
       }).map((member) => member.id),
-    ).toEqual(["c", "a"]);
+    ).toEqual(["c", "e", "a", "d"]);
   });
 
-  test("sorts partner seekers first, then by the visible name", () => {
+  test("sorts partner seekers first, named members A to Z, then hidden names", () => {
     expect(
       filterAndSortClassmates(members, { hiddenName: "Classmate" }).map(
         (member) => member.id,
       ),
-    ).toEqual(["b", "c", "a"]);
+    ).toEqual(["b", "c", "e", "a", "d"]);
   });
 
   test("uses a fallback initial and extracts the shared-link host", () => {

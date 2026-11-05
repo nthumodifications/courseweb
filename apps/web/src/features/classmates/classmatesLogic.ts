@@ -26,9 +26,9 @@ export const filterAndSortClassmates = (
       if (left.lookingForPartners !== right.lookingForPartners) {
         return left.lookingForPartners ? -1 : 1;
       }
-      return (left.displayName ?? options.hiddenName).localeCompare(
-        right.displayName ?? options.hiddenName,
-      );
+      if (left.displayName === null) return right.displayName === null ? 0 : 1;
+      if (right.displayName === null) return -1;
+      return left.displayName.localeCompare(right.displayName);
     });
 };
 

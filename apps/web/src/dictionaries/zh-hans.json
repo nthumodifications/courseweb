@@ -1488,6 +1488,7 @@
     },
     "class_pages": {
       "title": "课程同学",
+      "edit_profile": "编辑个人文件",
       "signed_out": "登录以管理课程个人数据。",
       "loading": "加载中…",
       "error": "无法保存数据，请再试一次。",
