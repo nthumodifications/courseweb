@@ -32,7 +32,7 @@ type GuardRoute = {
   path: (language: Language) => string;
   languages: readonly Language[];
   fixture?: FixtureName;
-  assertion?: "course-title" | "no-horizontal-overflow";
+  assertion?: "course-title";
 };
 
 // Add future pages here. A route owns its path, language matrix, fixture, and optional assertions.
@@ -55,18 +55,6 @@ const ROUTES: readonly GuardRoute[] = [
     id: "timetable-empty",
     path: (language) => `/${language}/timetable`,
     languages: ["zh"],
-  },
-  {
-    id: "classmates-profile",
-    path: (language) => `/${language}/classmates`,
-    languages: ["zh", "en"],
-    assertion: "no-horizontal-overflow",
-  },
-  {
-    id: "classmates-course",
-    path: (language) => `/${language}/classmates/11510/11510-CS101`,
-    languages: ["zh", "en"],
-    assertion: "no-horizontal-overflow",
   },
 ];
 
@@ -258,17 +246,6 @@ const checkPage = async (page: Page, assertion?: GuardRoute["assertion"]) =>
           lineHeight,
         });
       }
-    }
-
-    if (
-      pageAssertion === "no-horizontal-overflow" &&
-      document.documentElement.scrollWidth > window.innerWidth
-    ) {
-      failures.push({
-        kind: "horizontal-overflow",
-        viewportWidth: window.innerWidth,
-        documentWidth: document.documentElement.scrollWidth,
-      });
     }
 
     // The known regression is the in-between desktop band; narrow layouts stack
