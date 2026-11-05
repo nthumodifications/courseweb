@@ -196,7 +196,11 @@ export const ClassPageSection = ({
   });
 
   const sectionClass = "flex flex-col gap-4 border-t border-border py-4";
-  const heading = <h2 className="font-bold">{copy.title}</h2>;
+  const heading = (
+    <h3 className="font-bold" id="class-page">
+      {copy.title}
+    </h3>
+  );
   if (accessState === "sign_in" || !token)
     return (
       <section className={sectionClass}>

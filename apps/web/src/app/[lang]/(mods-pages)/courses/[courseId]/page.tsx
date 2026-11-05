@@ -140,15 +140,17 @@ const CourseDetailPage = () => {
             />
           ) : null
         }
+        classPage={
+          courseId.length >= 5 ? (
+            <ClassPageSection
+              courseId={courseId}
+              semester={getSemesterFromID(courseId)}
+              lang={lang ?? "zh"}
+            />
+          ) : null
+        }
         hasCourseChanges={hasCourseChanges}
       />
-      {courseId.length >= 5 && (
-        <ClassPageSection
-          courseId={courseId}
-          semester={getSemesterFromID(courseId)}
-          lang={lang ?? "zh"}
-        />
-      )}
     </div>
   );
 };

@@ -230,6 +230,7 @@ const CourseDetailContainer = ({
   bottomAware = false,
   modal = false,
   courseChanges,
+  classPage,
   hasCourseChanges = false,
 }: {
   lang: Language;
@@ -237,6 +238,7 @@ const CourseDetailContainer = ({
   bottomAware?: boolean;
   modal?: boolean;
   courseChanges?: ReactNode;
+  classPage?: ReactNode;
   hasCourseChanges?: boolean;
 }) => {
   const dict = useDictionary();
@@ -920,6 +922,7 @@ const CourseDetailContainer = ({
                 </div>
               </CourseDetailSection>
               {courseChanges}
+              {classPage}
             </div>
             <div className="w-full lg:w-[284px] flex flex-col gap-4">
               <CourseDetailSection id="toc">
