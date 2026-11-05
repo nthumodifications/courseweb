@@ -19,6 +19,8 @@ import { event } from "@/lib/gtag";
 
 import { useQuery } from "@tanstack/react-query";
 import useSyncedStorage from "../useSyncedStorage";
+import { useAuth } from "react-oidc-context";
+import { leaveDroppedCourse } from "@/lib/class-pages";
 import {
   mergeCourseStorage,
   mergeCustomTimetableStorage,
@@ -216,6 +218,7 @@ const userTimetableContext = createContext<
 });
 
 const useUserTimetableProvider = (loadCourse = true) => {
+  const auth = useAuth();
   const [
     courses,
     setStoredCourses,
@@ -502,6 +505,16 @@ const useUserTimetableProvider = (loadCourse = true) => {
 
   const deleteCourse = (courseID: string | string[]) => {
     const courseIDs = Array.isArray(courseID) ? courseID : [courseID];
+    // A dropped course also leaves its class page. Best effort: the server
+    // prunes again when the user next opens that page.
+    const accessToken = auth.user?.access_token;
+    if (accessToken) {
+      courseIDs.forEach((id) => {
+        const semester = getSemesterFromID(id);
+        if (semester)
+          void leaveDroppedCourse(accessToken, semester, id).catch(() => {});
+      });
+    }
     setCourses((courses) => {
       //get first 5 characters of courseID
       let oldCourses = { ...courses };

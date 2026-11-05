@@ -43,6 +43,13 @@ model User {
   shortNameRevisions    CourseShortNameRevision[]
   reviewReports         CourseReviewReport[] @relation("CourseReviewReportReporter")
   resolvedReviewReports CourseReviewReport[] @relation("CourseReviewReportResolver")
+  classProfile            ClassPageProfile?
+  classMemberships        ClassPageMembership[]
+  classPageLinks          ClassPageLink[]
+  classPageReports        ClassPageReport[]     @relation("ClassPageReportReporter")
+  resolvedClassReports    ClassPageReport[]     @relation("ClassPageReportResolver")
+  classPageBlocksMade     ClassPageBlock[]      @relation("ClassPageBlocker")
+  classPageBlocksReceived ClassPageBlock[]      @relation("ClassPageBlocked")
 }
 
 model UserStorage {
@@ -266,6 +273,112 @@ model CourseReviewReport {
   @@unique([reviewId, reporterId])
   @@index([reviewId])
   @@index([resolvedAt])
+}
+
+model ClassPageProfile {
+  id                 String   @id @default(uuid())
+  userId             String   @unique
+  displayName        String
+  department         String
+  year               String
+  contacts           Json     @default("[]")
+  displayNameVisible Boolean  @default(true)
+  departmentVisible  Boolean  @default(true)
+  yearVisible        Boolean  @default(true)
+  contactsVisible    Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  user               User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  memberships        ClassPageMembership[]
+}
+
+model ClassPageMembership {
+  id                 String            @id @default(uuid())
+  userId             String
+  profileId          String
+  semester           String
+  courseId           String
+  selfDeclared       Boolean           @default(true)
+  lookingForPartners Boolean           @default(false)
+  createdAt          DateTime          @default(now())
+  user               User              @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  profile            ClassPageProfile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  links              ClassPageLink[]
+  reports            ClassPageReport[] @relation("ClassPageMemberReports")
+
+  @@unique([userId, semester, courseId])
+  @@index([profileId])
+  @@index([semester, courseId])
+}
+
+enum ClassPageLinkStatus {
+  VISIBLE
+  HIDDEN
+}
+
+model ClassPageLink {
+  id           String              @id @default(uuid())
+  authorId     String
+  membershipId String
+  label        String
+  url          String
+  status       ClassPageLinkStatus @default(VISIBLE)
+  createdAt    DateTime            @default(now())
+  author       User                @relation(fields: [authorId], references: [userId], onDelete: Cascade)
+  membership   ClassPageMembership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  reports      ClassPageReport[]
+
+  @@index([membershipId, status])
+}
+
+enum ClassPageReportTargetType {
+  MEMBER
+  LINK
+}
+
+enum ClassPageReportReason {
+  SPAM
+  HARASSMENT
+  PERSONAL_INFO
+  OTHER
+}
+
+model ClassPageReport {
+  id               String                    @id @default(uuid())
+  reporterId       String
+  targetType       ClassPageReportTargetType
+  membershipId     String?
+  linkId           String?
+  targetUserId     String?
+  targetSemester   String
+  targetCourseId   String
+  reason           ClassPageReportReason
+  note             String?
+  createdAt        DateTime                  @default(now())
+  resolvedAt       DateTime?
+  resolvedById     String?
+  reporter         User                      @relation("ClassPageReportReporter", fields: [reporterId], references: [userId], onDelete: Cascade)
+  resolvedBy       User?                     @relation("ClassPageReportResolver", fields: [resolvedById], references: [userId], onDelete: SetNull)
+  targetMembership ClassPageMembership?      @relation("ClassPageMemberReports", fields: [membershipId], references: [id], onDelete: SetNull)
+  targetLink       ClassPageLink?            @relation(fields: [linkId], references: [id], onDelete: SetNull)
+
+  @@unique([reporterId, membershipId])
+  @@unique([reporterId, linkId])
+  @@index([resolvedAt])
+  @@index([targetType, createdAt])
+  @@index([targetUserId])
+}
+
+model ClassPageBlock {
+  id        String   @id @default(uuid())
+  blockerId String
+  blockedId String
+  createdAt DateTime @default(now())
+  blocker   User     @relation("ClassPageBlocker", fields: [blockerId], references: [userId], onDelete: Cascade)
+  blocked   User     @relation("ClassPageBlocked", fields: [blockedId], references: [userId], onDelete: Cascade)
+
+  @@unique([blockerId, blockedId])
+  @@index([blockedId])
 }
 
 enum CourseShortNameIdentityType {
