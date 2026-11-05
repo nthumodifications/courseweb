@@ -107,9 +107,18 @@
     },
     "course_actions": {
       "course_location": "開課地點",
-      "location_unavailable": "這門課沒有可定位的開課地點",
-      "hide_course": "從課表隱藏課程",
-      "show_course": "顯示課程"
+      "location_unavailable": "這門課沒有可定位的開課地點"
+    },
+    "course_item": {
+      "classmates": "同學",
+      "classmates_count": "同學：{count} 人",
+      "hide": "從課表隱藏",
+      "show": "顯示於課表",
+      "change_color": "更改顏色",
+      "remove": "移除",
+      "more_actions": "更多課程動作",
+      "move_course": "移動課程",
+      "priority": "體育／通識第 {priority} 志願"
     },
     "credits": "總學分",
     "course": "課",
