@@ -247,3 +247,25 @@ export const getClassPageClientAccess = ({
   if (!joined) return "join";
   return "view";
 };
+
+// Per-course class page summary for the signed-in student's own timetable.
+// Only courses in their stored timetable for `semester` are returned.
+export type ClassPageCount = { members: number; joined: boolean };
+export type ClassPageCounts = Record<string, ClassPageCount>;
+
+export const getClassPageCounts = async (token: string, semester: string) =>
+  (
+    await request<{ counts: ClassPageCounts }>(
+      `/counts/${encodeURIComponent(semester)}`,
+      token,
+    )
+  ).counts;
+
+export const classmatesPath = (
+  lang: string,
+  semester?: string,
+  courseId?: string,
+) =>
+  semester && courseId
+    ? `/${lang}/classmates/${encodeURIComponent(semester)}/${encodeURIComponent(courseId)}`
+    : `/${lang}/classmates`;
