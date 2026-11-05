@@ -34,6 +34,7 @@ export const SEARCHABLE_FIELDS = [
   "teacher_zh",
   "name_en",
   "teacher_en",
+  "short_names",
 ] as const;
 
 export type SearchProjectionRecord = UnknownRecord & {
@@ -67,6 +68,7 @@ export type SearchProjectionRecord = UnknownRecord & {
   separate_times: string[];
   for_class: string[];
   courseLevel: string;
+  short_names: string[];
 };
 
 const asString = (value: unknown) => (value == null ? "" : String(value));
@@ -120,6 +122,7 @@ export const prepareSearchRecord = (
     class: asString(input.class),
     name_zh: asString(input.name_zh),
     name_en: asString(input.name_en),
+    short_names: asStringArray(input.short_names),
     teacher_zh: asStringArray(input.teacher_zh),
     teacher_en: asStringArray(input.teacher_en),
     credits: asNullableNumber(input.credits),

@@ -149,6 +149,24 @@ export type RecruitmentApplication = {
 
 export type ReviewModerationStatus = "reported" | "hidden" | "removed" | "all";
 export type ReviewModerationAction = "restore" | "hide" | "remove";
+export type AdminCourseShortNameRevision = {
+  id: string;
+  editorId: string;
+  shortName: string;
+  action: string;
+  createdAt: string;
+};
+export type AdminCourseShortName = {
+  id: string;
+  identityType: "module" | "course_code";
+  identityKey: string;
+  language: "zh" | "en";
+  shortName: string;
+  locked: boolean;
+  updatedAt: string;
+  updatedById: string;
+  revisions: AdminCourseShortNameRevision[];
+};
 export type AdminCourseReview = {
   id: string;
   moduleKey: string;
@@ -260,6 +278,39 @@ type ReviewsClient = {
 const reviewsClient = () =>
   (authClient.api.admin as unknown as { reviews: ReviewsClient }).reviews;
 
+type CourseShortNamesAdminClient = {
+  $get: (
+    input: {},
+    options: { headers: ReturnType<typeof authHeaders> },
+  ) => Promise<unknown>;
+  ":id": {
+    lock: {
+      $post: (
+        input: {
+          param: { id: string };
+          json: { locked: boolean; reason: string };
+        },
+        options: { headers: ReturnType<typeof authHeaders> },
+      ) => Promise<unknown>;
+    };
+    revert: {
+      $post: (
+        input: {
+          param: { id: string };
+          json: { revisionId: string; reason: string };
+        },
+        options: { headers: ReturnType<typeof authHeaders> },
+      ) => Promise<unknown>;
+    };
+  };
+};
+const courseShortNamesClient = () =>
+  (
+    authClient.api.admin as unknown as {
+      "course-short-names": CourseShortNamesAdminClient;
+    }
+  )["course-short-names"];
+
 /**
  * Turn a non-2xx admin response into an Error carrying the server's own
  * explanation. The API answers with `error_description` for anything a person
@@ -297,6 +348,7 @@ export const adminKeys = {
     ["admin", "reviews", status] as const,
   classPageReports: (status: ClassPageReportStatus) =>
     ["admin", "class-page-reports", status] as const,
+  courseShortNames: ["admin", "course-short-names"] as const,
 };
 
 /**
@@ -893,6 +945,23 @@ export const useAdminClassPageReports = (status: ClassPageReportStatus) => {
   });
 };
 
+export const useAdminCourseShortNames = () => {
+  const token = useAdminToken();
+  return useQuery<{ entries: AdminCourseShortName[] }>({
+    queryKey: adminKeys.courseShortNames,
+    enabled: Boolean(token),
+    queryFn: async () => {
+      const response = await courseShortNamesClient().$get(
+        {},
+        { headers: authHeaders(requireToken(token)) },
+      );
+      return unwrap<{ entries: AdminCourseShortName[] }>(
+        response as unknown as Response,
+      );
+    },
+  });
+};
+
 export const useModerateClassPageReport = () => {
   const token = useAdminToken();
   const invalidate = useInvalidateAdmin();
@@ -917,6 +986,54 @@ export const useModerateClassPageReport = () => {
         },
       );
       return unwrap<{ ok: true }>(response);
+    },
+    onSuccess: invalidate,
+  });
+};
+
+export const useLockCourseShortName = () => {
+  const token = useAdminToken();
+  const invalidate = useInvalidateAdmin();
+  return useMutation({
+    mutationFn: async (input: {
+      id: string;
+      locked: boolean;
+      reason: string;
+    }) => {
+      const response = await courseShortNamesClient()[":id"].lock.$post(
+        {
+          param: { id: input.id },
+          json: { locked: input.locked, reason: input.reason },
+        },
+        { headers: authHeaders(requireToken(token)) },
+      );
+      return unwrap<{ ok: true; locked: boolean }>(
+        response as unknown as Response,
+      );
+    },
+    onSuccess: invalidate,
+  });
+};
+
+export const useRevertCourseShortName = () => {
+  const token = useAdminToken();
+  const invalidate = useInvalidateAdmin();
+  return useMutation({
+    mutationFn: async (input: {
+      id: string;
+      revisionId: string;
+      reason: string;
+    }) => {
+      const response = await courseShortNamesClient()[":id"].revert.$post(
+        {
+          param: { id: input.id },
+          json: { revisionId: input.revisionId, reason: input.reason },
+        },
+        { headers: authHeaders(requireToken(token)) },
+      );
+      return unwrap<{ entry: AdminCourseShortName }>(
+        response as unknown as Response,
+      );
     },
     onSuccess: invalidate,
   });

@@ -39,6 +39,8 @@ model User {
   clientConsents        ClientConsent[]
   adminActions          AdminAuditLog[]
   courseReviews         CourseReview[]
+  shortNameEdits        CourseShortName[] @relation("CourseShortNameEditor")
+  shortNameRevisions    CourseShortNameRevision[]
   reviewReports         CourseReviewReport[] @relation("CourseReviewReportReporter")
   resolvedReviewReports CourseReviewReport[] @relation("CourseReviewReportResolver")
   classProfile            ClassPageProfile?
@@ -377,4 +379,49 @@ model ClassPageBlock {
 
   @@unique([blockerId, blockedId])
   @@index([blockedId])
+}
+
+enum CourseShortNameIdentityType {
+  MODULE
+  COURSE_CODE
+}
+
+enum CourseShortNameLanguage {
+  ZH
+  EN
+}
+
+model CourseShortName {
+  id           String                      @id @default(uuid())
+  identityType CourseShortNameIdentityType
+  identityKey  String
+  language     CourseShortNameLanguage
+  shortName    String
+  locked       Boolean                     @default(false)
+  updatedById  String
+  createdAt    DateTime                    @default(now())
+  updatedAt    DateTime                    @updatedAt
+  updatedBy    User                        @relation("CourseShortNameEditor", fields: [updatedById], references: [userId], onDelete: Restrict)
+  revisions    CourseShortNameRevision[]
+
+  @@unique([identityType, identityKey, language])
+  @@index([updatedById])
+  @@map("course_short_names")
+}
+
+// Revisions are inserted for every name edit and admin revert. The API never
+// updates or deletes these rows, preserving the editor and previous value.
+model CourseShortNameRevision {
+  id        String          @id @default(uuid())
+  entryId   String
+  editorId  String
+  shortName String
+  action    String          @default("EDIT")
+  createdAt DateTime        @default(now())
+  entry     CourseShortName @relation(fields: [entryId], references: [id], onDelete: Restrict)
+  editor    User            @relation(fields: [editorId], references: [userId], onDelete: Restrict)
+
+  @@index([entryId, createdAt])
+  @@index([editorId, createdAt])
+  @@map("course_short_name_revisions")
 }

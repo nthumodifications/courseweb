@@ -71,6 +71,7 @@ const LibraryWidget: FC<LibraryWidgetProps> = ({
   return (
     <WidgetShell
       title={title}
+      widgetType="library"
       onRemove={onRemove}
       dragHandleProps={dragHandleProps}
       isDragging={isDragging}

@@ -73,6 +73,7 @@ import ReviewsSection from "@/components/Reviews/ReviewsSection";
 import { normaliseInstructorName } from "@/lib/instructors";
 import { parseCourseAudienceTags } from "@courseweb/shared";
 import CourseAudienceTags from "./CourseAudienceTags";
+import ShortNameContributeForm from "./ShortNameContributeForm";
 
 const safeCreateModuleKey = (department: string, course: string) => {
   try {
@@ -608,6 +609,14 @@ const CourseDetailContainer = ({
                       ))}
                     </span>
                   </h2>
+                  {(moduleKey || course) && (
+                    <ShortNameContributeForm
+                      {...(moduleKey
+                        ? { moduleKey }
+                        : { courseCode: courseCodeFromRawId(course!.raw_id) })}
+                      language={contentLanguage(lang) === "en" ? "en" : "zh"}
+                    />
+                  )}
                 </div>
                 <CourseTagList course={course} />
                 <div>
