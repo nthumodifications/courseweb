@@ -107,9 +107,18 @@
     },
     "course_actions": {
       "course_location": "开课地点",
-      "location_unavailable": "这门课没有可定位的开课地点",
-      "hide_course": "从课表隐藏课程",
-      "show_course": "显示课程"
+      "location_unavailable": "这门课没有可定位的开课地点"
+    },
+    "course_item": {
+      "classmates": "同学",
+      "classmates_count": "同学：{count} 人",
+      "hide": "从课表隐藏",
+      "show": "显示于课表",
+      "change_color": "更改颜色",
+      "remove": "移除",
+      "more_actions": "更多课程动作",
+      "move_course": "移动课程",
+      "priority": "体育／通识第 {priority} 志愿"
     },
     "credits": "总学分",
     "course": "课",

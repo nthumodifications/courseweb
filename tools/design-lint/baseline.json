@@ -138,7 +138,6 @@
         "apps/web/src/components/Timetable/TimeslotHeader.tsx": 8,
         "apps/web/src/components/Timetable/Timetable.tsx": 14,
         "apps/web/src/components/Timetable/TimetableAgenda.tsx": 2,
-        "apps/web/src/components/Timetable/TimetableCourseList.tsx": 1,
         "apps/web/src/components/Timetable/TimetableDayCards.tsx": 2,
         "apps/web/src/components/Timetable/TimetableDots.tsx": 3,
         "apps/web/src/components/Timetable/TimetableItemDrawer.tsx": 4,

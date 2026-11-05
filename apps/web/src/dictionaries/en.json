@@ -107,9 +107,18 @@
     },
     "course_actions": {
       "course_location": "Course Location",
-      "location_unavailable": "This course has no mapped venue",
-      "hide_course": "Hide course from timetable",
-      "show_course": "Show course"
+      "location_unavailable": "This course has no mapped venue"
+    },
+    "course_item": {
+      "classmates": "Classmates",
+      "classmates_count": "Classmates: {count}",
+      "hide": "Hide in timetable",
+      "show": "Show in timetable",
+      "change_color": "Change colour",
+      "remove": "Remove",
+      "more_actions": "More course actions",
+      "move_course": "Move course",
+      "priority": "PE/GE priority {priority}"
     },
     "credits": "credits",
     "course": "courses",
