@@ -10,10 +10,12 @@ import {
   MessageSquareWarning,
   ScrollText,
   ShieldAlert,
+  Tag,
   UserPlus,
   Users,
 } from "lucide-react";
 import { useAdminIdentity } from "./api";
+import useDictionary from "@/dictionaries/useDictionary";
 
 /**
  * The admin center's shell.
@@ -32,6 +34,12 @@ const NAV = [
     to: "reviews",
     label: "Course Reviews",
     icon: MessageSquareWarning,
+    end: false,
+  },
+  {
+    to: "course-short-names",
+    label: "Course short names",
+    icon: Tag,
     end: false,
   },
   { to: "clients", label: "OAuth Clients", icon: KeyRound, superuser: true },
@@ -60,6 +68,7 @@ const CenteredNotice = ({
 const AdminLayout = () => {
   const { lang } = useParams<{ lang: string }>();
   const auth = useAuth();
+  const dict = useDictionary();
   const { data: identity, isError, status } = useAdminIdentity();
 
   // While signed in, "no answer yet" is not "not staff". The identity query is
@@ -163,7 +172,9 @@ const AdminLayout = () => {
                     }
                   >
                     <Icon className="h-4 w-4" aria-hidden />
-                    {item.label}
+                    {item.to === "course-short-names"
+                      ? dict.admin_short_names.title
+                      : item.label}
                   </NavLink>
                 </li>
               );

@@ -770,6 +770,25 @@
     "admin": "Admin Center",
     "youbike": "YouBike 2.0"
   },
+  "admin_short_names": {
+    "title": "Course short names",
+    "empty": "No short names yet.",
+    "locked": "Locked",
+    "lock": "Lock",
+    "unlock": "Unlock",
+    "revert": "Revert",
+    "reason": "Reason required",
+    "revision": "Revision",
+    "editor": "Edited by",
+    "updated": "Updated",
+    "identity_module": "Course module",
+    "identity_course_code": "Course code",
+    "language_zh": "Chinese",
+    "language_en": "English",
+    "edit_action": "Edit",
+    "revert_action": "Revert",
+    "action_failed": "Could not save this change."
+  },
   "command_palette": {
     "placeholder": "Type a command…",
     "no_results": "No commands found",
@@ -1773,14 +1792,18 @@
       "sign_in_required": "Sign in to contribute dates for this course"
     },
     "ShortNameContributeForm": {
-      "title": "Contribute a short course name",
-      "description": "Add a short name to make this course easier to identify.",
+      "title": "Edit short course name",
+      "description": "Use a short name students recognize.",
       "dont_abuse": "Please do not abuse the system.",
       "accurate_relevant": "Enter only accurate and relevant information.",
-      "privacy": "Your submission will contain your student ID and be publicly visible.",
+      "privacy": "Short names are public. Administrators can see who edited them.",
       "placeholder": "Short course name",
       "cancel": "Cancel",
-      "submit": "Submit"
+      "submit": "Save",
+      "short_name": "Short name",
+      "no_short_name": "No short name",
+      "edit": "Edit",
+      "save_failed": "Could not save the short name. Try again."
     },
     "ShareCourseButton": {
       "share_prefix": "Share: ",

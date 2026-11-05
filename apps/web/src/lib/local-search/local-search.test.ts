@@ -61,6 +61,35 @@ test("does not stringify object keyword values", () => {
   ).toEqual(["environment", "3"]);
 });
 
+test("local course search matches public short-name aliases by stable module key", async () => {
+  const engine = new LocalSearchEngine({
+    baseUrl: "https://api.example.test",
+    cache: new MemorySearchChunkCache(),
+    fetch: makeFetch({
+      hash: "short-name-alias",
+      conditional304: false,
+      calls: [],
+      records: fixture,
+    }),
+    defaultSemester: "11510",
+    workerFactory: () => new FakeWorker(),
+    loadShortNames: async () => [
+      {
+        identityType: "module",
+        identityKey: "AES:5101",
+        language: "en",
+        shortName: "I2P2",
+      },
+    ],
+  });
+
+  const result = await engine.search(
+    "11510",
+    request({ query: "I2P2", hitsPerPage: 10 }).params,
+  );
+  expect(result.hits.map((hit) => hit.objectID)).toEqual(["11510AES 510100"]);
+});
+
 type FetchState = {
   hash: string;
   conditional304: boolean;
@@ -416,6 +445,7 @@ describe("local course search", () => {
       "teacher_zh",
       "name_en",
       "teacher_en",
+      "short_names",
     ]);
   });
 

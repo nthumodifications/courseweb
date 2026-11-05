@@ -81,8 +81,35 @@ const viteEnv =
   ).env ?? {};
 
 const API_BASE = (viteEnv.VITE_COURSEWEB_API_URL ?? "").replace(/\/$/, "");
+const AUTH_BASE = (viteEnv.VITE_NTHUMODS_AUTH_URL ?? "").replace(/\/$/, "");
 export { isLocalSearchEnabled } from "./local-search/feature-flags";
 const localSearchEnabled = isLocalSearchEnabled(viteEnv);
+
+const loadPublicShortNames = AUTH_BASE
+  ? async () => {
+      const controller = new AbortController();
+      const timeout = globalThis.setTimeout(() => controller.abort(), 5_000);
+      try {
+        const response = await fetch(`${AUTH_BASE}/api/course-short-names`, {
+          headers: { Accept: "application/json" },
+          cache: "force-cache",
+          signal: controller.signal,
+        });
+        if (!response.ok) throw new Error("Course short names unavailable");
+        const data = (await response.json()) as {
+          entries?: {
+            identityType: "module" | "course_code";
+            identityKey: string;
+            language: "zh" | "en";
+            shortName: string;
+          }[];
+        };
+        return Array.isArray(data.entries) ? data.entries : [];
+      } finally {
+        globalThis.clearTimeout(timeout);
+      }
+    }
+  : undefined;
 
 const serializeParam = (
   params: URLSearchParams,
@@ -170,6 +197,9 @@ export const createResilientSearchClient = (
   const localClient: LocalSearchClient | undefined = shouldUseLocalSearch
     ? createLocalSearchClient({
         defaultSemester: lastSemester.id,
+        ...(options.localSearch === undefined && loadPublicShortNames
+          ? { loadShortNames: loadPublicShortNames }
+          : {}),
         ...(options.localSearch === false ? {} : (options.localSearch ?? {})),
         queryTransform: options.localQueryTransform,
         searchTextTransform: options.localSearchTextTransform,

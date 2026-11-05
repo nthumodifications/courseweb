@@ -89,6 +89,13 @@ export type SearchManifestEntry = {
   textFormatVersion?: string;
 };
 
+export type LocalShortNameAlias = {
+  identityType: "module" | "course_code";
+  identityKey: string;
+  language: "zh" | "en";
+  shortName: string;
+};
+
 export type FetchLike = (
   input: RequestInfo | URL,
   init?: RequestInit,
@@ -111,6 +118,7 @@ export type LocalSearchEngineOptions = {
   defaultSemester?: string;
   queryTransform?: (query: string) => string;
   searchTextTransform?: (text: string) => string;
+  loadShortNames?: () => Promise<LocalShortNameAlias[]>;
 };
 
 type LoadedChunk = {
@@ -503,6 +511,8 @@ export class LocalSearchEngine {
   private readonly defaultSemester?: string;
   private readonly queryTransform: (query: string) => string;
   private readonly searchTextTransform: (text: string) => string;
+  private readonly loadShortNames?: () => Promise<LocalShortNameAlias[]>;
+  private shortNamesPromise?: Promise<LocalShortNameAlias[]>;
 
   constructor(options: LocalSearchEngineOptions = {}) {
     const env = getEnv();
@@ -519,6 +529,7 @@ export class LocalSearchEngine {
     this.defaultSemester = options.defaultSemester;
     this.queryTransform = options.queryTransform ?? ((query) => query);
     this.searchTextTransform = options.searchTextTransform ?? ((text) => text);
+    this.loadShortNames = options.loadShortNames;
   }
 
   getStatus = () => this.status;
@@ -699,6 +710,41 @@ export class LocalSearchEngine {
   private async loadChunk(semester: string): Promise<LoadedChunk> {
     this.setStatus("loading");
     const source = await this.downloadChunk(semester);
+    if (this.loadShortNames) {
+      try {
+        this.shortNamesPromise ??= this.loadShortNames();
+        const aliases = await this.shortNamesPromise;
+        const aliasMap = new Map<string, string[]>();
+        for (const alias of aliases) {
+          const key = `${alias.identityType}:${alias.identityKey}`;
+          const names = aliasMap.get(key) ?? [];
+          if (!names.includes(alias.shortName)) names.push(alias.shortName);
+          aliasMap.set(key, names);
+        }
+        const records = source.records.map((record) => {
+          const department = record.department
+            .normalize("NFKC")
+            .trim()
+            .replace(/\s+/gu, " ");
+          const course = record.course.normalize("NFKC").replace(/\s+/gu, "");
+          const moduleKey = `${department}:${course}`;
+          const courseCode = `${department}${course}`
+            .replace(/\s+/gu, "")
+            .toUpperCase();
+          return {
+            ...record,
+            short_names: [
+              ...(aliasMap.get(`module:${moduleKey}`) ?? []),
+              ...(aliasMap.get(`course_code:${courseCode}`) ?? []),
+            ],
+          };
+        });
+        source.records = records;
+      } catch {
+        // Short names are an optional alias source; course chunks remain usable
+        // if the public endpoint is unavailable.
+      }
+    }
     const chunk = await this.buildChunk(source);
     this.loadedChunks.set(semester, chunk);
     for (const listener of this.readyListeners) listener(semester);
