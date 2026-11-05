@@ -770,6 +770,25 @@
     "admin": "管理中心",
     "youbike": "YouBike 2.0"
   },
+  "admin_short_names": {
+    "title": "课程简称",
+    "empty": "目前没有课程简称。",
+    "locked": "已锁定",
+    "lock": "锁定",
+    "unlock": "解除锁定",
+    "revert": "还原",
+    "reason": "请填写原因",
+    "revision": "版本",
+    "editor": "编辑者",
+    "updated": "更新于",
+    "identity_module": "课程模块",
+    "identity_course_code": "课程代码",
+    "language_zh": "中文",
+    "language_en": "英文",
+    "edit_action": "编辑",
+    "revert_action": "还原",
+    "action_failed": "无法保存变更。"
+  },
   "command_palette": {
     "placeholder": "输入指令…",
     "no_results": "找不到指令",
@@ -1334,6 +1353,16 @@
         "manage_widgets_description": "选择要显示在今日页面的小工具。",
         "empty": "没有小工具",
         "view_full_page": "查看完整页面",
+        "widget_settings": {
+          "title": "小工具设置",
+          "weather_days": "预报天数",
+          "countdown_title": "倒数名称",
+          "countdown_date": "目标日期",
+          "countdown_default_label": "剩余天数",
+          "upcoming_days": "日期范围（天）",
+          "upcoming_count": "显示行程数",
+          "reset": "重设"
+        },
         "widget_options": {
           "schedule": {
             "title": "课程表"
@@ -1763,14 +1792,19 @@
       "sign_in_required": "请登录以贡献课程日期"
     },
     "ShortNameContributeForm": {
-      "title": "提供课程简称",
-      "description": "提供课程简称，让大家更容易辨识课程。",
+      "title": "编辑课程简称",
+      "description": "使用大家熟悉的简称。",
       "dont_abuse": "请勿滥用系统。",
       "accurate_relevant": "请只填写准确且相关的信息。",
-      "privacy": "送出的内容会包含学号，并公开显示。",
+      "privacy": "简称会公开显示，管理员可查看编辑者。",
       "placeholder": "课程简称",
       "cancel": "取消",
-      "submit": "送出"
+      "submit": "保存",
+      "short_name": "课程简称",
+      "add": "添加课程简称",
+      "no_short_name": "尚无简称",
+      "edit": "编辑",
+      "save_failed": "无法保存简称，请再试一次。"
     },
     "ShareCourseButton": {
       "share_prefix": "分享：",

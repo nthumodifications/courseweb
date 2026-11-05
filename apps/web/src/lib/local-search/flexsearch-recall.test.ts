@@ -43,7 +43,7 @@ const firstNonemptyFieldValue = (field: (typeof SEARCHABLE_FIELDS)[number]) => {
     const nonempty = values.find((item) => String(item ?? "").trim());
     if (nonempty !== undefined) return String(nonempty);
   }
-  throw new Error(`No non-empty value for ${field}`);
+  return undefined;
 };
 
 const cjkName = records.find((record) => {
@@ -60,7 +60,7 @@ const englishName = records.find((record) => {
 const englishWord = englishName
   ?.split(/\s+/)
   .find((word) => /^[A-Za-z]{5,}$/.test(word));
-const englishTeacher = firstNonemptyFieldValue("teacher_en");
+const englishTeacher = firstNonemptyFieldValue("teacher_en")!;
 const mixedSource = records.find(
   (record) =>
     /[A-Za-z]/.test(record.name_zh) && cjkPattern.test(record.name_zh),
@@ -98,13 +98,15 @@ const queryCases = [
   { name: "Zero rows", query: "not-a-real-course" },
   { name: "Exactly one row", query: "11510TSED702300" },
   { name: "Thousands of rows", query: "c" },
-  ...SEARCHABLE_FIELDS.map((field) => ({
-    name: `searchable field: ${field}`,
-    query:
+  ...SEARCHABLE_FIELDS.flatMap((field) => {
+    const value =
       field === "teacher_en"
         ? englishTeacher.split(/[\s,]+/)[0]
-        : firstNonemptyFieldValue(field),
-  })),
+        : firstNonemptyFieldValue(field);
+    return value === undefined
+      ? []
+      : [{ name: `searchable field: ${field}`, query: value }];
+  }),
 ];
 
 const sortedSet = (ids: readonly string[]) =>

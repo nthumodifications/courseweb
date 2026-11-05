@@ -75,6 +75,7 @@ const BusWidget: FC<BusWidgetProps> = ({
   return (
     <WidgetShell
       title={title}
+      widgetType="bus"
       onRemove={onRemove}
       dragHandleProps={dragHandleProps}
       isDragging={isDragging}

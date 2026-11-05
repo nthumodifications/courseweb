@@ -770,6 +770,25 @@
     "admin": "管理中心",
     "youbike": "YouBike 2.0"
   },
+  "admin_short_names": {
+    "title": "課程簡稱",
+    "empty": "目前沒有課程簡稱。",
+    "locked": "已鎖定",
+    "lock": "鎖定",
+    "unlock": "解除鎖定",
+    "revert": "還原",
+    "reason": "請填寫原因",
+    "revision": "版本",
+    "editor": "編輯者",
+    "updated": "更新於",
+    "identity_module": "課程模組",
+    "identity_course_code": "課程代碼",
+    "language_zh": "中文",
+    "language_en": "英文",
+    "edit_action": "編輯",
+    "revert_action": "還原",
+    "action_failed": "無法儲存變更。"
+  },
   "command_palette": {
     "placeholder": "輸入指令…",
     "no_results": "找不到指令",
@@ -1334,6 +1353,16 @@
         "manage_widgets_description": "選擇要顯示在今日頁面的小工具。",
         "empty": "沒有小工具",
         "view_full_page": "查看完整頁面",
+        "widget_settings": {
+          "title": "小工具設定",
+          "weather_days": "預報天數",
+          "countdown_title": "倒數名稱",
+          "countdown_date": "目標日期",
+          "countdown_default_label": "剩餘天數",
+          "upcoming_days": "日期範圍（天）",
+          "upcoming_count": "顯示行程數",
+          "reset": "重設"
+        },
         "widget_options": {
           "schedule": {
             "title": "課程表"
@@ -1763,14 +1792,19 @@
       "sign_in_required": "請登入以貢獻課程日期"
     },
     "ShortNameContributeForm": {
-      "title": "提供課程簡稱",
-      "description": "提供課程簡稱，讓大家更容易辨識課程。",
+      "title": "編輯課程簡稱",
+      "description": "使用大家熟悉的簡稱。",
       "dont_abuse": "請勿濫用系統。",
       "accurate_relevant": "請只填寫準確且相關的資訊。",
-      "privacy": "送出的內容會包含學號，並公開顯示。",
+      "privacy": "簡稱會公開顯示，管理員可查看編輯者。",
       "placeholder": "課程簡稱",
       "cancel": "取消",
-      "submit": "送出"
+      "submit": "儲存",
+      "short_name": "課程簡稱",
+      "add": "新增課程簡稱",
+      "no_short_name": "尚無簡稱",
+      "edit": "編輯",
+      "save_failed": "無法儲存簡稱，請再試一次。"
     },
     "ShareCourseButton": {
       "share_prefix": "分享：",
