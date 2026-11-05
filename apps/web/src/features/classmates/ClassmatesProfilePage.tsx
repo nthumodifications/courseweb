@@ -146,7 +146,7 @@ const ClassmatesProfilePage = () => {
     retry: false,
   });
   const countsQuery = useQuery({
-    queryKey: ["class-pages", "counts", semester],
+    queryKey: classPageKeys.counts(semester),
     queryFn: () => getClassPageCounts(token!, semester),
     enabled: Boolean(token && semester),
     retry: false,
@@ -180,7 +180,7 @@ const ClassmatesProfilePage = () => {
     mutationFn: () => joinAllCourses(token!, semester),
     onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: ["class-pages", "counts", semester],
+        queryKey: classPageKeys.counts(semester),
       });
       await queryClient.invalidateQueries({ queryKey: ["class-pages"] });
     },

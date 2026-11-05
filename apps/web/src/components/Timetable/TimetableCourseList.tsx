@@ -70,7 +70,11 @@ import { UnresolvedCoursesNotice } from "./UnresolvedCoursesNotice";
 import { lazyWithRetry } from "@/lib/chunk-recovery";
 import { useAuth } from "react-oidc-context";
 import { useQuery } from "@tanstack/react-query";
-import { classmatesPath, getClassPageCounts } from "@/lib/class-pages";
+import {
+  classPageKeys,
+  classmatesPath,
+  getClassPageCounts,
+} from "@/lib/class-pages";
 import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
 
 const DownloadTimetableDialogLazy = lazyWithRetry(
@@ -459,7 +463,7 @@ export const TimetableCourseList = ({
 
   const accessToken = auth.user?.access_token;
   const classPageCountsQuery = useQuery({
-    queryKey: ["class-pages", "counts", auth.user?.profile.sub, semester],
+    queryKey: classPageKeys.counts(semester),
     queryFn: () => getClassPageCounts(accessToken!, semester),
     enabled: Boolean(auth.isAuthenticated && accessToken),
     retry: false,

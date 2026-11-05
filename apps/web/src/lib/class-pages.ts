@@ -92,6 +92,7 @@ export const classPageKeys = {
     ["class-pages", "membership", semester, courseId] as const,
   page: (semester: string, courseId: string) =>
     ["class-pages", "page", semester, courseId] as const,
+  counts: (semester: string) => ["class-pages", "counts", semester] as const,
 };
 
 export const getClassPageProfile = (token: string) =>

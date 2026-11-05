@@ -29,7 +29,7 @@ const ClassmatesSettingsLink = () => {
   });
   const profile = profileQuery.data?.profile;
   const countsQuery = useQuery({
-    queryKey: ["class-pages", "counts", semester],
+    queryKey: classPageKeys.counts(semester),
     queryFn: () => getClassPageCounts(token!, semester),
     enabled: Boolean(auth.isAuthenticated && token && profile && semester),
     retry: false,

@@ -81,7 +81,7 @@ const invalidateOffering = async (
     }),
     queryClient.invalidateQueries({ queryKey: classPageKeys.profile }),
     queryClient.invalidateQueries({
-      queryKey: ["class-pages", "counts", semester],
+      queryKey: classPageKeys.counts(semester),
     }),
   ]);
 };
