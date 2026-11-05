@@ -1334,6 +1334,16 @@
         "manage_widgets_description": "Choose which widgets appear on Today.",
         "empty": "No widgets",
         "view_full_page": "View full page",
+        "widget_settings": {
+          "title": "Widget settings",
+          "weather_days": "Forecast days",
+          "countdown_title": "Countdown label",
+          "countdown_date": "Target date",
+          "countdown_default_label": "Days left",
+          "upcoming_days": "Date range (days)",
+          "upcoming_count": "Events shown",
+          "reset": "Reset"
+        },
         "widget_options": {
           "schedule": {
             "title": "Schedule"

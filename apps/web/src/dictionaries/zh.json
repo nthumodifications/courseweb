@@ -1334,6 +1334,16 @@
         "manage_widgets_description": "選擇要顯示在今日頁面的小工具。",
         "empty": "沒有小工具",
         "view_full_page": "查看完整頁面",
+        "widget_settings": {
+          "title": "小工具設定",
+          "weather_days": "預報天數",
+          "countdown_title": "倒數名稱",
+          "countdown_date": "目標日期",
+          "countdown_default_label": "剩餘天數",
+          "upcoming_days": "日期範圍（天）",
+          "upcoming_count": "顯示行程數",
+          "reset": "重設"
+        },
         "widget_options": {
           "schedule": {
             "title": "課程表"

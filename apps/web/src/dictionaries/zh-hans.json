@@ -1334,6 +1334,16 @@
         "manage_widgets_description": "选择要显示在今日页面的小工具。",
         "empty": "没有小工具",
         "view_full_page": "查看完整页面",
+        "widget_settings": {
+          "title": "小工具设置",
+          "weather_days": "预报天数",
+          "countdown_title": "倒数名称",
+          "countdown_date": "目标日期",
+          "countdown_default_label": "剩余天数",
+          "upcoming_days": "日期范围（天）",
+          "upcoming_count": "显示行程数",
+          "reset": "重设"
+        },
         "widget_options": {
           "schedule": {
             "title": "课程表"

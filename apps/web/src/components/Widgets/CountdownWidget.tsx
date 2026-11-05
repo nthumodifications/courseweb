@@ -14,6 +14,8 @@ import useUpcomingEvents, {
 } from "@/hooks/useUpcomingEvents";
 import { getLocale } from "@/helpers/dateLocale";
 import { useSettings } from "@/hooks/contexts/settings";
+import { useLocalStorage } from "usehooks-ts";
+import { differenceInCalendarDays, parseISO } from "date-fns";
 
 const DATE_KEY_FORMAT = "yyyy-MM-dd";
 
@@ -83,10 +85,38 @@ const CountdownWidget: FC<CountdownWidgetProps> = ({
 }) => {
   const dict = useDictionary();
   const date = useTime();
+  const [customTitle] = useLocalStorage("widget_countdown_title", "");
+  const [customDate] = useLocalStorage("widget_countdown_date", "");
   const { nextEvent } = useUpcomingEvents();
   const title = dict.today.countdown.title;
 
   const countdownInfo = useMemo(() => {
+    if (customDate) {
+      const target = parseISO(customDate);
+      if (!Number.isNaN(target.getTime())) {
+        const today = new Date(
+          date.getFullYear(),
+          date.getMonth(),
+          date.getDate(),
+        );
+        const targetDay = new Date(
+          target.getFullYear(),
+          target.getMonth(),
+          target.getDate(),
+        );
+        const days = Math.max(0, differenceInCalendarDays(targetDay, today));
+        return {
+          type: "active" as const,
+          days,
+          semId: "custom",
+          label:
+            customTitle ||
+            dict.settings.calendar.widget_dashboard.widget_settings
+              .countdown_default_label,
+          emoji: days <= 14 ? "🔥" : days <= 30 ? "⏰" : "📚",
+        };
+      }
+    }
     const current = semesterInfo
       .map((semester) => ({ semester, range: getSemesterDateRange(semester) }))
       .find(({ range }) => range && date >= range.start && date < range.end);
@@ -132,11 +162,12 @@ const CountdownWidget: FC<CountdownWidgetProps> = ({
       label: dict.today.countdown.days_left,
       emoji: daysLeft <= 14 ? "🔥" : daysLeft <= 30 ? "⏰" : "📚",
     };
-  }, [date, dict]);
+  }, [customDate, customTitle, date, dict]);
 
   return (
     <WidgetShell
       title={title}
+      widgetType="countdown"
       onRemove={onRemove}
       dragHandleProps={dragHandleProps}
       isDragging={isDragging}

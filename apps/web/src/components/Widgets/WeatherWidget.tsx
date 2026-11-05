@@ -6,6 +6,7 @@ import { useSettings } from "@/hooks/contexts/settings";
 import useDictionary from "@/dictionaries/useDictionary";
 import WeatherIcon from "@/components/Today/WeatherIcon";
 import { Cloud } from "lucide-react";
+import { useLocalStorage } from "usehooks-ts";
 import WeatherForecast from "./WeatherForecast";
 
 interface WeatherWidgetProps {
@@ -22,6 +23,10 @@ const WeatherWidget: FC<WeatherWidgetProps> = ({
   const { language } = useSettings();
   const dict = useDictionary();
   const weatherDict = dict.settings.calendar.widget_dashboard.weather;
+  const [storedDays] = useLocalStorage("widget_weather_days", 4);
+  const forecastDays = Number.isInteger(storedDays)
+    ? Math.min(5, Math.max(1, storedDays))
+    : 4;
   const { data: weather, isLoading } = useQuery({
     queryKey: ["weather"],
     queryFn: async () => {
@@ -35,13 +40,16 @@ const WeatherWidget: FC<WeatherWidgetProps> = ({
 
   // Get today's weather data (first entry)
   const todayWeather = Array.isArray(weather) ? weather[0]?.weatherData : null;
-  const upcomingWeather = Array.isArray(weather) ? weather.slice(1) : [];
+  const upcomingWeather = Array.isArray(weather)
+    ? weather.slice(1, forecastDays + 1)
+    : [];
   const missingValue = weatherDict.missing_value;
   const rainLabel = weatherDict.rain;
 
   return (
     <WidgetShell
       title={title}
+      widgetType="weather"
       onRemove={onRemove}
       dragHandleProps={dragHandleProps}
       isDragging={isDragging}

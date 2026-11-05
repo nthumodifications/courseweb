@@ -1,4 +1,5 @@
 import { FC, useMemo } from "react";
+import { useLocalStorage } from "usehooks-ts";
 import { Link } from "react-router-dom";
 import { Calendar } from "lucide-react";
 import { WidgetShell } from "./WidgetShell";
@@ -20,7 +21,15 @@ const UpcomingEventsWidget: FC<UpcomingEventsWidgetProps> = ({
 }) => {
   const dict = useDictionary();
   const { language, showAcademicCalendar } = useSettings();
-  const { events, isLoading, error } = useUpcomingEvents();
+  const [storedWindowDays] = useLocalStorage("widget_upcoming_window_days", 7);
+  const [storedMaxEvents] = useLocalStorage("widget_upcoming_max_events", 5);
+  const windowDays = [3, 7, 14, 30].includes(storedWindowDays)
+    ? storedWindowDays
+    : 7;
+  const maxEvents = [3, 5, 8, 10].includes(storedMaxEvents)
+    ? storedMaxEvents
+    : 5;
+  const { events, isLoading, error } = useUpcomingEvents({ windowDays });
   const visibleEvents = useMemo(
     () =>
       events.filter(
@@ -37,6 +46,7 @@ const UpcomingEventsWidget: FC<UpcomingEventsWidgetProps> = ({
   return (
     <WidgetShell
       title={title}
+      widgetType="upcoming-events"
       onRemove={onRemove}
       dragHandleProps={dragHandleProps}
       isDragging={isDragging}
@@ -57,7 +67,7 @@ const UpcomingEventsWidget: FC<UpcomingEventsWidgetProps> = ({
             <span className="text-xs">{dict.today.upcoming.no_events}</span>
           </div>
         ) : (
-          <UpcomingEventList events={events} compact maxEvents={5} />
+          <UpcomingEventList events={events} compact maxEvents={maxEvents} />
         )}
         <Link
           to={`/${language}/calendar`}
