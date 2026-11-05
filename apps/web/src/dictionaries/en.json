@@ -1801,6 +1801,7 @@
       "cancel": "Cancel",
       "submit": "Save",
       "short_name": "Short name",
+      "add": "Add a short name",
       "no_short_name": "No short name",
       "edit": "Edit",
       "save_failed": "Could not save the short name. Try again."

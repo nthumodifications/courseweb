@@ -1801,6 +1801,7 @@
       "cancel": "取消",
       "submit": "儲存",
       "short_name": "課程簡稱",
+      "add": "新增課程簡稱",
       "no_short_name": "尚無簡稱",
       "edit": "編輯",
       "save_failed": "無法儲存簡稱，請再試一次。"

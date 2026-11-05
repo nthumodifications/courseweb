@@ -65,6 +65,8 @@ const ShortNameContributeForm = ({
     }
   };
 
+  if (!current && !auth.isAuthenticated) return null;
+
   return (
     <div className="flex min-w-0 items-center gap-2">
       {current ? (
@@ -74,22 +76,18 @@ const ShortNameContributeForm = ({
             {current.shortName}
           </span>
         </span>
-      ) : (
-        <span className="text-sm text-muted-foreground">
-          {labels.no_short_name}
-        </span>
-      )}
+      ) : null}
       {auth.isAuthenticated && (
         <Dialog open={open} onOpenChange={setOpen}>
           <Button
             type="button"
             variant="ghost"
             size="sm"
-            aria-label={labels.edit}
+            aria-label={current ? labels.edit : labels.add}
             onClick={() => setOpen(true)}
           >
             <Edit2 className="mr-1 h-4 w-4" aria-hidden />
-            {labels.edit}
+            {current ? labels.edit : labels.add}
           </Button>
           <DialogContent>
             <DialogHeader>

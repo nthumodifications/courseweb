@@ -1801,6 +1801,7 @@
       "cancel": "取消",
       "submit": "保存",
       "short_name": "课程简称",
+      "add": "添加课程简称",
       "no_short_name": "尚无简称",
       "edit": "编辑",
       "save_failed": "无法保存简称，请再试一次。"
