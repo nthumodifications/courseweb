@@ -1490,6 +1490,8 @@
       "save": "Save profile",
       "saving": "Saving…",
       "leave": "Leave class pages",
+      "leave_confirm_title": "Leave class pages?",
+      "leave_confirm_description": "Your profile, every class page membership and the links you shared are deleted. This cannot be undone.",
       "blocked_title": "Blocked classmates",
       "blocked_member": "Classmate",
       "unblock": "Unblock"

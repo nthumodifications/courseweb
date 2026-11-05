@@ -3,7 +3,20 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "react-oidc-context";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button, Input, Switch } from "@courseweb/ui";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+  Button,
+  Input,
+  Switch,
+} from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
 import {
   classPageKeys,
@@ -276,13 +289,32 @@ export const ClassPagesSettings = () => {
             : dict.settings.class_pages.save}
         </Button>
         {profile && (
-          <Button
-            variant="outline"
-            disabled={leaveMutation.isPending}
-            onClick={() => leaveMutation.mutate()}
-          >
-            {dict.settings.class_pages.leave}
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" disabled={leaveMutation.isPending}>
+                {dict.settings.class_pages.leave}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  {dict.settings.class_pages.leave_confirm_title}
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  {dict.settings.class_pages.leave_confirm_description}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>{dict.common.cancel}</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => leaveMutation.mutate()}
+                  className="bg-destructive text-destructive-foreground"
+                >
+                  {dict.settings.class_pages.leave}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         )}
       </div>
 

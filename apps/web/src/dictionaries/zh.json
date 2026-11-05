@@ -1490,6 +1490,8 @@
       "save": "儲存個人資料",
       "saving": "儲存中…",
       "leave": "退出課程同學",
+      "leave_confirm_title": "退出課程同學？",
+      "leave_confirm_description": "你的個人資料、所有課程頁面的成員身分，以及你分享的連結都會刪除，無法復原。",
       "blocked_title": "已封鎖的同學",
       "blocked_member": "同學",
       "unblock": "解除封鎖"

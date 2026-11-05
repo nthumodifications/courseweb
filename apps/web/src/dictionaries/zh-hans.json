@@ -1490,6 +1490,8 @@
       "save": "保存个人数据",
       "saving": "保存中…",
       "leave": "退出课程同学",
+      "leave_confirm_title": "退出课程同学？",
+      "leave_confirm_description": "你的个人数据、所有课程页面的成员身分，以及你分享的链接都会删除，无法复原。",
       "blocked_title": "已封锁的同学",
       "blocked_member": "同学",
       "unblock": "解除封锁"
