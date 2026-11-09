@@ -186,9 +186,9 @@ export const planNextCampusBus = (
   const campus = getVenueCampus(nextClass.venue);
   if (!campus) return null;
 
-  const previousClass = todayClasses
-    .filter((courseClass) => courseClass.start < nextClass.start)
-    .at(-1);
+  const previousClass = todayClasses.findLast(
+    (courseClass) => courseClass.start < nextClass.start,
+  );
   const fromCampus = previousClass
     ? getVenueCampus(previousClass.venue)
     : homeCampus;

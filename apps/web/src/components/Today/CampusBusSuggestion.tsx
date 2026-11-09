@@ -49,17 +49,13 @@ const CampusBusSuggestion: FC<CampusBusSuggestionProps> = ({ events }) => {
     staleTime: 5 * 60 * 1000,
     enabled: classes.length > 0,
   });
+  const originCampus = homeCampus === "none" ? null : homeCampus;
   const suggestion = useMemo(
     () =>
       data && !holidayToday
-        ? planNextCampusBus(
-            classes,
-            data,
-            now,
-            homeCampus === "none" ? null : homeCampus,
-          )
+        ? planNextCampusBus(classes, data, now, originCampus)
         : null,
-    [classes, data, holidayToday, homeCampus, now],
+    [classes, data, holidayToday, originCampus, now],
   );
   const transfers = useMemo(
     () =>

@@ -74,39 +74,30 @@ const bus = (
   type,
 });
 
+const routeInfo = (direction: string, duration: string, route: string) => ({
+  direction,
+  duration,
+  route,
+  routeEN: route,
+});
+
 const createBusData = (
   towardSouthCampus: NandaBusDepartureDetails[] = [],
   towardMainCampus: NandaBusDepartureDetails[] = [],
 ): CompleteBusData => ({
   main: {
-    toward_TSMC_building_info: {
-      direction: "toward TSMC",
-      duration: "15 minutes",
-      route: "campus bus",
-      routeEN: "campus bus",
-    },
-    toward_main_gate_info: {
-      direction: "toward gate",
-      duration: "15 minutes",
-      route: "campus bus",
-      routeEN: "campus bus",
-    },
+    toward_TSMC_building_info: routeInfo("toward TSMC", "15 minutes", "bus"),
+    toward_main_gate_info: routeInfo("toward gate", "15 minutes", "bus"),
     weekday: { toward_TSMC_building: [], toward_main_gate: [] },
     weekend: { toward_TSMC_building: [], toward_main_gate: [] },
   },
   nanda: {
-    toward_south_campus_info: {
-      direction: "toward Nanda",
-      duration: "20 minutes",
-      route: "shuttle",
-      routeEN: "shuttle",
-    },
-    toward_main_campus_info: {
-      direction: "toward main campus",
-      duration: "20 minutes",
-      route: "shuttle",
-      routeEN: "shuttle",
-    },
+    toward_south_campus_info: routeInfo(
+      "toward Nanda",
+      "20 minutes",
+      "shuttle",
+    ),
+    toward_main_campus_info: routeInfo("toward main", "20 minutes", "shuttle"),
     weekday: {
       toward_south_campus: towardSouthCampus,
       toward_main_campus: towardMainCampus,
@@ -118,6 +109,7 @@ const createBusData = (
 const taipeiDate = (value: string) =>
   fromZonedTime(`${value}:00.000`, "Asia/Taipei");
 
+const MAIN = "GEN II綜二101";
 const classEvent = (
   id: string,
   title: string,
@@ -129,8 +121,8 @@ const classEvent = (
     id,
     source: "class",
     title,
-    start: taipeiDate(start),
-    end: end ? taipeiDate(end) : undefined,
+    start: taipeiDate(`2026-10-09T${start}`),
+    end: end ? taipeiDate(`2026-10-09T${end}`) : undefined,
     location: venue,
     allDay: false,
     state: "upcoming",
@@ -218,41 +210,11 @@ describe("CampusBusSuggestion", () => {
   test("renders the next-class row and all transfer statuses without duplicating its trip", async () => {
     const { container } = await renderSuggestion(
       [
-        classEvent(
-          "a",
-          "First",
-          "GEN II綜二101",
-          "2026-10-09T07:00",
-          "2026-10-09T07:50",
-        ),
-        classEvent(
-          "b",
-          "Next",
-          "Nanda南大N404",
-          "2026-10-09T09:00",
-          "2026-10-09T09:50",
-        ),
-        classEvent(
-          "c",
-          "Third",
-          "GEN II綜二101",
-          "2026-10-09T10:00",
-          "2026-10-09T10:50",
-        ),
-        classEvent(
-          "d",
-          "Fourth",
-          "Nanda南大N101",
-          "2026-10-09T12:00",
-          "2026-10-09T12:50",
-        ),
-        classEvent(
-          "e",
-          "Fifth",
-          "GEN II綜二101",
-          "2026-10-09T13:30",
-          "2026-10-09T14:20",
-        ),
+        classEvent("a", "First", MAIN, "07:00", "07:50"),
+        classEvent("b", "Next", "Nanda南大N404", "09:00", "09:50"),
+        classEvent("c", "Third", MAIN, "10:00", "10:50"),
+        classEvent("d", "Fourth", "Nanda南大N101", "12:00", "12:50"),
+        classEvent("e", "Fifth", MAIN, "13:30", "14:20"),
       ],
       createBusData(
         [bus("08:30", "route1"), bus("11:30", "route1")],
@@ -288,45 +250,22 @@ describe("CampusBusSuggestion", () => {
     );
   });
 
-  test("shows one muted transfer line when the next inter-campus trip has no bus", async () => {
+  test.each([
+    {
+      name: "the next inter-campus trip has no bus",
+      home: "none" as const,
+      firstEnd: "07:50",
+    },
+    {
+      name: "a previous class has no departure",
+      home: "main" as const,
+      firstEnd: undefined,
+    },
+  ])("shows one muted no-bus line when $name", async ({ home, firstEnd }) => {
+    homeCampus = home;
     const { container } = await renderSuggestion([
-      classEvent(
-        "a",
-        "First",
-        "GEN II綜二101",
-        "2026-10-09T07:00",
-        "2026-10-09T07:50",
-      ),
-      classEvent(
-        "b",
-        "Next",
-        "Nanda南大N404",
-        "2026-10-09T09:00",
-        "2026-10-09T09:50",
-      ),
-    ]);
-
-    const status = container.querySelector('[role="status"]');
-    expect(status?.children).toHaveLength(1);
-    expect(status?.textContent).toBe(
-      "校區轉乘：校本部 → 南大校區 — 這段轉乘已沒有可用的校園公車班次。",
-    );
-    expect(
-      container.querySelector('[data-testid="bus-listing-item"]'),
-    ).toBeNull();
-  });
-
-  test("shows one muted no-bus line when a previous class has no departure", async () => {
-    homeCampus = "main";
-    const { container } = await renderSuggestion([
-      classEvent("first", "First", "GEN II綜二101", "2026-10-09T07:00"),
-      classEvent(
-        "next",
-        "Next",
-        "Nanda南大N404",
-        "2026-10-09T09:00",
-        "2026-10-09T09:50",
-      ),
+      classEvent("a", "First", MAIN, "07:00", firstEnd),
+      classEvent("b", "Next", "Nanda南大N404", "09:00", "09:50"),
     ]);
 
     const status = container.querySelector('[role="status"]');

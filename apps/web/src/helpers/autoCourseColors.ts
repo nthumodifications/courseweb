@@ -16,7 +16,7 @@ const TIME_CODES = new Set(scheduleTimeSlots.map(({ time }) => time));
 const stableHash = (value: string) => {
   let hash = 2166136261;
   for (const char of value) {
-    hash ^= char.charCodeAt(0);
+    hash ^= char.codePointAt(0) ?? 0;
     hash = Math.imul(hash, 16777619);
   }
   return hash >>> 0;
@@ -35,7 +35,7 @@ const assignDepartmentColors = (
   const usedIndexes = new Set<number>();
   const departments = [...new Set(courses.map(({ department }) => department))]
     .filter(Boolean)
-    .sort();
+    .sort((left, right) => left.localeCompare(right, "en"));
 
   for (const department of departments) {
     const hash = stableHash(department);

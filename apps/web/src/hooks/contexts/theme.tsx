@@ -64,6 +64,15 @@ const ThemeContext = createContext<ThemeContextValue>({
   toggleCompactHeader: () => {},
 });
 
+const applyTransitionSpeedAttribute = (
+  root: HTMLElement,
+  speed: ThemeConfig["transitionSpeed"],
+) => {
+  const attribute = getTransitionSpeedAttribute(speed);
+  if (attribute) root.dataset.transitionSpeed = attribute;
+  else delete root.dataset.transitionSpeed;
+};
+
 const applyThemeConfig = (
   config: ThemeConfig,
   isDark: boolean,
@@ -116,14 +125,7 @@ const applyThemeConfig = (
     "--transition-duration",
     getTransitionDuration(config.transitionSpeed, prefersReducedMotion),
   );
-  const transitionSpeedAttribute = getTransitionSpeedAttribute(
-    config.transitionSpeed,
-  );
-  if (transitionSpeedAttribute) {
-    root.setAttribute("data-transition-speed", transitionSpeedAttribute);
-  } else {
-    root.removeAttribute("data-transition-speed");
-  }
+  applyTransitionSpeedAttribute(root, config.transitionSpeed);
 
   // Apply background classes on body
   const body = document.body;
