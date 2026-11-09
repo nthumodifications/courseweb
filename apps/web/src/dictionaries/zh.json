@@ -1170,6 +1170,13 @@
         "comfortable": "適中",
         "spacious": "寬鬆"
       },
+      "transition_speed": {
+        "title": "轉場速度",
+        "instant": "立即",
+        "fast": "快速",
+        "default": "預設",
+        "slow": "緩慢"
+      },
       "background": {
         "title": "背景",
         "from": "起始顏色",

@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useState,
 } from "react";
 import { useLocalStorage } from "usehooks-ts";
 import {
@@ -18,8 +19,10 @@ import {
   ThemeDensity,
   ThemeFont,
   ThemeRadius,
+  TransitionSpeed,
 } from "@/types/theme";
 import { THEME_PRESET_MAP } from "@/config/themePresets";
+import { getTransitionDuration } from "@/lib/transitionSettings";
 
 interface ThemeContextValue {
   config: ThemeConfig;
@@ -28,6 +31,7 @@ interface ThemeContextValue {
   setFontScale: (scale: number) => void;
   setFont: (f: ThemeFont) => void;
   setDensity: (d: ThemeDensity) => void;
+  setTransitionSpeed: (speed: TransitionSpeed) => void;
   setBackground: (
     bg: ThemeBackground,
     opts?: { from?: string; to?: string; dir?: string },
@@ -47,6 +51,7 @@ const ThemeContext = createContext<ThemeContextValue>({
   setFontScale: () => {},
   setFont: () => {},
   setDensity: () => {},
+  setTransitionSpeed: () => {},
   setBackground: () => {},
   setAccentOverride: () => {},
   resetTheme: () => {},
@@ -56,7 +61,11 @@ const ThemeContext = createContext<ThemeContextValue>({
   toggleCompactHeader: () => {},
 });
 
-const applyThemeConfig = (config: ThemeConfig, isDark: boolean) => {
+const applyThemeConfig = (
+  config: ThemeConfig,
+  isDark: boolean,
+  prefersReducedMotion: boolean,
+) => {
   const root = document.documentElement;
   const preset =
     THEME_PRESET_MAP[config.preset] ?? THEME_PRESET_MAP["nthumods"];
@@ -99,6 +108,10 @@ const applyThemeConfig = (config: ThemeConfig, isDark: boolean) => {
   root.style.setProperty(
     "--density-factor",
     String(DENSITY_VALUES[config.density]),
+  );
+  root.style.setProperty(
+    "--transition-duration",
+    getTransitionDuration(config.transitionSpeed, prefersReducedMotion),
   );
 
   // Apply background classes on body
@@ -184,6 +197,13 @@ const useThemeProvider = () => {
     [setConfig],
   );
 
+  const setTransitionSpeed = useCallback(
+    (transitionSpeed: TransitionSpeed) => {
+      setConfig((prev) => ({ ...prev, transitionSpeed }));
+    },
+    [setConfig],
+  );
+
   const setBackground = useCallback(
     (
       background: ThemeBackground,
@@ -236,6 +256,7 @@ const useThemeProvider = () => {
       setFontScale,
       setFont,
       setDensity,
+      setTransitionSpeed,
       setBackground,
       setAccentOverride,
       resetTheme,
@@ -251,6 +272,7 @@ const useThemeProvider = () => {
       setFontScale,
       setFont,
       setDensity,
+      setTransitionSpeed,
       setBackground,
       setAccentOverride,
       resetTheme,
@@ -269,10 +291,20 @@ export const ThemeProvider: FC<PropsWithChildren<{ isDark: boolean }>> = ({
   isDark,
 }) => {
   const value = useThemeProvider();
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
   useEffect(() => {
-    applyThemeConfig(value.config, isDark);
-  }, [value.config, isDark]);
+    if (typeof window.matchMedia !== "function") return;
+    const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const updatePreference = () => setPrefersReducedMotion(preference.matches);
+    updatePreference();
+    preference.addEventListener("change", updatePreference);
+    return () => preference.removeEventListener("change", updatePreference);
+  }, []);
+
+  useEffect(() => {
+    applyThemeConfig(value.config, isDark, prefersReducedMotion);
+  }, [value.config, isDark, prefersReducedMotion]);
 
   useEffect(() => {
     document.documentElement.classList.toggle("zen-mode", value.zenMode);

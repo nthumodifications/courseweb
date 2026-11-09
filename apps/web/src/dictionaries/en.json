@@ -1170,6 +1170,13 @@
         "comfortable": "Default",
         "spacious": "Spacious"
       },
+      "transition_speed": {
+        "title": "Transition Speed",
+        "instant": "Instant",
+        "fast": "Fast",
+        "default": "Default",
+        "slow": "Slow"
+      },
       "background": {
         "title": "Background",
         "from": "From",

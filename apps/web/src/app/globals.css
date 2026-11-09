@@ -82,6 +82,7 @@ body {
     --font-family: "Inter", "PingFang TC", "Microsoft JhengHei", "Noto Sans CJK TC", "Noto Sans TC", sans-serif;
     --font-scale: 1;
     --density-factor: 1;
+    --transition-duration: 150ms;
     --bg-pattern: none;
     --bg-gradient-from: hsl(var(--background));
     --bg-gradient-to: hsl(var(--background));
@@ -128,6 +129,12 @@ body {
     --content-height: calc(
       calc(100vh - env(safe-area-inset-top, 0px)) - var(--header-height)
     );
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --transition-duration: 0ms !important;
   }
 }
 
@@ -237,6 +244,11 @@ html.compact-header header {
 @layer base {
   * {
     @apply border-border;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: var(--transition-duration, 150ms) !important;
   }
   html,
   body {
