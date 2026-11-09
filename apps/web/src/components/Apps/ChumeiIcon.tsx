@@ -7,7 +7,15 @@
  * `public/images` rather than hotlinked, so the list does not depend on
  * chumei.observe.tw being up to render.
  */
-const ChumeiIcon = ({ size = 24 }: { size?: number }) => (
+// This app uses Vite and does not have Next's image optimizer.
+/* eslint @next/next/no-img-element: off */
+const ChumeiIcon = ({
+  size = 24,
+  className,
+}: {
+  size?: number | string;
+  className?: string;
+}) => (
   <img
     src="/images/chumei-logo.png"
     alt=""
@@ -15,7 +23,7 @@ const ChumeiIcon = ({ size = 24 }: { size?: number }) => (
     height={size}
     loading="lazy"
     decoding="async"
-    className="rounded-[4px]"
+    className={className ? `rounded-[4px] ${className}` : "rounded-[4px]"}
   />
 );
 

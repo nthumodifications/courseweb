@@ -177,6 +177,20 @@ const AdminReviewsPage = lazyWithRetry(
 const AdminCourseShortNamesPage = lazyWithRetry(
   () => import("@/app/[lang]/admin/course-short-names/page"),
 );
+const AdminOrganisationsPage = lazyWithRetry(
+  () => import("@/app/[lang]/admin/organisations/page"),
+);
+
+const SpacesIndexPage = lazyWithRetry(() => import("@/app/[lang]/spaces/page"));
+const SpaceDetailPage = lazyWithRetry(
+  () => import("@/app/[lang]/spaces/detail-page"),
+);
+const MyBookingsPage = lazyWithRetry(
+  () => import("@/app/[lang]/spaces/mine-page"),
+);
+const ManageSpacesPage = lazyWithRetry(
+  () => import("@/app/[lang]/spaces/manage-page"),
+);
 
 // Separate layout page
 const WaitlistPage = lazyWithRetry(() => import("@/app/[lang]/waitlist/page"));
@@ -488,6 +502,34 @@ export const appRoutes = [
                 },
               },
               {
+                path: "spaces",
+                element: <SpacesIndexPage />,
+                handle: { title: en.spaces.title, titleZh: zh.spaces.title },
+              },
+              {
+                path: "spaces/:org/:space",
+                element: <SpaceDetailPage />,
+                handle: { noindex: true },
+              },
+              {
+                path: "spaces/mine",
+                element: <MyBookingsPage />,
+                handle: {
+                  title: en.spaces.myBookings,
+                  titleZh: zh.spaces.myBookings,
+                  noindex: true,
+                },
+              },
+              {
+                path: "spaces/manage",
+                element: <ManageSpacesPage />,
+                handle: {
+                  title: en.spaces.manage,
+                  titleZh: zh.spaces.manage,
+                  noindex: true,
+                },
+              },
+              {
                 path: "student/grades",
                 element: <GradesPage />,
                 handle: {
@@ -685,6 +727,7 @@ export const appRoutes = [
               { path: "announcements", element: <AdminAnnouncementsPage /> },
               { path: "recruitment", element: <AdminRecruitmentPage /> },
               { path: "reviews", element: <AdminReviewsPage /> },
+              { path: "organisations", element: <AdminOrganisationsPage /> },
               {
                 path: "course-short-names",
                 element: <AdminCourseShortNamesPage />,

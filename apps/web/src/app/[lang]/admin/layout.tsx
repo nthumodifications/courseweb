@@ -5,6 +5,7 @@ import { Badge, Button, cn } from "@courseweb/ui";
 import {
   Activity,
   ArrowLeft,
+  Building2,
   KeyRound,
   Megaphone,
   MessageSquareWarning,
@@ -36,6 +37,7 @@ const NAV = [
     icon: MessageSquareWarning,
     end: false,
   },
+  { to: "organisations", label: "Organisations", icon: Building2, end: false },
   {
     to: "course-short-names",
     label: "Course short names",
@@ -174,7 +176,9 @@ const AdminLayout = () => {
                     <Icon className="h-4 w-4" aria-hidden />
                     {item.to === "course-short-names"
                       ? dict.admin_short_names.title
-                      : item.label}
+                      : item.to === "organisations"
+                        ? dict.spaces.verificationQueue
+                        : item.label}
                   </NavLink>
                 </li>
               );

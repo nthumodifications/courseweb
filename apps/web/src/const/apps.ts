@@ -28,7 +28,7 @@ type AppDefinition = {
   title_zh: string;
   title_en: string;
   href: string;
-  Icon: React.FC<any>;
+  Icon: React.ComponentType<{ size?: number | string; className?: string }>;
   target?: string;
   beta?: boolean;
 };
@@ -141,6 +141,14 @@ export const apps: AppDefinition[] = [
     title_en: "Sports Venue Occupancy",
     href: "/sports-venues",
     Icon: Dumbbell,
+  },
+  {
+    id: "spaces",
+    category: "facilities",
+    title_zh: "空間預約",
+    title_en: "Space reservations",
+    href: "/spaces",
+    Icon: CalendarIcon,
   },
   {
     id: "library",

@@ -33,6 +33,7 @@ const mockCalendarShareFindFirst = mock();
 const mockCalendarShareFindMany = mock();
 const mockCalendarShareCreate = mock();
 const mockCalendarShareUpdateMany = mock();
+const mockBookingFindMany = mock();
 const mockStorageGet = mock();
 const mockTimetableFetch = mock();
 
@@ -83,6 +84,7 @@ const mockClient = {
       }),
     ),
   },
+  booking: { findMany: mockBookingFindMany },
 } as any;
 mock.module("../client", () => ({ default: mockClient }));
 
@@ -114,6 +116,7 @@ const {
   createCalendarApp,
   clearAcademicCalendarCache,
   parseCalendarIncludes,
+  approvedBookingsToIcs,
   SEMESTER_INFO: secureApiSemesterInfo,
   trimTrailingSlashes,
 } = await import("./calendar");
@@ -208,11 +211,13 @@ describe("Calendar API", () => {
     mockCalendarShareFindMany.mockReset();
     mockCalendarShareCreate.mockClear();
     mockCalendarShareUpdateMany.mockClear();
+    mockBookingFindMany.mockReset();
     mockStorageGet.mockReset();
     mockTimetableFetch.mockReset();
     mockCalendarShareFindFirst.mockResolvedValue(null);
     mockCalendarShareFindMany.mockResolvedValue([]);
     mockCalendarShareUpdateMany.mockResolvedValue({ count: 0 });
+    mockBookingFindMany.mockResolvedValue([]);
     mockStorageGet.mockResolvedValue({
       exists: true,
       data: () => ({ value: { "11510": ["11510-COURSE-1"] } }),
@@ -588,6 +593,67 @@ describe("Calendar API", () => {
         headers: { "If-None-Match": etag! },
       });
       expect(notModified.status).toBe(304);
+    },
+  );
+
+  test("exports approved space bookings in the external calendar feed", async () => {
+    const event = approvedBookingsToIcs([
+      {
+        id: "booking-42",
+        status: "APPROVED",
+        startAt: new Date("2027-01-04T01:00:00.000Z"),
+        endAt: new Date("2027-01-04T02:00:00.000Z"),
+        updatedAt: new Date("2026-12-01T00:00:00.000Z"),
+        space: { name: "Club room", location: "Administration Building" },
+      },
+      {
+        id: "booking-pending",
+        status: "REQUESTED",
+        startAt: new Date("2027-01-04T02:00:00.000Z"),
+        endAt: new Date("2027-01-04T03:00:00.000Z"),
+        updatedAt: new Date("2026-12-01T00:00:00.000Z"),
+        space: { name: "Private pending room", location: "Campus" },
+      },
+    ]);
+    expect(event).toContain("UID:booking-booking-42@nthumods.com");
+    expect(event).toContain("SUMMARY:Club room");
+    expect(event).toContain("LOCATION:Administration Building");
+    expect(event).not.toContain("booking-pending");
+    expect(event).toContain("TIMEZONE-ID:Asia/Taipei");
+  });
+
+  serialTest(
+    "merges approved space bookings into the signed calendar feed",
+    async () => {
+      const feedUrl = await prepareTimetableFeed();
+      mockBookingFindMany.mockResolvedValueOnce([
+        {
+          id: "booking-feed-1",
+          status: "APPROVED",
+          startAt: new Date("2027-01-04T01:00:00.000Z"),
+          endAt: new Date("2027-01-04T02:00:00.000Z"),
+          updatedAt: new Date("2026-12-01T00:00:00.000Z"),
+          space: { name: "Club room", location: "Administration Building" },
+        },
+      ]);
+      mockTimetableFetch.mockRejectedValue(
+        new Error("calendar upstream unavailable"),
+      );
+
+      const response = await calendarHandler.request(feedUrl);
+      const body = await response.text();
+
+      expect(response.status).toBe(200);
+      expect(body).toContain("UID:booking-booking-feed-1@nthumods.com");
+      expect(body).toContain("SUMMARY:Club room");
+      expect(mockBookingFindMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            userId: "test-user-id",
+            status: "APPROVED",
+          }),
+        }),
+      );
     },
   );
 

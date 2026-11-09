@@ -197,6 +197,28 @@ export type AdminCourseReview = {
   }[];
 };
 
+export type AdminSpaceOrganisation = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  contact: string;
+  status: "PENDING" | "VERIFIED" | "REJECTED" | "SUSPENDED";
+  createdAt: string;
+  creator: { userId: string; name: string; email: string };
+  members: Array<{
+    role: string;
+    user: { userId: string; name: string; email: string };
+  }>;
+  spaces: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    isPublic: boolean;
+    archivedAt: string | null;
+  }>;
+};
+
 export type AdminAuditEntry = {
   id: string;
   actorId: string;
@@ -259,7 +281,7 @@ const reviewsClient = () =>
 
 type CourseShortNamesAdminClient = {
   $get: (
-    input: {},
+    input: Record<string, never>,
     options: { headers: ReturnType<typeof authHeaders> },
   ) => Promise<unknown>;
   ":id": {
@@ -289,6 +311,37 @@ const courseShortNamesClient = () =>
       "course-short-names": CourseShortNamesAdminClient;
     }
   )["course-short-names"];
+
+type SpaceOrganisationsAdminClient = {
+  $get: (
+    input: {
+      query: {
+        status: "PENDING" | "VERIFIED" | "REJECTED" | "SUSPENDED" | "ALL";
+      };
+    },
+    options: { headers: ReturnType<typeof authHeaders> },
+  ) => Promise<unknown>;
+  ":id": {
+    status: {
+      $post: (
+        input: {
+          param: { id: string };
+          json: {
+            status: "VERIFIED" | "REJECTED" | "SUSPENDED";
+            reason: string;
+          };
+        },
+        options: { headers: ReturnType<typeof authHeaders> },
+      ) => Promise<unknown>;
+    };
+  };
+};
+const spaceOrganisationsClient = () =>
+  (
+    authClient.api.admin as unknown as {
+      organisations: SpaceOrganisationsAdminClient;
+    }
+  ).organisations;
 
 /**
  * Turn a non-2xx admin response into an Error carrying the server's own
@@ -326,6 +379,8 @@ export const adminKeys = {
   reviews: (status: ReviewModerationStatus) =>
     ["admin", "reviews", status] as const,
   courseShortNames: ["admin", "course-short-names"] as const,
+  spaceOrganisations: (status: string) =>
+    ["admin", "space-organisations", status] as const,
 };
 
 /**
@@ -985,5 +1040,48 @@ export const useRecruitmentResumeUrl = () => {
         response as unknown as Response,
       );
     },
+  });
+};
+
+export const useAdminSpaceOrganisations = (
+  status: "PENDING" | "VERIFIED" | "REJECTED" | "SUSPENDED" | "ALL" = "PENDING",
+) => {
+  const token = useAdminToken();
+  return useQuery<{ organisations: AdminSpaceOrganisation[] }>({
+    queryKey: adminKeys.spaceOrganisations(status),
+    enabled: Boolean(token),
+    queryFn: async () => {
+      const response = await spaceOrganisationsClient().$get(
+        { query: { status } },
+        { headers: authHeaders(requireToken(token)) },
+      );
+      return unwrap<{ organisations: AdminSpaceOrganisation[] }>(
+        response as unknown as Response,
+      );
+    },
+  });
+};
+
+export const useSetSpaceOrganisationStatus = () => {
+  const token = useAdminToken();
+  const invalidate = useInvalidateAdmin();
+  return useMutation({
+    mutationFn: async (input: {
+      id: string;
+      status: "VERIFIED" | "REJECTED" | "SUSPENDED";
+      reason: string;
+    }) => {
+      const response = await spaceOrganisationsClient()[":id"].status.$post(
+        {
+          param: { id: input.id },
+          json: { status: input.status, reason: input.reason },
+        },
+        { headers: authHeaders(requireToken(token)) },
+      );
+      return unwrap<{ ok: true; status: string }>(
+        response as unknown as Response,
+      );
+    },
+    onSuccess: invalidate,
   });
 };
