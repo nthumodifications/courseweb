@@ -64,7 +64,7 @@ export type Organisation = {
   spaces: Space[];
   members?: Array<{
     role: "OWNER" | "MANAGER" | "APPROVER";
-    user: { userId: string; name: string; nameEn: string; email: string };
+    user: { userId: string; name: string; nameEn: string; email?: string };
   }>;
 };
 

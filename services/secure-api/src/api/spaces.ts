@@ -552,6 +552,16 @@ export const createSpacesApp = ({
         discordWebhookUrl: canManageOrganisation(row.role)
           ? row.organisation.discordWebhookUrl
           : null,
+        members: canManageOrganisation(row.role)
+          ? row.organisation.members
+          : row.organisation.members.map(({ user, ...member }) => ({
+              ...member,
+              user: {
+                userId: user.userId,
+                name: user.name,
+                nameEn: user.nameEn,
+              },
+            })),
         spaces: row.organisation.spaces.map((space) => ({
           ...serializeSpace(space),
           allowListUserIds: space.allowList.map((entry) => entry.userId),

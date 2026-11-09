@@ -7,6 +7,7 @@ const orgFindMany = mock();
 const orgCreate = mock();
 const orgMemberFindFirst = mock();
 const orgMemberUpsert = mock();
+const orgMemberFindMany = mock();
 const orgMemberDelete = mock();
 const orgMemberCount = mock();
 const userFindFirst = mock();
@@ -28,7 +29,7 @@ const spaceDb: any = {
     findFirst: orgMemberFindFirst,
     create: mock(),
     upsert: orgMemberUpsert,
-    findMany: mock(),
+    findMany: orgMemberFindMany,
     count: orgMemberCount,
     delete: orgMemberDelete,
   },
@@ -134,6 +135,7 @@ describe("space reservation routes", () => {
       orgCreate,
       orgMemberFindFirst,
       orgMemberUpsert,
+      orgMemberFindMany,
       orgMemberDelete,
       orgMemberCount,
       userFindFirst,
@@ -174,6 +176,46 @@ describe("space reservation routes", () => {
         where: expect.objectContaining({ status: "VERIFIED" }),
       }),
     );
+  });
+
+  test("hides member emails and the webhook from approvers on the manage list", async () => {
+    const organisation = (role: string) => ({
+      role,
+      organisation: {
+        id: `organisation-${role}`,
+        name: "Club",
+        slug: `club-${role.toLowerCase()}`,
+        discordWebhookUrl: "https://discord.com/api/webhooks/1/secret",
+        members: [
+          {
+            id: "member-1",
+            role: "OWNER",
+            user: {
+              userId: "owner-1",
+              name: "Owner",
+              nameEn: "Owner",
+              email: "owner@example.edu",
+            },
+          },
+        ],
+        spaces: [],
+      },
+    });
+    orgMemberFindMany.mockResolvedValue([
+      organisation("APPROVER"),
+      organisation("MANAGER"),
+    ]);
+    const response = await app.request("/manage");
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    const [approverView, managerView] = body.organisations;
+    expect(approverView.members[0].user).toEqual({
+      userId: "owner-1",
+      name: "Owner",
+      nameEn: "Owner",
+    });
+    expect(approverView.discordWebhookUrl).toBeNull();
+    expect(managerView.members[0].user.email).toBe("owner@example.edu");
   });
 
   test("maps an organisation slug collision to HTTP 409", async () => {
