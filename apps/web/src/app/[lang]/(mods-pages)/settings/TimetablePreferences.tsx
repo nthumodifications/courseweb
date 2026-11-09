@@ -130,32 +130,6 @@ const TimetablePreferences: React.FC<SettingsControlProps> = ({
 
   return (
     <div className="divide-y divide-border">
-      <div className="flex flex-row items-center gap-4 py-4">
-        <label className="font-bold flex-1 text-sm">
-          {dict.settings.timetable.home_campus}
-        </label>
-        <Select
-          value={homeCampus}
-          onValueChange={(value) =>
-            setHomeCampus(value as "none" | "main" | "nanda")
-          }
-        >
-          <SelectTrigger className="w-[160px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">
-              {dict.settings.timetable.home_campus_options.none}
-            </SelectItem>
-            <SelectItem value="main">
-              {dict.settings.timetable.home_campus_options.main}
-            </SelectItem>
-            <SelectItem value="nanda">
-              {dict.settings.timetable.home_campus_options.nanda}
-            </SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
       {/* Language */}
       <div className="flex flex-row items-center gap-4 py-4">
         <label className="font-bold flex-1 text-sm">
@@ -321,6 +295,33 @@ const TimetablePreferences: React.FC<SettingsControlProps> = ({
             );
           })}
         </div>
+      </div>
+
+      <div className="flex flex-row items-center gap-4 py-4">
+        <label className="font-bold flex-1 text-sm">
+          {dict.settings.timetable.home_campus}
+        </label>
+        <Select
+          value={homeCampus}
+          onValueChange={(value) =>
+            setHomeCampus(value as "none" | "main" | "nanda")
+          }
+        >
+          <SelectTrigger className="w-[160px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">
+              {dict.settings.timetable.home_campus_options.none}
+            </SelectItem>
+            <SelectItem value="main">
+              {dict.settings.timetable.home_campus_options.main}
+            </SelectItem>
+            <SelectItem value="nanda">
+              {dict.settings.timetable.home_campus_options.nanda}
+            </SelectItem>
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );
