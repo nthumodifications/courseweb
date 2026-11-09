@@ -19,6 +19,8 @@ const settingsContext = createContext<ReturnType<typeof useSettingsProvider>>({
   darkMode: false,
   pinnedApps: [],
   showAcademicCalendar: true,
+  homeCampus: "none",
+  setHomeCampus: () => {},
   setShowAcademicCalendar: () => {},
   setLanguage: () => {},
   setDarkMode: () => {},
@@ -28,15 +30,6 @@ const settingsContext = createContext<ReturnType<typeof useSettingsProvider>>({
   setAnalytics: () => {},
 });
 
-type HeadlessAISStorage =
-  | { enabled: false }
-  | {
-      enabled: true;
-      studentid: string;
-      password: string;
-      ACIXSTORE?: string;
-      lastUpdated: number;
-    };
 const useSettingsProvider = () => {
   const routeLanguage = useParams().lang;
   const language: Language =
@@ -60,6 +53,9 @@ const useSettingsProvider = () => {
   const [analytics, setAnalytics] = useLocalStorage<boolean>("analytics", true);
   const [showAcademicCalendar, setShowAcademicCalendar] =
     useLocalStorage<boolean>("show_academic_calendar", true);
+  const [homeCampus, setHomeCampus] = useLocalStorage<
+    "none" | "main" | "nanda"
+  >("bus_home_campus", "none");
 
   useEffect(() => {
     if (
@@ -165,6 +161,8 @@ const useSettingsProvider = () => {
     darkMode,
     pinnedApps,
     showAcademicCalendar,
+    homeCampus,
+    setHomeCampus,
     setShowAcademicCalendar,
     setLanguage,
     setDarkMode,

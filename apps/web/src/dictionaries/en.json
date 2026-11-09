@@ -1025,6 +1025,10 @@
     "to_main_campus": "To Main Campus",
     "main_campus": "Main Campus",
     "leave_by": "Leave by {time}",
+    "leave_by_trip": "Take the {departure} shuttle, arrives {arrival}",
+    "leave_by_no_fit": "No shuttle can get you to the next class in time.",
+    "campus_transfer_warning_too_short": "The gap between classes is too short for a shuttle.",
+    "campus_transfer_warning_no_bus": "No shuttle is available between these classes.",
     "campus_transfer": "Campus transfer: {from} → {to} — take {line} at {departure} (arrives by {arrival}).",
     "campus_transfer_too_short": "Campus transfer: {from} → {to} — the gap is too short for any campus bus.",
     "campus_transfer_no_bus": "Campus transfer: {from} → {to} — no campus bus remains for this transfer.",
@@ -1263,6 +1267,12 @@
     },
     "timetable": {
       "title": "Timetable",
+      "home_campus": "Home campus",
+      "home_campus_options": {
+        "none": "Not set",
+        "main": "Main Campus",
+        "nanda": "Nanda Campus"
+      },
       "vertical_preview": "Vertical Preview",
       "default_view": {
         "title": "Default View",

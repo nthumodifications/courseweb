@@ -210,6 +210,8 @@ const SettingsPage = () => {
     ).map((widget) => widget.title),
   ];
   const timetablePreferencesSearchKeywords = [
+    dict.settings.timetable.home_campus,
+    ...Object.values(dict.settings.timetable.home_campus_options),
     dict.settings.timetable.language,
     ...Object.values(dict.settings.timetable.language_options),
     dict.settings.timetable.font_size,

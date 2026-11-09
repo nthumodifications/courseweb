@@ -1,19 +1,14 @@
 import { FC, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Route1LineIcon } from "@/components/BusIcons/Route1LineIcon";
-import { Route2LineIcon } from "@/components/BusIcons/Route2LineIcon";
-import {
-  BusListingItem,
-  type BusListingItemProps,
-} from "@/features/bus/BusListingItem";
 import useDictionary from "@/dictionaries/useDictionary";
 import { getAllBusData } from "@/libs/bus";
 import useTime from "@/hooks/useTime";
+import { useSettings } from "@/hooks/contexts/settings";
 import type { UpcomingEvent } from "@/hooks/useUpcomingEvents";
 import {
   findCampusTransfers,
-  findNextCampusBus,
   hasNoClassToday,
+  planNextCampusBus,
   type CampusClass,
 } from "@/helpers/campusBusSuggestion";
 
@@ -24,6 +19,7 @@ type CampusBusSuggestionProps = {
 const CampusBusSuggestion: FC<CampusBusSuggestionProps> = ({ events }) => {
   const dict = useDictionary();
   const now = useTime(60_000);
+  const { homeCampus } = useSettings();
   const classes = useMemo<CampusClass[]>(
     () =>
       events
@@ -49,8 +45,15 @@ const CampusBusSuggestion: FC<CampusBusSuggestionProps> = ({ events }) => {
   });
   const suggestion = useMemo(
     () =>
-      data && !holidayToday ? findNextCampusBus(classes, data, now) : null,
-    [classes, data, holidayToday, now],
+      data && !holidayToday
+        ? planNextCampusBus(
+            classes,
+            data,
+            now,
+            homeCampus === "none" ? null : homeCampus,
+          )
+        : null,
+    [classes, data, holidayToday, homeCampus, now],
   );
   const transfers = useMemo(
     () =>
@@ -61,82 +64,39 @@ const CampusBusSuggestion: FC<CampusBusSuggestionProps> = ({ events }) => {
   if (isLoading || error || (!suggestion && transfers.length === 0))
     return null;
 
-  const busProps = suggestion
-    ? (() => {
-        const Icon =
-          suggestion.line === "route1" ? Route1LineIcon : Route2LineIcon;
-        const destination =
-          suggestion.campus === "nanda" ? dict.bus.nanda : dict.bus.main_campus;
-        return {
-          tab: suggestion.direction === "down" ? "nanda" : "north_gate",
-          startTime: suggestion.departureTime,
-          Icon,
-          line: suggestion.line,
-          direction: suggestion.direction,
-          title:
-            suggestion.line === "route1"
-              ? dict.bus.route1_line
-              : dict.bus.route2_line,
-          destination: `${dict.bus.to}${destination}`,
-          notes: [
-            dict.bus.next_class.replace("{name}", suggestion.class.title),
-            dict.bus.next_class_venue.replace(
-              "{venue}",
-              suggestion.class.venue ?? destination,
-            ),
-          ],
-          arrival: dict.bus.leave_by.replace(
-            "{time}",
-            suggestion.departureTime,
-          ),
-          exactArrival: true,
-        } satisfies Omit<BusListingItemProps, "refTime">;
-      })()
-    : null;
+  const failedNextTransferId =
+    suggestion?.status === "no_bus" ? suggestion.class.id : null;
+  const transferWarnings = transfers.filter(
+    (transfer) =>
+      transfer.status !== "scheduled" &&
+      transfer.to.id !== failedNextTransferId,
+  );
+  if (!suggestion && transferWarnings.length === 0) return null;
 
   return (
-    <div className="flex flex-col px-2 divide-y divide-border">
-      {suggestion && busProps && <BusListingItem {...busProps} refTime={now} />}
-      {transfers.length > 0 && (
-        <div
-          className="flex flex-col gap-1 py-2 text-sm font-medium text-muted-foreground"
-          role="status"
-        >
-          {transfers.map((transfer) => {
-            const from =
-              transfer.fromCampus === "nanda"
-                ? dict.bus.nanda
-                : dict.bus.main_campus;
-            const to =
-              transfer.toCampus === "nanda"
-                ? dict.bus.nanda
-                : dict.bus.main_campus;
-            const message =
-              transfer.status === "scheduled"
-                ? dict.bus.campus_transfer
-                    .replace("{from}", from)
-                    .replace("{to}", to)
-                    .replace(
-                      "{line}",
-                      transfer.line === "route1"
-                        ? dict.bus.route1_line
-                        : dict.bus.route2_line,
-                    )
-                    .replace("{departure}", transfer.departureTime ?? "")
-                    .replace("{arrival}", transfer.arrivalTime ?? "")
-                : dict.bus[
-                    transfer.status === "too_short"
-                      ? "campus_transfer_too_short"
-                      : "campus_transfer_no_bus"
-                  ]
-                    .replace("{from}", from)
-                    .replace("{to}", to);
-            return (
-              <div key={`${transfer.from.id}-${transfer.to.id}`}>{message}</div>
-            );
-          })}
+    <div
+      className="flex flex-col gap-1 px-2 py-1 text-sm font-medium text-muted-foreground"
+      role="status"
+    >
+      {suggestion?.status === "scheduled" && (
+        <div>
+          {dict.bus.leave_by_trip
+            .replace("{departure}", suggestion.departureTime)
+            .replace("{arrival}", suggestion.arrivalTime)}
         </div>
       )}
+      {suggestion?.status === "no_bus" && <div>{dict.bus.leave_by_no_fit}</div>}
+      {transferWarnings.map((transfer) => {
+        const message =
+          dict.bus[
+            transfer.status === "too_short"
+              ? "campus_transfer_warning_too_short"
+              : "campus_transfer_warning_no_bus"
+          ];
+        return (
+          <div key={`${transfer.from.id}-${transfer.to.id}`}>{message}</div>
+        );
+      })}
     </div>
   );
 };

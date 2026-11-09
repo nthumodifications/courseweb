@@ -17,6 +17,7 @@ import {
 import useDictionary from "@/dictionaries/useDictionary";
 import { cn } from "@/lib/utils";
 import { ChevronUp, ChevronDown } from "lucide-react";
+import { useSettings } from "@/hooks/contexts/settings";
 
 interface SettingsControlProps {
   settings: TimetableDisplayPreferences;
@@ -72,6 +73,7 @@ const TimetablePreferences: React.FC<SettingsControlProps> = ({
   onSettingsChange,
 }) => {
   const dict = useDictionary();
+  const { homeCampus, setHomeCampus } = useSettings();
   const fieldOrder: TimetableFieldKey[] =
     settings.fieldOrder ?? DEFAULT_FIELD_ORDER;
 
@@ -128,6 +130,32 @@ const TimetablePreferences: React.FC<SettingsControlProps> = ({
 
   return (
     <div className="divide-y divide-border">
+      <div className="flex flex-row items-center gap-4 py-4">
+        <label className="font-bold flex-1 text-sm">
+          {dict.settings.timetable.home_campus}
+        </label>
+        <Select
+          value={homeCampus}
+          onValueChange={(value) =>
+            setHomeCampus(value as "none" | "main" | "nanda")
+          }
+        >
+          <SelectTrigger className="w-[160px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">
+              {dict.settings.timetable.home_campus_options.none}
+            </SelectItem>
+            <SelectItem value="main">
+              {dict.settings.timetable.home_campus_options.main}
+            </SelectItem>
+            <SelectItem value="nanda">
+              {dict.settings.timetable.home_campus_options.nanda}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
       {/* Language */}
       <div className="flex flex-row items-center gap-4 py-4">
         <label className="font-bold flex-1 text-sm">

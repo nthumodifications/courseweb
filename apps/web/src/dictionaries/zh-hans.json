@@ -1025,6 +1025,10 @@
     "to_main_campus": "往校本部",
     "main_campus": "校本部",
     "leave_by": "请于 {time} 前出发",
+    "leave_by_trip": "搭 {departure} 校车，{arrival} 到",
+    "leave_by_no_fit": "没有校车能及时抵达下一堂课。",
+    "campus_transfer_warning_too_short": "这两堂课间隔太短，来不及搭校车。",
+    "campus_transfer_warning_no_bus": "下两堂课之间没有可搭的校车。",
     "campus_transfer": "校区转乘：{from} → {to} — 请于 {departure} 搭乘{line}（预计 {arrival} 抵达）。",
     "campus_transfer_too_short": "校区转乘：{from} → {to} — 时间太短，没有任何校园公车能赶上。",
     "campus_transfer_no_bus": "校区转乘：{from} → {to} — 这段转乘已没有可用的校园公车班次。",
@@ -1263,6 +1267,12 @@
     },
     "timetable": {
       "title": "时间表",
+      "home_campus": "居住校区",
+      "home_campus_options": {
+        "none": "不设置",
+        "main": "校本部",
+        "nanda": "南大校区"
+      },
       "vertical_preview": "垂直式显示",
       "default_view": {
         "title": "预设查看",
