@@ -22,7 +22,10 @@ import {
   TransitionSpeed,
 } from "@/types/theme";
 import { THEME_PRESET_MAP } from "@/config/themePresets";
-import { getTransitionDuration } from "@/lib/transitionSettings";
+import {
+  getTransitionDuration,
+  getTransitionSpeedAttribute,
+} from "@/lib/transitionSettings";
 
 interface ThemeContextValue {
   config: ThemeConfig;
@@ -113,6 +116,14 @@ const applyThemeConfig = (
     "--transition-duration",
     getTransitionDuration(config.transitionSpeed, prefersReducedMotion),
   );
+  const transitionSpeedAttribute = getTransitionSpeedAttribute(
+    config.transitionSpeed,
+  );
+  if (transitionSpeedAttribute) {
+    root.setAttribute("data-transition-speed", transitionSpeedAttribute);
+  } else {
+    root.removeAttribute("data-transition-speed");
+  }
 
   // Apply background classes on body
   const body = document.body;

@@ -1,5 +1,8 @@
 import { describe, expect, test } from "bun:test";
-import { getTransitionDuration } from "./transitionSettings";
+import {
+  getTransitionDuration,
+  getTransitionSpeedAttribute,
+} from "./transitionSettings";
 
 describe("persisted transition speed mapping", () => {
   test.each([
@@ -11,8 +14,23 @@ describe("persisted transition speed mapping", () => {
     expect(getTransitionDuration(speed)).toBe(expected);
   });
 
-  test("defaults older saved theme preferences and reduced motion to instant", () => {
+  test("keeps default transitions unchanged when reduced motion is enabled", () => {
     expect(getTransitionDuration(undefined)).toBe("150ms");
+    expect(getTransitionDuration(undefined, true)).toBe("150ms");
+    expect(getTransitionDuration("default", true)).toBe("150ms");
+  });
+
+  test("reduced motion only makes a selected custom speed instant", () => {
     expect(getTransitionDuration("slow", true)).toBe("0ms");
+    expect(getTransitionDuration("fast", true)).toBe("0ms");
+    expect(getTransitionDuration("instant", true)).toBe("0ms");
+  });
+
+  test("only writes a data attribute for a selected non-default speed", () => {
+    expect(getTransitionSpeedAttribute(undefined)).toBeUndefined();
+    expect(getTransitionSpeedAttribute("default")).toBeUndefined();
+    expect(getTransitionSpeedAttribute("instant")).toBe("instant");
+    expect(getTransitionSpeedAttribute("fast")).toBe("fast");
+    expect(getTransitionSpeedAttribute("slow")).toBe("slow");
   });
 });
