@@ -1,9 +1,5 @@
 module.exports = {
-  extends: [
-    "eslint:recommended",
-    "plugin:@typescript-eslint/recommended",
-    "prettier",
-  ],
+  extends: ["eslint:recommended", "@typescript-eslint/recommended", "prettier"],
   parser: "@typescript-eslint/parser",
   parserOptions: {
     ecmaVersion: "latest",
@@ -23,7 +19,7 @@ module.exports = {
       },
     ],
     "@typescript-eslint/no-explicit-any": "warn",
-    "prefer-const": "error",
+    "@typescript-eslint/prefer-const": "error",
     "@typescript-eslint/no-empty-function": "warn",
     "no-console": ["warn", { allow: ["warn", "error"] }],
   },

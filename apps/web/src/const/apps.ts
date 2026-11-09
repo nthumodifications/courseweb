@@ -28,7 +28,7 @@ type AppDefinition = {
   title_zh: string;
   title_en: string;
   href: string;
-  Icon: React.ComponentType<{ size?: number | string; className?: string }>;
+  Icon: React.FC<any>;
   target?: string;
   beta?: boolean;
 };
