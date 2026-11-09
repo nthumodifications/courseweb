@@ -467,8 +467,14 @@ describe("campus bus suggestions", () => {
     },
   );
 
-  test("uses the existing venue definitions for campus classification", () => {
-    expect(getVenueCampus("Nanda南大N404")).toBe("nanda");
+  test.each(["Nanda南大N101", "Nanda南大N404", "Nanda南大8102"])(
+    "classifies real Nanda course venue %s through the shared building definition",
+    (venue) => {
+      expect(getVenueCampus(venue)).toBe("nanda");
+    },
+  );
+
+  test("uses the existing venue definitions for other campus classification", () => {
     expect(getVenueCampus("GEN II綜二101")).toBe("main");
     expect(getVenueCampus("VC虛擬教室101")).toBeNull();
     expect(getVenueCampus("Online")).toBeNull();
