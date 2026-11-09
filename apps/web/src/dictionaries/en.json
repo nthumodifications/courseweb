@@ -3305,6 +3305,15 @@
     "errorBorrowingUnit": "Enter a borrowing unit",
     "errorPurpose": "Enter a purpose",
     "errorHeadcount": "Enter a headcount",
-    "errorHeadcountInvalid": "Headcount must be greater than zero"
+    "errorHeadcountInvalid": "Headcount must be greater than zero",
+    "errorInvalidRange": "The booking time is invalid",
+    "slugTaken": "This URL slug is already in use",
+    "errorAlreadyStarted": "This booking has started and can no longer be approved",
+    "errorLastOwner": "The organisation must keep at least one owner",
+    "errorUserNotFound": "User not found",
+    "errorAllowListUserNotFound": "One or more allow-list users could not be found",
+    "errorReasonRequired": "Enter a reason",
+    "errorRateLimited": "Too many requests. Try again later",
+    "reasonRequiredForReject": "Required when rejecting or suspending"
   }
 }

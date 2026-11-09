@@ -3,7 +3,12 @@ import { Link, useParams } from "react-router-dom";
 import { useAuth } from "react-oidc-context";
 import { Button } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
-import { useCancelBooking, useMyBookings, type Booking } from "./api";
+import {
+  getSpaceErrorMessage,
+  useCancelBooking,
+  useMyBookings,
+  type Booking,
+} from "./api";
 
 const formatTime = (value: string, lang: string) =>
   new Intl.DateTimeFormat(
@@ -116,8 +121,8 @@ const MyBookingsPage = () => {
                   setError("");
                   try {
                     await cancel.mutateAsync({ input: booking.id });
-                  } catch {
-                    setError(dict.spaces.saveFailed);
+                  } catch (error) {
+                    setError(getSpaceErrorMessage(error, dict.spaces));
                   }
                 }}
               >

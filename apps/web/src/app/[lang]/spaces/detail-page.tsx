@@ -5,6 +5,7 @@ import { Button } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
 import {
   useCreateBooking,
+  getSpaceErrorMessage,
   useSpaceDetail,
   useSpaceWeek,
   type BusySlot,
@@ -201,38 +202,6 @@ const SpaceDetailPage = () => {
   const [error, setError] = useState("");
   const [confirmed, setConfirmed] = useState(false);
   const createBooking = useCreateBooking();
-  const bookingErrorMessage = (reason: unknown) => {
-    const raw = reason instanceof Error ? reason.message : "";
-    if (raw.includes("booking_conflict")) return dict.spaces.errorConflict;
-    if (raw.includes("booking_rules_failed")) {
-      const labels: Record<string, string> = {
-        too_soon: dict.spaces.errorTooSoon,
-        too_long: dict.spaces.errorTooLong,
-        slot_alignment: dict.spaces.errorSlot,
-        outside_opening_hours: dict.spaces.errorHours,
-        blackout: dict.spaces.errorBlackout,
-        active_booking_limit: dict.spaces.errorLimit,
-        nthu_only: dict.spaces.errorNthu,
-        members_only: dict.spaces.errorMembers,
-        allow_list_only: dict.spaces.errorAllowList,
-        borrowing_unit_required: dict.spaces.errorBorrowingUnit,
-        purpose_required: dict.spaces.errorPurpose,
-        headcount_required: dict.spaces.errorHeadcount,
-        invalid_headcount: dict.spaces.errorHeadcountInvalid,
-      };
-      const codes = raw
-        .split(":")
-        .slice(1)
-        .join(":")
-        .split(",")
-        .map((value) => value.trim());
-      const messages = codes.map((code) => labels[code]).filter(Boolean);
-      return (
-        messages.join(lang === "en" ? ", " : "、") || dict.spaces.bookingFailed
-      );
-    }
-    return dict.spaces.bookingFailed;
-  };
 
   if (detail.isLoading)
     return (
@@ -316,7 +285,14 @@ const SpaceDetailPage = () => {
       });
       setConfirmed(true);
     } catch (reason) {
-      setError(bookingErrorMessage(reason));
+      setError(
+        getSpaceErrorMessage(
+          reason,
+          dict.spaces,
+          "bookingFailed",
+          lang ?? "zh",
+        ),
+      );
     }
   };
 
@@ -471,11 +447,14 @@ const SpaceDetailPage = () => {
           <>
             <p className="text-sm text-muted-foreground">
               {dict.spaces.selected}:{" "}
-              {new Intl.DateTimeFormat(lang === "en" ? "en" : "zh-TW", {
-                timeZone: "Asia/Taipei",
-                dateStyle: "medium",
-                timeStyle: "short",
-              }).format(new Date(selectedStart))}
+              {new Intl.DateTimeFormat(
+                lang === "en" ? "en" : lang === "zh-cn" ? "zh-CN" : "zh-TW",
+                {
+                  timeZone: "Asia/Taipei",
+                  dateStyle: "medium",
+                  timeStyle: "short",
+                },
+              ).format(new Date(selectedStart))}
             </p>
             <label className="flex flex-col gap-1 text-sm">
               <span>{dict.spaces.duration}</span>

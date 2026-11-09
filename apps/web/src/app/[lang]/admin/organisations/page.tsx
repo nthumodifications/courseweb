@@ -37,13 +37,17 @@ const OrganisationVerificationPage = () => {
     next: "VERIFIED" | "REJECTED" | "SUSPENDED",
   ) => {
     const reason = reasonById[id]?.trim();
-    if (!reason) {
-      setError(dict.spaces.reason);
+    if (next !== "VERIFIED" && !reason) {
+      setError(dict.spaces.errorReasonRequired);
       return;
     }
     setError("");
     try {
-      await update.mutateAsync({ id, status: next, reason });
+      await update.mutateAsync({
+        id,
+        status: next,
+        reason: reason || undefined,
+      });
     } catch {
       setError(dict.spaces.saveFailed);
     }
@@ -102,7 +106,7 @@ const OrganisationVerificationPage = () => {
               </p>
               <div className="flex flex-row flex-wrap gap-2 text-sm text-muted-foreground">
                 <span>
-                  {organisation.creator.name} · {organisation.creator.userId}
+                  {organisation.creator.name} ・ {organisation.creator.userId}
                 </span>
                 <span>{organisation.contact}</span>
                 <span>
@@ -135,9 +139,13 @@ const OrganisationVerificationPage = () => {
                   }
                   placeholder={dict.spaces.reason}
                   aria-label={`${dict.spaces.reason}: ${organisation.name}`}
+                  title={dict.spaces.reasonRequiredForReject}
                   maxLength={1000}
                   className="min-w-48 flex-1"
                 />
+                <span className="text-sm text-muted-foreground">
+                  {dict.spaces.reasonRequiredForReject}
+                </span>
                 {organisation.status === "PENDING" && (
                   <Button
                     size="sm"

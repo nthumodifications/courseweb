@@ -1069,12 +1069,12 @@ export const useSetSpaceOrganisationStatus = () => {
     mutationFn: async (input: {
       id: string;
       status: "VERIFIED" | "REJECTED" | "SUSPENDED";
-      reason: string;
+      reason?: string;
     }) => {
       const response = await spaceOrganisationsClient()[":id"].status.$post(
         {
           param: { id: input.id },
-          json: { status: input.status, reason: input.reason },
+          json: { status: input.status, reason: input.reason ?? "" },
         },
         { headers: authHeaders(requireToken(token)) },
       );

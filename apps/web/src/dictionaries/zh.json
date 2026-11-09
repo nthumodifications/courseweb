@@ -3297,6 +3297,15 @@
     "errorBorrowingUnit": "請填寫借用單位",
     "errorPurpose": "請填寫用途",
     "errorHeadcount": "請填寫人數",
-    "errorHeadcountInvalid": "人數必須大於零"
+    "errorHeadcountInvalid": "人數必須大於零",
+    "errorInvalidRange": "預約時間無效",
+    "slugTaken": "網址代稱已被使用，請更換",
+    "errorAlreadyStarted": "預約已開始，無法核准",
+    "errorLastOwner": "組織至少要保留一位擁有者",
+    "errorUserNotFound": "找不到這位使用者",
+    "errorAllowListUserNotFound": "指定名單中有找不到的使用者",
+    "errorReasonRequired": "請填寫原因",
+    "errorRateLimited": "操作太頻繁，請稍後再試",
+    "reasonRequiredForReject": "拒絕或停用時必須填寫"
   }
 }

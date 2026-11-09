@@ -3297,6 +3297,15 @@
     "errorBorrowingUnit": "请填写借用单位",
     "errorPurpose": "请填写用途",
     "errorHeadcount": "请填写人数",
-    "errorHeadcountInvalid": "人数必须大于零"
+    "errorHeadcountInvalid": "人数必须大于零",
+    "errorInvalidRange": "预约时间无效",
+    "slugTaken": "网址代称已被使用，请更换",
+    "errorAlreadyStarted": "预约已开始，无法核准",
+    "errorLastOwner": "组织至少要保留一位拥有者",
+    "errorUserNotFound": "找不到这位用户",
+    "errorAllowListUserNotFound": "指定名单中有找不到的用户",
+    "errorReasonRequired": "请填写原因",
+    "errorRateLimited": "操作太频繁，请稍后再试",
+    "reasonRequiredForReject": "拒绝或禁用时必须填写"
   }
 }

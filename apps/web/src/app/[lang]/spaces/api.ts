@@ -73,6 +73,73 @@ type RequestOptions = {
   body?: unknown;
   token?: string | null;
 };
+
+export class SpaceApiError extends Error {
+  code: string;
+  status: number;
+  violations: string[];
+
+  constructor(code: string, status: number, violations: string[] = []) {
+    super(code);
+    this.name = "SpaceApiError";
+    this.code = code;
+    this.status = status;
+    this.violations = violations;
+  }
+}
+
+const violationLabelKeys: Record<string, string> = {
+  invalid_range: "errorInvalidRange",
+  too_soon: "errorTooSoon",
+  too_long: "errorTooLong",
+  slot_alignment: "errorSlot",
+  outside_opening_hours: "errorHours",
+  blackout: "errorBlackout",
+  active_booking_limit: "errorLimit",
+  nthu_only: "errorNthu",
+  members_only: "errorMembers",
+  allow_list_only: "errorAllowList",
+  borrowing_unit_required: "errorBorrowingUnit",
+  purpose_required: "errorPurpose",
+  headcount_required: "errorHeadcount",
+  invalid_headcount: "errorHeadcountInvalid",
+};
+
+const errorLabelKeys: Record<string, string> = {
+  booking_conflict: "errorConflict",
+  slug_taken: "slugTaken",
+  already_started: "errorAlreadyStarted",
+  last_owner: "errorLastOwner",
+  user_not_found: "errorUserNotFound",
+  allow_list_user_not_found: "errorAllowListUserNotFound",
+  reason_required: "errorReasonRequired",
+  rate_limited: "errorRateLimited",
+};
+
+export const getSpaceErrorMessage = (
+  error: unknown,
+  labels: Record<string, unknown>,
+  fallbackKey = "saveFailed",
+  locale = "zh",
+) => {
+  const apiError = error instanceof SpaceApiError ? error : undefined;
+  const code = apiError?.code;
+  const label = (key: string) =>
+    typeof labels[key] === "string" ? (labels[key] as string) : undefined;
+  if (apiError?.status === 429 || code === "rate_limited")
+    return label("errorRateLimited") ?? label(fallbackKey) ?? "";
+  if (apiError && code === "booking_rules_failed") {
+    const messages = apiError.violations
+      .map((violation) => label(violationLabelKeys[violation] ?? ""))
+      .filter((message): message is string => Boolean(message));
+    if (messages.length > 0)
+      return messages.join(locale === "en" ? ", " : "、");
+    return label("bookingFailed") ?? label(fallbackKey) ?? "";
+  }
+  const key = code ? errorLabelKeys[code] : undefined;
+  return (key ? label(key) : undefined) ?? label(fallbackKey) ?? "";
+};
+
 const request = async <T>(
   path: string,
   options: RequestOptions = {},
@@ -90,20 +157,19 @@ const request = async <T>(
       : {}),
   });
   if (!response.ok) {
-    let message = `Request failed (${response.status})`;
+    let code = "request_failed";
+    let violations: string[] = [];
     try {
       const body = (await response.json()) as {
         error?: string;
-        error_description?: string;
         violations?: string[];
       };
-      message = body.error_description ?? body.error ?? message;
-      if (body.violations)
-        message = `${message}: ${body.violations.join(", ")}`;
+      code = body.error ?? code;
+      violations = body.violations ?? [];
     } catch {
       // A proxy response may not be JSON.
     }
-    throw new Error(message);
+    throw new SpaceApiError(code, response.status, violations);
   }
   return (await response.json()) as T;
 };
