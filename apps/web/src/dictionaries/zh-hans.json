@@ -1318,6 +1318,14 @@
         "mono": "等宽",
         "rounded": "圆体"
       },
+      "auto_color": {
+        "title": "自动配色",
+        "by_department": "依系所自动配色",
+        "by_time_of_day": "依上课时段自动配色",
+        "confirm_title": "要套用自动配色吗？",
+        "confirm_description": "这会覆盖目前学期课程的手动颜色。",
+        "confirm": "套用配色"
+      },
       "move_up": "向上移动",
       "move_down": "向下移动",
       "theme": {

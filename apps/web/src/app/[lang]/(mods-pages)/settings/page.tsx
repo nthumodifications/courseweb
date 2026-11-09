@@ -447,9 +447,9 @@ const SettingsPage = () => {
                   }
                 />
                 <SettingsSearchableBlock
-                  keywords={Object.values(
-                    dict.settings.timetable.theme.options,
-                  ).concat(dict.settings.timetable.theme.title)}
+                  keywords={Object.values(dict.settings.timetable.theme.options)
+                    .concat(dict.settings.timetable.theme.title)
+                    .concat(Object.values(dict.settings.timetable.auto_color))}
                 >
                   <TimetableThemeList />
                 </SettingsSearchableBlock>

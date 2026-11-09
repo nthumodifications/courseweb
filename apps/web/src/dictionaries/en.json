@@ -1318,6 +1318,14 @@
         "mono": "Monospace",
         "rounded": "Rounded"
       },
+      "auto_color": {
+        "title": "Automatic colors",
+        "by_department": "Auto-color by department",
+        "by_time_of_day": "Auto-color by time of day",
+        "confirm_title": "Apply automatic colors?",
+        "confirm_description": "This replaces manual colors for courses in the current semester.",
+        "confirm": "Apply colors"
+      },
       "move_up": "Move up",
       "move_down": "Move down",
       "theme": {
