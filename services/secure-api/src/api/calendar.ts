@@ -838,17 +838,21 @@ const buildSharedCalendar = async (
   }
   const bookingCalendars: string[] = [];
   if (includes.has("events")) {
-    const bookings = await prisma.booking.findMany({
-      where: {
-        userId,
-        status: "APPROVED",
-        endAt: { gte: new Date() },
-      },
-      include: { space: { select: { name: true, location: true } } },
-      orderBy: { startAt: "asc" },
-    });
-    const bookingCalendar = approvedBookingsToIcs(bookings);
-    if (bookingCalendar) bookingCalendars.push(bookingCalendar);
+    try {
+      const bookings = await prisma.booking.findMany({
+        where: {
+          userId,
+          status: "APPROVED",
+          endAt: { gte: new Date() },
+        },
+        include: { space: { select: { name: true, location: true } } },
+        orderBy: { startAt: "asc" },
+      });
+      const bookingCalendar = approvedBookingsToIcs(bookings);
+      if (bookingCalendar) bookingCalendars.push(bookingCalendar);
+    } catch (error) {
+      console.error("Failed to load space bookings for calendar feed", error);
+    }
   }
   return timetableCalendars.length ||
     academicCalendars.length ||

@@ -658,6 +658,32 @@ describe("Calendar API", () => {
   );
 
   serialTest(
+    "serves the calendar when the space booking query fails",
+    async () => {
+      const feedUrl = await prepareTimetableFeed();
+      mockBookingFindMany.mockRejectedValueOnce(
+        new Error("space reservation migration is unavailable"),
+      );
+      mockTimetableFetch.mockResolvedValue(
+        new Response("BEGIN:VCALENDAR\r\nEND:VCALENDAR\r\n"),
+      );
+      const logError = spyOn(console, "error").mockImplementation(() => {});
+
+      const response = await calendarHandler.request(feedUrl);
+      const body = await response.text();
+
+      expect(response.status).toBe(200);
+      expect(body).toContain("BEGIN:VCALENDAR");
+      expect(body).not.toContain("UID:booking-");
+      expect(logError).toHaveBeenCalledWith(
+        "Failed to load space bookings for calendar feed",
+        expect.any(Error),
+      );
+      logError.mockRestore();
+    },
+  );
+
+  serialTest(
     "serves user events when the timetable upstream fails",
     async () => {
       const feedUrl = await prepareTimetableFeed();

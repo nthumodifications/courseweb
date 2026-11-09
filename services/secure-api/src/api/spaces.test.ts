@@ -4,10 +4,16 @@ import type { MiddlewareHandler } from "hono";
 import { createSpacesApp, type BookingNotifier } from "./spaces";
 
 const orgFindMany = mock();
+const orgCreate = mock();
 const orgMemberFindFirst = mock();
+const orgMemberUpsert = mock();
+const orgMemberDelete = mock();
+const orgMemberCount = mock();
 const userFindFirst = mock();
 const spaceFindFirst = mock();
+const spaceFindUnique = mock();
 const spaceCreate = mock();
+const spaceUpdate = mock();
 const bookingFindMany = mock();
 const bookingFindFirst = mock();
 const bookingFindUnique = mock();
@@ -15,22 +21,23 @@ const bookingCount = mock();
 const bookingCreate = mock();
 const bookingUpdateMany = mock();
 const bookingEventCreate = mock();
+const executeRaw = mock();
 const spaceDb: any = {
-  organisation: { findMany: orgFindMany },
+  organisation: { findMany: orgFindMany, create: orgCreate },
   organisationMember: {
     findFirst: orgMemberFindFirst,
     create: mock(),
-    upsert: mock(),
+    upsert: orgMemberUpsert,
     findMany: mock(),
-    count: mock(),
-    delete: mock(),
+    count: orgMemberCount,
+    delete: orgMemberDelete,
   },
   user: { findFirst: userFindFirst },
   space: {
     findFirst: spaceFindFirst,
-    findUnique: mock(),
+    findUnique: spaceFindUnique,
     create: spaceCreate,
-    update: mock(),
+    update: spaceUpdate,
     updateMany: mock(),
   },
   spaceOpeningHours: { deleteMany: mock() },
@@ -45,6 +52,7 @@ const spaceDb: any = {
     updateMany: bookingUpdateMany,
   },
   bookingEvent: { create: bookingEventCreate, createMany: mock() },
+  $executeRaw: executeRaw,
   $transaction: async (callback: (tx: any) => unknown) => callback(spaceDb),
 };
 
@@ -123,10 +131,16 @@ describe("space reservation routes", () => {
     notifierCalls.length = 0;
     for (const fn of [
       orgFindMany,
+      orgCreate,
       orgMemberFindFirst,
+      orgMemberUpsert,
+      orgMemberDelete,
+      orgMemberCount,
       userFindFirst,
       spaceFindFirst,
+      spaceFindUnique,
       spaceCreate,
+      spaceUpdate,
       bookingFindMany,
       bookingFindFirst,
       bookingFindUnique,
@@ -134,9 +148,13 @@ describe("space reservation routes", () => {
       bookingCreate,
       bookingUpdateMany,
       bookingEventCreate,
+      executeRaw,
     ])
       fn.mockReset();
     orgFindMany.mockResolvedValue([]);
+    orgMemberUpsert.mockResolvedValue({ id: "member-1" });
+    orgMemberDelete.mockResolvedValue({ id: "member-1" });
+    orgMemberCount.mockResolvedValue(1);
     orgMemberFindFirst.mockResolvedValue(null);
     bookingCount.mockResolvedValue(0);
     bookingEventCreate.mockResolvedValue({ id: "event-1" });
@@ -158,6 +176,222 @@ describe("space reservation routes", () => {
     );
   });
 
+  test("maps an organisation slug collision to HTTP 409", async () => {
+    orgCreate.mockRejectedValue({ code: "P2002" });
+    const response = await app.request(
+      "/organisations",
+      json({
+        name: "Club",
+        slug: "club",
+        description: "",
+        contact: "club@example.edu",
+      }),
+    );
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({ error: "slug_taken" });
+  });
+
+  test("maps space slug collisions to HTTP 409 on create and patch", async () => {
+    orgMemberFindFirst.mockResolvedValue({ role: "OWNER" });
+    spaceCreate.mockRejectedValue({ code: "P2002" });
+    const createResponse = await app.request(
+      "/organisations/organisation-1/spaces",
+      json({
+        name: "Room",
+        slug: "room-1",
+        description: "",
+        location: "Campus",
+        isPublic: true,
+        rules: "",
+        whoCanBook: "ANYONE_SIGNED_IN",
+        approvalMode: "APPROVAL",
+        slotLengthMinutes: 30,
+        minNoticeHours: 0,
+        maxLengthMinutes: 120,
+        maxActiveBookingsPerUser: 2,
+        requireBorrowingUnit: false,
+        requirePurpose: true,
+        requireHeadcount: false,
+        openingHours: [{ weekday: 1, opensAt: "09:00", closesAt: "17:00" }],
+        blackouts: [],
+        allowList: [],
+      }),
+    );
+    expect(createResponse.status).toBe(409);
+    expect(await createResponse.json()).toEqual({ error: "slug_taken" });
+
+    spaceFindUnique.mockResolvedValue({
+      id: "space-1",
+      organisationId: "organisation-1",
+      slotLengthMinutes: 30,
+      maxLengthMinutes: 120,
+    });
+    spaceUpdate.mockRejectedValue({ code: "P2002" });
+    const patchResponse = await app.request("/spaces/space-1", {
+      ...json({ slug: "taken-room" }),
+      method: "PATCH",
+    });
+    expect(patchResponse.status).toBe(409);
+    expect(await patchResponse.json()).toEqual({ error: "slug_taken" });
+  });
+
+  test("limits member role changes to owners and never changes an owner role", async () => {
+    userFindFirst.mockResolvedValue({ userId: "invitee-1" });
+
+    orgMemberFindFirst
+      .mockResolvedValueOnce({ role: "MANAGER" })
+      .mockResolvedValueOnce({ id: "member-owner", role: "OWNER" });
+    const managerAddManager = await app.request(
+      "/organisations/organisation-1/members",
+      json({ userIdentifier: "invitee-1", role: "MANAGER" }),
+    );
+    expect(managerAddManager.status).toBe(403);
+    expect(orgMemberUpsert).not.toHaveBeenCalled();
+
+    orgMemberFindFirst.mockReset();
+    orgMemberFindFirst
+      .mockResolvedValueOnce({ role: "MANAGER" })
+      .mockResolvedValueOnce({ role: "MANAGER" });
+    const managerChangeManager = await app.request(
+      "/organisations/organisation-1/members",
+      json({ userIdentifier: "invitee-1", role: "APPROVER" }),
+    );
+    expect(managerChangeManager.status).toBe(403);
+
+    orgMemberFindFirst.mockReset();
+    orgMemberFindFirst
+      .mockResolvedValueOnce({ role: "MANAGER" })
+      .mockResolvedValueOnce({ role: "OWNER" });
+    const managerTouchOwner = await app.request(
+      "/organisations/organisation-1/members",
+      json({ userIdentifier: "invitee-1", role: "APPROVER" }),
+    );
+    expect(managerTouchOwner.status).toBe(403);
+    expect(orgMemberUpsert).not.toHaveBeenCalled();
+
+    orgMemberFindFirst.mockReset();
+    orgMemberFindFirst
+      .mockResolvedValueOnce({ role: "OWNER" })
+      .mockResolvedValueOnce({ role: "OWNER" });
+    const ownerChangeOwner = await app.request(
+      "/organisations/organisation-1/members",
+      json({ userIdentifier: "invitee-1", role: "APPROVER" }),
+    );
+    expect(ownerChangeOwner.status).toBe(403);
+    expect(orgMemberUpsert).not.toHaveBeenCalled();
+  });
+
+  test("owners can add or change managers and managers can manage approvers", async () => {
+    userFindFirst.mockResolvedValue({ userId: "invitee-1" });
+    orgMemberFindFirst
+      .mockResolvedValueOnce({ role: "OWNER" })
+      .mockResolvedValueOnce(null);
+    const addManager = await app.request(
+      "/organisations/organisation-1/members",
+      json({ userIdentifier: "invitee-1", role: "MANAGER" }),
+    );
+    expect(addManager.status).toBe(201);
+
+    orgMemberFindFirst.mockReset();
+    orgMemberFindFirst
+      .mockResolvedValueOnce({ role: "OWNER" })
+      .mockResolvedValueOnce({ role: "MANAGER" });
+    const changeManager = await app.request(
+      "/organisations/organisation-1/members",
+      json({ userIdentifier: "invitee-1", role: "APPROVER" }),
+    );
+    expect(changeManager.status).toBe(201);
+
+    orgMemberFindFirst.mockReset();
+    orgMemberFindFirst
+      .mockResolvedValueOnce({ role: "OWNER" })
+      .mockResolvedValueOnce({ id: "member-manager", role: "MANAGER" });
+    const removeManager = await app.request(
+      "/organisations/organisation-1/members/manager-1",
+      { method: "DELETE" },
+    );
+    expect(removeManager.status).toBe(200);
+
+    orgMemberFindFirst.mockReset();
+    orgMemberFindFirst
+      .mockResolvedValueOnce({ role: "MANAGER" })
+      .mockResolvedValueOnce({ role: "APPROVER" });
+    const keepApprover = await app.request(
+      "/organisations/organisation-1/members",
+      json({ userIdentifier: "invitee-1", role: "APPROVER" }),
+    );
+    expect(keepApprover.status).toBe(201);
+    expect(orgMemberUpsert).toHaveBeenCalledTimes(3);
+  });
+
+  test("managers cannot remove owners or managers but may remove approvers and themselves", async () => {
+    orgMemberFindFirst
+      .mockResolvedValueOnce({ role: "MANAGER" })
+      .mockResolvedValueOnce({ id: "member-owner", role: "OWNER" });
+    const removeOwner = await app.request(
+      "/organisations/organisation-1/members/owner-1",
+      { method: "DELETE" },
+    );
+    expect(removeOwner.status).toBe(403);
+
+    orgMemberFindFirst.mockReset();
+    orgMemberFindFirst
+      .mockResolvedValueOnce({ role: "MANAGER" })
+      .mockResolvedValueOnce({ id: "member-manager", role: "MANAGER" });
+    const removeManager = await app.request(
+      "/organisations/organisation-1/members/manager-2",
+      { method: "DELETE" },
+    );
+    expect(removeManager.status).toBe(403);
+
+    orgMemberFindFirst.mockReset();
+    orgMemberFindFirst
+      .mockResolvedValueOnce({ role: "MANAGER" })
+      .mockResolvedValueOnce({ id: "member-approver", role: "APPROVER" });
+    const removeApprover = await app.request(
+      "/organisations/organisation-1/members/approver-1",
+      { method: "DELETE" },
+    );
+    expect(removeApprover.status).toBe(200);
+
+    orgMemberFindFirst.mockReset();
+    orgMemberFindFirst
+      .mockResolvedValueOnce({ role: "MANAGER" })
+      .mockResolvedValueOnce({ id: "member-manager", role: "MANAGER" });
+    const removeSelf = await app.request(
+      `/organisations/organisation-1/members/${requester.userId}`,
+      { method: "DELETE" },
+    );
+    expect(removeSelf.status).toBe(200);
+  });
+
+  test("an owner cannot remove the last owner but may remove another owner", async () => {
+    orgMemberFindFirst
+      .mockResolvedValueOnce({ role: "OWNER" })
+      .mockResolvedValueOnce({ id: "owner-self", role: "OWNER" })
+      .mockResolvedValueOnce({ id: "owner-self", role: "OWNER" });
+    orgMemberCount.mockResolvedValueOnce(1);
+    const lastOwner = await app.request(
+      `/organisations/organisation-1/members/${requester.userId}`,
+      { method: "DELETE" },
+    );
+    expect(lastOwner.status).toBe(409);
+    expect(await lastOwner.json()).toEqual({ error: "last_owner" });
+
+    orgMemberFindFirst.mockReset();
+    orgMemberFindFirst
+      .mockResolvedValueOnce({ role: "OWNER" })
+      .mockResolvedValueOnce({ id: "owner-2", role: "OWNER" })
+      .mockResolvedValueOnce({ id: "owner-2", role: "OWNER" });
+    orgMemberCount.mockResolvedValueOnce(2);
+    const removeOwner = await app.request(
+      "/organisations/organisation-1/members/owner-2",
+      { method: "DELETE" },
+    );
+    expect(removeOwner.status).toBe(200);
+    expect(executeRaw).toHaveBeenCalled();
+  });
+
   test("creates a valid booking request and notifies the organisation", async () => {
     spaceFindFirst.mockResolvedValue(defaultSpace());
     bookingCreate.mockResolvedValue({ id: "booking-1", status: "REQUESTED" });
@@ -176,6 +410,159 @@ describe("space reservation routes", () => {
     );
     expect(bookingEventCreate).toHaveBeenCalledTimes(1);
     expect(notifierCalls).toHaveLength(1);
+    expect(executeRaw).toHaveBeenCalledTimes(1);
+    const [lockSql, lockedSpaceId, lockedUserId] = executeRaw.mock.calls[0]!;
+    expect(String(lockSql.join(" "))).toContain("pg_advisory_xact_lock");
+    expect(lockedSpaceId).toBe(defaultSpace().id);
+    expect(lockedUserId).toBe(requester.userId);
+    expect(bookingCount).toHaveBeenCalledTimes(1);
+  });
+
+  test("checks the active booking cap under the advisory transaction lock", async () => {
+    spaceFindFirst.mockResolvedValue(
+      defaultSpace({ maxActiveBookingsPerUser: 1 }),
+    );
+    bookingCount.mockResolvedValue(1);
+
+    const response = await app.request("/bookings", bookingRequest());
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      error: "booking_rules_failed",
+      violations: ["active_booking_limit"],
+    });
+    expect(executeRaw).toHaveBeenCalledTimes(1);
+    expect(bookingCreate).not.toHaveBeenCalled();
+  });
+
+  test("does not approve single or bulk requests that have started, but allows rejection", async () => {
+    const past = new Date(Date.now() - 60_000);
+    orgMemberFindFirst.mockResolvedValue({ role: "APPROVER" });
+    bookingFindUnique.mockResolvedValue({
+      id: "booking-1",
+      status: "REQUESTED",
+      startAt: past,
+      space: { organisationId: "organisation-1" },
+    });
+    const singleApprove = await app.request(
+      "/bookings/booking-1/decision",
+      json({ action: "APPROVE" }),
+    );
+    expect(singleApprove.status).toBe(409);
+    expect(await singleApprove.json()).toEqual({ error: "already_started" });
+    expect(bookingUpdateMany).not.toHaveBeenCalled();
+
+    bookingFindMany.mockResolvedValue([
+      {
+        id: "6e78d4c1-3869-4bf6-8e47-7415806e5e3e",
+        status: "REQUESTED",
+        startAt: past,
+        space: { organisationId: "organisation-1" },
+      },
+    ]);
+    const bulkApprove = await app.request(
+      "/bookings/bulk-decision",
+      json({
+        bookingIds: ["6e78d4c1-3869-4bf6-8e47-7415806e5e3e"],
+        action: "APPROVE",
+      }),
+    );
+    expect(bulkApprove.status).toBe(409);
+    expect(await bulkApprove.json()).toEqual({ error: "already_started" });
+    expect(bookingUpdateMany).not.toHaveBeenCalled();
+
+    bookingFindUnique.mockResolvedValue({
+      id: "booking-1",
+      status: "REQUESTED",
+      startAt: past,
+      space: { organisationId: "organisation-1" },
+    });
+    bookingUpdateMany.mockResolvedValue({ count: 1 });
+    bookingFindUnique
+      .mockResolvedValueOnce({
+        id: "booking-1",
+        status: "REQUESTED",
+        startAt: past,
+        space: { organisationId: "organisation-1" },
+      })
+      .mockResolvedValueOnce({ id: "booking-1", status: "REJECTED" });
+    const singleReject = await app.request(
+      "/bookings/booking-1/decision",
+      json({ action: "REJECT", reason: "Review completed" }),
+    );
+    expect(singleReject.status).toBe(200);
+
+    bookingFindMany.mockResolvedValue([
+      {
+        id: "6e78d4c1-3869-4bf6-8e47-7415806e5e3e",
+        status: "REQUESTED",
+        startAt: past,
+        space: { organisationId: "organisation-1" },
+      },
+    ]);
+    bookingUpdateMany.mockResolvedValue({ count: 1 });
+    const bulkReject = await app.request(
+      "/bookings/bulk-decision",
+      json({
+        bookingIds: ["6e78d4c1-3869-4bf6-8e47-7415806e5e3e"],
+        action: "REJECT",
+        reason: "Review completed",
+      }),
+    );
+    expect(bulkReject.status).toBe(200);
+  });
+
+  test("requester booking views select and serialize without approver identity", async () => {
+    bookingFindMany.mockResolvedValue([
+      {
+        id: "booking-1",
+        startAt: new Date("2027-01-04T01:00:00.000Z"),
+        endAt: new Date("2027-01-04T02:00:00.000Z"),
+        status: "APPROVED",
+        decidedBy: "approver-student-id",
+        space: {
+          id: "space-1",
+          slug: "meeting-room",
+          name: "Meeting room",
+          organisation: {
+            name: "Club",
+            slug: "club",
+            discordWebhookUrl: "https://secret.invalid/webhook",
+          },
+          allowList: [{ userId: "private-allow-list-id" }],
+        },
+      },
+    ]);
+    const mineResponse = await app.request("/mine");
+    const mineBody = await mineResponse.json();
+    expect(mineResponse.status).toBe(200);
+    expect(JSON.stringify(mineBody)).not.toContain("approver-student-id");
+    expect(JSON.stringify(mineBody)).not.toContain("discordWebhookUrl");
+    expect(JSON.stringify(mineBody)).not.toContain("private-allow-list-id");
+    expect(bookingFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        select: expect.not.objectContaining({ decidedBy: true }),
+      }),
+    );
+
+    bookingFindFirst.mockResolvedValue({
+      id: "booking-1",
+      startAt: new Date("2027-01-04T01:00:00.000Z"),
+      endAt: new Date("2027-01-04T02:00:00.000Z"),
+      status: "APPROVED",
+      purpose: "Meeting",
+      decidedBy: "approver-student-id",
+      space: { id: "space-1", slug: "meeting-room", name: "Meeting room" },
+    });
+    const detailResponse = await app.request("/bookings/booking-1");
+    const detailBody = await detailResponse.json();
+    expect(detailResponse.status).toBe(200);
+    expect(JSON.stringify(detailBody)).not.toContain("approver-student-id");
+    expect(bookingFindFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        select: expect.not.objectContaining({ decidedBy: true }),
+      }),
+    );
   });
 
   test("rejects an ineligible student before creating a booking", async () => {

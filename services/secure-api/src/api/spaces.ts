@@ -259,6 +259,94 @@ const csvCell = (value: unknown) => {
   return `"${safe.replaceAll('"', '""')}"`;
 };
 
+const isSlugUniqueViolation = (error: unknown) => {
+  if (
+    typeof error !== "object" ||
+    error === null ||
+    !("code" in error) ||
+    (error as { code?: unknown }).code !== "P2002"
+  )
+    return false;
+  const target = (error as { meta?: { target?: unknown } }).meta?.target;
+  if (target === undefined) return true;
+  const targetName = Array.isArray(target) ? target.join("_") : String(target);
+  return targetName.toLowerCase().includes("slug");
+};
+
+const requesterBookingSelect = {
+  id: true,
+  spaceId: true,
+  startAt: true,
+  endAt: true,
+  status: true,
+  borrowingUnit: true,
+  purpose: true,
+  headcount: true,
+  notes: true,
+  reason: true,
+  createdAt: true,
+  space: {
+    select: {
+      id: true,
+      slug: true,
+      name: true,
+      organisation: { select: { name: true, slug: true } },
+    },
+  },
+} as const;
+
+const requesterMineSelect = {
+  id: true,
+  startAt: true,
+  endAt: true,
+  status: true,
+  space: {
+    select: {
+      slug: true,
+      name: true,
+      organisation: { select: { name: true, slug: true } },
+    },
+  },
+} as const;
+
+const serializeRequesterBooking = (booking: any) => ({
+  id: booking.id,
+  startAt: booking.startAt,
+  endAt: booking.endAt,
+  status: booking.status,
+  space: booking.space
+    ? {
+        slug: booking.space.slug,
+        name: booking.space.name,
+        organisation: booking.space.organisation
+          ? {
+              name: booking.space.organisation.name,
+              slug: booking.space.organisation.slug,
+            }
+          : null,
+      }
+    : null,
+});
+
+const serializeRequesterBookingDetail = (booking: any) => ({
+  ...serializeRequesterBooking(booking),
+  spaceId: booking.spaceId,
+  borrowingUnit: booking.borrowingUnit,
+  purpose: booking.purpose,
+  headcount: booking.headcount,
+  notes: booking.notes,
+  reason: booking.reason,
+  createdAt: booking.createdAt,
+  ...(booking.space
+    ? {
+        space: {
+          id: booking.space.id,
+          ...serializeRequesterBooking(booking).space,
+        },
+      }
+    : {}),
+});
+
 const event = (
   bookingId: string,
   what: string,
@@ -378,14 +466,12 @@ export const createSpacesApp = ({
     const user = c.get("user");
     const bookings = await db.booking.findMany({
       where: { userId: user.userId },
-      include: {
-        space: {
-          include: { organisation: { select: { name: true, slug: true } } },
-        },
-      },
+      select: requesterMineSelect,
       orderBy: { startAt: "desc" },
     });
-    return c.json({ bookings });
+    return c.json({
+      bookings: bookings.map((booking) => serializeRequesterBooking(booking)),
+    });
   });
 
   app.post(
@@ -395,27 +481,33 @@ export const createSpacesApp = ({
     async (c) => {
       const user = c.get("user");
       const input = c.req.valid("json");
-      const result = await db.$transaction(async (tx) => {
-        const organisation = await tx.organisation.create({
-          data: {
-            name: input.name,
-            slug: input.slug,
-            description: input.description,
-            contact: input.contact,
-            discordWebhookUrl: input.discordWebhookUrl ?? null,
-            createdBy: user.userId,
-          },
+      try {
+        const result = await db.$transaction(async (tx) => {
+          const organisation = await tx.organisation.create({
+            data: {
+              name: input.name,
+              slug: input.slug,
+              description: input.description,
+              contact: input.contact,
+              discordWebhookUrl: input.discordWebhookUrl ?? null,
+              createdBy: user.userId,
+            },
+          });
+          await tx.organisationMember.create({
+            data: {
+              organisationId: organisation.id,
+              userId: user.userId,
+              role: "OWNER",
+            },
+          });
+          return organisation;
         });
-        await tx.organisationMember.create({
-          data: {
-            organisationId: organisation.id,
-            userId: user.userId,
-            role: "OWNER",
-          },
-        });
-        return organisation;
-      });
-      return c.json({ organisation: result }, 201);
+        return c.json({ organisation: result }, 201);
+      } catch (error) {
+        if (isSlugUniqueViolation(error))
+          return c.json({ error: "slug_taken" }, 409);
+        throw error;
+      }
     },
   );
 
@@ -513,28 +605,44 @@ export const createSpacesApp = ({
     async (c) => {
       const user = c.get("user");
       const organisationId = c.req.param("organisationId");
-      const membership = await db.organisationMember.findFirst({
-        where: { organisationId, userId: user.userId },
-        select: { role: true },
-      });
-      if (!canManageOrganisation(membership?.role))
-        return c.json({ error: "forbidden" }, 403);
       const input = c.req.valid("json");
       const invitee = await resolveUserIdentifier(db, input.userIdentifier);
       if (!invitee) return c.json({ error: "user_not_found" }, 404);
-      const member = await db.organisationMember.upsert({
-        where: {
-          organisationId_userId: { organisationId, userId: invitee.userId },
-        },
-        create: { organisationId, userId: invitee.userId, role: input.role },
-        update: { role: input.role },
-        include: {
-          user: {
-            select: { userId: true, name: true, nameEn: true, email: true },
+      const result = await db.$transaction(async (tx) => {
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${organisationId} || ':members', 0))`;
+        const membership = await tx.organisationMember.findFirst({
+          where: { organisationId, userId: user.userId },
+          select: { role: true },
+        });
+        if (!canManageOrganisation(membership?.role))
+          return { error: "forbidden" as const };
+        if (input.role === "MANAGER" && membership?.role !== "OWNER")
+          return { error: "forbidden" as const };
+        const existing = await tx.organisationMember.findFirst({
+          where: { organisationId, userId: invitee.userId },
+          select: { role: true },
+        });
+        if (
+          existing?.role === "OWNER" ||
+          (existing?.role === "MANAGER" && membership?.role !== "OWNER")
+        )
+          return { error: "forbidden" as const };
+        const member = await tx.organisationMember.upsert({
+          where: {
+            organisationId_userId: { organisationId, userId: invitee.userId },
           },
-        },
+          create: { organisationId, userId: invitee.userId, role: input.role },
+          update: { role: input.role },
+          include: {
+            user: {
+              select: { userId: true, name: true, nameEn: true, email: true },
+            },
+          },
+        });
+        return { member } as const;
       });
-      return c.json({ member }, 201);
+      if ("error" in result) return c.json({ error: result.error }, 403);
+      return c.json({ member: result.member }, 201);
     },
   );
 
@@ -544,24 +652,41 @@ export const createSpacesApp = ({
     async (c) => {
       const user = c.get("user");
       const organisationId = c.req.param("organisationId");
-      const membership = await db.organisationMember.findFirst({
-        where: { organisationId, userId: user.userId },
-        select: { role: true },
-      });
-      if (!canManageOrganisation(membership?.role))
-        return c.json({ error: "forbidden" }, 403);
       const targetId = c.req.param("userId");
-      const target = await db.organisationMember.findFirst({
-        where: { organisationId, userId: targetId },
-      });
-      if (!target) return c.json({ error: "not_found" }, 404);
-      if (target.role === "OWNER") {
-        const owners = await db.organisationMember.count({
-          where: { organisationId, role: "OWNER" },
+      const result = await db.$transaction(async (tx) => {
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${organisationId} || ':members', 0))`;
+        const membership = await tx.organisationMember.findFirst({
+          where: { organisationId, userId: user.userId },
+          select: { role: true },
         });
-        if (owners <= 1) return c.json({ error: "last_owner" }, 409);
-      }
-      await db.organisationMember.delete({ where: { id: target.id } });
+        const target = await tx.organisationMember.findFirst({
+          where: { organisationId, userId: targetId },
+          select: { id: true, role: true },
+        });
+        if (!target) return { error: "not_found" as const };
+        const mayRemove =
+          targetId === user.userId ||
+          membership?.role === "OWNER" ||
+          (membership?.role === "MANAGER" && target.role === "APPROVER");
+        if (!mayRemove) return { error: "forbidden" as const };
+        if (target.role === "OWNER") {
+          const owners = await tx.organisationMember.count({
+            where: { organisationId, role: "OWNER" },
+          });
+          if (owners <= 1) return { error: "last_owner" as const };
+        }
+        await tx.organisationMember.delete({ where: { id: target.id } });
+        return { ok: true as const };
+      });
+      if ("error" in result)
+        return c.json(
+          { error: result.error },
+          result.error === "not_found"
+            ? 404
+            : result.error === "forbidden"
+              ? 403
+              : 409,
+        );
       return c.json({ ok: true });
     },
   );
@@ -593,25 +718,31 @@ export const createSpacesApp = ({
         allowList: _allowList,
         ...fields
       } = input;
-      const space = await db.space.create({
-        data: {
-          organisationId,
-          ...fields,
-          openingHours: { create: openingHours },
-          blackouts: {
-            create: blackouts.map((range) => ({
-              ...range,
-              startDate: asDate(range.startDate),
-              endDate: asDate(range.endDate),
-            })),
+      try {
+        const space = await db.space.create({
+          data: {
+            organisationId,
+            ...fields,
+            openingHours: { create: openingHours },
+            blackouts: {
+              create: blackouts.map((range) => ({
+                ...range,
+                startDate: asDate(range.startDate),
+                endDate: asDate(range.endDate),
+              })),
+            },
+            allowList: {
+              create: allowUsers.map((person) => ({ userId: person!.userId })),
+            },
           },
-          allowList: {
-            create: allowUsers.map((person) => ({ userId: person!.userId })),
-          },
-        },
-        include: { openingHours: true, blackouts: true },
-      });
-      return c.json({ space: serializeSpace(space) }, 201);
+          include: { openingHours: true, blackouts: true },
+        });
+        return c.json({ space: serializeSpace(space) }, 201);
+      } catch (error) {
+        if (isSlugUniqueViolation(error))
+          return c.json({ error: "slug_taken" }, 409);
+        throw error;
+      }
     },
   );
 
@@ -655,43 +786,51 @@ export const createSpacesApp = ({
       if (allowUsers?.some((person) => !person))
         return c.json({ error: "allow_list_user_not_found" }, 400);
       const { openingHours, blackouts, allowList, ...fields } = input;
-      const space = await db.$transaction(async (tx) => {
-        if (openingHours)
-          await tx.spaceOpeningHours.deleteMany({ where: { spaceId } });
-        if (blackouts)
-          await tx.spaceBlackout.deleteMany({ where: { spaceId } });
-        if (allowList)
-          await tx.spaceBookingAllowList.deleteMany({ where: { spaceId } });
-        return tx.space.update({
-          where: { id: spaceId },
-          data: {
-            ...fields,
-            ...(openingHours ? { openingHours: { create: openingHours } } : {}),
-            ...(blackouts
-              ? {
-                  blackouts: {
-                    create: blackouts.map((range) => ({
-                      ...range,
-                      startDate: asDate(range.startDate),
-                      endDate: asDate(range.endDate),
-                    })),
-                  },
-                }
-              : {}),
-            ...(allowList
-              ? {
-                  allowList: {
-                    create: allowUsers!.map((person) => ({
-                      userId: person!.userId,
-                    })),
-                  },
-                }
-              : {}),
-          },
-          include: { openingHours: true, blackouts: true },
+      try {
+        const space = await db.$transaction(async (tx) => {
+          if (openingHours)
+            await tx.spaceOpeningHours.deleteMany({ where: { spaceId } });
+          if (blackouts)
+            await tx.spaceBlackout.deleteMany({ where: { spaceId } });
+          if (allowList)
+            await tx.spaceBookingAllowList.deleteMany({ where: { spaceId } });
+          return tx.space.update({
+            where: { id: spaceId },
+            data: {
+              ...fields,
+              ...(openingHours
+                ? { openingHours: { create: openingHours } }
+                : {}),
+              ...(blackouts
+                ? {
+                    blackouts: {
+                      create: blackouts.map((range) => ({
+                        ...range,
+                        startDate: asDate(range.startDate),
+                        endDate: asDate(range.endDate),
+                      })),
+                    },
+                  }
+                : {}),
+              ...(allowList
+                ? {
+                    allowList: {
+                      create: allowUsers!.map((person) => ({
+                        userId: person!.userId,
+                      })),
+                    },
+                  }
+                : {}),
+            },
+            include: { openingHours: true, blackouts: true },
+          });
         });
-      });
-      return c.json({ space: serializeSpace(space) });
+        return c.json({ space: serializeSpace(space) });
+      } catch (error) {
+        if (isSlugUniqueViolation(error))
+          return c.json({ error: "slug_taken" }, 409);
+        throw error;
+      }
     },
   );
 
@@ -855,14 +994,6 @@ export const createSpacesApp = ({
         where: { organisationId: space.organisationId, userId: user.userId },
         select: { id: true },
       });
-      const activeBookingCount = await db.booking.count({
-        where: {
-          spaceId: space.id,
-          userId: user.userId,
-          status: { in: ["REQUESTED", "APPROVED"] },
-          endAt: { gt: new Date() },
-        },
-      });
       const rules: BookingRules = {
         whoCanBook: space.whoCanBook,
         slotLengthMinutes: space.slotLengthMinutes,
@@ -889,7 +1020,7 @@ export const createSpacesApp = ({
         isNthuStudent: user.inschool,
         isOrganisationMember: Boolean(membership),
         isAllowListed: space.allowList.length > 0,
-        activeBookingCount,
+        activeBookingCount: 0,
       });
       if (ruleErrors.length > 0)
         return c.json(
@@ -900,7 +1031,24 @@ export const createSpacesApp = ({
       const status: BookingStatus =
         space.approvalMode === "INSTANT" ? "APPROVED" : "REQUESTED";
       try {
-        const booking = await db.$transaction(async (tx) => {
+        const result = await db.$transaction(async (tx) => {
+          await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${space.id} || ':' || ${user.userId}, 0))`;
+          const activeBookingCount = await tx.booking.count({
+            where: {
+              spaceId: space.id,
+              userId: user.userId,
+              status: { in: ["REQUESTED", "APPROVED"] },
+              endAt: { gt: new Date() },
+            },
+          });
+          const transactionRuleErrors = validateBookingRules(rules, candidate, {
+            isNthuStudent: user.inschool,
+            isOrganisationMember: Boolean(membership),
+            isAllowListed: space.allowList.length > 0,
+            activeBookingCount,
+          });
+          if (transactionRuleErrors.length > 0)
+            return { ruleErrors: transactionRuleErrors } as const;
           const created = await tx.booking.create({
             data: {
               spaceId: space.id,
@@ -922,8 +1070,13 @@ export const createSpacesApp = ({
               data: event(created.id, "BOOKING_APPROVED", user.userId),
             });
           }
-          return created;
+          return { booking: created } as const;
         });
+        if ("ruleErrors" in result)
+          return c.json(
+            { error: "booking_rules_failed", violations: result.ruleErrors },
+            400,
+          );
         if (status === "REQUESTED") {
           await notifier.notifyNewRequest({
             organisationName: space.organisation.name,
@@ -934,7 +1087,7 @@ export const createSpacesApp = ({
             endAt: candidate.endAt,
           });
         }
-        return c.json({ booking }, 201);
+        return c.json({ booking: result.booking }, 201);
       } catch (error) {
         if (isPostgresExclusionViolation(error))
           return c.json({ error: "booking_conflict" }, 409);
@@ -947,9 +1100,10 @@ export const createSpacesApp = ({
     const user = c.get("user");
     const booking = await db.booking.findFirst({
       where: { id: c.req.param("bookingId"), userId: user.userId },
+      select: requesterBookingSelect,
     });
     if (!booking) return c.json({ error: "not_found" }, 404);
-    return c.json({ booking });
+    return c.json({ booking: serializeRequesterBookingDetail(booking) });
   });
 
   app.post("/bookings/:bookingId/cancel", auth, async (c) => {
@@ -1009,6 +1163,8 @@ export const createSpacesApp = ({
         return { error: "forbidden" as const };
       if (current.status !== "REQUESTED")
         return { error: "not_pending" as const };
+      if (action === "APPROVE" && current.startAt <= new Date())
+        return { error: "already_started" as const };
       const status = action === "APPROVE" ? "APPROVED" : "REJECTED";
       const update = await tx.booking.updateMany({
         where: { id: bookingId, status: "REQUESTED" },
@@ -1084,6 +1240,11 @@ export const createSpacesApp = ({
             selected.some((booking) => booking.status !== "REQUESTED")
           )
             return { error: "not_pending" as const };
+          if (
+            input.action === "APPROVE" &&
+            selected.some((booking) => booking.startAt <= new Date())
+          )
+            return { error: "already_started" as const };
           for (const organisationId of new Set(
             selected.map((booking) => booking.space.organisationId),
           )) {

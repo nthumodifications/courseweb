@@ -10,10 +10,15 @@ const statusQuery = z.object({
     .enum(["PENDING", "VERIFIED", "REJECTED", "SUSPENDED", "ALL"])
     .default("PENDING"),
 });
-const statusInput = z.object({
-  status: z.enum(["VERIFIED", "REJECTED", "SUSPENDED"]),
-  reason: z.string().trim().min(1).max(1000),
-});
+const statusInput = z
+  .object({
+    status: z.enum(["VERIFIED", "REJECTED", "SUSPENDED"]),
+    reason: z.string().trim().max(1000).optional(),
+  })
+  .refine(
+    ({ status, reason }) => status === "VERIFIED" || Boolean(reason?.trim()),
+    { path: ["reason"] },
+  );
 const invalidInput = (
   result: { success: boolean },
   c: { json: (body: unknown, status: 400) => Response },
@@ -78,7 +83,7 @@ export const createAdminOrganisationsApp = ({
           action: "space_organisation.status",
           targetType: "organisation",
           targetId: id,
-          metadata: { status, reason },
+          metadata: { status, ...(reason ? { reason } : {}) },
         });
         return c.json({ ok: true, status });
       },
