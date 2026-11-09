@@ -78,7 +78,6 @@ const WeekGrid = ({
     () =>
       new Intl.DateTimeFormat(locale, {
         timeZone: "Asia/Taipei",
-        weekday: "short",
         day: "numeric",
         month: "numeric",
       }),
@@ -260,6 +259,36 @@ const SpaceDetailPage = () => {
     { length: Math.floor(freeDuration / space.slotLengthMinutes) },
     (_, index) => (index + 1) * space.slotLengthMinutes,
   );
+  const bookingEligibilitySummary = dict.spaces.bookingEligibilitySummary
+    .replace(
+      "{eligibility}",
+      space.whoCanBook === "NTHU_ONLY"
+        ? dict.spaces.nthuOnly
+        : space.whoCanBook === "MEMBERS"
+          ? dict.spaces.membersOnly
+          : space.whoCanBook === "ALLOW_LIST"
+            ? dict.spaces.allowListOnly
+            : dict.spaces.anyone,
+    )
+    .replace(
+      "{approval}",
+      space.approvalMode === "INSTANT"
+        ? dict.spaces.instantApprovalShort
+        : dict.spaces.approvalRequiredShort,
+    )
+    .replace("{slotLength}", String(space.slotLengthMinutes));
+  const noticeUnit =
+    lang === "en" && space.minNoticeHours !== 1
+      ? dict.spaces.hours
+      : dict.spaces.hour;
+  const durationUnit =
+    lang === "en" && space.maxLengthMinutes !== 1
+      ? dict.spaces.minutes
+      : dict.spaces.minute;
+  const bookingLimitsSummary = dict.spaces.bookingLimitsSummary
+    .replace("{notice}", `${space.minNoticeHours} ${noticeUnit}`)
+    .replace("{duration}", `${space.maxLengthMinutes} ${durationUnit}`)
+    .replace("{maxActive}", String(space.maxActiveBookingsPerUser));
 
   const submit = async () => {
     setError("");
@@ -327,26 +356,9 @@ const SpaceDetailPage = () => {
           <p className="text-sm leading-relaxed">{space.rules}</p>
         )}
         <p className="text-sm text-muted-foreground">
-          {dict.spaces.whoCanBook}:{" "}
-          {space.whoCanBook === "NTHU_ONLY"
-            ? dict.spaces.nthuOnly
-            : space.whoCanBook === "MEMBERS"
-              ? dict.spaces.membersOnly
-              : space.whoCanBook === "ALLOW_LIST"
-                ? dict.spaces.allowListOnly
-                : dict.spaces.anyone}
-          {" ・ "}
-          {space.approvalMode === "INSTANT"
-            ? dict.spaces.instantApproval
-            : dict.spaces.approvalRequired}
-          {" ・ "}
-          {space.slotLengthMinutes} {dict.spaces.slotLength.toLowerCase()}
+          {bookingEligibilitySummary}
         </p>
-        <p className="text-sm text-muted-foreground">
-          {dict.spaces.minNotice}: {space.minNoticeHours}h{" ・ "}
-          {dict.spaces.maxLength}: {space.maxLengthMinutes}m{" ・ "}
-          {dict.spaces.maxActive}: {space.maxActiveBookingsPerUser}
-        </p>
+        <p className="text-sm text-muted-foreground">{bookingLimitsSummary}</p>
         <p className="text-sm text-muted-foreground">
           {dict.spaces.openingHours}:{" "}
           {space.openingHours.length
@@ -402,9 +414,27 @@ const SpaceDetailPage = () => {
       ) : (
         <>
           <div className="flex flex-row flex-wrap gap-3 py-2 text-xs text-muted-foreground">
-            <span>{dict.spaces.free}</span>
-            <span>{dict.spaces.booked}</span>
-            <span>{dict.spaces.closed}</span>
+            <span className="flex items-center gap-1.5">
+              <span
+                aria-hidden="true"
+                className="h-3 w-3 border border-border bg-background"
+              />
+              {dict.spaces.free}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span
+                aria-hidden="true"
+                className="h-3 w-3 border border-border bg-muted"
+              />
+              {dict.spaces.booked}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span
+                aria-hidden="true"
+                className="h-3 w-3 border border-transparent bg-background"
+              />
+              {dict.spaces.closed}
+            </span>
           </div>
           <WeekGrid
             space={space}

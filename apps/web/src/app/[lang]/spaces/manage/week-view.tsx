@@ -17,7 +17,7 @@ import {
   type Space,
 } from "../api";
 import { getTaipeiWeekStart } from "../detail-page";
-import { formatTaipeiTime } from "./shared";
+import { formatTaipeiBookingRange, formatTaipeiTime } from "./shared";
 
 export const WeekView = ({
   organisation,
@@ -91,11 +91,11 @@ export const WeekView = ({
             >
               <div className="min-w-0 flex-1">
                 <span className="font-medium">
-                  {formatTaipeiTime(booking.startAt, lang ?? "zh")}
-                </span>
-                <span className="text-muted-foreground">
-                  {" "}
-                  – {formatTaipeiTime(booking.endAt, lang ?? "zh", false)}
+                  {formatTaipeiBookingRange(
+                    booking.startAt,
+                    booking.endAt,
+                    lang ?? "zh",
+                  )}
                 </span>
                 <div className="text-muted-foreground">
                   {booking.user?.name} ・ {booking.user?.userId}

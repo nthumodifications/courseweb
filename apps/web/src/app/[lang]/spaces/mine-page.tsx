@@ -16,12 +16,7 @@ import {
   useMyBookings,
   type Booking,
 } from "./api";
-
-const formatTime = (value: string, lang: string) =>
-  new Intl.DateTimeFormat(
-    lang === "en" ? "en" : lang === "zh-cn" ? "zh-CN" : "zh-TW",
-    { timeZone: "Asia/Taipei", dateStyle: "medium", timeStyle: "short" },
-  ).format(new Date(value));
+import { formatTaipeiBookingRange } from "./manage/shared";
 
 const MyBookingsPage = () => {
   const dict = useDictionary();
@@ -99,8 +94,11 @@ const MyBookingsPage = () => {
             <span className="font-medium">{dict.spaces.title}</span>
           )}
           <div className="text-sm text-muted-foreground">
-            {formatTime(booking.startAt, lang ?? "zh")} –{" "}
-            {formatTime(booking.endAt, lang ?? "zh")}
+            {formatTaipeiBookingRange(
+              booking.startAt,
+              booking.endAt,
+              lang ?? "zh",
+            )}
           </div>
           {booking.space?.organisation?.name && (
             <div className="text-sm text-muted-foreground">

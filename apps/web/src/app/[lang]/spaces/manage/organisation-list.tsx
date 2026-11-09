@@ -25,7 +25,7 @@ import { SpaceCreateForm, SpaceRulesEditor } from "./space-rules-editor";
 import { WeekView } from "./week-view";
 import { statusText } from "./shared";
 
-export const CreateOrganisation = () => {
+export const CreateOrganisation = ({ open = false }: { open?: boolean }) => {
   const dict = useDictionary();
   const create = useCreateOrganisation();
   const [name, setName] = useState("");
@@ -57,7 +57,7 @@ export const CreateOrganisation = () => {
     }
   };
   return (
-    <details className="border-b border-border py-3" open>
+    <details className="border-b border-border py-3" open={open}>
       <summary className="cursor-pointer font-medium">
         {dict.spaces.createOrganisation}
       </summary>
@@ -309,18 +309,23 @@ export const OrganisationList = ({
   const dict = useDictionary();
   return (
     <>
-      <CreateOrganisation />
       {organisations.length === 0 ? (
-        <p className="py-4 text-sm text-muted-foreground">
-          {dict.spaces.emptySpaces}
-        </p>
+        <>
+          <CreateOrganisation open />
+          <p className="py-4 text-sm text-muted-foreground">
+            {dict.spaces.emptySpaces}
+          </p>
+        </>
       ) : (
-        organisations.map((organisation) => (
-          <ManageOrganisation
-            key={organisation.id}
-            organisation={organisation}
-          />
-        ))
+        <>
+          {organisations.map((organisation) => (
+            <ManageOrganisation
+              key={organisation.id}
+              organisation={organisation}
+            />
+          ))}
+          <CreateOrganisation />
+        </>
       )}
     </>
   );

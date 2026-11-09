@@ -9,7 +9,7 @@ import {
   useOrganisationRequests,
   type Booking,
 } from "../api";
-import { formatTaipeiTime } from "./shared";
+import { formatTaipeiBookingRange } from "./shared";
 
 export const RequestsQueue = ({
   organisationId,
@@ -152,8 +152,11 @@ export const RequestsQueue = ({
                   </div>
                   <div className="text-sm text-muted-foreground">
                     {booking.user?.userId} ・{" "}
-                    {formatTaipeiTime(booking.startAt, lang ?? "zh")} –{" "}
-                    {formatTaipeiTime(booking.endAt, lang ?? "zh", false)}
+                    {formatTaipeiBookingRange(
+                      booking.startAt,
+                      booking.endAt,
+                      lang ?? "zh",
+                    )}
                   </div>
                   {booking.purpose && (
                     <div className="text-sm text-muted-foreground">
