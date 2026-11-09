@@ -1,8 +1,16 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useAuth } from "react-oidc-context";
-import { Button, Input } from "@courseweb/ui";
+import { MoreHorizontal } from "lucide-react";
+import {
+  Button,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+  Input,
+} from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
+import { ConfirmedActionMenuItem } from "../ConfirmedActionMenuItem";
 import {
   getSpaceErrorMessage,
   downloadBookingsCsv,
@@ -212,9 +220,9 @@ const ManageOrganisation = ({
               </Button>
             </div>
           </div>
-          <MembersPanel organisation={organisation} />
         </>
       )}
+      <MembersPanel organisation={organisation} />
       <div className="border-t border-border py-3">
         <h3 className="font-medium">{dict.spaces.spaces}</h3>
         {spaces.length === 0 ? (
@@ -241,27 +249,36 @@ const ManageOrganisation = ({
                     </div>
                   </div>
                   {canManage && (
-                    <details className="relative shrink-0">
-                      <summary
-                        className="grid h-10 w-10 cursor-pointer list-none place-items-center rounded-md border border-border"
-                        aria-label={dict.spaces.archive}
-                      >
-                        ⋯
-                      </summary>
-                      <button
-                        type="button"
-                        className="absolute right-0 top-full z-10 min-h-10 whitespace-nowrap border border-border bg-background px-3 text-sm text-destructive"
-                        onClick={async () => {
-                          try {
-                            await archive.mutateAsync({ input: space.id });
-                          } catch (error) {
-                            setError(getSpaceErrorMessage(error, dict.spaces));
-                          }
-                        }}
-                      >
-                        {dict.spaces.archive}
-                      </button>
-                    </details>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-10 w-10 shrink-0"
+                          aria-label={`${dict.spaces.moreActions}: ${space.name}`}
+                        >
+                          <MoreHorizontal aria-hidden="true" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <ConfirmedActionMenuItem
+                          label={dict.spaces.archive}
+                          description={dict.spaces.archiveConfirm}
+                          confirmLabel={dict.spaces.archive}
+                          cancelLabel={dict.spaces.cancel}
+                          disabled={archive.isPending}
+                          onConfirm={async () => {
+                            try {
+                              await archive.mutateAsync({ input: space.id });
+                            } catch (error) {
+                              setError(
+                                getSpaceErrorMessage(error, dict.spaces),
+                              );
+                            }
+                          }}
+                        />
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   )}
                 </div>
                 {canManage && <SpaceRulesEditor key={space.id} space={space} />}

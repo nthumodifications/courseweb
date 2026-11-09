@@ -1,8 +1,15 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useAuth } from "react-oidc-context";
-import { Button } from "@courseweb/ui";
+import { MoreHorizontal } from "lucide-react";
+import {
+  Button,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
+import { ConfirmedActionMenuItem } from "./ConfirmedActionMenuItem";
 import {
   getSpaceErrorMessage,
   useCancelBooking,
@@ -105,19 +112,24 @@ const MyBookingsPage = () => {
           {statusLabel[booking.status]}
         </span>
         {canCancel && (
-          <details className="relative shrink-0">
-            <summary
-              className="grid h-10 w-10 cursor-pointer list-none place-items-center rounded-md border border-border text-foreground"
-              aria-label={dict.spaces.cancelBooking}
-            >
-              ⋯
-            </summary>
-            <div className="absolute right-0 top-full z-10 flex min-w-36 flex-col border border-border bg-background p-1">
-              <button
-                type="button"
-                className="min-h-10 px-3 text-left text-sm text-destructive hover:bg-muted"
-                onClick={async () => {
-                  if (!window.confirm(dict.spaces.cancelConfirm)) return;
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-10 w-10 shrink-0"
+                aria-label={`${dict.spaces.moreActions}: ${booking.space?.name ?? dict.spaces.title}`}
+              >
+                <MoreHorizontal aria-hidden="true" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <ConfirmedActionMenuItem
+                label={dict.spaces.cancelBooking}
+                description={dict.spaces.cancelConfirm}
+                confirmLabel={dict.spaces.cancelBooking}
+                cancelLabel={dict.spaces.cancel}
+                onConfirm={async () => {
                   setError("");
                   try {
                     await cancel.mutateAsync({ input: booking.id });
@@ -125,11 +137,9 @@ const MyBookingsPage = () => {
                     setError(getSpaceErrorMessage(error, dict.spaces));
                   }
                 }}
-              >
-                {dict.spaces.cancelBooking}
-              </button>
-            </div>
-          </details>
+              />
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
       </div>
     );

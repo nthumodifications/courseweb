@@ -3270,6 +3270,10 @@
     "bookingFailed": "Could not request booking",
     "cancelBooking": "Cancel booking",
     "cancelConfirm": "Cancel this booking?",
+    "removeConfirm": "Remove this member from the organisation?",
+    "noShowConfirm": "Mark this booking as a no-show?",
+    "archiveConfirm": "Archive this space?",
+    "moreActions": "More actions",
     "loading": "Loading",
     "discordWebhook": "Discord notification URL",
     "weekdays": [

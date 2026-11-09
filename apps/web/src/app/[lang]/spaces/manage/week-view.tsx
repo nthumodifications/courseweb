@@ -1,7 +1,14 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { MoreHorizontal } from "lucide-react";
 import { Button } from "@courseweb/ui";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
+import { ConfirmedActionMenuItem } from "../ConfirmedActionMenuItem";
 import {
   getSpaceErrorMessage,
   useManageSpaceWeek,
@@ -99,33 +106,37 @@ export const WeekView = ({
                   ? dict.spaces.requested
                   : dict.spaces.approved}
               </span>
-              {booking.status === "APPROVED" && (
-                <details className="relative shrink-0">
-                  <summary
-                    className="grid h-10 w-10 cursor-pointer list-none place-items-center rounded-md border border-border"
-                    aria-label={dict.spaces.markNoShow}
-                  >
-                    ⋯
-                  </summary>
-                  <button
-                    type="button"
-                    disabled={
-                      new Date(booking.endAt).getTime() > Date.now() ||
-                      markNoShow.isPending
-                    }
-                    className="absolute right-0 top-full z-10 min-h-10 whitespace-nowrap border border-border bg-background px-3 text-sm text-destructive disabled:opacity-50"
-                    onClick={async () => {
-                      try {
-                        await markNoShow.mutateAsync({ input: booking.id });
-                      } catch (error) {
-                        setError(getSpaceErrorMessage(error, dict.spaces));
-                      }
-                    }}
-                  >
-                    {dict.spaces.markNoShow}
-                  </button>
-                </details>
-              )}
+              {booking.status === "APPROVED" &&
+                new Date(booking.endAt).getTime() <= Date.now() && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-10 w-10 shrink-0"
+                        aria-label={`${dict.spaces.moreActions}: ${formatTaipeiTime(booking.startAt, lang ?? "zh")}`}
+                      >
+                        <MoreHorizontal aria-hidden="true" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <ConfirmedActionMenuItem
+                        label={dict.spaces.markNoShow}
+                        description={dict.spaces.noShowConfirm}
+                        confirmLabel={dict.spaces.markNoShow}
+                        cancelLabel={dict.spaces.cancel}
+                        disabled={markNoShow.isPending}
+                        onConfirm={async () => {
+                          try {
+                            await markNoShow.mutateAsync({ input: booking.id });
+                          } catch (error) {
+                            setError(getSpaceErrorMessage(error, dict.spaces));
+                          }
+                        }}
+                      />
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
             </div>
           ))}
         </div>
