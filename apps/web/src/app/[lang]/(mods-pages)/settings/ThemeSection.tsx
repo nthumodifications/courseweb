@@ -7,9 +7,17 @@ import {
   ThemeBackground,
   ThemeDensity,
   ThemeRadius,
+  TransitionSpeed,
 } from "@/types/theme";
 import { cn } from "@/lib/utils";
-import { Button } from "@courseweb/ui";
+import {
+  Button,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@courseweb/ui";
 import { RotateCcw, Link2, Check } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import useDictionary from "@/dictionaries/useDictionary";
@@ -25,6 +33,13 @@ const RADIUS_OPTIONS: { value: ThemeRadius }[] = [
 const DENSITY_OPTIONS: {
   value: ThemeDensity;
 }[] = [{ value: "compact" }, { value: "comfortable" }, { value: "spacious" }];
+
+const TRANSITION_SPEED_OPTIONS: { value: TransitionSpeed }[] = [
+  { value: "instant" },
+  { value: "fast" },
+  { value: "default" },
+  { value: "slow" },
+];
 
 const BACKGROUND_OPTIONS: {
   value: ThemeBackground;
@@ -44,6 +59,7 @@ export const ThemeSection = () => {
     setRadius,
     setFontScale,
     setDensity,
+    setTransitionSpeed,
     setBackground,
     setFont,
     setAccentOverride,
@@ -296,6 +312,29 @@ export const ThemeSection = () => {
             </button>
           ))}
         </div>
+      </div>
+
+      <div className="flex flex-row items-center gap-4 py-4">
+        <label className="flex-1 text-sm font-bold">
+          {dict.settings.appearance.transition_speed.title}
+        </label>
+        <Select
+          value={config.transitionSpeed ?? "default"}
+          onValueChange={(value) =>
+            setTransitionSpeed(value as TransitionSpeed)
+          }
+        >
+          <SelectTrigger className="w-[160px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {TRANSITION_SPEED_OPTIONS.map(({ value }) => (
+              <SelectItem key={value} value={value}>
+                {dict.settings.appearance.transition_speed[value]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Background */}

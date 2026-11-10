@@ -3,9 +3,9 @@ import { fromZonedTime } from "date-fns-tz";
 import type { CompleteBusData, NandaBusDepartureDetails } from "@/libs/bus";
 import {
   findCampusTransfers,
-  findNextCampusBus,
   hasNoClassToday,
   getVenueCampus,
+  planNextCampusBus,
   type CampusClass,
 } from "./campusBusSuggestion";
 
@@ -159,13 +159,16 @@ describe("campus bus suggestions", () => {
   ])(
     "uses the fallback date-range data without parsing duration for a $venue class",
     ({ venue, line, direction, departureTime, arrivalTime }) => {
-      const result = findNextCampusBus(
+      const fromCampus = venue.includes("Nanda") ? "main" : "nanda";
+      const result = planNextCampusBus(
         [classAt(venue)],
         fallbackBusData(),
         taipeiDate("2026-10-08T08:00"),
+        fromCampus,
       );
 
       expect(result).toMatchObject({
+        status: "scheduled",
         line,
         direction,
         departureTime,
@@ -180,35 +183,142 @@ describe("campus bus suggestions", () => {
       classes: [] as CampusClass[],
       data: busData(),
       now: "2026-10-08T08:00",
+      homeCampus: "main" as const,
     },
     {
       name: "unknown venue",
       classes: [classAt("Online")],
       data: busData([bus("08:20", "route1")]),
       now: "2026-10-08T08:00",
+      homeCampus: "main" as const,
     },
     {
       name: "class on another day",
       classes: [classAt("Nanda南大N404", "2026-10-09T09:00")],
       data: busData([bus("08:20", "route1")]),
       now: "2026-10-08T08:00",
+      homeCampus: "main" as const,
     },
     {
       name: "no bus arrives in time",
       classes: [classAt("Nanda南大N404")],
       data: busData([bus("08:50", "route1")]),
       now: "2026-10-08T08:00",
+      homeCampus: "main" as const,
+      expectedStatus: "no_bus" as const,
     },
     {
       name: "Friday-suspended bus",
       classes: [classAt("Nanda南大N404", "2026-10-09T09:00")],
       data: busData([bus("08:20", "route1", "週五停駛")]),
       now: "2026-10-09T08:00",
+      homeCampus: "main" as const,
+      expectedStatus: "no_bus" as const,
     },
-  ])("returns nothing for $name", ({ classes, data, now }) => {
-    const result = findNextCampusBus(classes, data, taipeiDate(now));
+  ])(
+    "plans no hint for $name",
+    ({ classes, data, now, homeCampus, expectedStatus }) => {
+      const result = planNextCampusBus(
+        classes,
+        data,
+        taipeiDate(now),
+        homeCampus,
+      );
 
-    expect(result).toBeNull();
+      if (expectedStatus) {
+        expect(result).toMatchObject({ status: expectedStatus });
+      } else {
+        expect(result).toBeNull();
+      }
+    },
+  );
+
+  test("uses the latest weekday shuttle that arrives five minutes early", () => {
+    const result = planNextCampusBus(
+      [classAt("Nanda南大N404")],
+      busData([bus("08:10", "route1"), bus("08:31", "route2")]),
+      taipeiDate("2026-10-08T08:00"),
+      "main",
+    );
+
+    expect(result).toMatchObject({
+      status: "scheduled",
+      departureTime: "08:31",
+      arrivalTime: "08:51",
+    });
+  });
+
+  test("uses the weekend shuttle schedule for the next class", () => {
+    const result = planNextCampusBus(
+      [classAt("Nanda南大N404", "2026-10-10T09:00")],
+      busData([], [], [bus("08:20", "route2")]),
+      taipeiDate("2026-10-10T08:00"),
+      "main",
+    );
+
+    expect(result).toMatchObject({
+      status: "scheduled",
+      line: "route2",
+      departureTime: "08:20",
+      arrivalTime: "08:40",
+    });
+  });
+
+  test("reports when no shuttle can arrive with five minutes to spare", () => {
+    const result = planNextCampusBus(
+      [classAt("Nanda南大N404")],
+      busData([bus("08:36", "route1")]),
+      taipeiDate("2026-10-08T08:00"),
+      "main",
+    );
+
+    expect(result).toMatchObject({ status: "no_bus", fromCampus: "main" });
+  });
+
+  test("does not suggest a shuttle that left earlier in the current minute", () => {
+    const result = planNextCampusBus(
+      [classAt("Nanda南大N404")],
+      busData([bus("08:00", "route1"), bus("08:10", "route2")]),
+      fromZonedTime("2026-10-08T08:00:30.000", "Asia/Taipei"),
+      "main",
+    );
+
+    expect(result).toMatchObject({
+      status: "scheduled",
+      departureTime: "08:10",
+      arrivalTime: "08:30",
+    });
+  });
+
+  test("only uses the home campus for a student's first class today", () => {
+    const sameCampusNextClass = planNextCampusBus(
+      [
+        classAt("GEN II綜二101", "2026-10-08T08:00", "2026-10-08T08:50"),
+        classAt("GEN III綜三101", "2026-10-08T09:30", undefined, "class-2"),
+      ],
+      busData([bus("08:55", "route1")]),
+      taipeiDate("2026-10-08T09:00"),
+      "nanda",
+    );
+    const firstClass = planNextCampusBus(
+      [classAt("GEN II綜二101")],
+      busData([], [bus("08:20", "route1")]),
+      taipeiDate("2026-10-08T08:00"),
+      "nanda",
+    );
+    const firstClassWithoutHome = planNextCampusBus(
+      [classAt("GEN II綜二101")],
+      busData([], [bus("08:20", "route1")]),
+      taipeiDate("2026-10-08T08:00"),
+    );
+
+    expect(sameCampusNextClass).toBeNull();
+    expect(firstClassWithoutHome).toBeNull();
+    expect(firstClass).toMatchObject({
+      status: "scheduled",
+      fromCampus: "nanda",
+      campus: "main",
+    });
   });
 
   test.each([
@@ -328,8 +438,8 @@ describe("campus bus suggestions", () => {
           status: "scheduled",
           fromCampus: "nanda",
           toCampus: "main",
-          departureTime: "10:40",
-          arrivalTime: "11:00",
+          departureTime: "10:35",
+          arrivalTime: "10:55",
         },
       ],
     },
@@ -357,9 +467,16 @@ describe("campus bus suggestions", () => {
     },
   );
 
-  test("uses the existing venue definitions for campus classification", () => {
-    expect(getVenueCampus("Nanda南大N404")).toBe("nanda");
+  test.each(["Nanda南大N101", "Nanda南大N404", "Nanda南大8102"])(
+    "classifies real Nanda course venue %s through the shared building definition",
+    (venue) => {
+      expect(getVenueCampus(venue)).toBe("nanda");
+    },
+  );
+
+  test("uses the existing venue definitions for other campus classification", () => {
     expect(getVenueCampus("GEN II綜二101")).toBe("main");
+    expect(getVenueCampus("VC虛擬教室101")).toBeNull();
     expect(getVenueCampus("Online")).toBeNull();
   });
 

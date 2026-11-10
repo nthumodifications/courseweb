@@ -1166,6 +1166,13 @@
         "comfortable": "适中",
         "spacious": "宽松"
       },
+      "transition_speed": {
+        "title": "转场速度",
+        "instant": "立即",
+        "fast": "快速",
+        "default": "预设",
+        "slow": "缓慢"
+      },
       "background": {
         "title": "背景",
         "from": "起始颜色",
@@ -1263,6 +1270,12 @@
     },
     "timetable": {
       "title": "时间表",
+      "home_campus": "居住校区",
+      "home_campus_options": {
+        "none": "不设置",
+        "main": "校本部",
+        "nanda": "南大校区"
+      },
       "vertical_preview": "垂直式显示",
       "default_view": {
         "title": "预设查看",
@@ -1307,6 +1320,14 @@
         "serif": "衬线",
         "mono": "等宽",
         "rounded": "圆体"
+      },
+      "auto_color": {
+        "title": "自动配色",
+        "by_department": "依系所自动配色",
+        "by_time_of_day": "依上课时段自动配色",
+        "confirm_title": "要套用自动配色吗？",
+        "confirm_description": "这会覆盖目前学期课程的手动颜色。",
+        "confirm": "套用配色"
       },
       "move_up": "向上移动",
       "move_down": "向下移动",

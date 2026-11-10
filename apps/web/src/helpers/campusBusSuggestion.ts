@@ -17,11 +17,21 @@ export type CampusClass = {
 export type CampusBusSuggestion = {
   class: CampusClass;
   campus: Campus;
+  fromCampus: Campus;
   line: "route1" | "route2";
   direction: "up" | "down";
   departureTime: string;
   arrivalTime: string;
 };
+
+export type NextCampusBusPlan =
+  | (CampusBusSuggestion & { status: "scheduled" })
+  | {
+      status: "no_bus";
+      class: CampusClass;
+      fromCampus: Campus;
+      campus: Campus;
+    };
 
 export type CampusTransferSuggestion = {
   from: CampusClass;
@@ -36,7 +46,6 @@ export type CampusTransferSuggestion = {
 };
 
 const CLOCK_PATTERN = /^(\d{1,2}):(\d{2})$/;
-const NANDA_VENUE_PATTERN = /南大|nanda/i;
 const HOLIDAY_TITLE_PATTERN =
   /國慶|國定假日|放假|休假|假日|補假|停課|holiday|no[\s-]?class|day off/i;
 
@@ -46,6 +55,7 @@ const CAMPUS_BUS_TRAVEL_MINUTES = {
   down: 20,
   up: 20,
 } as const;
+const ARRIVAL_BUFFER_MINUTES = 5;
 
 const parseClockMinutes = (value: string): number | null => {
   const match = CLOCK_PATTERN.exec(value.trim());
@@ -60,6 +70,14 @@ const parseClockMinutes = (value: string): number | null => {
 const getTaipeiClockMinutes = (date: Date) =>
   parseClockMinutes(formatInTimeZone(date, CAMPUS_BUS_TIME_ZONE, "HH:mm"));
 
+const getTaipeiCurrentMinute = (date: Date) => {
+  const clockMinutes = getTaipeiClockMinutes(date);
+  if (clockMinutes === null) return null;
+  return date.getSeconds() > 0 || date.getMilliseconds() > 0
+    ? clockMinutes + 1
+    : clockMinutes;
+};
+
 const getTaipeiDate = (date: Date) =>
   formatInTimeZone(date, CAMPUS_BUS_TIME_ZONE, "yyyy-MM-dd");
 
@@ -71,8 +89,9 @@ const formatClockMinutes = (minutes: number) =>
 
 export const getVenueCampus = (venue?: string): Campus | null => {
   if (!venue) return null;
-  if (NANDA_VENUE_PATTERN.exec(venue)) return "nanda";
-  return getBuildingDefinition(venue) ? "main" : null;
+  const building = getBuildingDefinition(venue);
+  if (!building || building.code.english === "VC") return null;
+  return building.code.english === "Nanda" ? "nanda" : "main";
 };
 
 type CampusCalendarEvent = {
@@ -150,19 +169,33 @@ const getEligibleSchedule = (
   };
 };
 
-export const findNextCampusBus = (
+export const planNextCampusBus = (
   classes: readonly CampusClass[],
   data: CompleteBusData,
   now: Date,
-): CampusBusSuggestion | null => {
-  const nextClass = getNextClass(classes, now);
+  homeCampus: Campus | null = null,
+): NextCampusBusPlan | null => {
+  const todayClasses = classes
+    .filter(
+      (courseClass) => getTaipeiDate(courseClass.start) === getTaipeiDate(now),
+    )
+    .sort((left, right) => left.start.getTime() - right.start.getTime());
+  const nextClass = getNextClass(todayClasses, now);
   if (!nextClass) return null;
 
   const campus = getVenueCampus(nextClass.venue);
   if (!campus) return null;
 
+  const previousClass = todayClasses.findLast(
+    (courseClass) => courseClass.start < nextClass.start,
+  );
+  const fromCampus = previousClass
+    ? getVenueCampus(previousClass.venue)
+    : homeCampus;
+  if (!fromCampus || fromCampus === campus) return null;
+
   const classStart = getTaipeiClockMinutes(nextClass.start);
-  const currentTime = getTaipeiClockMinutes(now);
+  const currentTime = getTaipeiCurrentMinute(now);
   if (classStart === null || currentTime === null) return null;
 
   const { direction, schedule, travelMinutes } = getEligibleSchedule(
@@ -171,6 +204,13 @@ export const findNextCampusBus = (
     getTaipeiDay(now),
   );
 
+  const earliestDeparture = previousClass?.end
+    ? Math.max(
+        currentTime,
+        getTaipeiClockMinutes(previousClass.end) ?? currentTime,
+      )
+    : currentTime;
+  const latestArrival = classStart - ARRIVAL_BUFFER_MINUTES;
   const departure = schedule
     .filter(
       (bus) =>
@@ -186,25 +226,39 @@ export const findNextCampusBus = (
         minutes: number;
       } =>
         candidate.minutes !== null &&
-        candidate.minutes >= currentTime &&
-        candidate.minutes + travelMinutes <= classStart,
+        candidate.minutes >= earliestDeparture &&
+        candidate.minutes + travelMinutes <= latestArrival,
     )
-    .sort((left, right) => left.minutes - right.minutes)[0];
+    .sort((left, right) => right.minutes - left.minutes)[0];
 
-  if (!departure) return null;
+  if (!departure) {
+    return { status: "no_bus", class: nextClass, fromCampus, campus };
+  }
 
   const departureTime = formatClockMinutes(departure.minutes);
   const arrivalMinutes = departure.minutes + travelMinutes;
   const arrivalTime = formatClockMinutes(arrivalMinutes);
 
   return {
+    status: "scheduled",
     class: nextClass,
     campus,
+    fromCampus,
     line: departure.bus.type,
     direction,
     departureTime,
     arrivalTime,
   };
+};
+
+export const findNextCampusBus = (
+  classes: readonly CampusClass[],
+  data: CompleteBusData,
+  now: Date,
+  homeCampus: Campus | null = null,
+): CampusBusSuggestion | null => {
+  const plan = planNextCampusBus(classes, data, now, homeCampus);
+  return plan?.status === "scheduled" ? plan : null;
 };
 
 const getTodayClasses = (classes: readonly CampusClass[], now: Date) => {
@@ -219,7 +273,7 @@ export const findCampusTransfers = (
   data: CompleteBusData,
   now: Date,
 ): CampusTransferSuggestion[] => {
-  const currentTime = getTaipeiClockMinutes(now);
+  const currentTime = getTaipeiCurrentMinute(now);
   if (currentTime === null) return [];
 
   const todayClasses = getTodayClasses(classes, now);
@@ -261,7 +315,11 @@ export const findCampusTransfers = (
           candidate.minutes !== null && candidate.minutes >= earliestDeparture,
       );
     const departure = departures
-      .filter((candidate) => candidate.minutes + travelMinutes <= nextStart)
+      .filter(
+        (candidate) =>
+          candidate.minutes + travelMinutes <=
+          nextStart - ARRIVAL_BUFFER_MINUTES,
+      )
       .sort((left, right) => right.minutes - left.minutes)[0];
 
     if (departure) {
