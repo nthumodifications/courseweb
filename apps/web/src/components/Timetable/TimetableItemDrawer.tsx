@@ -4,6 +4,7 @@ import {
   ExternalLink,
   CalendarPlus,
   MapPin,
+  Users,
 } from "lucide-react";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { PropsWithChildren, useEffect, useState } from "react";
@@ -43,6 +44,7 @@ import {
 import { useNavigate, useParams } from "react-router-dom";
 import { getCampusMapHref } from "@/features/campusMap/navigation";
 import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
+import { classmatesPath } from "@/lib/class-pages";
 
 const ImportantDates = ({ raw_id }: { raw_id: RawCourseID }) => {
   const { data: dates } = useQuery({
@@ -133,7 +135,7 @@ const TimetableCourseQuickAccess = ({ course }: { course: MinimalCourse }) => {
           <div className="flex-1">
             <div className="mb-2 space-y-1">
               <div className="flex flex-row gap-2 items-center">
-              <p className="text-nthu-500 text-sm font-medium">
+                <p className="text-nthu-500 text-sm font-medium">
                   {course.department} {course.course}-
                   {course.class.padStart(2, "0")}
                 </p>
@@ -186,6 +188,17 @@ const TimetableCourseQuickAccess = ({ course }: { course: MinimalCourse }) => {
           >
             <MapPin className="w-4 h-4 mr-2" />
             {dict.timetable.course_actions.course_location}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() =>
+              navigate(
+                classmatesPath(lang ?? "zh", course.semester, course.raw_id),
+              )
+            }
+          >
+            <Users className="w-4 h-4 mr-2" />
+            {dict.timetable.course_item.classmates}
           </Button>
           <DateContributeForm courseId={course.raw_id}>
             <Button variant="outline">

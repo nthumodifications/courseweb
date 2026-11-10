@@ -4,6 +4,8 @@ import {
   useEffect,
   useRef,
   useState,
+  type ReactElement,
+  type MouseEvent as ReactMouseEvent,
   type ReactNode,
 } from "react";
 import { createRoot } from "react-dom/client";
@@ -11,6 +13,7 @@ import { JSDOM } from "jsdom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterAll, afterEach, describe, expect, mock, test } from "bun:test";
 import { captureGlobalState } from "@/test-utils/global-state";
+import { getSyncedStorageKey } from "@/hooks/syncedStorage";
 import {
   nextStorageValue,
   persistStorageValue,
@@ -38,8 +41,12 @@ const restoreGlobals = captureGlobalState([
   globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
 ).IS_REACT_ACT_ENVIRONMENT = true;
 
+let testAuthState: {
+  isAuthenticated: boolean;
+  user?: { access_token: string; profile: { sub: string } };
+} = { isAuthenticated: false };
 mock.module("react-oidc-context", () => ({
-  useAuth: () => ({ isAuthenticated: false, user: undefined }),
+  useAuth: () => testAuthState,
 }));
 let courseResponseData: unknown[] = [];
 mock.module("@/config/api", () => ({
@@ -50,7 +57,18 @@ mock.module("@/config/api", () => ({
     },
   },
 }));
-mock.module("@/config/auth", () => ({ default: {} }));
+mock.module("@/config/auth", () => ({
+  default: {
+    api: {
+      kv: {
+        ":key": {
+          $get: async () => new Response(null, { status: 404 }),
+          $post: async () => new Response(null, { status: 204 }),
+        },
+      },
+    },
+  },
+}));
 mock.module("@/lib/gtag", () => ({ event: () => {} }));
 mock.module("@/hooks/contexts/settings", () => ({
   useSettings: () => ({ language: "en" }),
@@ -87,8 +105,19 @@ mock.module("@/dictionaries/useDictionary", () => ({
       conflict: "Conflict",
       course: "course",
       course_actions: {
-        hide_course: "Hide course",
-        show_course: "Show course",
+        course_location: "Course location",
+        location_unavailable: "Location unavailable",
+      },
+      course_item: {
+        classmates: "Classmates",
+        classmates_count: "Classmates: {count}",
+        hide: "Hide in timetable",
+        show: "Show in timetable",
+        change_color: "Change colour",
+        remove: "Remove",
+        more_actions: "More course actions",
+        move_course: "Move course",
+        priority: "PE/GE priority {priority}",
       },
       course_data_error: "Course data failed",
       course_data_loading: "Loading course data",
@@ -138,9 +167,57 @@ const useTestLocalStorage = <T,>(
   return [value, update];
 };
 
+const TestDropdownMenu = ({ children }: { children: ReactNode }) => {
+  return <>{children}</>;
+};
+
+const TestDropdownMenuTrigger = ({
+  children,
+}: {
+  asChild?: boolean;
+  children: ReactElement;
+}) => children;
+
+const TestDropdownMenuContent = ({
+  children,
+  onClick,
+}: {
+  children: ReactNode;
+  onClick?: (event: ReactMouseEvent<HTMLDivElement>) => void;
+}) => {
+  return (
+    <div role="menu" onClick={onClick}>
+      {children}
+    </div>
+  );
+};
+
+const TestDropdownMenuItem = ({
+  children,
+  onClick,
+}: {
+  children: ReactNode;
+  onClick?: (event: ReactMouseEvent<HTMLButtonElement>) => void;
+}) => {
+  return (
+    <button type="button" role="menuitem" onClick={onClick}>
+      {children}
+    </button>
+  );
+};
+
 mock.module("usehooks-ts", () => ({
   useLocalStorage: useTestLocalStorage,
   useMediaQuery: () => false,
+}));
+
+const actualCoursewebUI = await import("@courseweb/ui");
+mock.module("@courseweb/ui", () => ({
+  ...actualCoursewebUI,
+  DropdownMenu: TestDropdownMenu,
+  DropdownMenuContent: TestDropdownMenuContent,
+  DropdownMenuItem: TestDropdownMenuItem,
+  DropdownMenuTrigger: TestDropdownMenuTrigger,
 }));
 
 const moduleDom = new JSDOM("<!doctype html><html><body></body></html>", {
@@ -179,6 +256,7 @@ afterAll(() => {
   mock.module("@/hooks/contexts/settings", () => actualSettings);
   mock.module("@/dictionaries/useDictionary", () => actualDictionary);
   mock.module("usehooks-ts", () => actualUsehooksTs);
+  mock.module("@courseweb/ui", () => actualCoursewebUI);
 });
 
 const COURSES_KEY = "nthumods-storage-anonymous-courses";
@@ -187,11 +265,17 @@ const PREFERENCES_KEY =
 const DISPLAY_SETTINGS_KEY =
   "nthumods-storage-anonymous-timetable-display-settings";
 const TIMETABLE_THEME_KEY = "nthumods-storage-anonymous-timetable_theme";
+const USER_COURSES_KEY = getSyncedStorageKey("courses", "test-user");
+const USER_DISPLAY_SETTINGS_KEY = getSyncedStorageKey(
+  "timetable-display-settings",
+  "test-user",
+);
 
 const syncedRecord = (value: unknown) =>
   JSON.stringify({ value, lastModified: 1, updatedAt: 1, deviceId: "test" });
 
 let activeCleanup: (() => Promise<void>) | undefined;
+let activeFetchRestore: (() => void) | undefined;
 
 const testCourse = {
   capacity: 30,
@@ -302,7 +386,10 @@ const renderTimetable = async (
 describe("timetable provider render stability", () => {
   afterEach(async () => {
     await activeCleanup?.();
+    activeFetchRestore?.();
+    activeFetchRestore = undefined;
     courseResponseData = [];
+    testAuthState = { isAuthenticated: false };
     restoreGlobals();
   });
 
@@ -398,11 +485,15 @@ describe("timetable provider render stability", () => {
 
     const text = fixture.container.textContent ?? "";
     expect(text).toContain("CS 101001");
-    expect(text).toContain("離散數學 - 陳老師");
-    expect(text).toContain("Discrete Mathematics - Alice Chen");
-    expect(text).toContain("DELTA台達217 M9MaMb / M1M2");
+    expect(text).toContain("離散數學");
+    expect(text).toContain("Discrete Mathematics");
+    expect(text).toContain("DELTA台達217 M9MaMb");
+    expect(text).toContain("M1M2");
     expect(text).toContain("2 credits");
-    expect(text).toContain("Chinese");
+    expect(
+      fixture.container.querySelector('a[aria-label="Classmates"]')
+        ?.textContent,
+    ).toBe("");
     expect(text).not.toContain("30 people");
     expect(text).not.toContain("20 enrolled");
     expect(text).not.toContain("Note that should be hidden");
@@ -446,7 +537,7 @@ describe("timetable provider render stability", () => {
         fixture.container.textContent?.includes(secondCourse.name_zh) ?? false,
     );
 
-    const rows = [...fixture.container.querySelectorAll("div.max-w-3xl")];
+    const rows = [...fixture.container.querySelectorAll("div.group.min-w-0")];
     expect(rows).toHaveLength(2);
 
     const listContainer = rows[0]?.parentElement;
@@ -457,12 +548,15 @@ describe("timetable provider render stability", () => {
     await fixture.cleanup();
   });
 
-  test("dims hidden timetable rows and shows the reveal action", async () => {
+  test("dims hidden timetable rows and reveals them from the overflow menu", async () => {
     const course = testCourse;
     courseResponseData = [course];
 
     const fixture = await renderTimetable(
-      <TimetableCourseList semester="11410" />,
+      <>
+        <TimetableCourseList semester="11410" />
+        <TimetableStateProbe />
+      </>,
       {
         [COURSES_KEY]: { "11410": [course.raw_id] },
         [PREFERENCES_KEY]: { hiddenCourses: { [course.raw_id]: true } },
@@ -481,11 +575,265 @@ describe("timetable provider render stability", () => {
     );
 
     expect(fixture.container.querySelector(".opacity-60")).not.toBeNull();
-    const revealButton = fixture.container.querySelector<HTMLButtonElement>(
-      'button[aria-pressed="true"]',
+    const menuTrigger = fixture.container.querySelector<HTMLButtonElement>(
+      'button[aria-label="More course actions"]',
     );
-    expect(revealButton?.getAttribute("aria-label")).toBe("Show course");
-    expect(revealButton?.querySelector("svg")).not.toBeNull();
+    await act(async () => {
+      menuTrigger?.click();
+    });
+    await fixture.waitFor(() =>
+      [
+        ...fixture.container.ownerDocument.querySelectorAll<HTMLElement>(
+          '[role="menuitem"]',
+        ),
+      ].some((item) => item.textContent?.trim() === "Show in timetable"),
+    );
+    const showItem = [
+      ...fixture.container.ownerDocument.querySelectorAll<HTMLElement>(
+        '[role="menuitem"]',
+      ),
+    ].find((item) => item.textContent?.trim() === "Show in timetable");
+    expect(showItem).toBeDefined();
+    await act(async () => showItem?.click());
+    await fixture.waitFor(
+      () => fixture.readState().hiddenCourses?.[course.raw_id] === undefined,
+    );
+    expect(fixture.readState().hiddenCourses).toEqual({});
+    await fixture.cleanup();
+  });
+
+  test("hides a course from the overflow menu", async () => {
+    courseResponseData = [testCourse];
+    const fixture = await renderTimetable(
+      <>
+        <TimetableCourseList semester="11410" />
+        <TimetableStateProbe />
+      </>,
+      {
+        [COURSES_KEY]: { "11410": [testCourse.raw_id] },
+        [DISPLAY_SETTINGS_KEY]: {
+          englishNames: "none",
+          showCourseCode: false,
+          showVenue: false,
+          showPriority: false,
+          showCredits: false,
+          lockOrder: true,
+        },
+      },
+    );
+    await fixture.waitFor(
+      () =>
+        fixture.container.textContent?.includes(testCourse.name_zh) ?? false,
+    );
+    await act(async () => {
+      const trigger = fixture.container.querySelector<HTMLButtonElement>(
+        'button[aria-label="More course actions"]',
+      );
+      trigger?.click();
+    });
+    await fixture.waitFor(() =>
+      [
+        ...fixture.container.ownerDocument.querySelectorAll<HTMLElement>(
+          '[role="menuitem"]',
+        ),
+      ].some((item) => item.textContent?.trim() === "Hide in timetable"),
+    );
+    const hideItem = [
+      ...fixture.container.ownerDocument.querySelectorAll<HTMLElement>(
+        '[role="menuitem"]',
+      ),
+    ].find((item) => item.textContent?.trim() === "Hide in timetable");
+    expect(hideItem).toBeDefined();
+    await act(async () => hideItem?.click());
+    await fixture.waitFor(
+      () => fixture.readState().hiddenCourses?.[testCourse.raw_id] === true,
+    );
+    expect(fixture.container.querySelector(".opacity-60")).not.toBeNull();
+    await fixture.cleanup();
+  });
+
+  test("links the classmates count to the course page", async () => {
+    const course = testCourse;
+    const secondCourse = {
+      ...testCourse,
+      raw_id: "11410-EE 1010 1",
+      department: "EE",
+      course: "1010",
+      name_en: "Second course",
+      name_zh: "第二課程",
+    };
+    courseResponseData = [course, secondCourse];
+    testAuthState = {
+      isAuthenticated: true,
+      user: {
+        access_token: "test-token",
+        profile: { sub: "test-user" },
+      },
+    };
+    const originalFetch = globalThis.fetch;
+    let countRequests = 0;
+    activeFetchRestore = () => {
+      globalThis.fetch = originalFetch;
+    };
+    globalThis.fetch = async (input, init) => {
+      const url = String(input);
+      if (url.includes("/api/class-pages/counts/11410")) {
+        countRequests += 1;
+        expect(new Headers(init?.headers).get("Authorization")).toBe(
+          "Bearer test-token",
+        );
+        return new Response(
+          JSON.stringify({
+            counts: {
+              [course.raw_id]: { members: 7, joined: true },
+              [secondCourse.raw_id]: { members: 3, joined: false },
+            },
+          }),
+          { status: 200 },
+        );
+      }
+      return originalFetch(input, init);
+    };
+
+    const fixture = await renderTimetable(
+      <TimetableCourseList semester="11410" />,
+      {
+        [USER_COURSES_KEY]: {
+          "11410": [course.raw_id, secondCourse.raw_id],
+        },
+        [USER_DISPLAY_SETTINGS_KEY]: {
+          englishNames: "none",
+          showCourseCode: false,
+          showVenue: false,
+          showPriority: false,
+          showCredits: false,
+          lockOrder: true,
+        },
+      },
+    );
+    await fixture.waitFor(() => {
+      const links = fixture.container.querySelectorAll<HTMLAnchorElement>(
+        'a[aria-label^="Classmates"]',
+      );
+      return (
+        links.length === 2 &&
+        links[0]?.textContent?.includes("7") === true &&
+        links[1]?.textContent?.includes("3") === true
+      );
+    });
+    const classmatesLinks = [
+      ...fixture.container.querySelectorAll<HTMLAnchorElement>(
+        'a[aria-label^="Classmates"]',
+      ),
+    ];
+    expect(classmatesLinks[0]?.getAttribute("href")).toBe(
+      "/en/classmates/11410/11410-CS%201010%201",
+    );
+    expect(classmatesLinks[0]?.textContent).toContain("7");
+    expect(classmatesLinks[0]?.getAttribute("aria-label")).toBe(
+      "Classmates: 7",
+    );
+    expect(classmatesLinks[0]?.className).toContain("text-foreground");
+    expect(classmatesLinks[1]?.getAttribute("href")).toBe(
+      "/en/classmates/11410/11410-EE%201010%201",
+    );
+    expect(classmatesLinks[1]?.textContent).toContain("3");
+    expect(classmatesLinks[1]?.getAttribute("aria-label")).toBe(
+      "Classmates: 3",
+    );
+    expect(classmatesLinks[1]?.className).toContain("text-muted-foreground");
+    expect(countRequests).toBe(1);
+    await fixture.cleanup();
+  });
+
+  test("labels a course with a schedule conflict", async () => {
+    const conflictingCourse = {
+      ...testCourse,
+      raw_id: "11410-EE 1010 1",
+      department: "EE",
+      course: "1010",
+      name_en: "Conflicting course",
+      name_zh: "衝堂課程",
+    };
+    courseResponseData = [testCourse, conflictingCourse];
+
+    const fixture = await renderTimetable(
+      <TimetableCourseList semester="11410" />,
+      {
+        [COURSES_KEY]: {
+          "11410": [testCourse.raw_id, conflictingCourse.raw_id],
+        },
+        [DISPLAY_SETTINGS_KEY]: {
+          englishNames: "none",
+          showCourseCode: false,
+          showVenue: false,
+          showPriority: false,
+          showCredits: false,
+          lockOrder: true,
+        },
+      },
+    );
+    await fixture.waitFor(
+      () =>
+        fixture.container.querySelector(
+          '[role="img"][aria-label="Conflict"]',
+        ) !== null,
+    );
+
+    expect(
+      fixture.container.querySelectorAll('[role="img"][aria-label="Conflict"]'),
+    ).toHaveLength(2);
+    await fixture.cleanup();
+  });
+
+  test("removes a course from the overflow menu", async () => {
+    courseResponseData = [testCourse];
+    const fixture = await renderTimetable(
+      <>
+        <TimetableCourseList semester="11410" />
+        <TimetableStateProbe />
+      </>,
+      {
+        [COURSES_KEY]: { "11410": [testCourse.raw_id] },
+        [DISPLAY_SETTINGS_KEY]: {
+          englishNames: "none",
+          showCourseCode: false,
+          showVenue: false,
+          showPriority: false,
+          showCredits: false,
+          lockOrder: true,
+        },
+      },
+    );
+    await fixture.waitFor(
+      () =>
+        fixture.container.textContent?.includes(testCourse.name_zh) ?? false,
+    );
+    await act(async () => {
+      const trigger = fixture.container.querySelector<HTMLButtonElement>(
+        'button[aria-label="More course actions"]',
+      );
+      trigger?.click();
+    });
+    await fixture.waitFor(() =>
+      [
+        ...fixture.container.ownerDocument.querySelectorAll<HTMLElement>(
+          '[role="menuitem"]',
+        ),
+      ].some((item) => item.textContent?.trim() === "Remove"),
+    );
+    const removeItem = [
+      ...fixture.container.ownerDocument.querySelectorAll<HTMLElement>(
+        '[role="menuitem"]',
+      ),
+    ].find((item) => item.textContent?.trim() === "Remove");
+    expect(removeItem).toBeDefined();
+    await act(async () => removeItem?.click());
+    await fixture.waitFor(
+      () =>
+        !fixture.readState().courses?.["11410"]?.includes(testCourse.raw_id),
+    );
+    expect(fixture.readState().courses["11410"]).toEqual([]);
     await fixture.cleanup();
   });
 
