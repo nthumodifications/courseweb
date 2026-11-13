@@ -143,6 +143,14 @@ export const apps: AppDefinition[] = [
     Icon: Dumbbell,
   },
   {
+    id: "spaces",
+    category: "facilities",
+    title_zh: "空間預約",
+    title_en: "Space reservations",
+    href: "/spaces",
+    Icon: CalendarIcon,
+  },
+  {
     id: "library",
     category: "facilities",
     title_zh: "圖書館即時座位",

@@ -574,6 +574,42 @@ const academicCalendarIcs = async (
   return calendar.toString();
 };
 
+export const approvedBookingsToIcs = (
+  bookings: Array<{
+    id: string;
+    status: string;
+    startAt: Date;
+    endAt: Date;
+    updatedAt: Date;
+    space: { name: string; location: string };
+  }>,
+  now = new Date(),
+) => {
+  const approved = bookings.filter((booking) => booking.status === "APPROVED");
+  if (approved.length === 0) return "";
+  const calendar = ical({
+    name: "NTHUMods Space Reservations",
+    prodId: { company: "NTHUMods", product: "Calendar" },
+    scale: "gregorian",
+    method: ICalCalendarMethod.PUBLISH,
+    timezone: CALENDAR_TIME_ZONE,
+  });
+  const stamp = new Date(Math.floor(now.getTime() / 300_000) * 300_000);
+  for (const booking of approved) {
+    calendar.createEvent({
+      id: `booking-${booking.id}@nthumods.com`,
+      stamp,
+      lastModified: booking.updatedAt,
+      start: booking.startAt,
+      end: booking.endAt,
+      summary: stripCalendarLineBreaks(booking.space.name),
+      location: stripCalendarLineBreaks(booking.space.location),
+      categories: [{ name: "Space reservation" }],
+    });
+  }
+  return calendar.toString();
+};
+
 const fetchTimetableCalendars = async (
   c: any,
   courses: StoredCourses,
@@ -800,8 +836,31 @@ const buildSharedCalendar = async (
       academicCalendars.push(await academicCalendarIcs(academicEvents));
     }
   }
-  return timetableCalendars.length || academicCalendars.length
-    ? mergeCalendarEvents(baseCalendar, timetableCalendars, academicCalendars)
+  const bookingCalendars: string[] = [];
+  if (includes.has("events")) {
+    try {
+      const bookings = await prisma.booking.findMany({
+        where: {
+          userId,
+          status: "APPROVED",
+          endAt: { gte: new Date() },
+        },
+        include: { space: { select: { name: true, location: true } } },
+        orderBy: { startAt: "asc" },
+      });
+      const bookingCalendar = approvedBookingsToIcs(bookings);
+      if (bookingCalendar) bookingCalendars.push(bookingCalendar);
+    } catch (error) {
+      console.error("Failed to load space bookings for calendar feed", error);
+    }
+  }
+  return timetableCalendars.length ||
+    academicCalendars.length ||
+    bookingCalendars.length
+    ? mergeCalendarEvents(baseCalendar, timetableCalendars, [
+        ...academicCalendars,
+        ...bookingCalendars,
+      ])
     : baseCalendar;
 };
 
