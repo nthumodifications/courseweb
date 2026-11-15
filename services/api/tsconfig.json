@@ -1,10 +1,6 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "baseUrl": "../..",
-    "paths": {
-      "@courseweb/shared": ["packages/shared/dist/index.d.ts"]
-    },
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "bundler",

@@ -13,6 +13,7 @@ import { Helmet } from "react-helmet-async";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import {
   currentSemester,
+  departments,
   lastSemester,
   semesterInfo,
   toPrettySemester,
@@ -119,7 +120,7 @@ const CourseInsightChart = ({
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={points}
-            margin={{ top: 4, right: 8, left: -24, bottom: 0 }}
+            margin={{ top: 4, right: 8, left: 0, bottom: 0 }}
           >
             <CartesianGrid vertical={false} stroke="hsl(var(--border))" />
             <XAxis
@@ -131,7 +132,15 @@ const CourseInsightChart = ({
               interval="preserveStartEnd"
               minTickGap={12}
             />
-            <YAxis hide domain={["auto", "auto"]} />
+            <YAxis
+              width={38}
+              tickFormatter={(value: number) => formatValue(value)}
+              tickLine={false}
+              axisLine={false}
+              tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+              domain={["auto", "auto"]}
+              tickCount={3}
+            />
             <Tooltip
               cursor={{ stroke: "hsl(var(--border))" }}
               content={({ active, payload }) => {
@@ -217,28 +226,30 @@ const ExpandableModuleList = ({
           <div className="flex flex-col divide-y divide-border">
             {visible.map((module) => (
               <Link
-                className="flex min-w-0 items-center justify-between gap-4 py-2 outline-none hover:bg-muted/40 focus-visible:bg-muted/40"
+                className="flex min-w-0 items-center gap-2 py-2 outline-none hover:bg-muted/40 focus-visible:bg-muted/40"
                 key={module.key}
                 to={`/${lang}/courses/module/${encodeURIComponent(module.key)}`}
               >
-                <span className="min-w-0">
-                  <span className="block font-medium">
-                    <span
-                      dangerouslySetInnerHTML={{
-                        __html: sanitizeCourseHtml(
-                          lang === "en"
-                            ? module.nameEn || module.nameZh
-                            : localizeZh(module.nameZh),
-                        ),
-                      }}
-                    />
-                  </span>
+                <span className="min-w-0 flex-1 truncate whitespace-nowrap">
                   <span className="text-sm text-muted-foreground">
                     {module.department} {module.course}
                   </span>
-                </span>
-                <span className="shrink-0 text-sm font-medium text-muted-foreground">
-                  {module.key}
+                  <span
+                    aria-hidden="true"
+                    className="mx-1 text-muted-foreground"
+                  >
+                    ·
+                  </span>
+                  <span
+                    className="font-medium"
+                    dangerouslySetInnerHTML={{
+                      __html: sanitizeCourseHtml(
+                        lang === "en"
+                          ? module.nameEn || module.nameZh
+                          : localizeZh(module.nameZh),
+                      ),
+                    }}
+                  />
                 </span>
               </Link>
             ))}
@@ -438,10 +449,14 @@ const InsightsContent = ({
   ) => string;
 }) => {
   const [showAllDepartments, setShowAllDepartments] = useState(false);
+  const [showAllBuildings, setShowAllBuildings] = useState(false);
   const previous = data.comparison;
   const departmentRows = showAllDepartments
     ? data.departments
     : data.departments.slice(0, 20);
+  const buildingRows = showAllBuildings
+    ? data.buildings
+    : data.buildings.slice(0, 10);
   const metrics = [
     {
       label: labels.modules_sections,
@@ -522,12 +537,6 @@ const InsightsContent = ({
                       className="px-2 py-2 text-right font-medium"
                       scope="col"
                     >
-                      {labels.section}
-                    </th>
-                    <th
-                      className="px-2 py-2 text-right font-medium"
-                      scope="col"
-                    >
                       {labels.fill_rate}
                     </th>
                     <th
@@ -559,9 +568,6 @@ const InsightsContent = ({
                         <div className="text-xs text-muted-foreground">
                           {course.department} {course.course}
                         </div>
-                      </td>
-                      <td className="px-2 py-2 text-right tabular-nums">
-                        {course.class}
                       </td>
                       <td className="px-2 py-2 text-right font-medium tabular-nums">
                         {formatPercent(course.fillRate)}
@@ -602,7 +608,23 @@ const InsightsContent = ({
                 {departmentRows.map((department) => (
                   <tr key={department.department}>
                     <th className="py-2 pr-2 text-left font-medium" scope="row">
-                      {department.department}
+                      {(() => {
+                        const definition = departments.find(
+                          (item) => item.code === department.department,
+                        );
+                        return (
+                          <>
+                            {definition
+                              ? lang === "en"
+                                ? definition.name_en
+                                : localizeZh(definition.name_zh)
+                              : department.department}
+                            <span className="ml-1 text-sm font-normal text-muted-foreground">
+                              {department.department}
+                            </span>
+                          </>
+                        );
+                      })()}
                     </th>
                     <td className="px-2 py-2 text-right tabular-nums">
                       {numberFormat.format(department.sections)}
@@ -642,9 +664,9 @@ const InsightsContent = ({
           {!hasSchedule ? (
             <EmptyState title={labels.no_schedule_data} />
           ) : (
-            <div className="overflow-x-auto">
+            <div className="max-w-full overflow-x-auto overscroll-x-contain">
               <table
-                className="w-full table-fixed border-collapse text-xs"
+                className="w-full min-w-[520px] table-fixed border-collapse text-xs"
                 aria-label={labels.schedule_table_label}
               >
                 <thead>
@@ -716,21 +738,17 @@ const InsightsContent = ({
             <EmptyState title={labels.no_building_data} />
           ) : (
             <div className="flex flex-col divide-y divide-border">
-              {data.buildings.map((building) => (
+              {buildingRows.map((building) => (
                 <div
-                  className="flex items-center justify-between gap-4 py-2"
+                  className="flex min-w-0 items-baseline justify-between gap-3 py-1"
                   key={building.code}
                 >
-                  <span className="min-w-0">
-                    <span className="block font-medium">
-                      {lang === "en"
-                        ? building.nameEn
-                        : localizeZh(building.nameZh)}
-                    </span>
-                    <span className="text-sm text-muted-foreground">
-                      {lang === "en"
-                        ? building.code
-                        : localizeZh(building.code)}
+                  <span className="min-w-0 truncate font-medium">
+                    {lang === "en"
+                      ? building.nameEn
+                      : localizeZh(building.nameZh)}
+                    <span className="ml-1 text-sm font-normal text-muted-foreground">
+                      · {building.code}
                     </span>
                   </span>
                   <span className="shrink-0 font-bold tabular-nums">
@@ -739,6 +757,21 @@ const InsightsContent = ({
                 </div>
               ))}
             </div>
+          )}
+          {data.buildings.length > 10 && (
+            <Button
+              className="min-h-10 self-start px-2"
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowAllBuildings((value) => !value)}
+            >
+              {showAllBuildings
+                ? labels.show_fewer_buildings
+                : labels.show_all_buildings.replace(
+                    "{count}",
+                    numberFormat.format(data.buildings.length),
+                  )}
+            </Button>
           )}
         </section>
       </div>

@@ -776,6 +776,8 @@
     "department_demand": "系所需求",
     "show_all_departments": "顯示全部 {count} 個系所",
     "show_fewer_departments": "收合至前 20 個系所",
+    "show_all_buildings": "顯示全部 {count} 棟校舍",
+    "show_fewer_buildings": "收合至前 10 棟校舍",
     "when_classes_meet": "上課時段",
     "schedule_table_label": "各星期與節次的班次數",
     "schedule_cell_label": "星期{day}第{period}節：{count} 班",

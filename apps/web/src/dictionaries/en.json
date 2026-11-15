@@ -776,6 +776,8 @@
     "department_demand": "Department demand",
     "show_all_departments": "Show all {count} departments",
     "show_fewer_departments": "Show top 20",
+    "show_all_buildings": "Show all {count} buildings",
+    "show_fewer_buildings": "Show top 10",
     "when_classes_meet": "Class times",
     "schedule_table_label": "Sections by weekday and period",
     "schedule_cell_label": "{day}, period {period}: {count} sections",

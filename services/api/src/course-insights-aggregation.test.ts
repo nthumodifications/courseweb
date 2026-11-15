@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { lastSemester } from "@courseweb/shared";
+import { COURSE_INSIGHT_SEMESTERS } from "./course-insights-mirrors";
 import {
   buildCourseInsights,
   getCourseInsightHistorySemesters,
@@ -34,7 +34,6 @@ const currentRow = (
   values: Partial<CourseInsightCurrentRow> = {},
 ): CourseInsightCurrentRow => ({
   ...historyRow(rawId, "11510", department, course),
-  class: "0",
   times: [],
   venues: [],
   ...values,
@@ -84,7 +83,6 @@ describe("course insights aggregation", () => {
         venues: ["DELTA台達629", "DELTA台達630"],
       }),
       currentRow("11510CS 101001", "CS", "1010", {
-        class: "1",
         capacity: 5,
         enrolled: 5,
         times: ["M4F3"],
@@ -169,9 +167,44 @@ describe("course insights aggregation", () => {
   });
 
   it("loads only the history needed for the eight-term trend", () => {
-    const history = getCourseInsightHistorySemesters(lastSemester.id);
+    const latestSemester = COURSE_INSIGHT_SEMESTERS.at(-1)!.id;
+    const history = getCourseInsightHistorySemesters(latestSemester);
 
     expect(history).toHaveLength(7);
-    expect(history.every((semester) => semester < lastSemester.id)).toBe(true);
+    expect(history.every((semester) => semester < latestSemester)).toBe(true);
+  });
+
+  it("includes valid summer terms in comparisons and trends", () => {
+    const insights = buildCourseInsights(
+      "11530",
+      [historyRow("11430CS 101001", "11430", "CS", "1010")],
+      [
+        currentRow("11530CS 101001", "CS", "1010", {
+          semester: "11530",
+        }),
+      ],
+    );
+
+    expect(insights.comparisonSemester).toBe("11430");
+    expect(insights.trends.map(({ semester }) => semester)).toContain("11530");
+  });
+
+  it("requires at least 30 seats and caps the fullest list at ten", () => {
+    const current = Array.from({ length: 12 }, (_, index) =>
+      currentRow(`11510CS ${index}`, "CS", `${1000 + index}`, {
+        capacity: index === 0 ? 20 : 30,
+        enrolled: 100 - index,
+      }),
+    );
+
+    const insights = buildCourseInsights("11510", [], current);
+
+    expect(insights.fullestCourses).toHaveLength(10);
+    expect(
+      insights.fullestCourses.every((course) => course.capacity >= 30),
+    ).toBe(true);
+    expect(
+      insights.fullestCourses.some((course) => course.capacity === 20),
+    ).toBe(false);
   });
 });

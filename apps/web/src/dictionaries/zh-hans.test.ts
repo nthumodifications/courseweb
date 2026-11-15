@@ -95,15 +95,12 @@ test("site-specific mainland phrase corrections run before character conversion"
 test("Simplified Chinese dictionary has the same key tree and placeholders", () => {
   expect(flatten(zhHans).sort()).toEqual(flatten(zh).sort());
 
+  const simplifiedValues = new Map(stringValues(zhHans));
   for (const [key, value] of stringValues(zh)) {
-    const converted = stringValues(zhHans).find(
-      ([candidate]) => candidate === key,
-    );
-    expect(converted?.[0], key).toBe(key);
-    expect(placeholders(converted?.[1] ?? ""), key).toEqual(
-      placeholders(value),
-    );
-    expect(asciiCharacters(converted?.[1] ?? ""), key).toEqual(
+    const converted = simplifiedValues.get(key);
+    expect(converted, key).toBeDefined();
+    expect(placeholders(converted ?? ""), key).toEqual(placeholders(value));
+    expect(asciiCharacters(converted ?? ""), key).toEqual(
       asciiCharacters(value),
     );
   }

@@ -1,6 +1,5 @@
 import { Hono, type Context } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import { lastSemester, semesterInfo } from "@courseweb/shared";
 import { z } from "zod";
 import supabase_server from "./config/supabase_server";
 import {
@@ -14,19 +13,20 @@ import {
 const PAGE_SIZE = 1_000;
 const HISTORY_SELECT =
   "raw_id,semester,department,course,name_zh,name_en,capacity,enrolled,language";
-const CURRENT_SELECT = `${HISTORY_SELECT},class,times,venues`;
+const CURRENT_SELECT = `${HISTORY_SELECT},times,venues`;
 const CURRENT_CACHE_CONTROL =
   "public, max-age=21600, s-maxage=21600, stale-while-revalidate=86400";
 const PAST_CACHE_CONTROL =
   "public, max-age=86400, s-maxage=2592000, stale-while-revalidate=31536000";
+const LATEST_SEMESTER_CACHE_TTL_MS = 5 * 60 * 1000;
+const SEMESTER_ID_PATTERN = /^\d{3}(10|20|30)$/;
+
+let latestSemesterCache: { semester: string; expiresAt: number } | undefined;
 
 const semesterQueryValidator = zValidator(
   "query",
   z.object({
-    semester: z
-      .string()
-      .regex(/^\d{5}$/)
-      .optional(),
+    semester: z.string().regex(SEMESTER_ID_PATTERN).optional(),
   }),
 );
 
@@ -39,6 +39,35 @@ export type CourseInsightDataLoader = (
   context: Context,
   semester: string,
 ) => Promise<CourseInsightData>;
+
+export type LatestSemesterLoader = (context: Context) => Promise<string | null>;
+
+export const loadLatestCourseSemester: LatestSemesterLoader = async (
+  context,
+) => {
+  const now = Date.now();
+  if (latestSemesterCache && latestSemesterCache.expiresAt > now) {
+    return latestSemesterCache.semester;
+  }
+
+  const { data, error } = await supabase_server(context)
+    .from("courses")
+    .select("semester")
+    .not("semester", "is", null)
+    .order("semester", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+
+  const semester = (data as { semester?: string } | null)?.semester;
+  if (!semester || !SEMESTER_ID_PATTERN.test(semester)) return null;
+
+  latestSemesterCache = {
+    semester,
+    expiresAt: now + LATEST_SEMESTER_CACHE_TTL_MS,
+  };
+  return semester;
+};
 
 const loadHistoryRows = async (
   context: Context,
@@ -108,19 +137,20 @@ const getDefaultCache: CacheProvider = () => {
 export const createCourseInsightsApp = (
   loadData: CourseInsightDataLoader = loadCourseInsightData,
   cacheProvider: CacheProvider = getDefaultCache,
+  loadLatestSemester: LatestSemesterLoader = loadLatestCourseSemester,
 ) =>
   new Hono().get("/", semesterQueryValidator, async (c) => {
-    const semester = c.req.valid("query").semester ?? lastSemester.id;
-    if (!semesterInfo.some((item) => item.id === semester)) {
-      return c.json({ error: "Unknown semester" }, 400);
-    }
+    const requestedSemester = c.req.valid("query").semester;
+    const latestSemester = await loadLatestSemester(c);
+    if (!latestSemester) return c.json({ error: "No course data" }, 404);
+    const semester = requestedSemester ?? latestSemester;
 
     const cache = cacheProvider();
     const cacheKeyUrl = new URL(c.req.url);
     cacheKeyUrl.search = new URLSearchParams({ semester }).toString();
     const cacheKey = new Request(cacheKeyUrl.toString());
     const cacheControl =
-      semester === lastSemester.id ? CURRENT_CACHE_CONTROL : PAST_CACHE_CONTROL;
+      semester === latestSemester ? CURRENT_CACHE_CONTROL : PAST_CACHE_CONTROL;
     if (cache) {
       try {
         const cached = await cache.match(cacheKey);

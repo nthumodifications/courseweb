@@ -1,5 +1,5 @@
 import { describe, expect, it, mock } from "bun:test";
-import { Hono } from "hono";
+import { Hono, type Context } from "hono";
 import { createCourseInsightsApp } from "./course-insights";
 import type {
   CourseInsightCurrentRow,
@@ -11,7 +11,6 @@ const current: CourseInsightCurrentRow = {
   semester: "11510",
   department: "CS",
   course: "1010",
-  class: "0",
   name_zh: "資料結構",
   name_en: "Data Structures",
   capacity: 30,
@@ -22,17 +21,25 @@ const current: CourseInsightCurrentRow = {
 };
 
 describe("GET /course/insights", () => {
-  it("returns aggregates and a six-hour cache for the latest semester", async () => {
-    const loadData = mock(async () => ({
-      historyRows: [] as CourseInsightHistoryRow[],
-      currentRows: [current],
-    }));
+  it("defaults to the latest semester with course rows and uses a six-hour cache", async () => {
+    const requestedSemesters: string[] = [];
+    const loadData = mock(async (_context: Context, semester: string) => {
+      requestedSemesters.push(semester);
+      return {
+        historyRows: [] as CourseInsightHistoryRow[],
+        currentRows: [current],
+      };
+    });
     const app = new Hono().route(
       "/course/insights",
-      createCourseInsightsApp(loadData, () => undefined),
+      createCourseInsightsApp(
+        loadData,
+        () => undefined,
+        async () => "11510",
+      ),
     );
 
-    const response = await app.request("/course/insights?semester=11510");
+    const response = await app.request("/course/insights");
     const body = (await response.json()) as {
       snapshot: { sections: number; englishShare: number | null };
       fullestCourses: { rawId: string; fillRate: number }[];
@@ -53,12 +60,14 @@ describe("GET /course/insights", () => {
       fillRate: 0.8,
     });
     expect(loadData).toHaveBeenCalledTimes(1);
+    expect(requestedSemesters).toEqual(["11510"]);
   });
 
   it("uses a longer cache for past semesters", async () => {
     const app = createCourseInsightsApp(
       async () => ({ historyRows: [], currentRows: [current] }),
       () => undefined,
+      async () => "11510",
     );
 
     const response = await app.request("/?semester=11410");
@@ -67,7 +76,7 @@ describe("GET /course/insights", () => {
     expect(response.headers.get("Cache-Control")).toContain("s-maxage=2592000");
   });
 
-  it("rejects semester ids that are not present in shared semester data", async () => {
+  it("rejects semester ids that do not match a supported term format", async () => {
     const loadData = mock(async () => ({
       historyRows: [] as CourseInsightHistoryRow[],
       currentRows: [],
@@ -78,5 +87,23 @@ describe("GET /course/insights", () => {
 
     expect(response.status).toBe(400);
     expect(loadData).not.toHaveBeenCalled();
+  });
+
+  it("accepts the academic-term format for summer semesters", async () => {
+    const app = createCourseInsightsApp(
+      async (_context, semester) => ({
+        historyRows: [],
+        currentRows: [{ ...current, semester }],
+      }),
+      () => undefined,
+      async () => "11510",
+    );
+
+    const response = await app.request("/?semester=11530");
+
+    expect(response.status).toBe(200);
+    expect(((await response.json()) as { semester: string }).semester).toBe(
+      "11530",
+    );
   });
 });

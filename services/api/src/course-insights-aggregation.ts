@@ -1,4 +1,7 @@
-import { getBuildingDefinition, semesterInfo } from "@courseweb/shared";
+import {
+  COURSE_INSIGHT_SEMESTERS as semesterInfo,
+  getCourseInsightBuildingDefinition,
+} from "./course-insights-mirrors";
 
 export interface CourseInsightHistoryRow {
   raw_id: string;
@@ -13,7 +16,6 @@ export interface CourseInsightHistoryRow {
 }
 
 export interface CourseInsightCurrentRow extends CourseInsightHistoryRow {
-  class: string;
   times: string[] | null;
   venues: string[] | null;
 }
@@ -45,7 +47,6 @@ export interface CourseInsightsResponse {
     moduleKey: string;
     department: string;
     course: string;
-    class: string;
     nameZh: string;
     nameEn: string;
     enrolled: number;
@@ -97,17 +98,37 @@ const PERIODS = [
   "c",
   "d",
 ];
-const FULLNESS_MINIMUM_CAPACITY = 10;
+const FULLNESS_MINIMUM_CAPACITY = 30;
 const TREND_SEMESTER_LIMIT = 8;
 const NEW_MODULE_LOOKBACK = 4;
 const TIME_CODE = /([MTWRFSU])([1-9nabcd])/gi;
+const COURSE_TERM_CODES = ["10", "20", "30"] as const;
+const FIRST_COURSE_SEMESTER = semesterInfo[0]?.id ?? "10810";
+
+const getCourseSemestersThrough = (semester: string) => {
+  const firstYear = Number(FIRST_COURSE_SEMESTER.slice(0, 3));
+  const finalYear = Number(semester.slice(0, 3));
+  const possibleSemesters = Array.from(
+    {
+      length: Math.max(
+        0,
+        (finalYear - firstYear + 1) * COURSE_TERM_CODES.length,
+      ),
+    },
+    (_, index) =>
+      `${String(firstYear + Math.floor(index / COURSE_TERM_CODES.length)).padStart(3, "0")}${COURSE_TERM_CODES[index % COURSE_TERM_CODES.length]}`,
+  );
+
+  return possibleSemesters.filter(
+    (courseSemester) =>
+      courseSemester >= FIRST_COURSE_SEMESTER && courseSemester <= semester,
+  );
+};
 
 export const getCourseInsightHistorySemesters = (semester: string) =>
-  semesterInfo
-    .filter((item) => item.id < semester)
-    .sort((left, right) => left.id.localeCompare(right.id))
-    .slice(-(TREND_SEMESTER_LIMIT - 1))
-    .map((item) => item.id);
+  getCourseSemestersThrough(semester)
+    .filter((courseSemester) => courseSemester < semester)
+    .slice(-(TREND_SEMESTER_LIMIT - 1));
 
 const moduleKey = (
   row: Pick<CourseInsightHistoryRow, "department" | "course">,
@@ -189,14 +210,9 @@ const compareModules = (
   left.course.localeCompare(right.course);
 
 const getComparisonSemester = (semester: string) => {
-  const selected = semesterInfo.find((item) => item.id === semester);
-  if (!selected) return null;
-  return (
-    semesterInfo.find(
-      (item) =>
-        item.year === selected.year - 1 && item.semester === selected.semester,
-    )?.id ?? null
-  );
+  const comparisonYear = Number(semester.slice(0, 3)) - 1;
+  if (comparisonYear < Number(FIRST_COURSE_SEMESTER.slice(0, 3))) return null;
+  return `${String(comparisonYear).padStart(3, "0")}${semester.slice(3)}`;
 };
 
 const getDepartmentDemand = (rows: readonly CourseInsightCurrentRow[]) => {
@@ -265,19 +281,19 @@ const getBuildingDemand = (rows: readonly CourseInsightCurrentRow[]) => {
   for (const row of rows) {
     const buildings = new Map<
       string,
-      NonNullable<ReturnType<typeof getBuildingDefinition>>
+      NonNullable<ReturnType<typeof getCourseInsightBuildingDefinition>>
     >();
     for (const venue of row.venues ?? []) {
-      const definition = getBuildingDefinition(venue);
-      if (definition && definition.code.english !== "VC") {
-        buildings.set(definition.code.english, definition);
+      const definition = getCourseInsightBuildingDefinition(venue);
+      if (definition && definition.code !== "VC") {
+        buildings.set(definition.code, definition);
       }
     }
     for (const [code, definition] of buildings) {
       const item = sectionsByBuilding.get(code) ?? {
         code,
-        nameZh: definition.building.chinese,
-        nameEn: definition.building.english,
+        nameZh: definition.nameZh,
+        nameEn: definition.nameEn,
         sections: 0,
       };
       item.sections += 1;
@@ -312,7 +328,7 @@ export const buildCourseInsights = (
   const coveredPriorSemesters = priorSemesters.filter((item) =>
     semestersWithRows.has(item),
   );
-  const priorSemesterIds = new Set(coveredPriorSemesters);
+  const priorSemesterIds = new Set<string>(coveredPriorSemesters);
   const previousModules = summarizeModules(
     historyRows.filter((row) => priorSemesterIds.has(row.semester)),
   );
@@ -327,13 +343,12 @@ export const buildCourseInsights = (
   const discontinuedModules = [...comparisonModules.values()]
     .filter((item) => !currentModules.has(item.key))
     .sort(compareModules);
-  const trendSemesters = semesterInfo
-    .filter((item) => item.id <= semester)
-    .map((item) => item.id)
-    .slice(-TREND_SEMESTER_LIMIT);
+  const trendSemesters =
+    getCourseSemestersThrough(semester).slice(-TREND_SEMESTER_LIMIT);
+  const trendSemesterIds = new Set<string>(trendSemesters);
   const rowsBySemester = new Map<string, CourseInsightHistoryRow[]>();
   for (const row of [...historyRows, ...currentRows]) {
-    if (!trendSemesters.includes(row.semester)) continue;
+    if (!trendSemesterIds.has(row.semester)) continue;
     const semesterRows = rowsBySemester.get(row.semester) ?? [];
     semesterRows.push(row);
     rowsBySemester.set(row.semester, semesterRows);
@@ -364,7 +379,6 @@ export const buildCourseInsights = (
       moduleKey: moduleKey(row),
       department: row.department,
       course: row.course,
-      class: row.class,
       nameZh: row.name_zh,
       nameEn: row.name_en,
       enrolled: row.enrolled!,
