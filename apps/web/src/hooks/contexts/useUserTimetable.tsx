@@ -70,6 +70,13 @@ export const TIMETABLE_FONT_SIZE_CLASSES: Record<TimetableFontSize, string> = {
   lg: "text-base",
 };
 
+export const TIMETABLE_FONT_SIZE_PIXELS: Record<TimetableFontSize, number> = {
+  xs: 10,
+  sm: 12,
+  base: 14,
+  lg: 16,
+};
+
 // Traditional Chinese (Taiwan) system faces. No download: PingFang TC on Apple
 // platforms, Microsoft JhengHei on Windows, Noto Sans CJK TC elsewhere.
 const TC_SANS =
