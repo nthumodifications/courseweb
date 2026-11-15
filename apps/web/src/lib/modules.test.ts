@@ -9,28 +9,8 @@ type SupabaseCall = {
 const offeringPages: unknown[][] = [];
 const supabaseCalls: SupabaseCall[] = [];
 const scoreChunks: string[][] = [];
-const searchRequestKeywords: string[] = [];
-const searchRpcRows: unknown[] = [];
 
 const fakeSupabase = {
-  rpc(_name: string, args: { keyword: string }) {
-    searchRequestKeywords.push(args.keyword);
-    const builder = {
-      select: (_columns: string) => builder,
-      order: (_column: string, _options: { ascending: boolean }) => builder,
-      limit: (_count: number) => builder,
-      abortSignal: (_signal: AbortSignal) => builder,
-      then: (
-        resolve: (value: { data: unknown[]; error: null }) => unknown,
-        reject: (reason: unknown) => unknown,
-      ) =>
-        Promise.resolve({ data: searchRpcRows.splice(0), error: null }).then(
-          resolve,
-          reject,
-        ),
-    };
-    return builder;
-  },
   from(table: string) {
     const call: SupabaseCall = { table, orders: [] };
     supabaseCalls.push(call);
@@ -83,7 +63,6 @@ const {
   normalizeCourseTitle,
   parseModuleKey,
   rankModuleSearchResults,
-  searchModules,
   serializePostgresArrayElement,
 } = await import("./modules");
 const {
@@ -383,19 +362,6 @@ describe("module variants and aggregation", () => {
     expect(rankModuleSearchResults(results, "微積分")[0].latestSemester).toBe(
       "11410",
     );
-  });
-});
-
-describe("module search requests", () => {
-  test("converts full-width key queries to searchable department and course terms", async () => {
-    searchRpcRows.push(
-      searchRow("11510MATH 101001", "11510", "MATH", "1010", "微積分"),
-    );
-
-    const results = await searchModules("ｍａｔｈ　１０１０");
-
-    expect(searchRequestKeywords.at(-1)).toBe("MATH 1010");
-    expect(results[0]?.key).toBe("MATH:1010");
   });
 });
 

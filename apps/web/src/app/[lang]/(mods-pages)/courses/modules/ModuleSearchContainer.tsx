@@ -277,7 +277,7 @@ const ModuleSearchContainer = ({
   const indexQuery = useQuery({
     queryKey: ["module-search-index"],
     queryFn: ({ signal }) => getModuleSearchIndex(signal),
-    staleTime: 30 * 60 * 1000,
+    staleTime: 6 * 60 * 60 * 1000,
   });
   const searchClient = useMemo(() => createModuleSearchClient(), []);
   const routing = useMemo(

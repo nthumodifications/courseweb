@@ -1,15 +1,38 @@
-import { semesterInfo } from "@courseweb/shared";
 import { cleanSyllabusFields } from "@/lib/syllabus-text";
 import type { CourseDefinition } from "@/config/supabase";
 import {
-  getDemandSeries,
-  getRecentFill,
-  type ModuleScore,
-} from "./module-insights";
+  aggregateModuleHistoryRows,
+  canMergeRename,
+  createModuleKey,
+  decodeModuleSearchIndex,
+  getSemesterTerm,
+  normalizeCourseTitle,
+  semesterSortValue,
+  variantSort,
+  type CompactModuleSearchIndex,
+  type ModuleHistoryAggregate,
+  type ModuleHistoryRow,
+  type ModuleLanguage,
+  type ModuleSearchResult,
+} from "../../../../services/api/src/module-search-index";
+import type { ModuleScore } from "./module-insights";
+
+export {
+  aggregateModuleHistoryRows,
+  aggregateModuleSearchRows,
+  createModuleKey,
+  getSemesterTerm,
+  normalizeCourseTitle,
+} from "../../../../services/api/src/module-search-index";
+export type {
+  ModuleLanguage,
+  ModuleSearchResult,
+} from "../../../../services/api/src/module-search-index";
 
 // Loaded on demand so the pure helpers in this file can be imported (and
 // tested) without a configured Supabase client.
 const loadSupabase = async () => (await import("@/config/supabase")).default;
+const loadApi = async () => (await import("@/config/api")).default;
 
 export const serializePostgresArrayElement = (value: string) =>
   `"${value.replaceAll("\\", "\\\\").replaceAll('"', '\\"')}"`;
@@ -91,65 +114,6 @@ export interface ModuleAggregate {
   variants: ModuleVariant[];
 }
 
-type ModuleHistoryRow = Pick<
-  CourseDefinition,
-  "semester" | "department" | "course" | "name_zh" | "name_en" | "credits"
->;
-
-type ModuleSearchRow = Pick<
-  CourseDefinition,
-  | "semester"
-  | "department"
-  | "course"
-  | "name_zh"
-  | "name_en"
-  | "credits"
-  | "language"
-  | "teacher_zh"
-  | "teacher_en"
-  | "capacity"
-  | "enrolled"
->;
-
-interface ModuleHistoryVariant {
-  titleKey: string;
-  titleKeys: string[];
-  nameZh: string;
-  nameEn: string;
-  titles: ModuleTitle[];
-  semesters: string[];
-  credits: number[];
-  mergedRename: boolean;
-}
-
-interface ModuleHistoryAggregate {
-  key: string;
-  department: string;
-  course: string;
-  variants: ModuleHistoryVariant[];
-}
-
-interface ModuleSearchInstructor {
-  nameZh: string;
-  nameEn: string;
-}
-
-export interface ModuleSearchResult {
-  key: string;
-  department: string;
-  course: string;
-  titleKey: string;
-  nameZh: string;
-  nameEn: string;
-  semesters: string[];
-  credits: number[];
-  languages: ModuleLanguage[];
-  latestSemester: string;
-  fillRate: number | null;
-  instructors: ModuleSearchInstructor[];
-}
-
-export type ModuleLanguage = "english" | "chinese" | "bilingual" | "other";
 export type ModuleTermFilter = "fall" | "spring" | "both";
 export type ModuleRecentFilter = "latest" | "3" | "6" | "10";
 export type ModuleSearchSort =
@@ -187,33 +151,6 @@ const normalizePart = (value: string) =>
  * the punctuation map and trailing trim avoid treating editorial punctuation
  * as a new course title.
  */
-export const normalizeCourseTitle = (value: string) => {
-  const normalized = normalizePart(value)
-    .replace(/[，,]/g, ",")
-    .replace(/[。．.]/g, ".")
-    .replace(/[：:]/g, ":")
-    .replace(/[；;]/g, ";")
-    .replace(/[！!]/g, "!")
-    .replace(/[？?]/g, "?");
-
-  let end = normalized.length;
-  while (end > 0 && ".,;:!?".includes(normalized[end - 1])) end -= 1;
-  return normalized.slice(0, end).trim();
-};
-
-export const createModuleKey = (department: string, course: string) => {
-  const normalizedDepartment = normalizePart(department).toLocaleUpperCase();
-  const normalizedCourse = normalizePart(course)
-    .replace(/\s+/g, "")
-    .toLocaleUpperCase();
-
-  if (!normalizedDepartment || !normalizedCourse) {
-    throw new Error("A module key needs both department and course");
-  }
-
-  return `${normalizedDepartment}:${normalizedCourse}`;
-};
-
 export const parseModuleKey = (value: string): ParsedModuleKey | null => {
   const normalized = normalizePart(value).normalize("NFKC");
   const separator = normalized.indexOf(":");
@@ -228,30 +165,6 @@ export const parseModuleKey = (value: string): ParsedModuleKey | null => {
     .replace(/\s+/g, "")
     .toLocaleUpperCase();
   return department && course ? { department, course } : null;
-};
-
-export const getSemesterTerm = (semester: string): SemesterTerm | null => {
-  const value = String(semester);
-  if (!/^\d{5}$/.test(value)) return null;
-
-  switch (value[3]) {
-    case "1":
-      return "fall";
-    case "2":
-      return "spring";
-    case "3":
-      return "summer";
-    default:
-      return null;
-  }
-};
-
-const semesterSortValue = (semester: string) => {
-  const value = String(semester);
-  const term = getSemesterTerm(value);
-  return term
-    ? Number(value.slice(0, 3)) * 3 + ["fall", "spring", "summer"].indexOf(term)
-    : Number.MAX_SAFE_INTEGER;
 };
 
 const compareOfferings = (left: ModuleOffering, right: ModuleOffering) => {
@@ -361,118 +274,6 @@ const makeVariant = (
   };
 };
 
-const distinctHistoryTitles = (rows: ModuleHistoryRow[]) => {
-  const titles = new Map<string, ModuleTitle>();
-  for (const row of rows) {
-    titles.set(normalizeCourseTitle(row.name_zh), {
-      nameZh: row.name_zh,
-      nameEn: row.name_en,
-    });
-  }
-  return [...titles.values()];
-};
-
-const normalizeHistoryRow = (row: ModuleHistoryRow): ModuleHistoryRow =>
-  normalizeModuleRow(row);
-
-const makeHistoryVariant = (
-  titleKeys: string[],
-  rows: ModuleHistoryRow[],
-  mergedRename: boolean,
-): ModuleHistoryVariant => {
-  const sortedRows = [...rows].sort(
-    (left, right) =>
-      semesterSortValue(String(left.semester)) -
-      semesterSortValue(String(right.semester)),
-  );
-  const latestRow = sortedRows.at(-1)!;
-  const semesters = [
-    ...new Set(sortedRows.map((row) => String(row.semester))),
-  ].sort((left, right) => semesterSortValue(left) - semesterSortValue(right));
-
-  return {
-    titleKey: titleKeys.at(-1)!,
-    titleKeys,
-    nameZh: latestRow.name_zh,
-    nameEn: latestRow.name_en,
-    titles: distinctHistoryTitles(sortedRows),
-    semesters,
-    credits: [...new Set(sortedRows.map((row) => row.credits))].sort(
-      (left, right) => left - right,
-    ),
-    mergedRename,
-  };
-};
-
-const titleWithoutPunctuation = (title: string) =>
-  normalizeCourseTitle(title)
-    .replace(/[\p{P}\p{S}\d]/gu, "")
-    .toLocaleLowerCase();
-
-const hasSharedTitleStem = (left: string, right: string) => {
-  const leftText = titleWithoutPunctuation(left);
-  const rightText = titleWithoutPunctuation(right);
-  for (let index = 0; index <= leftText.length - 3; index += 1) {
-    if (rightText.includes(leftText.slice(index, index + 3))) return true;
-  }
-  return false;
-};
-
-const sequenceSuffix = (title: string) =>
-  /[一二三四五六七八九十ⅠⅡⅢⅣⅤAB]$/u.exec(titleWithoutPunctuation(title))?.[0];
-
-const haveConflictingSequenceSuffixes = (left: string, right: string) => {
-  const leftSuffix = sequenceSuffix(left);
-  const rightSuffix = sequenceSuffix(right);
-  return Boolean(leftSuffix && rightSuffix && leftSuffix !== rightSuffix);
-};
-
-const areAdjacentKnownSemesters = (before: string, after: string) => {
-  const beforeIndex = semesterInfo.findIndex((item) => item.id === before);
-  const afterIndex = semesterInfo.findIndex((item) => item.id === after);
-  if (beforeIndex >= 0 && afterIndex >= 0) {
-    return afterIndex - beforeIndex === 1;
-  }
-  return semesterSortValue(after) - semesterSortValue(before) === 1;
-};
-
-/**
- * A title handoff is merged only when the live data gives a conservative
- * rename signal: exactly two title variants, equal credits, at least two
- * semesters on each side, adjacent semester ranges, and a shared title stem.
- * Reused seminar/topic numbers otherwise remain separate variants.
- */
-type RenameComparable = Pick<ModuleVariant, "nameZh" | "semesters" | "credits">;
-
-const areSameCredits = (left: RenameComparable, right: RenameComparable) =>
-  left.credits.length === right.credits.length &&
-  left.credits.every((credit) => right.credits.includes(credit));
-
-const canMergeRename = (left: RenameComparable, right: RenameComparable) => {
-  if (!areSameCredits(left, right)) return false;
-
-  const leftLast = left.semesters.at(-1)!;
-  const rightLast = right.semesters.at(-1)!;
-  const [before, after] =
-    semesterSortValue(leftLast) <= semesterSortValue(rightLast)
-      ? [left, right]
-      : [right, left];
-  const beforeLast = before.semesters.at(-1)!;
-  const afterFirst = after.semesters[0];
-  const hasOverlap = before.semesters.some((semester) =>
-    after.semesters.includes(semester),
-  );
-
-  return (
-    before.semesters.length >= 2 &&
-    after.semesters.length >= 2 &&
-    !hasOverlap &&
-    areAdjacentKnownSemesters(beforeLast, afterFirst) &&
-    hasSharedTitleStem(before.nameZh, after.nameZh) &&
-    !haveConflictingSequenceSuffixes(before.nameZh, after.nameZh)
-  );
-};
-
 const mergeRenameVariants = (variants: ModuleVariant[]) => {
   if (variants.length !== 2 || !canMergeRename(variants[0], variants[1])) {
     return variants;
@@ -484,52 +285,6 @@ const mergeRenameVariants = (variants: ModuleVariant[]) => {
   ];
   return [makeVariant(titleKeys, offerings, true)];
 };
-
-export const aggregateModuleHistoryRows = (
-  rows: readonly ModuleHistoryRow[],
-): ModuleHistoryAggregate | null => {
-  const normalizedRows = rows
-    .map(normalizeHistoryRow)
-    .filter((row) => getSemesterTerm(row.semester));
-  if (normalizedRows.length === 0) return null;
-
-  const first = normalizedRows[0];
-  const rowsByTitle = new Map<string, ModuleHistoryRow[]>();
-  for (const row of normalizedRows) {
-    const titleKey = normalizeCourseTitle(row.name_zh);
-    const current = rowsByTitle.get(titleKey) ?? [];
-    current.push(row);
-    rowsByTitle.set(titleKey, current);
-  }
-
-  const variants = [...rowsByTitle.entries()].map(([titleKey, items]) =>
-    makeHistoryVariant([titleKey], items, false),
-  );
-  const mergedVariants =
-    variants.length === 2 && canMergeRename(variants[0], variants[1])
-      ? [
-          makeHistoryVariant(
-            [...new Set(variants.flatMap((variant) => variant.titleKeys))],
-            normalizedRows,
-            true,
-          ),
-        ]
-      : variants;
-
-  return {
-    key: createModuleKey(first.department, first.course),
-    department: first.department,
-    course: first.course,
-    variants: [...mergedVariants].sort(variantSort),
-  };
-};
-
-const variantSort = (
-  left: Pick<ModuleVariant, "semesters">,
-  right: Pick<ModuleVariant, "semesters">,
-) =>
-  semesterSortValue(right.semesters.at(-1)!) -
-  semesterSortValue(left.semesters.at(-1)!);
 
 export const aggregateModuleOfferings = (
   rows: readonly ModuleOfferingRow[],
@@ -721,134 +476,6 @@ export const getModuleHistory = async (moduleKey: string) => {
   return aggregateModuleHistoryRows(
     (data ?? []) as unknown as ModuleHistoryRow[],
   );
-};
-
-const MODULE_SEARCH_SELECT =
-  "semester, department, course, name_zh, name_en, credits, language, teacher_zh, teacher_en";
-
-const MODULE_INDEX_SELECT = `${MODULE_SEARCH_SELECT}, capacity, enrolled`;
-
-const MODULE_SEARCH_ROW_LIMIT = 500;
-const MODULE_INDEX_PAGE_SIZE = 1000;
-const MODULE_INDEX_PARALLEL_PAGES = 12;
-
-const normalizeSearchRow = (row: ModuleSearchRow): ModuleSearchRow => ({
-  ...row,
-  semester: String(row.semester),
-  department: normalizePart(row.department),
-  course: normalizePart(row.course),
-  capacity: row.capacity ?? null,
-  enrolled: row.enrolled ?? null,
-});
-
-const normalizeModuleLanguage = (value: string): ModuleLanguage => {
-  const normalized = normalizePart(value).normalize("NFKC").toLocaleLowerCase();
-  const hasEnglish =
-    normalized.includes("英") || normalized.includes("english");
-  const hasChinese =
-    normalized.includes("中") || normalized.includes("chinese");
-  if (hasEnglish && hasChinese) return "bilingual";
-  if (hasEnglish) return "english";
-  if (hasChinese) return "chinese";
-  return "other";
-};
-
-const getSearchLanguages = (
-  rows: readonly ModuleSearchRow[],
-  latestSemester: string,
-  titleKeys: readonly string[],
-) =>
-  [
-    ...new Set(
-      rows
-        .filter(
-          (row) =>
-            row.semester === latestSemester &&
-            titleKeys.includes(normalizeCourseTitle(row.name_zh)),
-        )
-        .map((row) => normalizeModuleLanguage(row.language ?? "")),
-    ),
-  ].sort((left, right) => left.localeCompare(right));
-
-const getSearchFillRate = (
-  rows: readonly ModuleSearchRow[],
-  titleKeys: readonly string[],
-) =>
-  getRecentFill(
-    getDemandSeries(
-      rows.filter((row) =>
-        titleKeys.includes(normalizeCourseTitle(row.name_zh)),
-      ),
-    ),
-  );
-
-const getSearchInstructors = (
-  rows: readonly ModuleSearchRow[],
-  latestSemester: string,
-  titleKeys: readonly string[],
-) => {
-  const instructors = new Map<string, ModuleSearchInstructor>();
-  for (const row of rows) {
-    if (
-      row.semester !== latestSemester ||
-      !titleKeys.includes(normalizeCourseTitle(row.name_zh))
-    ) {
-      continue;
-    }
-    const teacherZh = row.teacher_zh ?? [];
-    const teacherEn = row.teacher_en ?? [];
-    const count = Math.max(teacherZh.length, teacherEn.length);
-    for (let index = 0; index < count; index += 1) {
-      const nameZh = teacherZh[index] ?? "";
-      const nameEn = teacherEn[index] ?? nameZh;
-      const key = nameZh || nameEn;
-      if (key && !instructors.has(key)) {
-        instructors.set(key, { nameZh, nameEn });
-      }
-    }
-  }
-  return [...instructors.values()];
-};
-
-export const aggregateModuleSearchRows = (
-  rows: readonly ModuleSearchRow[],
-): ModuleSearchResult[] => {
-  const rowsByModule = new Map<string, ModuleSearchRow[]>();
-  for (const row of rows.map(normalizeSearchRow)) {
-    if (!getSemesterTerm(row.semester)) continue;
-    const key = createModuleKey(row.department, row.course);
-    const current = rowsByModule.get(key) ?? [];
-    current.push(row);
-    rowsByModule.set(key, current);
-  }
-
-  return [...rowsByModule.values()].flatMap((moduleRows) => {
-    const history = aggregateModuleHistoryRows(moduleRows);
-    if (!history) return [];
-
-    return history.variants.map((variant) => ({
-      key: history.key,
-      department: history.department,
-      course: history.course,
-      titleKey: variant.titleKey,
-      nameZh: variant.nameZh,
-      nameEn: variant.nameEn,
-      semesters: variant.semesters,
-      credits: variant.credits,
-      languages: getSearchLanguages(
-        moduleRows,
-        variant.semesters.at(-1)!,
-        variant.titleKeys,
-      ),
-      latestSemester: variant.semesters.at(-1)!,
-      fillRate: getSearchFillRate(moduleRows, variant.titleKeys),
-      instructors: getSearchInstructors(
-        moduleRows,
-        variant.semesters.at(-1)!,
-        variant.titleKeys,
-      ),
-    }));
-  });
 };
 
 const normalizeSearchText = (value: string) =>
@@ -1112,69 +739,12 @@ export const filterAndSortModuleSearchResults = (
 };
 
 export const getModuleSearchIndex = async (signal?: AbortSignal) => {
-  const supabase = await loadSupabase();
-  const { count, error: countError } = await supabase
-    .from("courses")
-    .select("raw_id", { count: "exact", head: true });
-  if (countError) throw countError;
-
-  const rowCount = count ?? 0;
-  const pages = Array.from(
-    { length: Math.ceil(rowCount / MODULE_INDEX_PAGE_SIZE) },
-    (_, page) => page,
-  );
-  const rows: ModuleSearchRow[] = [];
-
-  for (
-    let offset = 0;
-    offset < pages.length;
-    offset += MODULE_INDEX_PARALLEL_PAGES
-  ) {
-    const pageGroup = pages.slice(offset, offset + MODULE_INDEX_PARALLEL_PAGES);
-    const results = await Promise.all(
-      pageGroup.map(async (page) => {
-        let request = supabase
-          .from("courses")
-          .select(MODULE_INDEX_SELECT)
-          .order("raw_id", { ascending: true })
-          .range(
-            page * MODULE_INDEX_PAGE_SIZE,
-            (page + 1) * MODULE_INDEX_PAGE_SIZE - 1,
-          );
-        if (signal) request = request.abortSignal(signal);
-        const response = await request;
-        if (response.error) throw response.error;
-        return (response.data ?? []) as unknown as ModuleSearchRow[];
-      }),
-    );
-    rows.push(...results.flat());
-  }
-
-  return aggregateModuleSearchRows(rows);
-};
-
-export const searchModules = async (keyword: string, signal?: AbortSignal) => {
-  const trimmedKeyword = keyword.trim();
-  if (!trimmedKeyword) return [];
-
-  const parsedQuery = parseModuleKey(trimmedKeyword);
-  const searchKeyword = parsedQuery
-    ? `${parsedQuery.department} ${parsedQuery.course}`
-    : trimmedKeyword;
-
-  const supabase = await loadSupabase();
-  let request = supabase
-    .rpc("search_courses", { keyword: searchKeyword })
-    .select(MODULE_SEARCH_SELECT)
-    .order("semester", { ascending: false })
-    .limit(MODULE_SEARCH_ROW_LIMIT);
-  if (signal) request = request.abortSignal(signal);
-
-  const { data, error } = await request;
-  if (error) throw error;
-
-  return rankModuleSearchResults(
-    aggregateModuleSearchRows((data ?? []) as unknown as ModuleSearchRow[]),
-    trimmedKeyword,
+  const api = await loadApi();
+  const response = await api.course["modules-index"].$get(undefined, {
+    init: { signal },
+  });
+  if (!response.ok) throw new Error("Failed to load module search index");
+  return decodeModuleSearchIndex(
+    (await response.json()) as CompactModuleSearchIndex,
   );
 };

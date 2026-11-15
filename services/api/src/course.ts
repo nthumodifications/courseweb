@@ -6,6 +6,23 @@ import { z } from "zod";
 import { env } from "hono/adapter";
 import { parseHTML } from "linkedom/worker";
 import { parsePttPostedAt } from "./ptt";
+import {
+  aggregateModuleSearchRows,
+  encodeModuleSearchIndex,
+  type ModuleSearchRow,
+} from "./module-search-index";
+
+const MODULE_INDEX_SELECT =
+  "semester, department, course, name_zh, name_en, credits, language, teacher_zh, teacher_en, capacity, enrolled";
+const MODULE_INDEX_PAGE_SIZE = 1_000;
+const MODULE_INDEX_PARALLEL_PAGES = 12;
+const MODULE_INDEX_CACHE_CONTROL =
+  "public, max-age=3600, s-maxage=21600, stale-while-revalidate=86400";
+const MODULE_INDEX_CACHE_KEY_URL =
+  "https://api.nthumods.com/course/modules-index";
+
+export const getModuleIndexCacheKey = () =>
+  new Request(MODULE_INDEX_CACHE_KEY_URL);
 
 const getContribDates = async (c: Context, courseId: string) => {
   const { data, error } = await supabase_server(c)
@@ -92,6 +109,53 @@ const queryInChunks = async <T>(
 };
 
 const app = new Hono()
+  .get("/modules-index", async (c) => {
+    const cache = typeof caches === "undefined" ? undefined : caches.default;
+    const cacheKey = getModuleIndexCacheKey();
+    const cached = await cache?.match(cacheKey);
+    if (cached) return cached;
+
+    const supabase = supabase_server(c);
+    const { count, error: countError } = await supabase
+      .from("courses")
+      .select("raw_id", { count: "exact", head: true });
+    if (countError) throw new Error(countError.message);
+
+    const pageCount = Math.ceil((count ?? 0) / MODULE_INDEX_PAGE_SIZE);
+    const pages = Array.from({ length: pageCount }, (_, page) => page);
+    const rows: ModuleSearchRow[] = [];
+    for (
+      let offset = 0;
+      offset < pages.length;
+      offset += MODULE_INDEX_PARALLEL_PAGES
+    ) {
+      const pageGroup = pages.slice(
+        offset,
+        offset + MODULE_INDEX_PARALLEL_PAGES,
+      );
+      const pageRows = await Promise.all(
+        pageGroup.map(async (page) => {
+          const { data, error } = await supabase
+            .from("courses")
+            .select(MODULE_INDEX_SELECT)
+            .order("raw_id", { ascending: true })
+            .range(
+              page * MODULE_INDEX_PAGE_SIZE,
+              (page + 1) * MODULE_INDEX_PAGE_SIZE - 1,
+            );
+          if (error) throw new Error(error.message);
+          return (data ?? []) as unknown as ModuleSearchRow[];
+        }),
+      );
+      rows.push(...pageRows.flat());
+    }
+
+    const payload = encodeModuleSearchIndex(aggregateModuleSearchRows(rows));
+    c.header("Cache-Control", MODULE_INDEX_CACHE_CONTROL);
+    const response = c.json(payload);
+    if (cache) await cache.put(cacheKey, response.clone());
+    return response;
+  })
   .get("/", courseListQueryValidator, async (c) => {
     const { courses: _courses } = c.req.valid("query");
 
