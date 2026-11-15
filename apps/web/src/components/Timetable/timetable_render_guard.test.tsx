@@ -364,6 +364,83 @@ describe("timetable provider render stability", () => {
     );
 
     expect(fixture.container.textContent).toContain(testCourse.name_en);
+    expect(
+      fixture.container.querySelectorAll('[data-fit-field="title"]'),
+    ).toHaveLength(2);
+    expect(
+      [...fixture.container.querySelectorAll("[class]")].some((element) =>
+        /line-clamp/.test(element.className),
+      ),
+    ).toBe(false);
+    await fixture.cleanup();
+  });
+
+  test("renders every enabled timetable field through the fitter in both layouts", async () => {
+    const allFields = {
+      title: true,
+      code: true,
+      time: true,
+      venue: true,
+      teacher: true,
+      credits: true,
+    };
+    const tableDim = {
+      header: { width: 40, height: 40 },
+      timetable: { width: 100, height: 50 },
+    };
+    const fixture = await renderTimetable(
+      <>
+        <TimetableSlotVertical
+          course={{
+            course: testCourse,
+            venue: "DELTA台達217 M9MaMb",
+            dayOfWeek: 0,
+            startTime: 0,
+            endTime: 0,
+            color: "#000000",
+            textColor: "#ffffff",
+          }}
+          tableDim={tableDim}
+        />
+        <TimetableSlotHorizontal
+          course={{
+            course: testCourse,
+            venue: "DELTA台達217 M9MaMb",
+            dayOfWeek: 0,
+            startTime: 0,
+            endTime: 0,
+            color: "#000000",
+            textColor: "#ffffff",
+          }}
+          tableDim={tableDim}
+        />
+      </>,
+      {
+        [PREFERENCES_KEY]: {
+          fontSize: "lg",
+          display: allFields,
+        },
+      },
+    );
+
+    const fields = [...fixture.container.querySelectorAll("[data-fit-field]")]
+      .map((element) => element.getAttribute("data-fit-field"))
+      .sort((left, right) => (left ?? "").localeCompare(right ?? ""));
+    expect(fields).toEqual([
+      "code",
+      "code",
+      "credits",
+      "credits",
+      "teacher",
+      "teacher",
+      "time",
+      "time",
+      "title",
+      "title",
+      "venue",
+      "venue",
+    ]);
+    expect(fixture.container.textContent).toContain(testCourse.name_en);
     await fixture.cleanup();
   });
 

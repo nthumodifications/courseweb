@@ -6,7 +6,7 @@ import { scheduleTimeSlots } from "@courseweb/shared";
 import useUserTimetable, {
   DEFAULT_FIELD_ORDER,
   TIMETABLE_FONT_FAMILIES,
-  TIMETABLE_FONT_SIZE_CLASSES,
+  TIMETABLE_FONT_SIZE_PIXELS,
   TimetableFieldKey,
 } from "@/hooks/contexts/useUserTimetable";
 import { cn } from "@courseweb/ui";
@@ -20,6 +20,7 @@ import {
   timetableGridStart,
 } from "@/helpers/timetable";
 import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
+import { FitTextField, useTimetableSlotFitText } from "./FitText";
 
 type TimetableSlotProps = {
   course: CourseTimeslotData;
@@ -62,8 +63,8 @@ const TimetableSlotHorizontal = forwardRef<HTMLDivElement, TimetableSlotProps>(
     const fieldOrder: TimetableFieldKey[] =
       preferences.fieldOrder ?? DEFAULT_FIELD_ORDER;
     const display = preferences.display;
-    const fontSizeClass =
-      TIMETABLE_FONT_SIZE_CLASSES[preferences.fontSize ?? "sm"];
+    const baseFontSize =
+      TIMETABLE_FONT_SIZE_PIXELS[preferences.fontSize ?? "sm"];
     const fontFamily =
       TIMETABLE_FONT_FAMILIES[preferences.fontFamily ?? "system"];
     const customItem = course.customItem;
@@ -92,66 +93,96 @@ const TimetableSlotHorizontal = forwardRef<HTMLDivElement, TimetableSlotProps>(
         ? course.course.teacher_zh?.map(localizeData).join(", ")
         : course.course.teacher_en?.join(", ");
 
+    const {
+      containerRef: fitTextRef,
+      hiddenFields,
+      style: fitTextStyle,
+    } = useTimetableSlotFitText({
+      baseFontSize,
+      display,
+      displayLanguage: displayLang,
+      fieldOrder,
+      fontFamily,
+      showCustomTime,
+      slot: course,
+    });
+    const fitField = (field: string, content: JSX.Element | null) =>
+      content ? (
+        <FitTextField
+          key={field}
+          field={field}
+          hidden={hiddenFields.includes(field)}
+        >
+          {content}
+        </FitTextField>
+      ) : null;
+
     const renderField = (field: TimetableFieldKey) => {
       switch (field) {
         case "code":
-          return display.code ? (
-            <span
-              key="code"
-              className={cn(fontSizeClass, "font-medium", textAlign)}
-            >
-              {course.course.department + course.course.course}
-            </span>
-          ) : null;
+          return fitField(
+            field,
+            display.code ? (
+              <span className={cn("font-medium", textAlign)}>
+                {course.course.department + course.course.course}
+              </span>
+            ) : null,
+          );
         case "title":
-          return display.title ? (
-            <span
-              key="title"
-              className={cn(
-                fontSizeClass,
-                "line-clamp-1 font-medium min-w-0 break-words",
-                textAlign,
-              )}
-            >
-              {displayLang == "zh"
-                ? localizeData(course.course.name_zh)
-                : course.course.name_en}
-            </span>
-          ) : null;
+          return fitField(
+            field,
+            display.title ? (
+              <span
+                className={cn(
+                  "font-medium min-w-0 max-w-full break-words",
+                  textAlign,
+                )}
+              >
+                {displayLang == "zh"
+                  ? localizeData(course.course.name_zh)
+                  : course.course.name_en}
+              </span>
+            ) : null,
+          );
         case "time":
-          return display.time && startSlot && endSlot ? (
-            <span
-              key="time"
-              className={cn(fontSizeClass, "line-clamp-1", textAlign)}
-            >
-              {startSlot.start} - {endSlot.end}
-            </span>
-          ) : null;
+          return fitField(
+            field,
+            display.time && startSlot && endSlot ? (
+              <span className={textAlign}>
+                {startSlot.start} - {endSlot.end}
+              </span>
+            ) : null,
+          );
         case "teacher":
-          return display.teacher && teacherName ? (
-            <span
-              key="teacher"
-              className={cn(fontSizeClass, "line-clamp-1", textAlign)}
-            >
-              {teacherName}
-            </span>
-          ) : null;
+          return fitField(
+            field,
+            display.teacher && teacherName ? (
+              <span className={cn("break-words", textAlign)}>
+                {teacherName}
+              </span>
+            ) : null,
+          );
         case "venue":
-          return display.venue ? (
-            <div key="venue">
-              <VenueChip
-                venue={course.venue}
-                color={course.textColor}
-                textColor={course.textColor}
-              />
-            </div>
-          ) : null;
+          return fitField(
+            field,
+            display.venue ? (
+              <div>
+                <VenueChip
+                  venue={course.venue}
+                  color={course.textColor}
+                  textColor={course.textColor}
+                  fitText
+                />
+              </div>
+            ) : null,
+          );
         case "credits":
-          return display.credits ? (
-            <span key="credits" className={cn(fontSizeClass, textAlign)}>
-              {course.course.credits} cr
-            </span>
-          ) : null;
+          return fitField(
+            field,
+            display.credits ? (
+              <span className={textAlign}>{course.course.credits} cr</span>
+            ) : null,
+          );
         default:
           return null;
       }
@@ -209,55 +240,66 @@ const TimetableSlotHorizontal = forwardRef<HTMLDivElement, TimetableSlotProps>(
         {...props}
       >
         <div
+          ref={fitTextRef}
           className={cn(
-            "flex flex-col h-full p-1 select-none gap-0.5 overflow-hidden",
+            "flex flex-col h-full min-h-0 min-w-0 p-1 select-none gap-0.5",
             flexAlign,
             justifyContent,
           )}
-          style={{ fontFamily }}
+          style={{
+            ...fitTextStyle,
+            fontFamily,
+            overflowWrap: "anywhere",
+          }}
         >
           {customItem ? (
             <>
-              {display.title && (
-                <span
-                  className={cn(
-                    fontSizeClass,
-                    "line-clamp-1 font-medium min-w-0 break-words",
-                    textAlign,
-                  )}
-                >
-                  <CalendarClock className="inline-block h-3 w-3 mr-0.5 align-[-0.1em]" />
-                  {customItem.title}
-                </span>
-              )}
-              {display.code && customItem.shortCode && (
-                <span className={cn(fontSizeClass, "font-medium", textAlign)}>
-                  {customItem.shortCode}
-                </span>
-              )}
-              {(display.time || showCustomTime) && (
-                <span className={cn(fontSizeClass, "line-clamp-1", textAlign)}>
-                  {customSlot
-                    ? `${customSlot.start}–${customSlot.end}`
-                    : `${scheduleTimeSlots[course.startTime]?.start ?? ""}–${scheduleTimeSlots[course.endTime]?.end ?? ""}`}
-                </span>
-              )}
-              {display.venue && customItem.venue && (
-                <span className={cn(fontSizeClass, "line-clamp-1", textAlign)}>
-                  {customItem.venue}
-                </span>
-              )}
-              {customItem.note && (
-                <span
-                  className={cn(
-                    fontSizeClass,
-                    "line-clamp-1 opacity-85",
-                    textAlign,
-                  )}
-                >
-                  {customItem.note}
-                </span>
-              )}
+              {display.title &&
+                fitField(
+                  "title",
+                  <span
+                    className={cn(
+                      "font-medium min-w-0 max-w-full break-words",
+                      textAlign,
+                    )}
+                  >
+                    <CalendarClock
+                      className="inline-block mr-0.5 align-[-0.1em]"
+                      style={{ width: "0.86em", height: "0.86em" }}
+                    />
+                    {customItem.title}
+                  </span>,
+                )}
+              {display.code &&
+                customItem.shortCode &&
+                fitField(
+                  "code",
+                  <span className={cn("font-medium", textAlign)}>
+                    {customItem.shortCode}
+                  </span>,
+                )}
+              {(display.time || showCustomTime) &&
+                fitField(
+                  "time",
+                  <span className={textAlign}>
+                    {customSlot
+                      ? `${customSlot.start}–${customSlot.end}`
+                      : `${scheduleTimeSlots[course.startTime]?.start ?? ""}–${scheduleTimeSlots[course.endTime]?.end ?? ""}`}
+                  </span>,
+                )}
+              {display.venue &&
+                customItem.venue &&
+                fitField(
+                  "venue",
+                  <span className={textAlign}>{customItem.venue}</span>,
+                )}
+              {customItem.note &&
+                fitField(
+                  "note",
+                  <span className={cn("opacity-85 break-words", textAlign)}>
+                    {customItem.note}
+                  </span>,
+                )}
             </>
           ) : (
             fieldOrder.map((field) => renderField(field))
