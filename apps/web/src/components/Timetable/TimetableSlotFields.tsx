@@ -143,8 +143,8 @@ export const useTimetableSlotFields = ({
         return fitField(
           field,
           display.time && startSlot && endSlot ? (
-            <span className={textAlign}>
-              {startSlot.start} - {endSlot.end}
+            <span className={cn("whitespace-nowrap", textAlign)}>
+              {startSlot.start}–{endSlot.end}
             </span>
           ) : null,
         );
@@ -209,7 +209,7 @@ export const useTimetableSlotFields = ({
       {(display.time || showCustomTime) &&
         fitField(
           "time",
-          <span className={textAlign}>
+          <span className={cn("whitespace-nowrap", textAlign)}>
             {customSlot
               ? `${customSlot.start}–${customSlot.end}`
               : `${scheduleTimeSlots[course.startTime]?.start ?? ""}–${scheduleTimeSlots[course.endTime]?.end ?? ""}`}

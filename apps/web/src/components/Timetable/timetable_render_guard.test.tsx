@@ -424,7 +424,7 @@ describe("timetable provider render stability", () => {
     const fieldTexts = [
       testCourse.department + testCourse.course,
       testCourse.name_en,
-      "08:00 - 08:50",
+      "08:00–08:50",
       "Alice Chen",
       "DELTA台達217 M9MaMb",
       `${testCourse.credits} cr`,
