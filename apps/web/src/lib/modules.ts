@@ -1,7 +1,11 @@
 import { semesterInfo } from "@courseweb/shared";
 import { cleanSyllabusFields } from "@/lib/syllabus-text";
 import type { CourseDefinition } from "@/config/supabase";
-import type { ModuleScore } from "./module-insights";
+import {
+  getDemandSeries,
+  getRecentFill,
+  type ModuleScore,
+} from "./module-insights";
 
 // Loaded on demand so the pure helpers in this file can be imported (and
 // tested) without a configured Supabase client.
@@ -94,15 +98,17 @@ type ModuleHistoryRow = Pick<
 
 type ModuleSearchRow = Pick<
   CourseDefinition,
-  | "raw_id"
   | "semester"
   | "department"
   | "course"
   | "name_zh"
   | "name_en"
   | "credits"
+  | "language"
   | "teacher_zh"
   | "teacher_en"
+  | "capacity"
+  | "enrolled"
 >;
 
 interface ModuleHistoryVariant {
@@ -137,8 +143,40 @@ export interface ModuleSearchResult {
   nameEn: string;
   semesters: string[];
   credits: number[];
+  languages: ModuleLanguage[];
   latestSemester: string;
+  fillRate: number | null;
   instructors: ModuleSearchInstructor[];
+}
+
+export type ModuleLanguage = "english" | "chinese" | "bilingual" | "other";
+export type ModuleTermFilter = "fall" | "spring" | "both";
+export type ModuleRecentFilter = "latest" | "3" | "6" | "10";
+export type ModuleSearchSort =
+  | "relevance"
+  | "course-code"
+  | "recent"
+  | "times-offered"
+  | "fill-rate";
+export const MODULE_ENGLISH_TAUGHT_VALUE = "yes";
+export const MODULE_SEARCH_FACETS = [
+  "department",
+  "credits",
+  "language",
+  "termOffered",
+  "recentlyOffered",
+  "courseLevel",
+  "englishTaught",
+] as const;
+
+export interface ModuleSearchFilters {
+  departments?: readonly string[];
+  credits?: readonly string[];
+  languages?: readonly ModuleLanguage[];
+  terms?: readonly ModuleTermFilter[];
+  recent?: readonly ModuleRecentFilter[];
+  levels?: readonly string[];
+  englishTaught?: boolean;
 }
 
 const normalizePart = (value: string) =>
@@ -686,17 +724,63 @@ export const getModuleHistory = async (moduleKey: string) => {
 };
 
 const MODULE_SEARCH_SELECT =
-  "raw_id, semester, department, course, name_zh, name_en, credits, teacher_zh, teacher_en";
+  "semester, department, course, name_zh, name_en, credits, language, teacher_zh, teacher_en";
+
+const MODULE_INDEX_SELECT = `${MODULE_SEARCH_SELECT}, capacity, enrolled`;
 
 const MODULE_SEARCH_ROW_LIMIT = 500;
+const MODULE_INDEX_PAGE_SIZE = 1000;
+const MODULE_INDEX_PARALLEL_PAGES = 12;
 
 const normalizeSearchRow = (row: ModuleSearchRow): ModuleSearchRow => ({
   ...row,
-  raw_id: String(row.raw_id),
   semester: String(row.semester),
   department: normalizePart(row.department),
   course: normalizePart(row.course),
+  capacity: row.capacity ?? null,
+  enrolled: row.enrolled ?? null,
 });
+
+const normalizeModuleLanguage = (value: string): ModuleLanguage => {
+  const normalized = normalizePart(value).normalize("NFKC").toLocaleLowerCase();
+  const hasEnglish =
+    normalized.includes("英") || normalized.includes("english");
+  const hasChinese =
+    normalized.includes("中") || normalized.includes("chinese");
+  if (hasEnglish && hasChinese) return "bilingual";
+  if (hasEnglish) return "english";
+  if (hasChinese) return "chinese";
+  return "other";
+};
+
+const getSearchLanguages = (
+  rows: readonly ModuleSearchRow[],
+  latestSemester: string,
+  titleKeys: readonly string[],
+) =>
+  [
+    ...new Set(
+      rows
+        .filter(
+          (row) =>
+            row.semester === latestSemester &&
+            titleKeys.includes(normalizeCourseTitle(row.name_zh)),
+        )
+        .map((row) => normalizeModuleLanguage(row.language ?? "")),
+    ),
+  ].sort((left, right) => left.localeCompare(right));
+
+const getSearchFillRate = (
+  rows: readonly ModuleSearchRow[],
+  titleKeys: readonly string[],
+) =>
+  getRecentFill(
+    getDemandSeries(
+      rows.filter((row) =>
+        titleKeys.includes(normalizeCourseTitle(row.name_zh)),
+      ),
+    ),
+  );
 
 const getSearchInstructors = (
   rows: readonly ModuleSearchRow[],
@@ -751,7 +835,13 @@ export const aggregateModuleSearchRows = (
       nameEn: variant.nameEn,
       semesters: variant.semesters,
       credits: variant.credits,
+      languages: getSearchLanguages(
+        moduleRows,
+        variant.semesters.at(-1)!,
+        variant.titleKeys,
+      ),
       latestSemester: variant.semesters.at(-1)!,
+      fillRate: getSearchFillRate(moduleRows, variant.titleKeys),
       instructors: getSearchInstructors(
         moduleRows,
         variant.semesters.at(-1)!,
@@ -763,6 +853,101 @@ export const aggregateModuleSearchRows = (
 
 const normalizeSearchText = (value: string) =>
   value.normalize("NFKC").trim().toLocaleLowerCase();
+
+const getModuleLevel = (course: string) => {
+  const firstDigit = Number(course.match(/\d/)?.[0]);
+  return firstDigit ? `${Math.min(firstDigit, 5)}000` : "";
+};
+
+const getModuleTerms = (semesters: readonly string[]): ModuleTermFilter[] => {
+  const terms = new Set(semesters.map(getSemesterTerm));
+  const offeredFall = terms.has("fall");
+  const offeredSpring = terms.has("spring");
+  const values: ModuleTermFilter[] = [];
+  if (offeredFall) values.push("fall");
+  if (offeredSpring) values.push("spring");
+  if (offeredFall && offeredSpring) values.push("both");
+  return values;
+};
+
+const getModuleRecentFilters = (
+  semesters: readonly string[],
+  latestSemesters: readonly string[],
+): ModuleRecentFilter[] => {
+  const values: ModuleRecentFilter[] = [];
+  if (semesters.includes(latestSemesters[0] ?? "")) values.push("latest");
+  for (const limit of [3, 6, 10] as const) {
+    const recent = new Set(latestSemesters.slice(0, limit));
+    if (semesters.some((semester) => recent.has(semester))) {
+      values.push(String(limit) as ModuleRecentFilter);
+    }
+  }
+  return values;
+};
+
+export const getModuleSearchFacetValues = (
+  result: ModuleSearchResult,
+  facet: string,
+  latestSemesters: readonly string[],
+): string[] => {
+  switch (facet) {
+    case "department":
+      return [result.department];
+    case "credits":
+      return result.credits.map(String);
+    case "language":
+      return result.languages;
+    case "termOffered":
+      return getModuleTerms(result.semesters);
+    case "recentlyOffered":
+      return getModuleRecentFilters(result.semesters, latestSemesters);
+    case "courseLevel": {
+      const level = getModuleLevel(result.course);
+      return level ? [level] : [];
+    }
+    case "englishTaught":
+      return result.languages.some(
+        (language) => language === "english" || language === "bilingual",
+      )
+        ? [MODULE_ENGLISH_TAUGHT_VALUE]
+        : [];
+    default:
+      return [];
+  }
+};
+
+const getSearchableText = (result: ModuleSearchResult) =>
+  [
+    result.key,
+    `${result.department} ${result.course}`,
+    result.nameZh,
+    result.nameEn,
+    ...result.instructors.flatMap((instructor) => [
+      instructor.nameZh,
+      instructor.nameEn,
+    ]),
+  ]
+    .map(normalizeSearchText)
+    .join(" ");
+
+export const matchesModuleSearchQuery = (
+  result: ModuleSearchResult,
+  keyword: string,
+) => {
+  const query = normalizeSearchText(keyword);
+  if (!query) return true;
+
+  const searchableText = getSearchableText(result);
+  const compactQuery = query.replace(/\s+/g, "");
+  const compactCode = `${result.department}${result.course}`
+    .replace(/\s+/g, "")
+    .toLocaleLowerCase();
+  if (compactQuery && compactCode.includes(compactQuery)) return true;
+  return query
+    .split(/\s+/)
+    .filter(Boolean)
+    .every((part) => searchableText.includes(part));
+};
 
 const getSearchMatchTier = (
   result: ModuleSearchResult,
@@ -815,6 +1000,157 @@ export const rankModuleSearchResults = (
       left.titleKey.localeCompare(right.titleKey)
     );
   });
+};
+
+const collator = new Intl.Collator("en", {
+  numeric: true,
+  sensitivity: "base",
+});
+
+const compareModuleCode = (
+  left: ModuleSearchResult,
+  right: ModuleSearchResult,
+) =>
+  collator.compare(left.department, right.department) ||
+  collator.compare(left.course, right.course) ||
+  left.titleKey.localeCompare(right.titleKey);
+
+const moduleMatchesFilters = (
+  result: ModuleSearchResult,
+  filters: ModuleSearchFilters,
+  latestSemesters: readonly string[],
+) => {
+  if (
+    filters.departments?.length &&
+    !filters.departments.includes(result.department)
+  ) {
+    return false;
+  }
+  if (
+    filters.credits?.length &&
+    !result.credits.some((credit) => filters.credits?.includes(String(credit)))
+  ) {
+    return false;
+  }
+  if (
+    filters.languages?.length &&
+    !result.languages.some((language) => filters.languages?.includes(language))
+  ) {
+    return false;
+  }
+  if (
+    filters.terms?.length &&
+    !getModuleTerms(result.semesters).some((term) =>
+      filters.terms?.includes(term),
+    )
+  ) {
+    return false;
+  }
+  if (
+    filters.recent?.length &&
+    !getModuleRecentFilters(result.semesters, latestSemesters).some((term) =>
+      filters.recent?.includes(term),
+    )
+  ) {
+    return false;
+  }
+  if (
+    filters.levels?.length &&
+    !filters.levels.includes(getModuleLevel(result.course))
+  ) {
+    return false;
+  }
+  if (
+    filters.englishTaught &&
+    !result.languages.some(
+      (language) => language === "english" || language === "bilingual",
+    )
+  ) {
+    return false;
+  }
+  return true;
+};
+
+export const filterAndSortModuleSearchResults = (
+  results: readonly ModuleSearchResult[],
+  keyword: string,
+  filters: ModuleSearchFilters = {},
+  sort: ModuleSearchSort = "relevance",
+) => {
+  const latestSemesters = [
+    ...new Set(results.flatMap((result) => result.semesters)),
+  ].sort((left, right) => semesterSortValue(right) - semesterSortValue(left));
+  const matched = results.filter(
+    (result) =>
+      matchesModuleSearchQuery(result, keyword) &&
+      moduleMatchesFilters(result, filters, latestSemesters),
+  );
+
+  if (sort === "relevance" && keyword.trim()) {
+    return rankModuleSearchResults(matched, keyword);
+  }
+
+  return [...matched].sort((left, right) => {
+    if (sort === "recent") {
+      const recentDifference =
+        semesterSortValue(right.latestSemester) -
+        semesterSortValue(left.latestSemester);
+      if (recentDifference !== 0) return recentDifference;
+    } else if (sort === "times-offered") {
+      const countDifference = right.semesters.length - left.semesters.length;
+      if (countDifference !== 0) return countDifference;
+    } else if (sort === "fill-rate") {
+      if (left.fillRate === null && right.fillRate !== null) return 1;
+      if (right.fillRate === null && left.fillRate !== null) return -1;
+      if (left.fillRate !== null && right.fillRate !== null) {
+        const fillDifference = right.fillRate - left.fillRate;
+        if (fillDifference !== 0) return fillDifference;
+      }
+    }
+    return compareModuleCode(left, right);
+  });
+};
+
+export const getModuleSearchIndex = async (signal?: AbortSignal) => {
+  const supabase = await loadSupabase();
+  const { count, error: countError } = await supabase
+    .from("courses")
+    .select("raw_id", { count: "exact", head: true });
+  if (countError) throw countError;
+
+  const rowCount = count ?? 0;
+  const pages = Array.from(
+    { length: Math.ceil(rowCount / MODULE_INDEX_PAGE_SIZE) },
+    (_, page) => page,
+  );
+  const rows: ModuleSearchRow[] = [];
+
+  for (
+    let offset = 0;
+    offset < pages.length;
+    offset += MODULE_INDEX_PARALLEL_PAGES
+  ) {
+    const pageGroup = pages.slice(offset, offset + MODULE_INDEX_PARALLEL_PAGES);
+    const results = await Promise.all(
+      pageGroup.map(async (page) => {
+        let request = supabase
+          .from("courses")
+          .select(MODULE_INDEX_SELECT)
+          .order("raw_id", { ascending: true })
+          .range(
+            page * MODULE_INDEX_PAGE_SIZE,
+            (page + 1) * MODULE_INDEX_PAGE_SIZE - 1,
+          );
+        if (signal) request = request.abortSignal(signal);
+        const response = await request;
+        if (response.error) throw response.error;
+        return (response.data ?? []) as unknown as ModuleSearchRow[];
+      }),
+    );
+    rows.push(...results.flat());
+  }
+
+  return aggregateModuleSearchRows(rows);
 };
 
 export const searchModules = async (keyword: string, signal?: AbortSignal) => {

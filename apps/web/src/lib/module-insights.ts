@@ -12,6 +12,11 @@ export interface InsightOffering {
   enrolled: number | null;
 }
 
+export type DemandOffering = Pick<
+  InsightOffering,
+  "semester" | "capacity" | "enrolled"
+>;
+
 export interface ModuleScore {
   raw_id: string;
   average: number;
@@ -31,7 +36,7 @@ export interface DemandPoint {
 
 /** Seats filled per semester, over sections that publish both numbers. */
 export const getDemandSeries = (
-  offerings: readonly InsightOffering[],
+  offerings: readonly DemandOffering[],
 ): DemandPoint[] => {
   const bySemester = new Map<string, DemandPoint>();
   for (const offering of offerings) {

@@ -45,8 +45,10 @@ const getLocation = (browserWindow: Window) => {
  * dialog is on top of it. The search page remains mounted as the background
  * route, but its delayed native history writer must not create a third entry.
  */
-export const createCourseSearchRouter = (browserWindow = window) => {
-  const router = historyRouter<UiState>({
+export const createCourseSearchRouter = <TRouteState extends object = UiState>(
+  browserWindow = window,
+) => {
+  const router = historyRouter<TRouteState>({
     getLocation: () => getLocation(browserWindow),
     push: (url) => {
       if (hasDialogState(browserWindow)) return;
