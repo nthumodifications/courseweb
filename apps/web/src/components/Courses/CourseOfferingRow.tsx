@@ -54,6 +54,12 @@ export const CourseOfferingRow = ({
 }) => {
   const localizeData = useLocalizedZhData();
   const language = offering.language.trim();
+  const languageLabel =
+    language === "英"
+      ? dict.course.tags.english
+      : language === "中"
+        ? dict.course.tags.chinese
+        : language;
   const capacity =
     offering.capacity === null
       ? null
@@ -78,7 +84,7 @@ export const CourseOfferingRow = ({
       ? `${offering.enrolled} / ${offering.capacity}`
       : dict.course.module.not_available;
     const section = sectionLabel(dict, offering.class);
-    const languageAndVenue = [timeAndVenue, language]
+    const languageAndVenue = [timeAndVenue, languageLabel]
       .filter(Boolean)
       .join(" · ");
 
@@ -150,7 +156,7 @@ export const CourseOfferingRow = ({
         </span>
         {(language || capacity) && (
           <span className="mt-1 flex flex-wrap gap-2 text-xs text-muted-foreground">
-            {language && <span>{language}</span>}
+            {language && <span>{languageLabel}</span>}
             {capacity && <span>{capacity}</span>}
           </span>
         )}

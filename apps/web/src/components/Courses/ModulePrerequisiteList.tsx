@@ -44,7 +44,8 @@ const ModulePrerequisiteNode = ({
     <span>
       {node.mustNotHaveTaken && (
         <span className="text-muted-foreground">
-          {labels.prerequisite_not_taken_prefix}{" "}
+          {labels.prerequisite_not_taken_prefix}
+          {lang === "en" ? " " : ""}
         </span>
       )}
       {courseName}

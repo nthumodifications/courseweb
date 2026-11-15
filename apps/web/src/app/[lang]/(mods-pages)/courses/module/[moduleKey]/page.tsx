@@ -337,12 +337,19 @@ export const ModulePageContent = ({
       : selectedVariant.nameZh;
   const languages = getLanguages(selectedVariant.offerings)
     .slice(0, 2)
-    .map((entry) => entry.value)
+    .map(({ value }) =>
+      value === "英"
+        ? dict.course.tags.english
+        : value === "中"
+          ? dict.course.tags.chinese
+          : value,
+    )
     .join(contentLang === "en" ? ", " : "、");
   const metaSeparator = contentLang === "en" ? "·" : "・";
   const yearsAndCount =
-    `${academicYearRange(selectedVariant.semesters)} ${dict.course.module.academic_years} ` +
-    `${metaSeparator} ${selectedVariant.semesters.length} ${dict.course.module.semesters_count}`;
+    contentLang === "en"
+      ? `${academicYearRange(selectedVariant.semesters)} · ${selectedVariant.semesters.length} ${dict.course.module.semesters_count}`
+      : `${academicYearRange(selectedVariant.semesters)}・${selectedVariant.semesters.length}${dict.course.module.semesters_count}`;
   const reviewInstructors = [
     ...new Set(
       getModuleInstructorSummaries(selectedVariant)
@@ -389,7 +396,7 @@ export const ModulePageContent = ({
                 {selectedVariant.nameEn}
               </p>
             )}
-            <div className="flex min-w-0 flex-wrap items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex min-w-0 flex-wrap items-center gap-1 text-sm text-muted-foreground">
               <span>
                 {selectedVariant.credits.join(
                   contentLang === "en" ? "/" : "、",
