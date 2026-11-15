@@ -6,6 +6,7 @@ import { z } from "zod";
 import { env } from "hono/adapter";
 import { parseHTML } from "linkedom/worker";
 import { parsePttPostedAt } from "./ptt";
+import courseInsights from "./course-insights";
 
 const getContribDates = async (c: Context, courseId: string) => {
   const { data, error } = await supabase_server(c)
@@ -92,6 +93,7 @@ const queryInChunks = async <T>(
 };
 
 const app = new Hono()
+  .route("/insights", courseInsights)
   .get("/", courseListQueryValidator, async (c) => {
     const { courses: _courses } = c.req.valid("query");
 
