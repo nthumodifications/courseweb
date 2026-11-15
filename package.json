@@ -17,6 +17,7 @@
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "design-lint": "node tools/design-lint/index.mjs",
+    "type-check": "bun run --cwd apps/web type-check",
     "test:design-lint": "node --test tools/design-lint/baseline.test.mjs",
     "test": "turbo run test",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",

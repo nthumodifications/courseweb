@@ -41,6 +41,9 @@ const PastReviewsPage = lazyWithRetry(
 );
 const CoursesPage = lazyWithRetry(routeLoaders.courses);
 const CourseChangesFeedPage = lazyWithRetry(routeLoaders.courseChanges);
+const CourseInsightsPage = lazyWithRetry(
+  () => import("@/app/[lang]/(mods-pages)/courses/insights/page"),
+);
 const CourseDetailPage = lazyWithRetry(routeLoaders.courseDetail);
 const ModulePage = lazyWithRetry(routeLoaders.module);
 const InstructorPage = lazyWithRetry(routeLoaders.instructor);
@@ -295,6 +298,10 @@ export const appRoutes = [
                   description: en.course_changes.meta_description,
                   descriptionZh: zh.course_changes.meta_description,
                 },
+              },
+              {
+                path: ROUTE_PATHS.courseInsights,
+                element: <CourseInsightsPage />,
               },
               {
                 path: ROUTE_PATHS.module,
