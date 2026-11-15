@@ -3,6 +3,8 @@ import {
   getDefaultSemester,
   getLastSemester,
   getNextCourseSemester,
+  hydrateSemesters,
+  lastSemester,
   mergeSemesterRows,
   type SemesterInfo,
 } from "./semester";
@@ -135,5 +137,21 @@ describe("semester merge", () => {
         },
       ]).some((semester) => semester.id === "11540"),
     ).toBe(false);
+  });
+
+  test("hydrates the live last-semester binding when course data arrives", () => {
+    expect(
+      hydrateSemesters([
+        {
+          id: "11520",
+          begins: "2027-02-15",
+          ends: "2027-06-06",
+          hasCourses: true,
+        },
+      ]),
+    ).toBe(true);
+    expect(lastSemester.id).toBe("11520");
+    hydrateSemesters([]);
+    expect(lastSemester.id).toBe("11510");
   });
 });
