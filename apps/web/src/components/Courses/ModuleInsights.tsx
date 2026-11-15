@@ -2,8 +2,6 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import useDictionary from "@/dictionaries/useDictionary";
 import { toPrettySemester } from "@/helpers/semester";
-import { contentLanguage } from "@/helpers/contentLanguage";
-import { formatCourseTime } from "@/lib/format-course-times";
 import {
   getModuleBrief,
   getModuleScores,
@@ -13,6 +11,7 @@ import {
   getCommonTimes,
   getDemandSeries,
   getInstructorInsights,
+  getLanguages,
   getRecentFill,
   summariseScores,
   type ScoreSummary,
@@ -58,30 +57,20 @@ export const ModuleStat = ({
   label,
   hint,
   compact = false,
-}: ModuleStatProps) =>
-  compact ? (
-    <div className="flex min-w-0 flex-col">
-      <dd className="font-bold tabular-nums">{value}</dd>
-      <dt className="text-sm text-muted-foreground">{label}</dt>
-      {hint && <span className="text-xs text-muted-foreground">{hint}</span>}
-    </div>
-  ) : (
-    <div title={hint} className="flex min-w-0 items-baseline gap-1">
-      <dd className="shrink-0 whitespace-nowrap font-bold tabular-nums">
-        {value}
-      </dd>
-      <dt className="text-sm text-muted-foreground">{label}</dt>
-    </div>
-  );
+}: ModuleStatProps) => (
+  <div className="flex min-w-0 flex-col">
+    <dd
+      className={`break-all font-bold ${compact ? "text-lg leading-6" : value.length > 8 ? "text-lg leading-8" : "text-2xl"}`}
+    >
+      {value}
+    </dd>
+    <dt className="text-sm text-muted-foreground">{label}</dt>
+    {hint && <span className="text-xs text-muted-foreground">{hint}</span>}
+  </div>
+);
 
 /** The numbers a student wants first: how full, how graded, when, in what language. */
-export const ModuleStats = ({
-  variant,
-  lang,
-}: {
-  variant: ModuleVariant;
-  lang: string;
-}) => {
+export const ModuleStats = ({ variant }: { variant: ModuleVariant }) => {
   const dict = useDictionary();
   const labels = dict.course.module.stats;
   const scores = useModuleScores(variant);
@@ -90,10 +79,15 @@ export const ModuleStats = ({
   const recentFill = getRecentFill(getDemandSeries(variant.offerings));
   const score = summariseScores(scores)[0];
   const time = getCommonTimes(variant.offerings)[0];
-  if (recentFill === null && !score && !time) return null;
+  const languages = getLanguages(variant.offerings)
+    .slice(0, 2)
+    .map((entry) => entry.value)
+    .join(" / ");
+
+  if (recentFill === null && !score && !time && !languages) return null;
 
   return (
-    <dl className="flex min-w-0 flex-wrap items-baseline gap-x-4 gap-y-2">
+    <dl className="grid grid-cols-2 gap-x-4 gap-y-4">
       {recentFill !== null && (
         <ModuleStat
           value={`${Math.round(recentFill * 100)}%`}
@@ -110,12 +104,8 @@ export const ModuleStats = ({
           } · ${score.count} ${labels.classes}`}
         />
       )}
-      {time && (
-        <ModuleStat
-          value={formatCourseTime(time.value, contentLanguage(lang))}
-          label={labels.usual_time}
-        />
-      )}
+      {time && <ModuleStat value={time.value} label={labels.usual_time} />}
+      {languages && <ModuleStat value={languages} label={labels.language} />}
     </dl>
   );
 };
@@ -247,7 +237,7 @@ export const ModuleDemand = ({ variant }: { variant: ModuleVariant }) => {
       <p className="text-sm text-muted-foreground">
         {dict.course.module.demand.caption}
       </p>
-      <ModuleDemandChart series={series} size="sm" />
+      <ModuleDemandChart series={series} />
     </section>
   );
 };

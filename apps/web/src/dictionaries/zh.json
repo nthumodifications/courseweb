@@ -651,7 +651,6 @@
       "prerequisite_all_students": "全校學生",
       "prerequisite_grade_above": "以上",
       "prerequisite_not_taken_prefix": "未修過",
-      "prerequisite_not_taken_sentence": "不可修過：",
       "prerequisite_and": "而且",
       "prerequisite_requires": "需要",
       "prerequisite_unlocks": "修完可修",
@@ -683,7 +682,6 @@
       "show_fewer": "收起",
       "clear_instructor_filter": "清除教師篩選",
       "capacity": "名額",
-      "enrollment_fill": "選上／名額",
       "credits_unit": "學分",
       "view_offering": "查看開課",
       "default_section": "一般班",
@@ -694,7 +692,6 @@
       "search_placeholder": "搜尋課號、課名或教師……",
       "search_prompt": "輸入課號、課名或教師，尋找歷年開課紀錄。",
       "search_examples": ["微積分", "程式", "CS 1355"],
-      "search_examples_label": "範例搜尋",
       "search_no_results": "找不到符合的課程模組",
       "search_results": "個課程模組",
       "search_other_modules": "搜尋其他課程",
@@ -731,8 +728,7 @@
         "gpa_scale": "等級制",
         "classes": "個班",
         "usual_time": "最常開課時段",
-        "language": "授課語言",
-        "language_short": "語言"
+        "language": "授課語言"
       },
       "brief": "課程簡介",
       "brief_from": "取自 {semester} 課程大綱",

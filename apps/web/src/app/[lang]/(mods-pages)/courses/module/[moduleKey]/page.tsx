@@ -1,10 +1,10 @@
-import { courseLanguageLabel } from "@/lib/course-language";
-import { Fragment, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   ErrorState,
+  Separator,
   Select,
   SelectContent,
   SelectItem,
@@ -12,9 +12,9 @@ import {
   SelectValue,
 } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
-import ModulePrerequisiteList from "@/components/Courses/ModulePrerequisiteList";
+import PrerequisiteBlock from "@/components/CourseDetails/PrerequisiteBlock";
 import { usePrerequisiteGraphData } from "@/components/CourseDetails/usePrerequisiteGraphData";
-import { ModuleTermDots } from "@/components/Courses/ModuleTermAvailability";
+import { ModuleTermAvailability } from "@/components/Courses/ModuleTermAvailability";
 import { CourseOfferingRow } from "@/components/Courses/CourseOfferingRow";
 import {
   CoursePageErrorPage,
@@ -31,12 +31,10 @@ import {
 import { toPrettySemester } from "@/helpers/semester";
 import { contentLanguage } from "@/helpers/contentLanguage";
 import type { Language } from "@/types/settings";
-import { getLanguages } from "@/lib/module-insights";
 import {
   getModuleOfferings,
   getModuleVariant,
   getModuleInstructorSummaries,
-  createModuleKey,
   parseModuleKey,
   type ModuleAggregate,
   type ModuleHistory,
@@ -48,6 +46,13 @@ import ReviewsSection from "@/components/Reviews/ReviewsSection";
 const MODULE_STALE_TIME = 24 * 60 * 60 * 1000;
 
 type Dictionary = ReturnType<typeof useDictionary>;
+
+// Same chip as HighlightItem in components/Courses/CourseTagsList.
+const ModuleChip = ({ children }: { children: React.ReactNode }) => (
+  <div className="flex min-w-[52px] flex-row items-center justify-center space-x-2 rounded-md bg-muted px-1 py-1 text-xs text-foreground select-none">
+    {children}
+  </div>
+);
 
 const decodeModuleKey = (value: string | undefined) => {
   if (!value) return "";
@@ -149,7 +154,6 @@ const OfferingList = ({
           lang={lang}
           dict={dict}
           showSemester={index === 0}
-          compact
         />
       ))}
     </div>
@@ -205,7 +209,6 @@ const ModuleEmptyState = ({
     lang={lang}
     dict={dict}
     inDialog={inDialog}
-    wide
     title={pageTitle}
   >
     <ErrorState title={errorTitle} />
@@ -227,9 +230,6 @@ export const ModulePageContent = ({
 }) => {
   const moduleKey = decodeModuleKey(rawModuleKey);
   const parsedModuleKey = parseModuleKey(moduleKey);
-  const canonicalModuleKey = parsedModuleKey
-    ? createModuleKey(parsedModuleKey.department, parsedModuleKey.course)
-    : moduleKey;
   const dict = useDictionary();
   const [pageSearchParams, setPageSearchParams] = useSearchParams();
   const [selectedInstructor, setSelectedInstructor] = useState<string | null>(
@@ -249,8 +249,8 @@ export const ModulePageContent = ({
     isLoading,
     refetch,
   } = useQuery({
-    queryKey: ["module", canonicalModuleKey],
-    queryFn: () => getModuleOfferings(canonicalModuleKey),
+    queryKey: ["module", moduleKey],
+    queryFn: () => getModuleOfferings(moduleKey),
     enabled: Boolean(parsedModuleKey),
     staleTime: MODULE_STALE_TIME,
     gcTime: MODULE_STALE_TIME * 7,
@@ -267,20 +267,19 @@ export const ModulePageContent = ({
   );
   const prerequisitesDiffer =
     prerequisiteTexts && new Set(prerequisiteTexts).size > 1;
-  const { parsedPrerequisite, prerequisiteGraph } =
+  const { parsedPrerequisite, prerequisiteRows, prerequisiteGraph } =
     usePrerequisiteGraphData(prerequisiteOffering);
 
   const genericTitle = `${dict.course.module.title} | NTHUMods`;
   const moduleErrorTitle = error
     ? dict.common.load_error
     : dict.course.module.no_offerings;
-  const contentClass = "flex min-w-0 flex-col gap-4";
+  const contentClass = "flex min-w-0 flex-col gap-4 pb-6";
   const renderState = (children: React.ReactNode) => (
     <CoursePageState
       lang={lang}
       dict={dict}
       inDialog={inDialog}
-      wide
       title={genericTitle}
     >
       {children}
@@ -309,7 +308,6 @@ export const ModulePageContent = ({
         lang={lang}
         dict={dict}
         inDialog={inDialog}
-        wide
         pageTitle={genericTitle}
         error={Boolean(error)}
         title={moduleErrorTitle}
@@ -331,20 +329,11 @@ export const ModulePageContent = ({
     );
   }
 
-  const contentLang = contentLanguage(lang);
+  const latestOffering = selectedVariant.offerings.at(-1)!;
   const pageName =
-    contentLang === "en"
-      ? selectedVariant.nameEn || selectedVariant.nameZh
-      : selectedVariant.nameZh;
-  const languages = getLanguages(selectedVariant.offerings)
-    .slice(0, 2)
-    .map(({ value }) => courseLanguageLabel(value, dict.course.tags))
-    .join(contentLang === "en" ? ", " : "、");
-  const metaSeparator = contentLang === "en" ? "·" : "・";
-  const yearsAndCount =
-    contentLang === "en"
-      ? `${academicYearRange(selectedVariant.semesters)} · ${selectedVariant.semesters.length} ${dict.course.module.semesters_count}`
-      : `${academicYearRange(selectedVariant.semesters)}・${selectedVariant.semesters.length}${dict.course.module.semesters_count}`;
+    contentLanguage(lang) === "en"
+      ? latestOffering.name_en
+      : latestOffering.name_zh;
   const reviewInstructors = [
     ...new Set(
       getModuleInstructorSummaries(selectedVariant)
@@ -375,45 +364,36 @@ export const ModulePageContent = ({
       dict={dict}
       inDialog={inDialog}
       title={`${pageName} ${module.department} ${module.course} | NTHUMods`}
-      wide
+      description={`${pageName} (${latestOffering.name_zh}) ${dict.course.module.history}`}
     >
       <CoursePageContent inDialog={inDialog}>
         <div className={contentClass}>
-          <header className="flex min-w-0 flex-col gap-2 border-b border-border pb-3">
-            <h1 className="flex min-w-0 flex-wrap items-baseline gap-2 font-bold">
-              <span className="shrink-0 font-mono text-sm tabular-nums text-muted-foreground">
-                {module.department} {module.course}
-              </span>
-              <span className="min-w-0">{selectedVariant.nameZh}</span>
-            </h1>
-            {selectedVariant.nameEn && (
-              <p className="text-sm text-muted-foreground">
-                {selectedVariant.nameEn}
-              </p>
-            )}
-            <div className="flex min-w-0 flex-wrap items-center gap-1 text-xs text-muted-foreground">
-              <span>
-                {selectedVariant.credits.join(
-                  contentLang === "en" ? "/" : "、",
-                )}{" "}
-                {dict.course.module.credits_unit}
-              </span>
-              <span aria-hidden="true">{metaSeparator}</span>
-              {languages && (
-                <>
-                  <span>
-                    {dict.course.module.stats.language_short} {languages}
-                  </span>
-                  <span aria-hidden="true">{metaSeparator}</span>
-                </>
-              )}
-              <ModuleTermDots
-                semesters={selectedVariant.semesters}
-                showLabels
-              />
-              <span aria-hidden="true">{metaSeparator}</span>
-              <span className="tabular-nums">{yearsAndCount}</span>
+          {/* Mirrors the course detail header line for line. */}
+          <header className="flex min-w-0 flex-col gap-2">
+            <div className="font-medium text-base">
+              {academicYearRange(selectedVariant.semesters)}{" "}
+              {dict.course.module.academic_years}
             </div>
+            <div className="font-bold text-xl text-nthu-600">
+              {module.department} {module.course}
+            </div>
+            <h1 className="min-w-0 whitespace-normal font-bold text-xl">
+              {latestOffering.name_zh}
+            </h1>
+            <h2 className="min-w-0 whitespace-normal font-medium">
+              {latestOffering.name_en}
+            </h2>
+            <div className="flex flex-row flex-wrap gap-1 text-sm">
+              <ModuleChip>
+                {selectedVariant.credits.join(" / ")}{" "}
+                {dict.course.module.credits_unit}
+              </ModuleChip>
+              <ModuleChip>
+                {selectedVariant.semesters.length}{" "}
+                {dict.course.module.semesters_count}
+              </ModuleChip>
+            </div>
+            <ModuleTermAvailability semesters={selectedVariant.semesters} />
           </header>
 
           <VariantPicker
@@ -433,10 +413,20 @@ export const ModulePageContent = ({
             }}
           />
 
-          <ModuleStats variant={selectedVariant} lang={lang} />
+          <Separator />
 
-          <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(16rem,1fr)]">
-            <div className="flex min-w-0 flex-col gap-4">
+          <div className="grid min-w-0 gap-x-10 gap-y-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
+            {/* Phones see the summary first; on desktop it is the side column. */}
+            <aside className="flex min-w-0 flex-col gap-6 lg:order-last lg:sticky lg:top-4 lg:self-start">
+              <ModuleStats variant={selectedVariant} />
+              <ModuleInstructors
+                variant={selectedVariant}
+                lang={lang}
+                selected={selectedInstructor}
+                onSelect={setSelectedInstructor}
+              />
+            </aside>
+            <div className="flex min-w-0 flex-col gap-6">
               {prerequisiteOffering &&
                 parsedPrerequisite &&
                 prerequisiteGraph &&
@@ -449,9 +439,10 @@ export const ModulePageContent = ({
                     <h2 id="module-prerequisites" className="font-bold">
                       {dict.course.details.prerequesites}
                     </h2>
-                    <ModulePrerequisiteList
+                    <PrerequisiteBlock
                       parsed={parsedPrerequisite}
-                      graph={prerequisiteGraph}
+                      course={prerequisiteOffering}
+                      rows={prerequisiteRows}
                       lang={contentLanguage(lang)}
                       dict={dict}
                     />
@@ -465,34 +456,25 @@ export const ModulePageContent = ({
                     )}
                   </section>
                 )}
+              <ModuleBrief variant={selectedVariant} />
+              <ModuleDemand variant={selectedVariant} />
               <OfferingList
                 variant={selectedVariant}
                 lang={lang}
                 dict={dict}
                 selectedInstructor={selectedInstructor}
               />
-              <ModuleBrief variant={selectedVariant} />
               <ReviewsSection
                 lang={lang}
-                moduleKey={canonicalModuleKey}
+                moduleKey={moduleKey}
                 instructors={reviewInstructors}
                 semesterOptions={selectedVariant.semesters}
                 semesterOptionsByInstructor={reviewSemesterOptionsByInstructor}
                 allowInstructorFilter
               />
             </div>
-            <aside className="flex min-w-0 flex-col gap-4 lg:border-l lg:border-border lg:pl-4">
-              <ModuleInstructors
-                variant={selectedVariant}
-                lang={lang}
-                selected={selectedInstructor}
-                onSelect={setSelectedInstructor}
-              />
-              <ModuleDemand variant={selectedVariant} />
-            </aside>
           </div>
         </div>
-        <div className="h-6" aria-hidden="true" />
       </CoursePageContent>
     </CoursePageState>
   );

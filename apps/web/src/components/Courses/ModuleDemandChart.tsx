@@ -13,6 +13,10 @@ import useDictionary from "@/dictionaries/useDictionary";
 import { toPrettySemester } from "@/helpers/semester";
 import type { DemandPoint } from "@/lib/module-insights";
 
+// One hue: the bar is darker when the semester was over-subscribed.
+const FILL_UNDER = "#C19AE6"; // nthu-400
+const FILL_OVER = "#7E42AE"; // nthu-700
+
 const percent = (value: number) => `${Math.round(value * 100)}%`;
 
 /** Seats filled per semester, as a share of capacity. */
@@ -75,7 +79,7 @@ export const ModuleDemandChart = ({
               const point = payload?.[0]?.payload as DemandPoint | undefined;
               if (!active || !point) return null;
               return (
-                <div className="rounded-lg border border-border bg-background p-2 text-sm shadow-sm">
+                <div className="rounded-lg border bg-background p-2 text-sm shadow-sm">
                   <div className="font-bold">
                     {toPrettySemester(point.semester)}
                   </div>
@@ -101,8 +105,7 @@ export const ModuleDemandChart = ({
             {series.map((point) => (
               <Cell
                 key={point.semester}
-                fill="hsl(var(--primary))"
-                fillOpacity={point.fill > 1 ? 1 : 0.6}
+                fill={point.fill > 1 ? FILL_OVER : FILL_UNDER}
               />
             ))}
           </Bar>

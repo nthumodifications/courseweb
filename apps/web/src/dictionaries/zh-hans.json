@@ -651,7 +651,6 @@
       "prerequisite_all_students": "全校学生",
       "prerequisite_grade_above": "以上",
       "prerequisite_not_taken_prefix": "未修过",
-      "prerequisite_not_taken_sentence": "不可修过：",
       "prerequisite_and": "而且",
       "prerequisite_requires": "需要",
       "prerequisite_unlocks": "修完可修",
@@ -683,7 +682,6 @@
       "show_fewer": "收起",
       "clear_instructor_filter": "清除教师筛选",
       "capacity": "名额",
-      "enrollment_fill": "选上／名额",
       "credits_unit": "学分",
       "view_offering": "查看开课",
       "default_section": "一般班",
@@ -694,7 +692,6 @@
       "search_placeholder": "搜索课号、课名或教师……",
       "search_prompt": "输入课号、课名或教师，寻找历年开课纪录。",
       "search_examples": ["微积分", "程序", "CS 1355"],
-      "search_examples_label": "范例搜索",
       "search_no_results": "找不到符合的课程模块",
       "search_results": "个课程模块",
       "search_other_modules": "搜索其他课程",
@@ -731,8 +728,7 @@
         "gpa_scale": "等级制",
         "classes": "个班",
         "usual_time": "最常开课时段",
-        "language": "授课语言",
-        "language_short": "语言"
+        "language": "授课语言"
       },
       "brief": "课程简介",
       "brief_from": "取自 {semester} 课程大纲",
