@@ -146,6 +146,7 @@ const bundledSemesters: SemesterInfo[] = [
   },
 ];
 
+// Live bindings let importers observe hydrated semester state after API refreshes.
 export let semesterInfo: SemesterInfo[] = [...bundledSemesters];
 
 const dayStart = (date: Date) =>
@@ -349,5 +350,6 @@ export const getNextCourseSemester = (
   );
 };
 
+// These derived exports stay live so refreshes update existing importers too.
 export let currentSemester = getSemester(new Date());
 export let lastSemester = getLastSemester(semesterInfo);

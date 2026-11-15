@@ -19,6 +19,9 @@ export type SemesterDate = {
   extractionMethod: "rules" | "llm";
 };
 
+type SemesterDateRange = Pick<SemesterDate, "id" | "begins" | "ends">;
+type SemesterNeighbor = Pick<SemesterInfo, "id" | "begins" | "ends">;
+
 type SemesterDatesEnv = LlmEnv & {
   DB: D1Database;
   CALENDAR_API_KEY?: string;
@@ -123,10 +126,16 @@ const termFromLabel = (summary: string): number | undefined => {
   return undefined;
 };
 
+const classStartPatterns = [
+  /上課開始|開始上課|正式上課/u,
+  /開學日?|始業|學期開始/u,
+  /classes?\s+begin/iu,
+  /start\s+of\s+classes/iu,
+  /semester\s+begins?/iu,
+] as const;
+
 const isClassStart = (summary: string) =>
-  /上課開始|開始上課|開學日?|始業|學期開始|正式上課|classes?\s+begin|start\s+of\s+classes|semester\s+begins?/iu.test(
-    summary,
-  );
+  classStartPatterns.some((pattern) => pattern.test(summary));
 
 const hasBeginEvidence = (summary: string) =>
   /上課|開學|始業|開課|classes?/iu.test(summary) ||
@@ -134,43 +143,55 @@ const hasBeginEvidence = (summary: string) =>
     summary,
   );
 
+const breakStartPatterns = [
+  /寒假[^\n]{0,30}(?:開始|起|begin|start)/iu,
+  /冬假[^\n]{0,30}(?:開始|起|begin|start)/iu,
+  /winter\s+break[^\n]{0,30}(?:開始|起|begin|start)/iu,
+  /winter\s+vacation[^\n]{0,30}(?:開始|起|begin|start)/iu,
+  /暑假[^\n]{0,30}(?:開始|起|begin|start)/iu,
+  /summer\s+break[^\n]{0,30}(?:開始|起|begin|start)/iu,
+  /summer\s+vacation[^\n]{0,30}(?:開始|起|begin|start)/iu,
+  /(?:開始|起|begin|start)[^\n]{0,30}(?:寒假|冬假|暑假)/iu,
+  /(?:開始|起|begin|start)[^\n]{0,30}winter\s+(?:break|vacation)/iu,
+  /(?:開始|起|begin|start)[^\n]{0,30}summer\s+(?:break|vacation)/iu,
+] as const;
+
 const isBreakStart = (summary: string) =>
-  /(?:寒假|冬假|winter\s+(?:break|vacation))[^\n]{0,30}(?:開始|起|begin|start)|(?:暑假|summer\s+(?:break|vacation))[^\n]{0,30}(?:開始|起|begin|start)|(?:開始|起|begin|start)[^\n]{0,30}(?:寒假|冬假|暑假|winter\s+(?:break|vacation)|summer\s+(?:break|vacation))/iu.test(
-    summary,
-  );
+  breakStartPatterns.some((pattern) => pattern.test(summary));
 
 const hasBreakEvidence = (summary: string) =>
   /寒假|冬假|暑假|winter\s+(?:break|vacation)|summer\s+(?:break|vacation)/iu.test(
     summary,
   );
 
+const fallbackSemesterForDate = (
+  date: string,
+  summary: string,
+  boundary: "begin" | "break",
+) => {
+  const year = Number(date.slice(0, 4));
+  const month = Number(date.slice(5, 7));
+  const winterBreak =
+    boundary === "break" && /寒假|冬假|winter/iu.test(summary);
+  const summerBreak = boundary === "break" && /暑假|summer/iu.test(summary);
+
+  if (winterBreak || (!summerBreak && (month >= 8 || month <= 1))) {
+    return { term: 1, rocYear: month === 1 ? year - 1912 : year - 1911 };
+  }
+  if (summerBreak || (month >= 2 && month <= 7)) {
+    return { term: 2, rocYear: year - 1912 };
+  }
+  return undefined;
+};
+
 const idForCalendarDate = (
   date: string,
   summary: string,
   boundary: "begin" | "break",
 ): string | undefined => {
-  const labelYear = academicYearFromLabel(summary);
-  const labelTerm = termFromLabel(summary);
-  const [year, month] = date.split("-").map(Number);
-  let term = labelTerm;
-  let rocYear = labelYear;
-
-  if (term === undefined || rocYear === undefined) {
-    if (boundary === "break" && /寒假|冬假|winter/iu.test(summary)) {
-      term ??= 1;
-      rocYear ??= month! === 1 ? year! - 1912 : year! - 1911;
-    } else if (boundary === "break" && /暑假|summer/iu.test(summary)) {
-      term ??= 2;
-      rocYear ??= year! - 1912;
-    } else if (month! >= 8 || month! <= 1) {
-      term ??= 1;
-      rocYear ??= month! === 1 ? year! - 1912 : year! - 1911;
-    } else if (month! >= 2 && month! <= 7) {
-      term ??= 2;
-      rocYear ??= year! - 1912;
-    }
-  }
-
+  const fallback = fallbackSemesterForDate(date, summary, boundary);
+  const term = termFromLabel(summary) ?? fallback?.term;
+  const rocYear = academicYearFromLabel(summary) ?? fallback?.rocYear;
   if (rocYear === undefined || term === undefined) return undefined;
   return `${String(rocYear).padStart(3, "0")}${term}0`;
 };
@@ -242,9 +263,7 @@ const daysInclusive = (begins: string, ends: string) =>
     86_400_000 +
   1;
 
-const asSemesterNeighbor = (
-  row: Pick<SemesterDate, "id" | "begins" | "ends">,
-) => {
+const asSemesterNeighbor = (row: SemesterDateRange) => {
   const [year, startMonth, startDay] = row.begins.split("-").map(Number);
   const [endYear, endMonth, endDay] = row.ends.split("-").map(Number);
   return {
@@ -268,11 +287,8 @@ const monthIsPlausible = (id: string, begins: string, ends: string) => {
 };
 
 export const validateSemesterDate = (
-  candidate: Pick<SemesterDate, "id" | "begins" | "ends">,
-  neighbours: readonly Pick<
-    SemesterInfo,
-    "id" | "begins" | "ends"
-  >[] = bundledSemesterInfo,
+  candidate: SemesterDateRange,
+  neighbours: readonly SemesterNeighbor[] = bundledSemesterInfo,
 ): string[] => {
   const errors: string[] = [];
   const begins = asDateKey(candidate.begins);
@@ -342,27 +358,103 @@ const validateLlmCandidate = (
   const parsed = llmSemesterSchema.safeParse(value);
   if (!parsed.success || parsed.data.semesterId !== id) return undefined;
   const { begins, ends, beginsEvidence, endsEvidence } = parsed.data;
-  const beginEvent = evidence.begins.find(
+  const hasBeginEvent = evidence.begins.some(
     (item) => item.date === begins && item.summary.includes(beginsEvidence),
   );
-  const breakEvent = evidence.breaks.find(
+  const hasBreakEvent = evidence.breaks.some(
     (item) =>
       item.date === shiftDate(ends, 1) &&
       item.summary.includes(endsEvidence) &&
       /(?:寒假|冬假|暑假|winter|summer|break|vacation)/iu.test(item.summary),
   );
-  if (!beginEvent || !breakEvent) return undefined;
+  if (!hasBeginEvent || !hasBreakEvent) return undefined;
   return { begins, ends };
+};
+
+const ruleCandidateFromEvidence = (
+  evidence: SemesterEvidence,
+): Pick<SemesterDate, "begins" | "ends"> | undefined => {
+  const begins = [...evidence.ruleBegins].sort((left, right) =>
+    left.date.localeCompare(right.date),
+  )[0];
+  if (!begins) return undefined;
+  const breakStart = evidence.ruleBreaks
+    .filter((item) => item.date > begins.date)
+    .sort((left, right) => left.date.localeCompare(right.date))[0];
+  return breakStart
+    ? { begins: begins.date, ends: shiftDate(breakStart.date, -1) }
+    : undefined;
+};
+
+const llmCandidateFromEvidence = async (
+  id: string,
+  evidence: SemesterEvidence,
+  env: LlmEnv,
+  llmExtractor: SemesterLlmExtractor,
+) => {
+  try {
+    return validateLlmCandidate(
+      await llmExtractor({ id, sourceText: evidenceText(evidence), env }),
+      id,
+      evidence,
+    );
+  } catch (error) {
+    console.warn(`[semester-dates] LLM extraction failed for ${id}`, error);
+    return undefined;
+  }
+};
+
+const extractSemesterDateRow = async (
+  id: string,
+  evidence: SemesterEvidence,
+  env: LlmEnv,
+  llmExtractor: SemesterLlmExtractor,
+  neighbours: readonly SemesterNeighbor[],
+): Promise<{ row?: SemesterDate; failed: boolean }> => {
+  let candidate = ruleCandidateFromEvidence(evidence);
+  let extractionMethod: SemesterDate["extractionMethod"] = "rules";
+  if (
+    !candidate ||
+    validateSemesterDate({ id, ...candidate }, neighbours).length
+  ) {
+    const parsed = await llmCandidateFromEvidence(
+      id,
+      evidence,
+      env,
+      llmExtractor,
+    );
+    if (parsed) {
+      candidate = parsed;
+      extractionMethod = "llm";
+    }
+  }
+
+  if (!candidate) {
+    return {
+      failed: Boolean(evidence.begins.length || evidence.breaks.length),
+    };
+  }
+  const errors = validateSemesterDate({ id, ...candidate }, neighbours);
+  if (errors.length) {
+    console.warn(`[semester-dates] rejected ${id}: ${errors.join(", ")}`);
+    return { failed: true };
+  }
+  return {
+    row: {
+      id,
+      ...candidate,
+      sourceText: evidenceText(evidence),
+      extractionMethod,
+    },
+    failed: false,
+  };
 };
 
 export async function extractSemesterDates(
   events: readonly CalendarEvent[],
   env: LlmEnv,
   llmExtractor: SemesterLlmExtractor = defaultSemesterLlmExtractor,
-  neighbours: readonly Pick<
-    SemesterInfo,
-    "id" | "begins" | "ends"
-  >[] = bundledSemesterInfo,
+  neighbours: readonly SemesterNeighbor[] = bundledSemesterInfo,
 ): Promise<{ rows: SemesterDate[]; failed: string[] }> {
   const grouped = collectEvidence(events);
   const rows: SemesterDate[] = [];
@@ -371,53 +463,18 @@ export async function extractSemesterDates(
   for (const id of [...grouped.keys()].sort((left, right) =>
     left.localeCompare(right),
   )) {
-    const evidence = grouped.get(id)!;
+    const evidence = grouped.get(id);
+    if (!evidence) continue;
     const knownNeighbours = [...neighbours, ...rows.map(asSemesterNeighbor)];
-    const begins = [...evidence.ruleBegins].sort((left, right) =>
-      left.date.localeCompare(right.date),
-    )[0];
-    const breakStart = begins
-      ? evidence.ruleBreaks
-          .filter((item) => item.date > begins.date)
-          .sort((left, right) => left.date.localeCompare(right.date))[0]
-      : undefined;
-    let candidate =
-      begins && breakStart
-        ? { begins: begins.date, ends: shiftDate(breakStart.date, -1) }
-        : undefined;
-    let extractionMethod: SemesterDate["extractionMethod"] = "rules";
-
-    if (
-      !candidate ||
-      validateSemesterDate({ id, ...candidate }, knownNeighbours).length
-    ) {
-      try {
-        const parsed = validateLlmCandidate(
-          await llmExtractor({ id, sourceText: evidenceText(evidence), env }),
-          id,
-          evidence,
-        );
-        if (parsed) {
-          candidate = parsed;
-          extractionMethod = "llm";
-        }
-      } catch (error) {
-        console.warn(`[semester-dates] LLM extraction failed for ${id}`, error);
-      }
-    }
-
-    if (!candidate) {
-      if (evidence.begins.length || evidence.breaks.length) failed.push(id);
-      continue;
-    }
-    const errors = validateSemesterDate({ id, ...candidate }, knownNeighbours);
-    if (errors.length) {
-      console.warn(`[semester-dates] rejected ${id}: ${errors.join(", ")}`);
-      failed.push(id);
-      continue;
-    }
-    const sourceText = evidenceText(evidence);
-    rows.push({ id, ...candidate, sourceText, extractionMethod });
+    const result = await extractSemesterDateRow(
+      id,
+      evidence,
+      env,
+      llmExtractor,
+      knownNeighbours,
+    );
+    if (result.row) rows.push(result.row);
+    if (result.failed) failed.push(id);
   }
   return { rows, failed };
 }

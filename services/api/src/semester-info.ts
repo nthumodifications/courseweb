@@ -13,37 +13,54 @@ export type SemesterInfo = {
   estimated?: boolean;
 };
 
-const bundledSemesterInfo: SemesterInfo[] = `
-10810|2019|1|2019-09-09|2020-01-12|true
-10820|2019|2|2020-02-17|2020-06-21|true
-10910|2020|1|2020-09-14|2021-01-29|true
-10920|2020|2|2021-02-22|2021-06-25|true
-11010|2021|1|2021-09-13|2022-01-14|true
-11020|2021|2|2022-02-14|2022-06-17|true
-11110|2022|1|2022-09-12|2023-01-13|true
-11120|2022|2|2023-02-13|2023-06-16|true
-11210|2023|1|2023-09-11|2024-01-12|true
-11220|2023|2|2024-02-19|2024-06-23|true
-11310|2024|1|2024-09-02|2024-12-22|true
-11320|2024|2|2025-02-17|2025-06-08|true
-11410|2025|1|2025-09-01|2025-12-21|true
-11420|2025|2|2026-02-23|2026-06-14|true
-11510|2026|1|2026-09-07|2026-12-27|true
-11520|2026|2|2027-02-15|2027-06-06|false
-`
-  .trim()
-  .split("\n")
-  .map((line) => {
-    const [id, year, semester, begins, ends, hasCourses] = line.split("|");
-    return {
-      id: id!,
-      year: Number(year),
-      semester: Number(semester),
-      begins: new Date(`${begins}T00:00:00`),
-      ends: new Date(`${ends}T00:00:00`),
-      hasCourses: hasCourses === "true",
-    };
-  });
+type BundledSemesterRow = readonly [
+  id: string,
+  begins: string,
+  ends: string,
+  hasCourses?: boolean,
+];
+
+const parseBundledDate = (value: string) =>
+  new Date(
+    Number(value.slice(0, 4)),
+    Number(value.slice(5, 7)) - 1,
+    Number(value.slice(8, 10)),
+  );
+
+const parseBundledSemester = ([
+  id,
+  begins,
+  ends,
+  hasCourses = true,
+]: BundledSemesterRow): SemesterInfo => ({
+  id,
+  year: Number(id.slice(0, 3)) + 1911,
+  semester: Number(id.slice(3, 4)),
+  begins: parseBundledDate(begins),
+  ends: parseBundledDate(ends),
+  hasCourses,
+});
+
+const bundledSemesterRows: BundledSemesterRow[] = [
+  ["10810", "2019-09-09", "2020-01-12"],
+  ["10820", "2020-02-17", "2020-06-21"],
+  ["10910", "2020-09-14", "2021-01-29"],
+  ["10920", "2021-02-22", "2021-06-25"],
+  ["11010", "2021-09-13", "2022-01-14"],
+  ["11020", "2022-02-14", "2022-06-17"],
+  ["11110", "2022-09-12", "2023-01-13"],
+  ["11120", "2023-02-13", "2023-06-16"],
+  ["11210", "2023-09-11", "2024-01-12"],
+  ["11220", "2024-02-19", "2024-06-23"],
+  ["11310", "2024-09-02", "2024-12-22"],
+  ["11320", "2025-02-17", "2025-06-08"],
+  ["11410", "2025-09-01", "2025-12-21"],
+  ["11420", "2026-02-23", "2026-06-14"],
+  ["11510", "2026-09-07", "2026-12-27"],
+  ["11520", "2027-02-15", "2027-06-06", false],
+];
+
+const bundledSemesterInfo = bundledSemesterRows.map(parseBundledSemester);
 
 export const semesterInfo: SemesterInfo[] = [...bundledSemesterInfo];
 

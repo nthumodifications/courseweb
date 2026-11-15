@@ -285,41 +285,45 @@ type StoredCourses = Record<string, string[]>;
 // Bundled mirror of packages/shared/src/constants/semester.ts used when the
 // public API is unavailable. Runtime rows come from GET /semesters and are
 // cached in memory so this service follows the public API's live semester data.
-const parseSemesterDate = (value: string) => {
-  const [year, month, day] = value.split(",").map(Number);
-  return new Date(year!, month!, day!);
-};
-
 type SemesterInfo = { id: string; begins: Date; ends: Date };
 
-export const SEMESTER_INFO: SemesterInfo[] = `
-10810|2019,8,9|2020,0,12
-10820|2020,1,17|2020,5,21
-10910|2020,8,14|2021,0,29
-10920|2021,1,22|2021,5,25
-11010|2021,8,13|2022,0,14
-11020|2022,1,14|2022,5,17
-11110|2022,8,12|2023,0,13
-11120|2023,1,13|2023,5,16
-11210|2023,8,11|2024,0,12
-11220|2024,1,19|2024,5,23
-11310|2024,8,2|2024,11,22
-11320|2025,1,17|2025,5,8
-11410|2025,8,1|2025,11,21
-11420|2026,1,23|2026,5,14
-11510|2026,8,7|2026,11,27
-11520|2027,1,15|2027,5,6
-`
-  .trim()
-  .split("\n")
-  .map((row) => {
-    const [id, begins, ends] = row.split("|");
-    return {
-      id: id!,
-      begins: parseSemesterDate(begins!),
-      ends: parseSemesterDate(ends!),
-    };
-  });
+type BundledSemesterRow = readonly [id: string, begins: string, ends: string];
+
+const parseSemesterDate = (value: string) =>
+  new Date(
+    Number(value.slice(0, 4)),
+    Number(value.slice(5, 7)) - 1,
+    Number(value.slice(8, 10)),
+  );
+
+const parseSemesterRow = ([
+  id,
+  begins,
+  ends,
+]: BundledSemesterRow): SemesterInfo => ({
+  id,
+  begins: parseSemesterDate(begins),
+  ends: parseSemesterDate(ends),
+});
+
+export const SEMESTER_INFO: SemesterInfo[] = [
+  ["10810", "2019-09-09", "2020-01-12"],
+  ["10820", "2020-02-17", "2020-06-21"],
+  ["10910", "2020-09-14", "2021-01-29"],
+  ["10920", "2021-02-22", "2021-06-25"],
+  ["11010", "2021-09-13", "2022-01-14"],
+  ["11020", "2022-02-14", "2022-06-17"],
+  ["11110", "2022-09-12", "2023-01-13"],
+  ["11120", "2023-02-13", "2023-06-16"],
+  ["11210", "2023-09-11", "2024-01-12"],
+  ["11220", "2024-02-19", "2024-06-23"],
+  ["11310", "2024-09-02", "2024-12-22"],
+  ["11320", "2025-02-17", "2025-06-08"],
+  ["11410", "2025-09-01", "2025-12-21"],
+  ["11420", "2026-02-23", "2026-06-14"],
+  ["11510", "2026-09-07", "2026-12-27"],
+  ["11520", "2027-02-15", "2027-06-06"],
+].map(parseSemesterRow);
 
 type SemesterInfoCacheEntry = {
   expiresAt: number;

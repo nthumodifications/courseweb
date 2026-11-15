@@ -39,7 +39,7 @@ const SemesterSelector = () => {
     if (
       shouldDefaultSemester({
         canRefine,
-        hasRefinedItem: Boolean(items.find((item) => item.isRefined)),
+        hasRefinedItem: items.some((item) => item.isRefined),
         refinedSemester: selected,
         hasExplicitSemester: false,
         hasUserSelectedSemester: hasUserSelectedSemester.current,

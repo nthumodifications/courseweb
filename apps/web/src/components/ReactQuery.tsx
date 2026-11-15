@@ -9,9 +9,8 @@ import {
   persistQueryClientSave,
   type Persister,
 } from "@tanstack/react-query-persist-client";
-import { PropsWithChildren } from "react";
+import { useEffect, type PropsWithChildren } from "react";
 import { createIDBPersister } from "@/lib/idb_persister";
-import { useEffect } from "react";
 import { subscribeSemesters } from "@courseweb/shared";
 
 const queryClient = new QueryClient({

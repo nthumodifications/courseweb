@@ -32,4 +32,5 @@ const refreshSemesters = async () => {
 };
 
 readCachedSemesters();
+// Refresh in the background so the semester request cannot delay first paint.
 void refreshSemesters();
