@@ -61,7 +61,7 @@ const SemesterSwitcher = ({
           <ChevronRight />
         </Button>
       </div>
-      <div className="px-4">
+      <div className="w-full min-w-0 px-4 md:w-auto md:flex-none">
         <NewSemesterPrompt onView={setSemester} />
       </div>
     </>

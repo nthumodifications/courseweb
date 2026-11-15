@@ -10,6 +10,7 @@ export type SemesterInfo = {
   begins: Date;
   ends: Date;
   hasCourses: boolean;
+  estimated?: boolean;
 };
 
 const bundledSemesters: SemesterInfo[] = [
@@ -213,6 +214,7 @@ const parseSemesterRow = (value: unknown): SemesterInfo | undefined => {
     begins,
     ends,
     hasCourses: row.hasCourses === true,
+    estimated: row.estimated === true,
   };
 };
 
@@ -256,7 +258,8 @@ const sameSemesterRows = (
       row.id === other?.id &&
       row.begins.getTime() === other.begins.getTime() &&
       row.ends.getTime() === other.ends.getTime() &&
-      row.hasCourses === other.hasCourses
+      row.hasCourses === other.hasCourses &&
+      row.estimated === other.estimated
     );
   });
 
@@ -308,17 +311,25 @@ export const getDefaultSemester = (
   date = new Date(),
   semesters: readonly SemesterInfo[] = semesterInfo,
 ) => {
-  const current = getSemester(date, semesters);
+  const academicSemesters = semesters.filter((semester) =>
+    /(?:10|20)$/.test(semester.id),
+  );
+  const current = getSemester(date, academicSemesters);
   if (current) return current;
-  const withCourses = semesters.filter((semester) => semester.hasCourses);
+  const withCourses = academicSemesters.filter(
+    (semester) => semester.hasCourses,
+  );
   const firstFuture = withCourses.find((semester) => semester.begins > date);
-  if (!semesters.some((semester) => semester.begins <= date)) {
-    return firstFuture ?? withCourses[0] ?? semesters[0]!;
+  if (!academicSemesters.some((semester) => semester.begins <= date)) {
+    return (
+      firstFuture ?? withCourses[0] ?? academicSemesters[0] ?? semesters[0]!
+    );
   }
   return (
     firstFuture ??
     [...withCourses].reverse().find((semester) => semester.ends < date) ??
     withCourses.at(-1) ??
+    academicSemesters[0] ??
     semesters[0]!
   );
 };
@@ -328,9 +339,12 @@ export const getNextCourseSemester = (
   date = new Date(),
   semesters: readonly SemesterInfo[] = semesterInfo,
 ) => {
-  const current = getSemester(date, semesters);
+  const academicSemesters = semesters.filter((semester) =>
+    /(?:10|20)$/.test(semester.id),
+  );
+  const current = getSemester(date, academicSemesters);
   if (!current) return undefined;
-  return semesters.find(
+  return academicSemesters.find(
     (semester) => semester.id > current.id && semester.hasCourses,
   );
 };

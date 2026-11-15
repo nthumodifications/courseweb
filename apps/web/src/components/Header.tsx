@@ -40,12 +40,12 @@ const Header = () => {
   };
 
   return (
-    <header className="h-[--header-height] w-full bg-background border-border border-b px-2 md:px-4 py-4 md:col-span-2 flex flex-row items-center z-50 gap-4 sticky top-0">
+    <header className="h-auto min-h-[--header-height] w-full bg-background border-border border-b px-2 md:px-4 py-2 md:h-[--header-height] md:py-4 md:col-span-2 flex flex-row items-center z-50 gap-4 sticky top-0">
       <SidebarTrigger />
-      <div className="flex flex-1 items-center">
+      <div className="flex min-w-0 flex-1 items-center">
         <div
           id="header-portal-container"
-          className="flex-1 flex justify-center"
+          className="flex min-w-0 flex-1 justify-center"
         />
         <HeaderPortalOutlet />
       </div>

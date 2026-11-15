@@ -58,6 +58,24 @@ describe("semester resolution", () => {
     );
   });
 
+  test("does not let a course-bearing summer become the default or prompt target", () => {
+    const withSummer = [
+      ...semesters,
+      row("11530", "2027-06-14", "2027-08-27"),
+      row("11610", "2027-09-06", "2027-12-26"),
+    ];
+
+    expect(getDefaultSemester(new Date("2027-07-01"), withSummer).id).toBe(
+      "11610",
+    );
+    expect(
+      getNextCourseSemester(new Date("2027-07-01"), withSummer),
+    ).toBeUndefined();
+    expect(getNextCourseSemester(new Date("2027-04-01"), withSummer)?.id).toBe(
+      "11610",
+    );
+  });
+
   test("after the last known date, keeps the newest semester with courses", () => {
     expect(getDefaultSemester(new Date("2028-01-01"), semesters).id).toBe(
       "11510",
@@ -106,6 +124,44 @@ describe("semester merge", () => {
     expect(merged.find((semester) => semester.id === "11530")?.hasCourses).toBe(
       true,
     );
+  });
+
+  test("replaces an estimated API semester when scraped dates arrive", () => {
+    const estimated = mergeSemesterRows(
+      [
+        {
+          id: "11610",
+          begins: "2027-09-07",
+          ends: "2027-12-27",
+          hasCourses: true,
+          estimated: true,
+        },
+      ],
+      new Date("2027-06-20"),
+    );
+    expect(estimated.find((semester) => semester.id === "11610")).toMatchObject(
+      { estimated: true },
+    );
+
+    const withRealDates = mergeSemesterRows(
+      [
+        {
+          id: "11610",
+          begins: "2027-09-06",
+          ends: "2027-12-26",
+          hasCourses: true,
+          estimated: false,
+        },
+      ],
+      new Date("2027-06-20"),
+    );
+    expect(
+      withRealDates.find((semester) => semester.id === "11610"),
+    ).toMatchObject({
+      begins: new Date(2027, 8, 6),
+      ends: new Date(2027, 11, 26),
+      estimated: false,
+    });
   });
 
   test("keeps bundled dates authoritative after a semester has ended", () => {

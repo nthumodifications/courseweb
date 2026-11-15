@@ -56,17 +56,18 @@ export const chooseSemestersToSync = (
     [...ordered].reverse().find((semester) => semester.begins <= date) ??
     ordered[0];
   const currentId = current?.id ?? fallbackCurrentId(date);
-  const immediateNext = nextSemesterId(currentId);
-  const knownImmediateNext = ordered.some(
-    (semester) => semester.id === immediateNext,
+  const next = nextSemesterId(currentId);
+  const afterNext = next ? nextSemesterId(next) : undefined;
+  const sequentialCandidates = [next, afterNext].filter(
+    (id): id is string => id !== undefined && id !== currentId,
   );
-  const nextDated = ordered.find(
-    (semester) => semester.id > currentId && semester.begins > date,
-  )?.id;
-  const next = knownImmediateNext
-    ? immediateNext
-    : (nextDated ?? immediateNext);
-  return next && next !== currentId ? [currentId, next] : [currentId];
+  const datedCandidates = ordered
+    .filter((semester) => semester.id > currentId && semester.begins > date)
+    .map((semester) => semester.id);
+  const upcoming = [
+    ...new Set([...sequentialCandidates, ...datedCandidates]),
+  ].slice(0, 3);
+  return [currentId, ...upcoming];
 };
 
 export const fetchAutoSyncSemesters = async (

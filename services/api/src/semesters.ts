@@ -9,6 +9,7 @@ export type SemesterResponse = {
   begins: string;
   ends: string;
   hasCourses: boolean;
+  estimated: boolean;
 };
 
 type SemesterDateRow = {
@@ -114,33 +115,65 @@ export const buildSemesterResponse = async (options: {
 }): Promise<SemesterResponse[]> => {
   const now = options.now ?? new Date();
   const relevantIds = new Set(relevantCourseCountIds(options.semesters, now));
-  const response = await Promise.all(
-    options.semesters.map(async (row) => {
-      let hasCourses = row.hasCourses;
-      if (
-        relevantIds.has(row.id) &&
-        options.supabaseUrl &&
-        options.serviceRoleKey
-      ) {
-        const count = await getCourseCount(
-          row.id,
-          options.supabaseUrl,
-          options.serviceRoleKey,
-          now.getTime(),
-          options.fetcher ?? fetch,
-        );
-        if (count !== undefined) hasCourses = count > 0;
-      }
-      return {
-        id: row.id,
-        year: row.year,
-        semester: row.semester,
-        begins: dateKey(row.begins),
-        ends: dateKey(row.ends),
-        hasCourses,
-      };
-    }),
-  );
+  const courseCounts = new Map<string, number>();
+  if (options.supabaseUrl && options.serviceRoleKey) {
+    const counts = await Promise.all(
+      [...relevantIds].map(
+        async (id) =>
+          [
+            id,
+            await getCourseCount(
+              id,
+              options.supabaseUrl!,
+              options.serviceRoleKey!,
+              now.getTime(),
+              options.fetcher ?? fetch,
+            ),
+          ] as const,
+      ),
+    );
+    for (const [id, count] of counts) {
+      if (count !== undefined) courseCounts.set(id, count);
+    }
+  }
+
+  const knownIds = new Set(options.semesters.map((row) => row.id));
+  const response: SemesterResponse[] = options.semesters.map((row) => ({
+    id: row.id,
+    year: row.year,
+    semester: row.semester,
+    begins: dateKey(row.begins),
+    ends: dateKey(row.ends),
+    hasCourses: courseCounts.has(row.id)
+      ? courseCounts.get(row.id)! > 0
+      : row.hasCourses,
+    estimated: false,
+  }));
+
+  for (const id of relevantIds) {
+    const count = courseCounts.get(id);
+    if (knownIds.has(id) || count === undefined || count === 0) continue;
+    const match = /^(\d{3})(10|20|30)$/.exec(id);
+    if (!match) continue;
+    const priorYearId = `${String(Number(match[1]) - 1).padStart(3, "0")}${match[2]}`;
+    const priorYear = options.semesters.find(
+      (semester) => semester.id === priorYearId,
+    );
+    if (!priorYear) continue;
+    const addYear = (date: Date) =>
+      new Date(date.getFullYear() + 1, date.getMonth(), date.getDate());
+    const begins = addYear(priorYear.begins);
+    const ends = addYear(priorYear.ends);
+    response.push({
+      id,
+      year: Number(match[1]) + 1911,
+      semester: Number(match[2][0]),
+      begins: dateKey(begins),
+      ends: dateKey(ends),
+      hasCourses: true,
+      estimated: true,
+    });
+  }
   return response.sort((left, right) => left.id.localeCompare(right.id));
 };
 

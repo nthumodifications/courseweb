@@ -22,6 +22,15 @@ describe("semester API data", () => {
     expect(ids).toContain("11530");
   });
 
+  it("counts next-two candidate IDs even when they have no date rows", () => {
+    const rows = semesterInfo.filter((row) =>
+      ["11510", "11520"].includes(row.id),
+    );
+    expect(
+      relevantCourseCountIds(rows, new Date("2027-06-20T12:00:00Z")),
+    ).toContain("11610");
+  });
+
   it("keeps bundled course availability for older rows outside the live count window", async () => {
     const response = await buildSemesterResponse({
       semesters: semesterInfo,
@@ -66,6 +75,7 @@ describe("semester API data", () => {
         begins: "2027-02-15",
         ends: "2027-06-06",
         hasCourses: true,
+        estimated: false,
       });
       expect(requests).toContain("eq.11520");
 
@@ -110,5 +120,38 @@ describe("semester API data", () => {
       setSystemTime(originalNow);
       clearSemesterCourseCountCache();
     }
+  });
+
+  it("returns a course-bearing undated candidate with dates estimated from last year", async () => {
+    const rows = semesterInfo.filter((row) =>
+      ["11510", "11520"].includes(row.id),
+    );
+    const requested: string[] = [];
+    clearSemesterCourseCountCache();
+    const result = await buildSemesterResponse({
+      semesters: rows,
+      now: new Date("2027-06-20T12:00:00Z"),
+      supabaseUrl: "https://supabase.example",
+      serviceRoleKey: "test-key",
+      fetcher: (async (input: RequestInfo | URL) => {
+        const semester = new URL(String(input)).searchParams.get("semester");
+        requested.push(semester ?? "");
+        return new Response(null, {
+          status: 200,
+          headers: {
+            "Content-Range": `0-0/${semester === "eq.11610" ? 4 : 0}`,
+          },
+        });
+      }) as typeof fetch,
+    });
+
+    expect(requested).toContain("eq.11610");
+    expect(result.find((row) => row.id === "11610")).toMatchObject({
+      begins: "2027-09-07",
+      ends: "2027-12-27",
+      hasCourses: true,
+      estimated: true,
+    });
+    clearSemesterCourseCountCache();
   });
 });

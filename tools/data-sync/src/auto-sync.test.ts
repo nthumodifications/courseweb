@@ -13,30 +13,32 @@ const semesters: AutoSyncSemester[] = [
 ];
 
 describe("automatic semester sync selection", () => {
-  it("uses the active semester and its next dated term", () => {
+  it("probes the next two IDs and the next dated future term", () => {
     expect(
       chooseSemestersToSync(new Date("2026-10-09T12:00:00Z"), semesters),
-    ).toEqual(["11510", "11520"]);
+    ).toEqual(["11510", "11520", "11530", "11610"]);
   });
 
-  it("uses the most recent term during a break and probes the next dated term", () => {
+  it("probes the next two IDs during a break even when the first is missing dates", () => {
     expect(
       chooseSemestersToSync(new Date("2027-06-20T12:00:00Z"), semesters),
-    ).toEqual(["11520", "11610"]);
+    ).toEqual(["11520", "11530", "11610"]);
   });
 
-  it("probes a known summer term before the next fall term", () => {
+  it("includes dated future terms, deduplicates, and caps upcoming probes at three", () => {
     expect(
       chooseSemestersToSync(new Date("2027-06-10T12:00:00Z"), [
         ...semesters,
         { id: "11530", begins: "2027-06-14", ends: "2027-08-27" },
+        { id: "11620", begins: "2028-02-14", ends: "2028-06-04" },
+        { id: "11630", begins: "2028-06-12", ends: "2028-08-25" },
       ]),
-    ).toEqual(["11520", "11530"]);
+    ).toEqual(["11520", "11530", "11610", "11620"]);
   });
 
   it("selects a current term from Taipei date if the calendar API is unavailable", () => {
     expect(chooseSemestersToSync(new Date("2026-10-09T16:05:00Z"), [])).toEqual(
-      ["11510", "11520"],
+      ["11510", "11520", "11530"],
     );
   });
 
@@ -61,10 +63,11 @@ describe("automatic semester sync selection", () => {
     });
 
     expect(result.success).toBe(true);
-    expect(result.semesters).toEqual(["11510", "11520"]);
+    expect(result.semesters).toEqual(["11510", "11520", "11530"]);
     expect(calls).toEqual([
       { semester: "11510", skipIfEmpty: false },
       { semester: "11520", skipIfEmpty: true },
+      { semester: "11530", skipIfEmpty: true },
     ]);
   });
 });
