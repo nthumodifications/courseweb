@@ -102,6 +102,13 @@ const TREND_SEMESTER_LIMIT = 8;
 const NEW_MODULE_LOOKBACK = 4;
 const TIME_CODE = /([MTWRFSU])([1-9nabcd])/gi;
 
+export const getCourseInsightHistorySemesters = (semester: string) =>
+  semesterInfo
+    .filter((item) => item.id < semester)
+    .sort((left, right) => left.id.localeCompare(right.id))
+    .slice(-(TREND_SEMESTER_LIMIT - 1))
+    .map((item) => item.id);
+
 const moduleKey = (
   row: Pick<CourseInsightHistoryRow, "department" | "course">,
 ) => `${row.department}:${row.course.replace(/\s+/g, "")}`;
@@ -293,20 +300,25 @@ export const buildCourseInsights = (
   const comparisonRows = comparisonSemester
     ? historyRows.filter((row) => row.semester === comparisonSemester)
     : [];
-  const comparison = comparisonSemester
-    ? summarizeCourseRows(comparisonRows)
-    : null;
+  const comparison =
+    comparisonSemester && comparisonRows.length > 0
+      ? summarizeCourseRows(comparisonRows)
+      : null;
   const priorSemesters = semesterInfo
     .filter((item) => item.id < semester)
     .map((item) => item.id)
     .slice(-NEW_MODULE_LOOKBACK);
-  const priorSemesterIds = new Set(priorSemesters);
+  const semestersWithRows = new Set(historyRows.map((row) => row.semester));
+  const coveredPriorSemesters = priorSemesters.filter((item) =>
+    semestersWithRows.has(item),
+  );
+  const priorSemesterIds = new Set(coveredPriorSemesters);
   const previousModules = summarizeModules(
     historyRows.filter((row) => priorSemesterIds.has(row.semester)),
   );
   const currentModules = summarizeModules(currentRows);
   const newModules =
-    priorSemesters.length === NEW_MODULE_LOOKBACK
+    coveredPriorSemesters.length === NEW_MODULE_LOOKBACK
       ? [...currentModules.values()]
           .filter((item) => !previousModules.has(item.key))
           .sort(compareModules)
@@ -373,7 +385,7 @@ export const buildCourseInsights = (
     fullestCourses,
     departments: getDepartmentDemand(currentRows),
     schedule: getScheduleCounts(currentRows),
-    newLookback: priorSemesters.length,
+    newLookback: coveredPriorSemesters.length,
     newModules,
     discontinuedModules,
     trends,

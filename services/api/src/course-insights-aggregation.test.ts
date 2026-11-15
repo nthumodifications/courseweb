@@ -1,6 +1,8 @@
 import { describe, expect, it } from "bun:test";
+import { lastSemester } from "@courseweb/shared";
 import {
   buildCourseInsights,
+  getCourseInsightHistorySemesters,
   summarizeCourseRows,
   type CourseInsightCurrentRow,
   type CourseInsightHistoryRow,
@@ -102,6 +104,8 @@ describe("course insights aggregation", () => {
       }),
     ];
     const history = [
+      historyRow("11310CS 101000", "11310", "CS", "1010"),
+      historyRow("11320CS 101000", "11320", "CS", "1010"),
       historyRow("11410CS 101000", "11410", "CS", "1010"),
       historyRow("11410BI 404000", "11410", "BI", "4040"),
       historyRow("11420CS 101000", "11420", "CS", "1010"),
@@ -144,5 +148,30 @@ describe("course insights aggregation", () => {
         sections: 1,
       },
     ]);
+  });
+
+  it("does not claim comparison or new-module coverage without prior rows", () => {
+    const insights = buildCourseInsights(
+      "10910",
+      [],
+      [
+        {
+          ...currentRow("10910CS 101000", "CS", "1010"),
+          semester: "10910",
+        },
+      ],
+    );
+
+    expect(insights.comparisonSemester).toBe("10810");
+    expect(insights.comparison).toBeNull();
+    expect(insights.newLookback).toBe(0);
+    expect(insights.newModules).toEqual([]);
+  });
+
+  it("loads only the history needed for the eight-term trend", () => {
+    const history = getCourseInsightHistorySemesters(lastSemester.id);
+
+    expect(history).toHaveLength(7);
+    expect(history.every((semester) => semester < lastSemester.id)).toBe(true);
   });
 });

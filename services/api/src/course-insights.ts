@@ -5,8 +5,10 @@ import { z } from "zod";
 import supabase_server from "./config/supabase_server";
 import {
   buildCourseInsights,
+  getCourseInsightHistorySemesters,
   type CourseInsightCurrentRow,
   type CourseInsightHistoryRow,
+  type CourseInsightsResponse,
 } from "./course-insights-aggregation";
 
 const PAGE_SIZE = 1_000;
@@ -85,9 +87,7 @@ export const loadCourseInsightData: CourseInsightDataLoader = async (
   context,
   semester,
 ) => {
-  const priorSemesters = semesterInfo
-    .filter((item) => item.id < semester)
-    .map((item) => item.id);
+  const priorSemesters = getCourseInsightHistorySemesters(semester);
   const [historyRows, currentRows] = await Promise.all([
     loadHistoryRows(context, priorSemesters),
     loadCurrentRows(context, semester),
@@ -119,10 +119,16 @@ export const createCourseInsightsApp = (
     const cacheKeyUrl = new URL(c.req.url);
     cacheKeyUrl.search = new URLSearchParams({ semester }).toString();
     const cacheKey = new Request(cacheKeyUrl.toString());
+    const cacheControl =
+      semester === lastSemester.id ? CURRENT_CACHE_CONTROL : PAST_CACHE_CONTROL;
     if (cache) {
       try {
         const cached = await cache.match(cacheKey);
-        if (cached) return cached;
+        if (cached) {
+          return c.json((await cached.json()) as CourseInsightsResponse, 200, {
+            "Cache-Control": cacheControl,
+          });
+        }
       } catch (error) {
         console.error("Failed to read course insights cache", error);
       }
@@ -130,8 +136,6 @@ export const createCourseInsightsApp = (
 
     const { historyRows, currentRows } = await loadData(c, semester);
     const payload = buildCourseInsights(semester, historyRows, currentRows);
-    const cacheControl =
-      semester === lastSemester.id ? CURRENT_CACHE_CONTROL : PAST_CACHE_CONTROL;
     const response = c.json(payload, 200, { "Cache-Control": cacheControl });
 
     if (cache) {
