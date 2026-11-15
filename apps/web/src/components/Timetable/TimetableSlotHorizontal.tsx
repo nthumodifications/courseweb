@@ -1,6 +1,6 @@
 import { useSettings } from "@/hooks/contexts/settings";
 import { CourseTimeslotData, TimetableDim } from "@/types/timetable";
-import { forwardRef, HTMLAttributes } from "react";
+import { cloneElement, forwardRef, HTMLAttributes } from "react";
 import { VenueChip } from "./VenueChip";
 import { scheduleTimeSlots } from "@courseweb/shared";
 import useUserTimetable, {
@@ -20,7 +20,7 @@ import {
   timetableGridStart,
 } from "@/helpers/timetable";
 import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
-import { FitTextField, useTimetableSlotFitText } from "./FitText";
+import { useTimetableSlotFitText } from "./FitText";
 
 type TimetableSlotProps = {
   course: CourseTimeslotData;
@@ -83,6 +83,10 @@ const TimetableSlotHorizontal = forwardRef<HTMLDivElement, TimetableSlotProps>(
     const preBandSize = extendedHours?.pre?.size ?? 0;
     const gridWidth = tableDim.timetable.width * scheduleTimeSlots.length;
     const gridMinutes = timetableGridEnd - timetableGridStart;
+    const slotHeight =
+      customSlot && customRange
+        ? Math.max(tableDim.timetable.height / fraction - 4, 24)
+        : tableDim.timetable.height / fraction - 4;
     const showCustomTime =
       customRange !== null &&
       (customRange.start < timetableGridStart ||
@@ -95,7 +99,7 @@ const TimetableSlotHorizontal = forwardRef<HTMLDivElement, TimetableSlotProps>(
 
     const {
       containerRef: fitTextRef,
-      hiddenFields,
+      overflowsAtMinimum,
       style: fitTextStyle,
     } = useTimetableSlotFitText({
       baseFontSize,
@@ -107,15 +111,7 @@ const TimetableSlotHorizontal = forwardRef<HTMLDivElement, TimetableSlotProps>(
       slot: course,
     });
     const fitField = (field: string, content: JSX.Element | null) =>
-      content ? (
-        <FitTextField
-          key={field}
-          field={field}
-          hidden={hiddenFields.includes(field)}
-        >
-          {content}
-        </FitTextField>
-      ) : null;
+      content ? cloneElement(content, { key: field }) : null;
 
     const renderField = (field: TimetableFieldKey) => {
       switch (field) {
@@ -191,10 +187,7 @@ const TimetableSlotHorizontal = forwardRef<HTMLDivElement, TimetableSlotProps>(
     return (
       <div
         ref={ref}
-        className={cn(
-          "absolute rounded-md transform translate-y-0.5",
-          customItem && "border border-dashed",
-        )}
+        className="absolute transform translate-y-0.5"
         style={{
           ...(customSlot && customRange
             ? {
@@ -215,7 +208,7 @@ const TimetableSlotHorizontal = forwardRef<HTMLDivElement, TimetableSlotProps>(
                       gridWidth) - 4,
                   40,
                 ),
-                height: Math.max(tableDim.timetable.height / fraction - 4, 24),
+                height: slotHeight,
               }
             : {
                 left:
@@ -231,79 +224,92 @@ const TimetableSlotHorizontal = forwardRef<HTMLDivElement, TimetableSlotProps>(
                   tableDim.timetable.width *
                     (course.endTime - course.startTime + 1) -
                   4,
-                height: tableDim.timetable.height / fraction - 4,
+                height: slotHeight,
               }),
-          backgroundColor: course.color,
-          color: course.textColor,
-          borderColor: customItem ? course.textColor : undefined,
+          height: slotHeight,
+          zIndex: overflowsAtMinimum ? 20 : undefined,
         }}
         {...props}
       >
         <div
-          ref={fitTextRef}
-          className={cn(
-            "flex flex-col h-full min-h-0 min-w-0 p-1 select-none gap-0.5",
-            flexAlign,
-            justifyContent,
-          )}
+          className={cn("rounded-md", customItem && "border border-dashed")}
           style={{
-            ...fitTextStyle,
-            fontFamily,
-            overflowWrap: "anywhere",
+            height: overflowsAtMinimum ? "auto" : "100%",
+            // At 6px, this slot grows over adjacent rows with its background while keeping all enabled fields visible.
+            minHeight: overflowsAtMinimum ? "100%" : undefined,
+            backgroundColor: course.color,
+            color: course.textColor,
+            borderColor: customItem ? course.textColor : undefined,
           }}
+          data-fit-available-height={slotHeight}
         >
-          {customItem ? (
-            <>
-              {display.title &&
-                fitField(
-                  "title",
-                  <span
-                    className={cn(
-                      "font-medium min-w-0 max-w-full break-words",
-                      textAlign,
-                    )}
-                  >
-                    <CalendarClock
-                      className="inline-block mr-0.5 align-[-0.1em]"
-                      style={{ width: "0.86em", height: "0.86em" }}
-                    />
-                    {customItem.title}
-                  </span>,
-                )}
-              {display.code &&
-                customItem.shortCode &&
-                fitField(
-                  "code",
-                  <span className={cn("font-medium", textAlign)}>
-                    {customItem.shortCode}
-                  </span>,
-                )}
-              {(display.time || showCustomTime) &&
-                fitField(
-                  "time",
-                  <span className={textAlign}>
-                    {customSlot
-                      ? `${customSlot.start}–${customSlot.end}`
-                      : `${scheduleTimeSlots[course.startTime]?.start ?? ""}–${scheduleTimeSlots[course.endTime]?.end ?? ""}`}
-                  </span>,
-                )}
-              {display.venue &&
-                customItem.venue &&
-                fitField(
-                  "venue",
-                  <span className={textAlign}>{customItem.venue}</span>,
-                )}
-              {customItem.note &&
-                fitField(
-                  "note",
-                  <span className={cn("opacity-85 break-words", textAlign)}>
-                    {customItem.note}
-                  </span>,
-                )}
-            </>
-          ) : (
-            fieldOrder.map((field) => renderField(field))
-          )}
+          <div
+            ref={fitTextRef}
+            className={cn(
+              "flex flex-col min-w-0 select-none",
+              !overflowsAtMinimum && "h-full min-h-0",
+              flexAlign,
+              justifyContent,
+            )}
+            style={{
+              ...fitTextStyle,
+              fontFamily,
+              overflowWrap: "anywhere",
+            }}
+          >
+            {customItem ? (
+              <>
+                {display.title &&
+                  fitField(
+                    "title",
+                    <span
+                      className={cn(
+                        "font-medium min-w-0 max-w-full break-words",
+                        textAlign,
+                      )}
+                    >
+                      <CalendarClock
+                        className="inline-block mr-0.5 align-[-0.1em]"
+                        style={{ width: "0.86em", height: "0.86em" }}
+                      />
+                      {customItem.title}
+                    </span>,
+                  )}
+                {display.code &&
+                  customItem.shortCode &&
+                  fitField(
+                    "code",
+                    <span className={cn("font-medium", textAlign)}>
+                      {customItem.shortCode}
+                    </span>,
+                  )}
+                {(display.time || showCustomTime) &&
+                  fitField(
+                    "time",
+                    <span className={textAlign}>
+                      {customSlot
+                        ? `${customSlot.start}–${customSlot.end}`
+                        : `${scheduleTimeSlots[course.startTime]?.start ?? ""}–${scheduleTimeSlots[course.endTime]?.end ?? ""}`}
+                    </span>,
+                  )}
+                {display.venue &&
+                  customItem.venue &&
+                  fitField(
+                    "venue",
+                    <span className={textAlign}>{customItem.venue}</span>,
+                  )}
+                {customItem.note &&
+                  fitField(
+                    "note",
+                    <span className={cn("opacity-85 break-words", textAlign)}>
+                      {customItem.note}
+                    </span>,
+                  )}
+              </>
+            ) : (
+              fieldOrder.map((field) => renderField(field))
+            )}
+          </div>
         </div>
       </div>
     );

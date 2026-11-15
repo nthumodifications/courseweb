@@ -1,6 +1,5 @@
 import {
   CSSProperties,
-  ReactNode,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -10,7 +9,6 @@ import {
 import {
   findFittingTextLayout,
   FitTextLayout,
-  getTimetableFieldDropOrder,
   TIMETABLE_TEXT_FIT_MIN_PX,
 } from "./fitTextAlgorithm";
 import type { CourseTimeslotData } from "@/types/timetable";
@@ -50,34 +48,31 @@ const cancelMeasurement = (measure: () => void) => {
   measurementFrame = null;
 };
 
+const getFitTextStyle = (fontSize: number): CSSProperties => ({
+  fontSize: `${fontSize}px`,
+  gap: `${Math.min(2, Math.max(0, (fontSize - 10) / 3))}px`,
+  lineHeight: 1.15,
+  padding: `${Math.max(2, fontSize / 4)}px`,
+});
+
 type UseFitTextOptions = {
   baseFontSize: number;
   contentKey: string;
-  dropOrder: readonly string[];
 };
 
-export const useFitText = ({
-  baseFontSize,
-  contentKey,
-  dropOrder,
-}: UseFitTextOptions) => {
+export const useFitText = ({ baseFontSize, contentKey }: UseFitTextOptions) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [layout, setLayout] = useState<FitTextLayout>(() => ({
     fontSize: baseFontSize,
-    hiddenFields: [],
     overflowsAtMinimum: false,
   }));
-  const dropOrderKey = dropOrder.join("\u001f");
-  const dropOrderRef = useRef(dropOrder);
-  dropOrderRef.current = dropOrder;
 
   useLayoutEffect(() => {
     setLayout((previous) =>
-      previous.fontSize === baseFontSize && previous.hiddenFields.length === 0
+      previous.fontSize === baseFontSize && !previous.overflowsAtMinimum
         ? previous
         : {
             fontSize: baseFontSize,
-            hiddenFields: [],
             overflowsAtMinimum: false,
           },
     );
@@ -93,49 +88,51 @@ export const useFitText = ({
       return;
     }
 
-    const previousFontSize = container.style.fontSize;
-    const fields = Array.from(
-      container.querySelectorAll<HTMLElement>("[data-fit-field]"),
+    const parent = container.parentElement;
+    const availableSlotHeight = Number.parseFloat(
+      parent?.dataset.fitAvailableHeight ?? "",
     );
-    const previousDisplays = fields.map((field) => field.style.display);
+    const parentStyle = parent ? window.getComputedStyle(parent) : null;
+    const borderHeight = parentStyle
+      ? Number.parseFloat(parentStyle.borderTopWidth) +
+        Number.parseFloat(parentStyle.borderBottomWidth)
+      : 0;
+    const availableHeight = Number.isFinite(availableSlotHeight)
+      ? Math.max(0, availableSlotHeight - borderHeight)
+      : container.clientHeight;
+
+    const previousStyles = {
+      fontSize: container.style.fontSize,
+      gap: container.style.gap,
+      lineHeight: container.style.lineHeight,
+      padding: container.style.padding,
+    };
 
     const nextLayout = findFittingTextLayout({
       baseFontSize,
-      dropOrder: dropOrderRef.current,
-      measure: (fontSize, hiddenFields) => {
-        const hidden = new Set(hiddenFields);
-        container.style.fontSize = `${fontSize}px`;
-        fields.forEach((field) => {
-          field.style.display = hidden.has(field.dataset.fitField ?? "")
-            ? "none"
-            : "contents";
-        });
+      measure: (fontSize) => {
+        const style = getFitTextStyle(fontSize);
+        container.style.fontSize = String(style.fontSize ?? "");
+        container.style.gap = String(style.gap ?? "");
+        container.style.lineHeight = String(style.lineHeight ?? "");
+        container.style.padding = String(style.padding ?? "");
 
         return (
-          container.scrollHeight <= container.clientHeight &&
+          container.scrollHeight <= availableHeight &&
           container.scrollWidth <= container.clientWidth
         );
       },
       minFontSize: TIMETABLE_TEXT_FIT_MIN_PX,
     });
 
-    container.style.fontSize = previousFontSize;
-    fields.forEach((field, index) => {
-      field.style.display = previousDisplays[index] ?? "";
-    });
+    Object.assign(container.style, previousStyles);
 
-    setLayout((previous) => {
-      const hiddenFieldsChanged =
-        previous.hiddenFields.length !== nextLayout.hiddenFields.length ||
-        previous.hiddenFields.some(
-          (field, index) => field !== nextLayout.hiddenFields[index],
-        );
-      return previous.fontSize === nextLayout.fontSize &&
-        !hiddenFieldsChanged &&
-        previous.overflowsAtMinimum === nextLayout.overflowsAtMinimum
+    setLayout((previous) =>
+      previous.fontSize === nextLayout.fontSize &&
+      previous.overflowsAtMinimum === nextLayout.overflowsAtMinimum
         ? previous
-        : nextLayout;
-    });
+        : nextLayout,
+    );
   }, [baseFontSize]);
 
   useEffect(() => {
@@ -173,13 +170,12 @@ export const useFitText = ({
       fonts?.removeEventListener("loadingdone", schedule);
       cancelMeasurement(measure);
     };
-  }, [contentKey, dropOrderKey, measure]);
+  }, [contentKey, measure]);
 
-  const style: CSSProperties = { fontSize: `${layout.fontSize}px` };
   return {
     containerRef,
-    hiddenFields: layout.hiddenFields,
-    style,
+    overflowsAtMinimum: layout.overflowsAtMinimum,
+    style: getFitTextStyle(layout.fontSize),
   };
 };
 
@@ -199,19 +195,8 @@ export const useTimetableSlotFitText = ({
   fontFamily: string;
   showCustomTime: boolean;
   slot: CourseTimeslotData;
-}) => {
-  const customItem = slot.customItem;
-  const visibleFields = customItem
-    ? [
-        ...(display.code && customItem.shortCode ? ["code"] : []),
-        ...(display.title ? ["title"] : []),
-        ...(display.time || showCustomTime ? ["time"] : []),
-        ...(display.venue && customItem.venue ? ["venue"] : []),
-        ...(customItem.note ? ["note"] : []),
-      ]
-    : fieldOrder.filter((field) => display[field]);
-
-  return useFitText({
+}) =>
+  useFitText({
     baseFontSize,
     contentKey: JSON.stringify({
       displayLanguage,
@@ -219,22 +204,7 @@ export const useTimetableSlotFitText = ({
       fontFamily,
       display,
       fieldOrder,
+      showCustomTime,
       slot,
     }),
-    dropOrder: getTimetableFieldDropOrder(visibleFields),
   });
-};
-
-export const FitTextField = ({
-  children,
-  field,
-  hidden,
-}: {
-  children: ReactNode;
-  field: string;
-  hidden: boolean;
-}) => (
-  <div data-fit-field={field} style={{ display: hidden ? "none" : "contents" }}>
-    {children}
-  </div>
-);

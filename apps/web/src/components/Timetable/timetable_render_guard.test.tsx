@@ -365,9 +365,6 @@ describe("timetable provider render stability", () => {
 
     expect(fixture.container.textContent).toContain(testCourse.name_en);
     expect(
-      fixture.container.querySelectorAll('[data-fit-field="title"]'),
-    ).toHaveLength(2);
-    expect(
       [...fixture.container.querySelectorAll("[class]")].some((element) =>
         /line-clamp/.test(element.className),
       ),
@@ -375,7 +372,7 @@ describe("timetable provider render stability", () => {
     await fixture.cleanup();
   });
 
-  test("renders every enabled timetable field through the fitter in both layouts", async () => {
+  test("renders every enabled timetable field in both layouts", async () => {
     const allFields = {
       title: true,
       code: true,
@@ -423,24 +420,18 @@ describe("timetable provider render stability", () => {
       },
     );
 
-    const fields = [...fixture.container.querySelectorAll("[data-fit-field]")]
-      .map((element) => element.getAttribute("data-fit-field"))
-      .sort((left, right) => (left ?? "").localeCompare(right ?? ""));
-    expect(fields).toEqual([
-      "code",
-      "code",
-      "credits",
-      "credits",
-      "teacher",
-      "teacher",
-      "time",
-      "time",
-      "title",
-      "title",
-      "venue",
-      "venue",
-    ]);
-    expect(fixture.container.textContent).toContain(testCourse.name_en);
+    const renderedText = fixture.container.textContent ?? "";
+    const fieldTexts = [
+      testCourse.department + testCourse.course,
+      testCourse.name_en,
+      "08:00 - 08:50",
+      "Alice Chen",
+      "DELTA台達217 M9MaMb",
+      `${testCourse.credits} cr`,
+    ];
+    for (const fieldText of fieldTexts) {
+      expect(renderedText.split(fieldText)).toHaveLength(3);
+    }
     await fixture.cleanup();
   });
 

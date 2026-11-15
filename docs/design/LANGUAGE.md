@@ -319,7 +319,7 @@
 ## §12 不准動的東西
 
 1. **校車頁**（`bus/` 底下全部）。唯一允許的改動是把硬寫顏色換成 token，而且要在報告裡說明。
-2. **課表格線**（`components/Timetable/Timetable.tsx` 及其 slot 渲染）。格線內文字大小只透過共用的 `FitText` fitting primitive 調整。
+2. **課表格線**（`components/Timetable/Timetable.tsx` 及其 slot 渲染）。格線內文字大小只透過共用的 `FitText` fitting primitive 調整；欄位不可隱藏，若 6px 仍溢出，課格可長高並覆蓋相鄰格子以完整顯示內容。
 3. **版面結構**。這一輪的工作是讓其他頁面**向旗艦靠攏**，不是重新發明版面。搬動一個區塊之前，要說得出它現在違反了上面哪一條規則。
 
 「順手改得更好看」不是理由。

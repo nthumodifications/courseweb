@@ -12,12 +12,16 @@ export const VenueChip: FC<{
   const localizeData = useLocalizedZhData();
   return (
     <Link
-      className={`flex flex-row justify-center items-center text-center rounded-md px-1 py-0.5 ${
+      className={`flex flex-row justify-center items-center text-center rounded-md ${
         fitText
           ? "min-w-0 max-w-full text-inherit"
-          : "text-[8px] md:text-[10px]"
+          : "px-1 py-0.5 text-[8px] md:text-[10px]"
       }`}
-      style={{ backgroundColor: color + "24", color: textColor }}
+      style={{
+        backgroundColor: color + "24",
+        color: textColor,
+        ...(fitText ? { padding: "0.125em 0.25em" } : {}),
+      }}
       to={`/${lang}/venues/${venue}`}
     >
       <span
