@@ -1,3 +1,4 @@
+import { isWholeSchoolAudience } from "@/lib/course-language";
 import type {
   PrerequisiteGraph,
   PrerequisiteGraphNode,
@@ -72,12 +73,11 @@ const ModulePrerequisiteList = ({
 }) => {
   const localizeData = useLocalizedZhData();
   const labels = dict.course.details;
-  const audience =
-    parsed.audience === "全校"
-      ? labels.prerequisite_all_students
-      : parsed.audience
-        ? localizeData(parsed.audience)
-        : undefined;
+  const audience = isWholeSchoolAudience(parsed.audience)
+    ? labels.prerequisite_all_students
+    : parsed.audience
+      ? localizeData(parsed.audience)
+      : undefined;
   const requirements = graph.requirements.map((group, index) => {
     const onlyNotTaken =
       group.mode === "all" &&

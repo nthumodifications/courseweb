@@ -1,3 +1,4 @@
+import { courseLanguageLabel } from "@/lib/course-language";
 import { ChevronRight } from "lucide-react";
 import useDictionary from "@/dictionaries/useDictionary";
 import { toPrettySemester } from "@/helpers/semester";
@@ -56,13 +57,10 @@ export const CourseOfferingRow = ({
   compact?: boolean;
 }) => {
   const localizeData = useLocalizedZhData();
-  const language = offering.language.trim();
-  const languageLabel =
-    language === "英"
-      ? dict.course.tags.english
-      : language === "中"
-        ? dict.course.tags.chinese
-        : language;
+  const languageLabel = courseLanguageLabel(
+    offering.language,
+    dict.course.tags,
+  );
   const capacity =
     offering.capacity === null
       ? null
@@ -161,9 +159,9 @@ export const CourseOfferingRow = ({
             ),
           )}
         </span>
-        {(language || capacity) && (
+        {(languageLabel || capacity) && (
           <span className="mt-1 flex flex-wrap gap-2 text-xs text-muted-foreground">
-            {language && <span>{languageLabel}</span>}
+            {languageLabel && <span>{languageLabel}</span>}
             {capacity && <span>{capacity}</span>}
           </span>
         )}

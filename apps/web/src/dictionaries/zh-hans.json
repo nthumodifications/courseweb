@@ -694,7 +694,7 @@
       "search_placeholder": "搜索课号、课名或教师……",
       "search_prompt": "输入课号、课名或教师，寻找历年开课纪录。",
       "search_examples": ["微积分", "程序", "CS 1355"],
-      "search_examples_label": "示例搜索",
+      "search_examples_label": "范例搜索",
       "search_no_results": "找不到符合的课程模块",
       "search_results": "个课程模块",
       "search_other_modules": "搜索其他课程",

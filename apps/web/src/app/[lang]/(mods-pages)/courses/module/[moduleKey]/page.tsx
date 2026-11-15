@@ -1,3 +1,4 @@
+import { courseLanguageLabel } from "@/lib/course-language";
 import { Fragment, useMemo, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { useParams, useSearchParams } from "react-router-dom";
@@ -337,13 +338,7 @@ export const ModulePageContent = ({
       : selectedVariant.nameZh;
   const languages = getLanguages(selectedVariant.offerings)
     .slice(0, 2)
-    .map(({ value }) =>
-      value === "英"
-        ? dict.course.tags.english
-        : value === "中"
-          ? dict.course.tags.chinese
-          : value,
-    )
+    .map(({ value }) => courseLanguageLabel(value, dict.course.tags))
     .join(contentLang === "en" ? ", " : "、");
   const metaSeparator = contentLang === "en" ? "·" : "・";
   const yearsAndCount =
