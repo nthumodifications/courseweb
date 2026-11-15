@@ -3,6 +3,24 @@ export const TIMETABLE_TEXT_FIT_STEP_PX = 0.5;
 
 export type FitTextMeasure = (fontSize: number) => boolean;
 
+type MeasuredTitle = { style: { display: string } };
+
+export const withClampedTitleExcluded = <T>(
+  title: MeasuredTitle | null,
+  excludeTitle: boolean,
+  measure: () => T,
+): T => {
+  if (!title || !excludeTitle) return measure();
+
+  const previousDisplay = title.style.display;
+  title.style.display = "none";
+  try {
+    return measure();
+  } finally {
+    title.style.display = previousDisplay;
+  }
+};
+
 export type FitTextLayout = {
   fontSize: number;
   overflowsAtMinimum: boolean;

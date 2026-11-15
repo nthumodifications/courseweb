@@ -1,5 +1,8 @@
 import { describe, expect, test } from "bun:test";
-import { findFittingTextLayout } from "./fitTextAlgorithm";
+import {
+  findFittingTextLayout,
+  withClampedTitleExcluded,
+} from "./fitTextAlgorithm";
 
 describe("timetable text fitting", () => {
   test("keeps the selected size when the content fits", () => {
@@ -55,5 +58,20 @@ describe("timetable text fitting", () => {
       overflowsAtMinimum: true,
     });
     expect(smallestSize).toBe(6);
+  });
+
+  test("fits other fields while a clamped title is excluded", () => {
+    const title = { style: { display: "" } };
+
+    const layout = withClampedTitleExcluded(title, true, () =>
+      findFittingTextLayout({
+        baseFontSize: 14,
+        measure: (fontSize) => title.style.display === "none" && fontSize <= 14,
+      }),
+    );
+
+    expect(layout.fontSize).toBe(14);
+    expect(layout.overflowsAtMinimum).toBe(false);
+    expect(title.style.display).toBe("");
   });
 });

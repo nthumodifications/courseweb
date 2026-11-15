@@ -52,6 +52,7 @@ export const DEFAULT_FIELD_ORDER: TimetableFieldKey[] = [
 ];
 
 export type TimetableFontSize = "xs" | "sm" | "base" | "lg";
+export type TimetableTitleBehavior = "fit" | "1" | "2";
 export type TimetableFontFamily =
   // Chinese-capable options first — slot text is mostly Chinese course names.
   | "system"
@@ -99,6 +100,7 @@ export interface TimetableDisplayPreferences {
   align: "left" | "center" | "right";
   verticalAlign: "top" | "center" | "bottom";
   fontSize: TimetableFontSize;
+  titleBehavior: TimetableTitleBehavior;
   fontFamily: TimetableFontFamily;
   display: {
     title: boolean;
@@ -118,6 +120,7 @@ export const DEFAULT_TIMETABLE_DISPLAY_PREFERENCES: TimetableDisplayPreferences 
     align: "center",
     verticalAlign: "top",
     fontSize: "sm",
+    titleBehavior: "fit",
     fontFamily: "system",
     display: {
       title: true,
@@ -131,12 +134,16 @@ export const DEFAULT_TIMETABLE_DISPLAY_PREFERENCES: TimetableDisplayPreferences 
     hiddenCourses: {},
   };
 
-const normalizeTimetableDisplayPreferences = (
+export const normalizeTimetableDisplayPreferences = (
   value: Partial<TimetableDisplayPreferences> | undefined,
 ): TimetableDisplayPreferences => ({
   ...DEFAULT_TIMETABLE_DISPLAY_PREFERENCES,
   ...value,
   fontSize: value?.fontSize ?? DEFAULT_TIMETABLE_DISPLAY_PREFERENCES.fontSize,
+  titleBehavior:
+    value?.titleBehavior === "1" || value?.titleBehavior === "2"
+      ? value.titleBehavior
+      : DEFAULT_TIMETABLE_DISPLAY_PREFERENCES.titleBehavior,
   fontFamily:
     value?.fontFamily ?? DEFAULT_TIMETABLE_DISPLAY_PREFERENCES.fontFamily,
   display: {
@@ -205,6 +212,7 @@ const userTimetableContext = createContext<
     align: "center",
     verticalAlign: "top",
     fontSize: "sm",
+    titleBehavior: "fit",
     fontFamily: "system",
     display: {
       title: true,

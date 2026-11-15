@@ -21,6 +21,7 @@ const TimetableSlotHorizontal = forwardRef<HTMLDivElement, TimetableSlotProps>(
   ({ course, tableDim, fraction = 1, fractionIndex = 1, ...props }, ref) => {
     const {
       fields,
+      fullTitle,
       flexAlign,
       fontFamily,
       fitTextRef,
@@ -98,6 +99,7 @@ const TimetableSlotHorizontal = forwardRef<HTMLDivElement, TimetableSlotProps>(
           zIndex: overflowsAtMinimum ? 20 : undefined,
         }}
         {...props}
+        title={fullTitle}
       >
         <div
           className={cn("rounded-md", customItem && "border border-dashed")}

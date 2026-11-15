@@ -10,11 +10,13 @@ import {
   findFittingTextLayout,
   FitTextLayout,
   TIMETABLE_TEXT_FIT_MIN_PX,
+  withClampedTitleExcluded,
 } from "./fitTextAlgorithm";
 import type { CourseTimeslotData } from "@/types/timetable";
 import type {
   TimetableDisplayPreferences,
   TimetableFieldKey,
+  TimetableTitleBehavior,
 } from "@/hooks/contexts/useUserTimetable";
 
 const pendingMeasurements = new Set<() => void>();
@@ -58,9 +60,14 @@ const getFitTextStyle = (fontSize: number): CSSProperties => ({
 type UseFitTextOptions = {
   baseFontSize: number;
   contentKey: string;
+  titleBehavior: TimetableTitleBehavior;
 };
 
-export const useFitText = ({ baseFontSize, contentKey }: UseFitTextOptions) => {
+export const useFitText = ({
+  baseFontSize,
+  contentKey,
+  titleBehavior,
+}: UseFitTextOptions) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [layout, setLayout] = useState<FitTextLayout>(() => ({
     fontSize: baseFontSize,
@@ -108,22 +115,28 @@ export const useFitText = ({ baseFontSize, contentKey }: UseFitTextOptions) => {
       padding: container.style.padding,
     };
 
-    const nextLayout = findFittingTextLayout({
-      baseFontSize,
-      measure: (fontSize) => {
-        const style = getFitTextStyle(fontSize);
-        container.style.fontSize = String(style.fontSize ?? "");
-        container.style.gap = String(style.gap ?? "");
-        container.style.lineHeight = String(style.lineHeight ?? "");
-        container.style.padding = String(style.padding ?? "");
+    const title = container.querySelector<HTMLElement>("[data-fit-text-title]");
+    const nextLayout = withClampedTitleExcluded(
+      title,
+      titleBehavior !== "fit",
+      () =>
+        findFittingTextLayout({
+          baseFontSize,
+          measure: (fontSize) => {
+            const style = getFitTextStyle(fontSize);
+            container.style.fontSize = String(style.fontSize ?? "");
+            container.style.gap = String(style.gap ?? "");
+            container.style.lineHeight = String(style.lineHeight ?? "");
+            container.style.padding = String(style.padding ?? "");
 
-        return (
-          container.scrollHeight <= availableHeight &&
-          container.scrollWidth <= container.clientWidth
-        );
-      },
-      minFontSize: TIMETABLE_TEXT_FIT_MIN_PX,
-    });
+            return (
+              container.scrollHeight <= availableHeight &&
+              container.scrollWidth <= container.clientWidth
+            );
+          },
+          minFontSize: TIMETABLE_TEXT_FIT_MIN_PX,
+        }),
+    );
 
     Object.assign(container.style, previousStyles);
 
@@ -133,7 +146,7 @@ export const useFitText = ({ baseFontSize, contentKey }: UseFitTextOptions) => {
         ? previous
         : nextLayout,
     );
-  }, [baseFontSize]);
+  }, [baseFontSize, titleBehavior]);
 
   useEffect(() => {
     let disposed = false;
@@ -187,6 +200,7 @@ export const useTimetableSlotFitText = ({
   fontFamily,
   showCustomTime,
   slot,
+  titleBehavior,
 }: {
   baseFontSize: number;
   display: TimetableDisplayPreferences["display"];
@@ -195,15 +209,18 @@ export const useTimetableSlotFitText = ({
   fontFamily: string;
   showCustomTime: boolean;
   slot: CourseTimeslotData;
+  titleBehavior: TimetableTitleBehavior;
 }) =>
   useFitText({
     baseFontSize,
+    titleBehavior,
     contentKey: JSON.stringify({
       displayLanguage,
       fontSize: baseFontSize,
       fontFamily,
       display,
       fieldOrder,
+      titleBehavior,
       showCustomTime,
       slot,
     }),

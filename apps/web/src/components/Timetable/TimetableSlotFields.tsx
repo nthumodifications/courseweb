@@ -65,10 +65,25 @@ export const useTimetableSlotFields = ({
   const fieldOrder: TimetableFieldKey[] =
     preferences.fieldOrder ?? DEFAULT_FIELD_ORDER;
   const display = preferences.display;
+  const customItem = course.customItem;
+  const titleBehavior = preferences.titleBehavior ?? "fit";
+  const titleLineClamp =
+    titleBehavior === "fit"
+      ? undefined
+      : {
+          display: "-webkit-box",
+          WebkitBoxOrient: "vertical" as const,
+          WebkitLineClamp: Number(titleBehavior),
+          overflow: "hidden",
+        };
+  const fullTitle = customItem
+    ? customItem.title
+    : displayLang == "zh"
+      ? localizeData(course.course.name_zh)
+      : course.course.name_en;
   const baseFontSize = TIMETABLE_FONT_SIZE_PIXELS[preferences.fontSize ?? "sm"];
   const fontFamily =
     TIMETABLE_FONT_FAMILIES[preferences.fontFamily ?? "system"];
-  const customItem = course.customItem;
   const customSlot = course.customSlot;
   const { start: startSlot, end: endSlot } = getTimetableSlotTimes(course);
   const customRange = customSlot ? getCustomSlotTimeRange(customSlot) : null;
@@ -93,6 +108,7 @@ export const useTimetableSlotFields = ({
     fontFamily,
     showCustomTime,
     slot: course,
+    titleBehavior,
   });
   const fitField = (field: string, content: JSX.Element | null) =>
     content ? cloneElement(content, { key: field }) : null;
@@ -112,7 +128,11 @@ export const useTimetableSlotFields = ({
         return fitField(
           field,
           display.title ? (
-            <span className={cn(titleClassName, textAlign)}>
+            <span
+              className={cn(titleClassName, textAlign)}
+              data-fit-text-title
+              style={titleLineClamp}
+            >
               {displayLang == "zh"
                 ? localizeData(course.course.name_zh)
                 : course.course.name_en}
@@ -166,7 +186,11 @@ export const useTimetableSlotFields = ({
       {display.title &&
         fitField(
           "title",
-          <span className={cn(customTitleClassName, textAlign)}>
+          <span
+            className={cn(customTitleClassName, textAlign)}
+            data-fit-text-title
+            style={titleLineClamp}
+          >
             <CalendarClock
               className="inline-block mr-0.5 align-[-0.1em]"
               style={{ width: "0.86em", height: "0.86em" }}
@@ -215,6 +239,7 @@ export const useTimetableSlotFields = ({
 
   return {
     fields,
+    fullTitle,
     flexAlign,
     fontFamily,
     fitTextRef,
