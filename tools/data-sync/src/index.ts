@@ -32,11 +32,19 @@ export {
 } from "./utils";
 
 export type { Course, Department, SyncEnvironment, SyncResult } from "./types";
+export {
+  chooseSemestersToSync,
+  fetchAutoSyncSemesters,
+  nextSemesterId,
+  runAutoSync,
+} from "./auto-sync";
 
 // Re-export the main sync function for convenience
 export const runSync = async (semester?: string) => {
   const { syncCourses } = await import("./sync-courses");
-  return syncCourses(semester);
+  if (semester) return syncCourses(semester);
+  const { runAutoSync } = await import("./auto-sync");
+  return runAutoSync({ syncSemester: syncCourses });
 };
 
 // Re-export the scheduled update function

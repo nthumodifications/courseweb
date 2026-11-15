@@ -6,6 +6,12 @@ Course data synchronization tools for CourseWeb monorepo.
 
 This package provides utilities for synchronizing course data, syllabus information, and search indices from external sources. It has been redesigned to run data scraping operations directly instead of making HTTP calls to API endpoints, making it suitable for containerized deployment and scheduled execution.
 
+The repository's nightly workflow runs at 00:10 Taipei time. With no semester
+argument, a run reads dates from `GET /semesters`, syncs the current semester
+(the most recently begun semester during breaks), then probes upcoming CCXP
+terms. Empty terms are skipped. NTHU semester IDs use `10` for fall, `20` for
+spring, and `30` for summer. The bundled date table remains the offline fallback.
+
 ## Features
 
 - ✅ Direct course data scraping from CCXP system
@@ -26,7 +32,7 @@ This package provides utilities for synchronizing course data, syllabus informat
 bun run setup --full
 
 # Edit tools/data-sync/.env with maintainer-provided credentials
-# Run one-time sync
+# Run automatic semester selection and sync
 bun run --cwd tools/data-sync sync:once
 
 # Run scheduled sync (development)
@@ -39,7 +45,7 @@ bun run --cwd tools/data-sync sync:scheduled
 # Build the image
 docker build -t courseweb-data-sync .
 
-# Run one-time sync
+# Run automatic semester selection and sync
 docker run --env-file .env courseweb-data-sync
 
 # Run with custom semester
@@ -47,7 +53,7 @@ docker run --env-file .env courseweb-data-sync tsx src/sync-courses.ts 11510
 
 # Run scheduled sync (persistent container)
 docker run -d --env-file .env --name courseweb-sync \
-  courseweb-data-sync tsx src/update-courses.ts "0 8 * * *" 11510
+  courseweb-data-sync tsx src/update-courses.ts "10 0 * * *"
 ```
 
 ### Docker Compose Usage
@@ -91,7 +97,8 @@ gcloud run deploy courseweb-data-sync \
 # Schedule periodic runs with Cloud Scheduler
 gcloud scheduler jobs create http courseweb-sync-job \
   --location asia-east1 \
-  --schedule "0 8 * * *" \
+  --schedule "10 0 * * *" \
+  --time-zone "Asia/Taipei" \
   --uri https://your-cloud-run-url.a.run.app \
   --http-method POST \
   --oidc-service-account-email your-service-account@project.iam.gserviceaccount.com
@@ -107,12 +114,15 @@ Runs a one-time synchronization of course data:
 bun run --cwd tools/data-sync sync:once [semester]
 ```
 
-This will:
+With no semester argument, this will:
 
-- Scrape archived courses for the specified semester (defaults to 11510)
+- Read semester dates from the API and select the current semester
+- Probe upcoming CCXP terms and skip those with no courses yet
 - Download and process syllabus data
 - Update Algolia search index
 - Exit when complete
+
+Pass a semester ID to override automatic selection for a one-off run.
 
 ### Scheduled Sync
 
@@ -155,6 +165,7 @@ bun run sync:scheduled
 ```typescript
 import {
   syncCourses,
+  runAutoSync,
   startScheduledSync,
   scrapeArchivedCourses,
   scrapeSyllabus,
@@ -163,10 +174,13 @@ import {
 } from "@courseweb/data-sync";
 
 // One-time sync
-const result = await syncCourses("11510"); // semester parameter optional
+const result = await syncCourses("11510"); // explicit semester override
+
+// Choose the current and upcoming semesters automatically
+const automatic = await runAutoSync({ syncSemester: syncCourses });
 
 // Start scheduled sync
-const job = startScheduledSync("0 8 * * *", "11510"); // cron pattern and semester optional
+const job = startScheduledSync("10 0 * * *"); // automatic selection each day
 
 // Use individual functions
 const env = validateEnvironment();
@@ -216,24 +230,22 @@ The sync scripts require the following environment variables:
 
 Optional variables:
 
-| Variable       | Description              | Default       |
-| -------------- | ------------------------ | ------------- |
-| `SEMESTER`     | Default semester to sync | `11510`       |
-| `CRON_PATTERN` | Default cron schedule    | `"0 0 * * *"` |
+| Variable            | Description                                 | Default                    |
+| ------------------- | ------------------------------------------- | -------------------------- |
+| `COURSEWEB_API_URL` | API base URL for semester dates             | `https://api.nthumods.com` |
+| `CRON_PATTERN`      | Schedule for the optional persistent runner | `"0 0 * * *"`              |
 
 ## Configuration
 
-### Default Semester
+### Semester Selection
 
-The default semester is `11510` (academic year 115, semester 1). You can override this by:
-
-- Passing a different semester parameter to the functions
-- Setting the `SEMESTER` environment variable
-- Using command line arguments
+Automatic runs use API dates and CCXP course availability. An explicit
+semester argument remains available for one-off backfills and manual runs.
 
 ### Schedule Pattern
 
-The default cron pattern is `"0 0 * * *"` (daily at midnight UTC, which is 8:00 AM GMT+8).
+The repository workflow runs daily at 00:10 Taipei time (`10 16 * * *` UTC).
+The standalone persistent runner accepts its own cron pattern.
 
 Common patterns:
 
@@ -387,7 +399,8 @@ kind: CronJob
 metadata:
   name: courseweb-data-sync
 spec:
-  schedule: "0 8 * * *"
+  schedule: "10 0 * * *"
+  timeZone: "Asia/Taipei"
   jobTemplate:
     spec:
       template:

@@ -13,7 +13,8 @@ import {
 import type { SyncResult } from "./types";
 
 export const syncCourses = async (
-  semester: string = "11510",
+  semester: string,
+  options: { skipIfEmpty?: boolean } = {},
 ): Promise<SyncResult> => {
   try {
     console.log("🚀 Starting course synchronization...");
@@ -25,8 +26,20 @@ export const syncCourses = async (
 
     // Step 1: Scrape archived courses
     console.log(`📚 Scraping archived courses for semester ${semester}...`);
-    const courses = await scrapeArchivedCourses(env, semester);
+    const courses = await scrapeArchivedCourses(env, semester, options);
     console.log(`✅ Scraped ${courses.length} courses`);
+
+    if (options.skipIfEmpty && courses.length === 0) {
+      console.log(`⏭️ CCXP has no courses for ${semester} yet; skipping`);
+      return {
+        success: true,
+        stats: {
+          coursesScraped: 0,
+          syllabusDownloaded: 0,
+          algoliaRecordsUpdated: 0,
+        },
+      };
+    }
 
     // Step 2: Scrape syllabus data
     console.log("📝 Scraping syllabus data...");
@@ -66,10 +79,18 @@ export default syncCourses;
 
 // If this file is run directly, execute the sync
 if (import.meta.main) {
-  const semester = process.argv[2] || "11510";
-  console.log(`Running sync for semester: ${semester}`);
+  const semester = process.argv[2]?.trim();
+  const run = async () => {
+    if (semester) {
+      console.log(`Running sync for semester: ${semester}`);
+      return syncCourses(semester);
+    }
+    console.log("Choosing semesters from the academic calendar and CCXP...");
+    const { runAutoSync } = await import("./auto-sync");
+    return runAutoSync({ syncSemester: syncCourses });
+  };
 
-  syncCourses(semester)
+  run()
     .then((result) => {
       if (result.success) {
         console.log("✅ Sync completed successfully");

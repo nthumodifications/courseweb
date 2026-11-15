@@ -2,6 +2,19 @@
 
 This guide covers deploying the CourseWeb Data Sync tool to various cloud platforms after the major refactor that moved data scraping operations from the API service to a standalone containerized application.
 
+## Repository Nightly Workflow
+
+Production course sync is scheduled by `.github/workflows/scrape.yaml` at
+`10 16 * * *` UTC (00:10 in Taipei). It reads semester dates from
+`GET /semesters`, syncs the current semester, and probes the next CCXP term.
+An empty upcoming term is skipped. Manual workflow dispatch accepts an optional
+semester ID for a one-off override; leave it empty for automatic selection.
+The semester API uses the Worker D1 migration applied by the main build workflow.
+
+The remaining examples below describe standalone deployments. Configure their
+scheduler for 00:10 in `Asia/Taipei` and leave the semester argument empty to
+use the same automatic selection.
+
 ## Overview
 
 The data sync tool has been redesigned to:
@@ -86,12 +99,13 @@ gcloud run deploy courseweb-data-sync \
 # Create Cloud Scheduler job
 gcloud scheduler jobs create http courseweb-sync-daily \
   --location asia-east1 \
-  --schedule "0 8 * * *" \
+  --schedule "10 0 * * *" \
+  --time-zone "Asia/Taipei" \
   --uri "https://courseweb-data-sync-xxx.a.run.app" \
   --http-method POST \
   --oidc-service-account-email courseweb-sync@your-project.iam.gserviceaccount.com \
   --headers "Content-Type=application/json" \
-  --message-body '{"semester":"11510"}'
+  --message-body '{}'
 ```
 
 #### Method 2: Cloud Run Jobs (Recommended)
@@ -113,7 +127,8 @@ gcloud run jobs execute courseweb-data-sync-job --region asia-east1
 # Schedule with Cloud Scheduler
 gcloud scheduler jobs create http courseweb-sync-scheduled \
   --location asia-east1 \
-  --schedule "0 8 * * *" \
+  --schedule "10 0 * * *" \
+  --time-zone "Asia/Taipei" \
   --uri "https://asia-east1-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/your-project/jobs/courseweb-data-sync-job:run" \
   --http-method POST \
   --oauth-service-account-email courseweb-sync@your-project.iam.gserviceaccount.com
@@ -182,7 +197,7 @@ resource "google_cloud_run_v2_job" "courseweb_data_sync" {
 resource "google_cloud_scheduler_job" "courseweb_sync" {
   name      = "courseweb-data-sync"
   region    = "asia-east1"
-  schedule  = "0 8 * * *"
+  schedule  = "10 0 * * *"
   time_zone = "Asia/Taipei"
 
   http_target {
@@ -291,7 +306,7 @@ kind: CronJob
 metadata:
   name: courseweb-data-sync
 spec:
-  schedule: "0 8 * * *"
+  schedule: "10 0 * * *"
   timeZone: "Asia/Taipei"
   jobTemplate:
     spec:
@@ -346,8 +361,8 @@ ALGOLIA_APP_ID=your-algolia-app-id
 ALGOLIA_API_KEY=your-algolia-admin-api-key
 
 # Optional
-SEMESTER=11510                    # Default semester
-CRON_PATTERN="0 8 * * *"         # Default schedule
+COURSEWEB_API_URL=https://api.nthumods.com # Semester dates API
+CRON_PATTERN="10 0 * * *"        # 00:10 Taipei when host TZ is Asia/Taipei
 ```
 
 ### Secrets Management

@@ -276,6 +276,7 @@ export const syncCourseRows = async (
 export const scrapeArchivedCourses = async (
   env: SyncEnvironment,
   semester: string,
+  options: { skipIfEmpty?: boolean } = {},
 ): Promise<Course[]> => {
   // Fetch landing page with retry
   const landingPageRes = await retryWithBackoff(
@@ -671,7 +672,14 @@ export const scrapeArchivedCourses = async (
   if (failedDepartments.length > 0) {
     console.warn(`Failed departments: ${failedDepartments.join(", ")}`);
   }
+  if (failedDepartments.length === departments.length) {
+    throw new Error(`All CCXP department requests failed for ${semester}`);
+  }
   console.log(`Found ${normalizedCourses.length} courses in ${semester}`);
+
+  if (options.skipIfEmpty && normalizedCourses.length === 0) {
+    return normalizedCourses;
+  }
 
   const supabase = createSupabaseClient(env);
   await syncCourseRows(supabase, semester, normalizedCourses);
