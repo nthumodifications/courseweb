@@ -48,7 +48,7 @@ const NewSemesterPrompt = ({
   return (
     <div className="flex min-w-0 items-center gap-1 whitespace-nowrap text-sm text-muted-foreground">
       <button
-        className="min-h-10 min-w-0 flex-1 truncate text-left hover:text-foreground"
+        className="min-h-11 min-w-0 flex-1 truncate text-left hover:text-foreground"
         onClick={() => onView(semesterId)}
         type="button"
       >
@@ -59,7 +59,7 @@ const NewSemesterPrompt = ({
       </button>
       <button
         aria-label={dict.semester_cutover.dismiss}
-        className="min-h-10 min-w-10 text-base hover:text-foreground"
+        className="min-h-11 min-w-11 shrink-0 text-base hover:text-foreground"
         onClick={dismiss}
         type="button"
       >

@@ -68,7 +68,7 @@ const TimetablePage = () => {
   // Set the SemesterSwitcher in the header portal
   useEffect(() => {
     setPortalContent(
-      <div className="flex min-w-0 w-full flex-col items-center md:flex-row md:justify-center">
+      <div className="contents md:flex md:min-w-0 md:w-full md:flex-row md:items-center md:justify-center">
         <SemesterSwitcher semester={semester} setSemester={setSemester} />
       </div>,
     );

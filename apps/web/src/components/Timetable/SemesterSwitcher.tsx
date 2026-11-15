@@ -37,7 +37,7 @@ const SemesterSwitcher = ({
 
   return (
     <>
-      <div className="flex w-full flex-row items-center justify-center gap-4 px-4 py-2">
+      <div className="col-start-2 row-start-1 flex w-full flex-row items-center justify-center gap-4 px-4 py-2">
         <Button
           variant="ghost"
           size="icon"
@@ -61,7 +61,7 @@ const SemesterSwitcher = ({
           <ChevronRight />
         </Button>
       </div>
-      <div className="w-full min-w-0 px-4 md:w-auto md:flex-none">
+      <div className="col-span-3 row-start-2 w-full min-w-0 px-4 md:w-auto md:flex-none">
         <NewSemesterPrompt onView={setSemester} />
       </div>
     </>
