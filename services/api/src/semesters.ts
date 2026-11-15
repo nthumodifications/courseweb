@@ -130,10 +130,6 @@ export const buildSemesterResponse = async (options: {
           options.fetcher ?? fetch,
         );
         if (count !== undefined) hasCourses = count > 0;
-      } else if (!row.hasCourses && row.ends < now) {
-        // Older scraped dates are retained as history; only recent and future
-        // semesters need a live existence check.
-        hasCourses = true;
       }
       return {
         id: row.id,

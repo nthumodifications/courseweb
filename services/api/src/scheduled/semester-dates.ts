@@ -242,6 +242,18 @@ const daysInclusive = (begins: string, ends: string) =>
     86_400_000 +
   1;
 
+const asSemesterNeighbor = (
+  row: Pick<SemesterDate, "id" | "begins" | "ends">,
+) => {
+  const [year, startMonth, startDay] = row.begins.split("-").map(Number);
+  const [endYear, endMonth, endDay] = row.ends.split("-").map(Number);
+  return {
+    id: row.id,
+    begins: new Date(Date.UTC(year!, startMonth! - 1, startDay!)),
+    ends: new Date(Date.UTC(endYear!, endMonth! - 1, endDay!)),
+  };
+};
+
 const monthIsPlausible = (id: string, begins: string, ends: string) => {
   const term = id.slice(3);
   const startMonth = Number(begins.slice(5, 7));
@@ -360,6 +372,7 @@ export async function extractSemesterDates(
     left.localeCompare(right),
   )) {
     const evidence = grouped.get(id)!;
+    const knownNeighbours = [...neighbours, ...rows.map(asSemesterNeighbor)];
     const begins = [...evidence.ruleBegins].sort((left, right) =>
       left.date.localeCompare(right.date),
     )[0];
@@ -376,7 +389,7 @@ export async function extractSemesterDates(
 
     if (
       !candidate ||
-      validateSemesterDate({ id, ...candidate }, neighbours).length
+      validateSemesterDate({ id, ...candidate }, knownNeighbours).length
     ) {
       try {
         const parsed = validateLlmCandidate(
@@ -397,7 +410,7 @@ export async function extractSemesterDates(
       if (evidence.begins.length || evidence.breaks.length) failed.push(id);
       continue;
     }
-    const errors = validateSemesterDate({ id, ...candidate }, neighbours);
+    const errors = validateSemesterDate({ id, ...candidate }, knownNeighbours);
     if (errors.length) {
       console.warn(`[semester-dates] rejected ${id}: ${errors.join(", ")}`);
       failed.push(id);
@@ -420,11 +433,14 @@ export async function readMergedSemesterInfo(
     const result = await db
       .prepare('SELECT "semester", "begins", "ends" FROM "semester_dates"')
       .all<{ semester: string; begins: string; ends: string }>();
+    const bundledCourses = new Map(
+      bundledSemesterInfo.map((semester) => [semester.id, semester.hasCourses]),
+    );
     const rows = (result.results ?? []).map((row) => ({
       id: row.semester,
       begins: row.begins,
       ends: row.ends,
-      hasCourses: false,
+      hasCourses: bundledCourses.get(row.semester) ?? false,
     }));
     return mergeSemesterRows(rows, now);
   } catch (error) {
@@ -471,14 +487,18 @@ export const persistGoodSemesterDates = async (
 ): Promise<string[]> => {
   const storedRows = await readStoredSemesterDates(db);
   const stored = new Map(storedRows.map((row) => [row.id, row]));
+  const neighbours = [
+    ...bundledSemesterInfo,
+    ...storedRows.map(asSemesterNeighbor),
+  ];
   const saved: string[] = [];
   const fetchedAt = now.toISOString();
   for (const row of candidates) {
-    if (validateSemesterDate(row).length) continue;
+    if (validateSemesterDate(row, neighbours).length) continue;
     const previous = stored.get(row.id);
     if (
       previous &&
-      !validateSemesterDate(previous).length &&
+      !validateSemesterDate(previous, neighbours).length &&
       extractionRank(row.extractionMethod) <
         extractionRank(previous.extractionMethod)
     ) {

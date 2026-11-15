@@ -76,6 +76,22 @@ describe("semester date extraction", () => {
         ends: "2027-12-06",
       }).length,
     ).toBeGreaterThan(0);
+    expect(
+      validateSemesterDate(
+        {
+          id: "11530",
+          begins: "2027-06-01",
+          ends: "2027-08-01",
+        },
+        [
+          {
+            id: "11520",
+            begins: new Date("2027-02-15T00:00:00Z"),
+            ends: new Date("2027-06-06T00:00:00Z"),
+          },
+        ],
+      ),
+    ).toContain("overlaps semester 11520");
   });
 
   it("does not replace a good deterministic row with an LLM parse", async () => {

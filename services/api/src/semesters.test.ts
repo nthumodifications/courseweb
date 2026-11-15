@@ -22,6 +22,15 @@ describe("semester API data", () => {
     expect(ids).toContain("11530");
   });
 
+  it("keeps bundled course availability for older rows outside the live count window", async () => {
+    const response = await buildSemesterResponse({
+      semesters: semesterInfo,
+      now: new Date("2026-10-01T12:00:00Z"),
+    });
+    expect(response.find((row) => row.id === "11410")?.hasCourses).toBe(true);
+    expect(response.find((row) => row.id === "11520")?.hasCourses).toBe(false);
+  });
+
   it("returns typed date rows, live course presence, and cache headers", async () => {
     const originalFetch = globalThis.fetch;
     const originalNow = new Date();
