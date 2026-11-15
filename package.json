@@ -27,7 +27,7 @@
     "build:api": "turbo run build --filter=@courseweb/api",
     "build:secure-api": "turbo run build --filter=@courseweb/secure-api",
     "build:apis": "turbo run build --filter=@courseweb/api --filter=@courseweb/secure-api",
-    "build:api-types": "turbo run build --filter=@courseweb/api-types",
+    "build:api-types": "bun run --cwd packages/shared build && turbo run build --filter=@courseweb/api-types",
     "dev:api": "turbo run dev --filter=api",
     "dev:secure-api": "turbo run dev --filter=secure-api",
     "setup": "bun tools/dev-setup/index.mjs",
