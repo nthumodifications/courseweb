@@ -197,6 +197,27 @@ export type AdminCourseReview = {
   }[];
 };
 
+export type ClassPageReportStatus = "reported" | "resolved" | "all";
+export type ClassPageModerationAction = "resolve" | "hide_link" | "ban_user";
+export type AdminClassPageReport = {
+  id: string;
+  targetType: "member" | "link";
+  reason: "spam" | "harassment" | "personal_info" | "other";
+  note: string | null;
+  createdAt: string;
+  resolvedAt: string | null;
+  reporterId: string;
+  target: {
+    displayName?: string | null;
+    userId?: string | null;
+    label?: string | null;
+    url?: string | null;
+    authorId?: string | null;
+    semester: string | null;
+    courseId: string | null;
+  };
+};
+
 export type AdminAuditEntry = {
   id: string;
   actorId: string;
@@ -325,6 +346,8 @@ export const adminKeys = {
   recruitment: (params: unknown) => ["admin", "recruitment", params] as const,
   reviews: (status: ReviewModerationStatus) =>
     ["admin", "reviews", status] as const,
+  classPageReports: (status: ClassPageReportStatus) =>
+    ["admin", "class-page-reports", status] as const,
   courseShortNames: ["admin", "course-short-names"] as const,
 };
 
@@ -902,6 +925,26 @@ export const useDismissReviewReport = () => {
   });
 };
 
+const classPageAdminUrl = () =>
+  `${import.meta.env.VITE_NTHUMODS_AUTH_URL || "https://auth.nthumods.com"}/api/admin/class-pages`;
+
+export const useAdminClassPageReports = (status: ClassPageReportStatus) => {
+  const token = useAdminToken();
+  return useQuery<{ reports: AdminClassPageReport[] }>({
+    queryKey: adminKeys.classPageReports(status),
+    enabled: Boolean(token),
+    queryFn: async () => {
+      const response = await fetch(
+        `${classPageAdminUrl()}/reports?status=${status}`,
+        {
+          headers: authHeaders(requireToken(token)),
+        },
+      );
+      return unwrap<{ reports: AdminClassPageReport[] }>(response);
+    },
+  });
+};
+
 export const useAdminCourseShortNames = () => {
   const token = useAdminToken();
   return useQuery<{ entries: AdminCourseShortName[] }>({
@@ -916,6 +959,35 @@ export const useAdminCourseShortNames = () => {
         response as unknown as Response,
       );
     },
+  });
+};
+
+export const useModerateClassPageReport = () => {
+  const token = useAdminToken();
+  const invalidate = useInvalidateAdmin();
+  return useMutation({
+    mutationFn: async (values: {
+      reportId: string;
+      action: ClassPageModerationAction;
+      reason: string;
+    }) => {
+      const response = await fetch(
+        `${classPageAdminUrl()}/reports/${values.reportId}/moderate`,
+        {
+          method: "POST",
+          headers: {
+            ...authHeaders(requireToken(token)),
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            action: values.action,
+            reason: values.reason,
+          }),
+        },
+      );
+      return unwrap<{ ok: true }>(response);
+    },
+    onSuccess: invalidate,
   });
 };
 

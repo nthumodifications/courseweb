@@ -80,6 +80,12 @@ const BusLinePage = lazyWithRetry(
 const CalendarPage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/calendar/page"),
 );
+const ClassmatesProfilePage = lazyWithRetry(
+  () => import("@/features/classmates/ClassmatesProfilePage"),
+);
+const ClassmatesCoursePage = lazyWithRetry(
+  () => import("@/features/classmates/ClassmatesCoursePage"),
+);
 const SettingsPage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/settings/page"),
 );
@@ -176,6 +182,9 @@ const AdminRecruitmentPage = lazyWithRetry(
 );
 const AdminReviewsPage = lazyWithRetry(
   () => import("@/app/[lang]/admin/reviews/page"),
+);
+const AdminClassPagesPage = lazyWithRetry(
+  () => import("@/app/[lang]/admin/class-pages/page"),
 );
 const AdminCourseShortNamesPage = lazyWithRetry(
   () => import("@/app/[lang]/admin/course-short-names/page"),
@@ -350,6 +359,14 @@ export const appRoutes = [
                   descriptionZh:
                     "清大學期日曆，包含重要日期、假期與截止時限。完整呈現國立清華大學學期行事曆，方便統籌個人規劃。",
                 },
+              },
+              {
+                path: "classmates/:semester/:courseId",
+                element: <ClassmatesCoursePage />,
+              },
+              {
+                path: "classmates",
+                element: <ClassmatesProfilePage />,
               },
               {
                 path: "settings",
@@ -692,6 +709,7 @@ export const appRoutes = [
               { path: "announcements", element: <AdminAnnouncementsPage /> },
               { path: "recruitment", element: <AdminRecruitmentPage /> },
               { path: "reviews", element: <AdminReviewsPage /> },
+              { path: "class-pages", element: <AdminClassPagesPage /> },
               {
                 path: "course-short-names",
                 element: <AdminCourseShortNamesPage />,

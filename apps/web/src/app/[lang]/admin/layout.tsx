@@ -5,6 +5,7 @@ import { Badge, Button, cn } from "@courseweb/ui";
 import {
   Activity,
   ArrowLeft,
+  ClipboardList,
   KeyRound,
   Megaphone,
   MessageSquareWarning,
@@ -36,6 +37,7 @@ const NAV = [
     icon: MessageSquareWarning,
     end: false,
   },
+  { to: "class-pages", label: "", icon: ClipboardList, end: false },
   {
     to: "course-short-names",
     label: "Course short names",
@@ -172,9 +174,11 @@ const AdminLayout = () => {
                     }
                   >
                     <Icon className="h-4 w-4" aria-hidden />
-                    {item.to === "course-short-names"
-                      ? dict.admin_short_names.title
-                      : item.label}
+                    {item.to === "class-pages"
+                      ? dict.admin.class_pages.nav
+                      : item.to === "course-short-names"
+                        ? dict.admin_short_names.title
+                        : item.label}
                   </NavLink>
                 </li>
               );

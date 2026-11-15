@@ -9,6 +9,7 @@ import { createKvStorageApp } from "./kv_storage";
 import { createCalendarApp } from "./calendar";
 import { resolveUserStorageMode } from "../storage/userStore";
 import reviewsHandler from "./reviews";
+import classPagesHandler from "./class-pages";
 import courseShortNamesHandler from "./course-short-names";
 
 const userStorageMode = resolveUserStorageMode();
@@ -41,6 +42,7 @@ const app = new Hono()
   .route("/calendar", createCalendarApp(undefined, userStorageMode))
   .route("/course-dates", courseDatesHandler)
   .route("/reviews", reviewsHandler)
+  .route("/class-pages", classPagesHandler)
   .route("/course-short-names", courseShortNamesHandler)
   .route("/admin", adminHandler);
 

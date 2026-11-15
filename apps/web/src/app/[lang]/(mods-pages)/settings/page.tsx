@@ -31,6 +31,7 @@ import { SettingItem } from "./SettingItem";
 import { MobileQuickNav } from "./MobileQuickNav";
 import { useScrollTracking } from "./useScrollTracking";
 import { AccountSection } from "./AccountSection";
+import ClassmatesSettingsLink from "@/features/classmates/ClassmatesSettingsLink";
 import { SETTINGS_SECTION_IDS, SETTINGS_SETTING_IDS } from "./sectionHash";
 import {
   SettingsSearchBar,
@@ -46,6 +47,7 @@ import {
   Shield,
   Palette,
   UserRound,
+  UsersRound,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -148,6 +150,11 @@ const SettingsPage = () => {
         id: "account",
         title: dict.settings.account.title,
         icon: <UserRound className="h-5 w-5" />,
+      },
+      {
+        id: "class-pages",
+        title: dict.settings.class_pages.title,
+        icon: <UsersRound className="h-5 w-5" />,
       },
       {
         id: "privacy",
@@ -477,6 +484,17 @@ const SettingsPage = () => {
 
               {/* Account Settings */}
               <AccountSection />
+
+              <SettingsSection
+                id="class-pages"
+                title={dict.settings.class_pages.title}
+              >
+                <SettingsSearchableBlock
+                  keywords={Object.values(dict.settings.class_pages)}
+                >
+                  <ClassmatesSettingsLink />
+                </SettingsSearchableBlock>
+              </SettingsSection>
 
               {/* Privacy Settings */}
               <SettingsSection id="privacy" title={dict.settings.privacy.title}>

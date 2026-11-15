@@ -5,6 +5,7 @@ export const SETTINGS_SECTION_IDS = [
   "timetable",
   "ai",
   "account",
+  "class-pages",
   "privacy",
   "advanced",
 ] as const;
