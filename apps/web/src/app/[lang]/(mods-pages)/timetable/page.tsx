@@ -10,6 +10,7 @@ import { useSwipeable } from "react-swipeable";
 import { useSemesters } from "@/hooks/useSemesters";
 import { useHeaderPortal } from "@/components/Portal/HeaderPortal";
 import { useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { serializeJsonLd } from "@/lib/seo";
 import { useSettings } from "@/hooks/contexts/settings";
@@ -29,12 +30,24 @@ const TimetablePage = () => {
     colorMap,
     preferences,
   } = useUserTimetable();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [vertical, setVertical] = useLocalStorage("timetable_vertical", true);
   const { language } = useSettings();
   const dict = useDictionary();
   const { setPortalContent, clearPortalContent } = useHeaderPortal();
   const previousSemesterRef = useRef(semester);
   const semesterCourses = getSemesterCourses(semester);
+
+  useEffect(() => {
+    const requestedSemester = searchParams.get("semester");
+    if (!requestedSemester) return;
+    if (semesterInfo.some((item) => item.id === requestedSemester)) {
+      setSemester(requestedSemester);
+    }
+    const nextSearchParams = new URLSearchParams(searchParams);
+    nextSearchParams.delete("semester");
+    setSearchParams(nextSearchParams, { replace: true });
+  }, [searchParams, semesterInfo, setSearchParams, setSemester]);
 
   const timetableData = createTimetableFromCoursesAndCustomItems(
     filterHiddenCourses(
@@ -68,7 +81,7 @@ const TimetablePage = () => {
   // Set the SemesterSwitcher in the header portal
   useEffect(() => {
     setPortalContent(
-      <div className="contents md:flex md:min-w-0 md:w-full md:flex-row md:items-center md:justify-center">
+      <div className="flex justify-center w-full">
         <SemesterSwitcher semester={semester} setSemester={setSemester} />
       </div>,
     );

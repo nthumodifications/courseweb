@@ -9,8 +9,13 @@ This package provides utilities for synchronizing course data, syllabus informat
 The repository's nightly workflow runs at 00:10 Taipei time. With no semester
 argument, a run reads dates from `GET /semesters`, syncs the current semester
 (the most recently begun semester during breaks), then probes upcoming CCXP
-terms. Empty terms are skipped. NTHU semester IDs use `10` for fall, `20` for
-spring, and `30` for summer. The bundled date table remains the offline fallback.
+terms in sequence. Each upcoming term gets one course-listing probe before a
+full scrape; empty terms skip the full department scrape, syllabus downloads,
+and Algolia update. The run fully syncs at most the first published upcoming
+term, so a nightly run covers the current term plus at most one new term.
+The GitHub Actions job allows 90 minutes for that workload.
+NTHU semester IDs use `10` for fall, `20` for spring, and `30` for summer. The
+bundled date table remains the offline fallback.
 
 ## Features
 
@@ -48,12 +53,12 @@ docker build -t courseweb-data-sync .
 # Run automatic semester selection and sync
 docker run --env-file .env courseweb-data-sync
 
-# Run with custom semester
-docker run --env-file .env courseweb-data-sync tsx src/sync-courses.ts 11510
+# Run with a custom semester
+docker run --env-file .env -e SEMESTER=11510 courseweb-data-sync
 
-# Run scheduled sync (persistent container)
+# Run scheduled sync (persistent container; automatic unless SEMESTER is set)
 docker run -d --env-file .env --name courseweb-sync \
-  courseweb-data-sync tsx src/update-courses.ts "10 0 * * *"
+  courseweb-data-sync bun run src/update-courses.ts "10 0 * * *"
 ```
 
 ### Docker Compose Usage
@@ -117,7 +122,9 @@ bun run --cwd tools/data-sync sync:once [semester]
 With no semester argument, this will:
 
 - Read semester dates from the API and select the current semester
-- Probe upcoming CCXP terms and skip those with no courses yet
+- Probe upcoming CCXP terms one at a time and skip a full scrape when the
+  probed department has no courses
+- Fully sync at most one published upcoming term after the current term
 - Download and process syllabus data
 - Update Algolia search index
 - Exit when complete
@@ -239,8 +246,11 @@ Optional variables:
 
 ### Semester Selection
 
-Automatic runs use API dates and CCXP course availability. An explicit
-semester argument remains available for one-off backfills and manual runs.
+Automatic runs use API dates and CCXP course availability. Empty upcoming terms
+are checked with one department listing, and later terms are deferred after
+the first upcoming term is fully synced. An explicit semester argument or
+`SEMESTER` environment variable remains available for one-off backfills and
+manual runs.
 
 ### Schedule Pattern
 

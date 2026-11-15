@@ -80,10 +80,6 @@
       "holiday": "假期"
     }
   },
-  "semester_cutover": {
-    "prompt": "{semester} 课程已公布・查看",
-    "dismiss": "关闭"
-  },
   "timetable": {
     "course_changes": {
       "summary": "课表中有 {count} 门课有异动",
@@ -1633,6 +1629,10 @@
     "TimetableCourseList": {
       "action": "前往设置",
       "text": "你可以在设置页面客制化课表。"
+    },
+    "new_semester": {
+      "title": "{semester} 课程已公布",
+      "link": "查看"
     },
     "dismiss": "关闭公告"
   },

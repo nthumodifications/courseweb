@@ -13,7 +13,6 @@ import { semesterInfo } from "@courseweb/shared";
 import useDictionary from "@/dictionaries/useDictionary";
 import { shouldDefaultSemester } from "./semesterDefault";
 import { useDefaultSemesterId } from "@/hooks/useSemesters";
-import NewSemesterPrompt from "@/components/Timetable/NewSemesterPrompt";
 
 const SemesterSelector = () => {
   const dict = useDictionary();
@@ -64,28 +63,20 @@ const SemesterSelector = () => {
   );
 
   return (
-    <div className="flex flex-col gap-2">
-      <Select value={selected} onValueChange={handleSelect}>
-        <SelectTrigger className="w-[200px] ">
-          <SelectValue placeholder={dict.course.refine.semester} />
-        </SelectTrigger>
-        <SelectContent>
-          {[...semesterInfo]
-            .sort((a, b) => Number.parseInt(b.id) - Number.parseInt(a.id))
-            .map((item) => (
-              <SelectItem value={item.id} key={item.id}>
-                {toPrettySemester(item.id)} {dict.course.refine.semester}
-              </SelectItem>
-            ))}
-        </SelectContent>
-      </Select>
-      <NewSemesterPrompt
-        onView={(semester) => {
-          hasUserSelectedSemester.current = true;
-          refine(semester);
-        }}
-      />
-    </div>
+    <Select value={selected} onValueChange={handleSelect}>
+      <SelectTrigger className="w-[200px] ">
+        <SelectValue placeholder={dict.course.refine.semester} />
+      </SelectTrigger>
+      <SelectContent>
+        {[...semesterInfo]
+          .sort((a, b) => Number.parseInt(b.id) - Number.parseInt(a.id))
+          .map((item) => (
+            <SelectItem value={item.id} key={item.id}>
+              {toPrettySemester(item.id)} {dict.course.refine.semester}
+            </SelectItem>
+          ))}
+      </SelectContent>
+    </Select>
   );
 };
 

@@ -80,10 +80,6 @@
       "holiday": "Holiday"
     }
   },
-  "semester_cutover": {
-    "prompt": "{semester} courses posted · View",
-    "dismiss": "Dismiss"
-  },
   "timetable": {
     "course_changes": {
       "summary": "{count} courses in your timetable changed",
@@ -1633,6 +1629,10 @@
     "TimetableCourseList": {
       "action": "Go Settings",
       "text": "You can change your theme in the settings page."
+    },
+    "new_semester": {
+      "title": "{semester} courses are now available",
+      "link": "View"
     },
     "dismiss": "Dismiss"
   },

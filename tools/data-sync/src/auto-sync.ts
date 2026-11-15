@@ -135,14 +135,19 @@ export const runAutoSync = async (options: {
     syllabusDownloaded: 0,
     algoliaRecordsUpdated: 0,
   };
+  const attemptedSemesters: string[] = [];
   for (const [index, semester] of semesterIds.entries()) {
+    attemptedSemesters.push(semester);
     const result = await options.syncSemester(semester, {
       skipIfEmpty: index > 0,
     });
-    if (!result.success) return { ...result, semesters: semesterIds };
+    if (!result.success) return { ...result, semesters: attemptedSemesters };
     stats.coursesScraped! += result.stats?.coursesScraped ?? 0;
     stats.syllabusDownloaded! += result.stats?.syllabusDownloaded ?? 0;
     stats.algoliaRecordsUpdated! += result.stats?.algoliaRecordsUpdated ?? 0;
+    // Upcoming terms are checked in order. Once the first published term has
+    // been fully synchronized, defer later terms to the next scheduled run.
+    if (index > 0 && !result.skipped) break;
   }
-  return { success: true, stats, semesters: semesterIds };
+  return { success: true, stats, semesters: attemptedSemesters };
 };

@@ -33,6 +33,7 @@ export const syncCourses = async (
       console.log(`⏭️ CCXP has no courses for ${semester} yet; skipping`);
       return {
         success: true,
+        skipped: true,
         stats: {
           coursesScraped: 0,
           syllabusDownloaded: 0,
@@ -79,7 +80,7 @@ export default syncCourses;
 
 // If this file is run directly, execute the sync
 if (import.meta.main) {
-  const semester = process.argv[2]?.trim();
+  const semester = process.argv[2]?.trim() || process.env.SEMESTER?.trim();
   const run = async () => {
     if (semester) {
       console.log(`Running sync for semester: ${semester}`);

@@ -28,6 +28,23 @@ import {
 
 const baseUrl = `https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/6/6.2/6.2.9/JH629002.php`;
 
+export const ccxpListingHasCourses = (html: string): boolean | undefined => {
+  const doc = parseHTML(html).document;
+  const table = Array.from(doc.querySelectorAll("table")).find((node) =>
+    (node.textContent?.trim() ?? "").startsWith("科號"),
+  );
+  if (!table) return undefined;
+  const rows = Array.from(table?.querySelectorAll("tr") ?? []);
+  return rows.some((row, index) => {
+    if (index < 2 || index % 2 !== 0) return false;
+    const cells = row.querySelectorAll("td");
+    return Boolean(cells[0]?.textContent?.trim());
+  });
+};
+
+export const shouldSkipUpcomingSemesterScrape = (html: string) =>
+  ccxpListingHasCourses(html) === false;
+
 const CHANGE_LOG_PAGE_SIZE = 1_000;
 const CHANGE_LOG_MAX_PAGES = 10;
 const CHANGE_LOG_INSERT_CHUNK_SIZE = 500;
@@ -388,7 +405,10 @@ export const scrapeArchivedCourses = async (
 
   console.log(`Found ${departments.length} departments`);
 
-  const fetchCourses = async (department: Department, yearSemester: string) => {
+  const fetchCourses = async (
+    department: Department,
+    yearSemester: string,
+  ): Promise<string> => {
     return await retryWithBackoff(
       async () => {
         const response = await fetch(baseUrl, {
@@ -408,13 +428,30 @@ export const scrapeArchivedCourses = async (
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
-        return response;
+        return response
+          .arrayBuffer()
+          .then((arrayBuffer) =>
+            new TextDecoder("big5").decode(new Uint8Array(arrayBuffer)),
+          );
       },
       3,
       1500,
       `${department.code} courses`,
     );
   };
+
+  let probedDepartment: { code: string; html: string } | undefined;
+  if (options.skipIfEmpty && departments.length > 0) {
+    const department = departments[0]!;
+    const html = await fetchCourses(department, semester);
+    if (shouldSkipUpcomingSemesterScrape(html)) {
+      console.log(
+        `⏭️ CCXP probe found no ${semester} courses in ${department.code}`,
+      );
+      return [];
+    }
+    probedDepartment = { code: department.code, html };
+  }
 
   const normalizedCourses: Course[] = [];
   const failedDepartments: string[] = [];
@@ -428,12 +465,10 @@ export const scrapeArchivedCourses = async (
       try {
         console.log(`Scraping ${department.code} ${semester}...`);
 
-        const response = await fetchCourses(department, semester);
-        const text = await response
-          .arrayBuffer()
-          .then((arrayBuffer) =>
-            new TextDecoder("big5").decode(new Uint8Array(arrayBuffer)),
-          );
+        const text =
+          department.code === probedDepartment?.code
+            ? probedDepartment.html
+            : await fetchCourses(department, semester);
 
         const doc = parseHTML(text).document;
         const tables = doc.querySelectorAll("table");

@@ -57,6 +57,7 @@ describe("automatic semester sync selection", () => {
         calls.push({ semester, skipIfEmpty: options?.skipIfEmpty });
         return {
           success: true,
+          skipped: semester !== "11510",
           stats: { coursesScraped: semester === "11510" ? 12 : 0 },
         };
       },
@@ -69,5 +70,24 @@ describe("automatic semester sync selection", () => {
       { semester: "11520", skipIfEmpty: true },
       { semester: "11530", skipIfEmpty: true },
     ]);
+  });
+
+  it("stops after the first published upcoming semester is fully synced", async () => {
+    const calls: string[] = [];
+    const result = await runAutoSync({
+      now: new Date("2026-10-09T12:00:00Z"),
+      semesters,
+      syncSemester: async (semester, options) => {
+        calls.push(`${semester}:${options?.skipIfEmpty}`);
+        return {
+          success: true,
+          stats: { coursesScraped: semester === "11520" ? 8 : 12 },
+        };
+      },
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.semesters).toEqual(["11510", "11520"]);
+    expect(calls).toEqual(["11510:false", "11520:true"]);
   });
 });

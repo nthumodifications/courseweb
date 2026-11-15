@@ -4,7 +4,6 @@ import { rocYear } from "@/helpers/roc";
 import { Semester } from "@/types/courses";
 import { Button } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
-import NewSemesterPrompt from "./NewSemesterPrompt";
 import { useSemesters } from "@/hooks/useSemesters";
 
 const SemesterSwitcher = ({
@@ -36,35 +35,30 @@ const SemesterSwitcher = ({
   };
 
   return (
-    <>
-      <div className="col-start-2 row-start-1 flex w-full flex-row items-center justify-center gap-4 px-4 py-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label={dict.calendar.accessibility.previous_period}
-          disabled={!hasPrev}
-          onClick={goPrev}
-        >
-          <ChevronLeft />
-        </Button>
-        <span className="text-base font-bold">
-          {rocYear(semesterObj.year)}-{semesterObj.semester}{" "}
-          {dict.timetable.semester_suffix}
-        </span>
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label={dict.calendar.accessibility.next_period}
-          disabled={!hasNext}
-          onClick={goNext}
-        >
-          <ChevronRight />
-        </Button>
-      </div>
-      <div className="col-span-3 row-start-2 w-full min-w-0 px-4 md:w-auto md:flex-none">
-        <NewSemesterPrompt onView={setSemester} />
-      </div>
-    </>
+    <div className="flex flex-row items-center justify-center gap-4 px-4 py-2 w-full">
+      <Button
+        variant="ghost"
+        size="icon"
+        aria-label={dict.calendar.accessibility.previous_period}
+        disabled={!hasPrev}
+        onClick={goPrev}
+      >
+        <ChevronLeft />
+      </Button>
+      <span className="text-lg font-bold">
+        {rocYear(semesterObj.year)}-{semesterObj.semester}{" "}
+        {dict.timetable.semester_suffix}
+      </span>
+      <Button
+        variant="ghost"
+        size="icon"
+        aria-label={dict.calendar.accessibility.next_period}
+        disabled={!hasNext}
+        onClick={goNext}
+      >
+        <ChevronRight />
+      </Button>
+    </div>
   );
 };
 

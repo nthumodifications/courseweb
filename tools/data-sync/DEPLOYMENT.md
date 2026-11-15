@@ -6,14 +6,19 @@ This guide covers deploying the CourseWeb Data Sync tool to various cloud platfo
 
 Production course sync is scheduled by `.github/workflows/scrape.yaml` at
 `10 16 * * *` UTC (00:10 in Taipei). It reads semester dates from
-`GET /semesters`, syncs the current semester, and probes the next CCXP term.
-An empty upcoming term is skipped. Manual workflow dispatch accepts an optional
-semester ID for a one-off override; leave it empty for automatic selection.
-The semester API uses the Worker D1 migration applied by the main build workflow.
+`GET /semesters`, syncs the current semester, then checks upcoming CCXP terms
+sequentially. Each upcoming term gets one department course-listing probe; an
+empty term skips the full scrape, syllabus downloads, and Algolia update. It
+fully syncs at most one published upcoming term per run. The job has a
+90-minute timeout for the current term plus one new term. Manual workflow
+dispatch accepts an optional semester ID for a one-off override; leave it empty
+for automatic selection. The semester API uses the Worker D1 migration applied
+by the main build workflow.
 
 The remaining examples below describe standalone deployments. Configure their
-scheduler for 00:10 in `Asia/Taipei` and leave the semester argument empty to
-use the same automatic selection.
+scheduler for 00:10 in `Asia/Taipei` and leave `SEMESTER` unset to use the same
+automatic selection. Each run processes terms sequentially and fully syncs at
+most one upcoming term.
 
 ## Overview
 

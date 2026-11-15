@@ -50,7 +50,8 @@ export default startScheduledSync;
 
 if (import.meta.main) {
   const cronPattern = process.argv[2] || "0 0 * * *";
-  const semester = process.argv[3]?.trim() || undefined;
+  const semester =
+    process.argv[3]?.trim() || process.env.SEMESTER?.trim() || undefined;
   console.log("Starting scheduled sync:");
   console.log(`  Cron: ${cronPattern}`);
   console.log(`  Selection: ${semester ?? "automatic"}`);
