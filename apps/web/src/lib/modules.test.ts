@@ -119,7 +119,18 @@ describe("module keys and title normalization", () => {
       department: "CS",
       course: "1355",
     });
-    expect(parseModuleKey("CS1355")).toBeNull();
+    expect(parseModuleKey("cs 1355")).toEqual({
+      department: "CS",
+      course: "1355",
+    });
+    expect(parseModuleKey("math1010")).toEqual({
+      department: "MATH",
+      course: "1010",
+    });
+    expect(parseModuleKey("ｍａｔｈ　１０１０")).toEqual({
+      department: "MATH",
+      course: "1010",
+    });
   });
 
   test("collapses full-width, whitespace, and editorial punctuation", () => {
@@ -307,18 +318,37 @@ describe("module variants and aggregation", () => {
     ).toEqual(["11410"]);
   });
 
-  test("groups search rows into module title variants and ranks exact codes first", () => {
+  test("ranks exact code, title prefix, title contains, and teacher matches", () => {
     const results = aggregateModuleSearchRows([
-      searchRow("11510MA135501", "11510", "MA", "1355", "微積分", "甲老師"),
-      searchRow("11310CS135501", "11310", "CS", "1355", "資料結構", "乙老師"),
-      searchRow("11410CS135501", "11410", "CS", "1355", "資料結構", "丙老師"),
+      searchRow(
+        "11210MA101001",
+        "11210",
+        "MA",
+        "1010",
+        "數學導論",
+        "微積分老師",
+      ),
+      searchRow("11310CS135501", "11310", "CS", "1355", "基礎微積分", "乙老師"),
+      searchRow("11410EE135501", "11410", "EE", "1355", "微積分乙", "丙老師"),
+      searchRow("11210PH135501", "11210", "PH", "1355", "微積分甲", "丁老師"),
+      searchRow(
+        "11510MATH 101001",
+        "11510",
+        "MATH",
+        "1010",
+        "課程名稱",
+        "戊老師",
+      ),
     ]);
 
-    const ranked = rankModuleSearchResults(results, "CS 1355");
-    expect(ranked.map((result) => result.key)).toEqual(["CS:1355", "MA:1355"]);
-    expect(ranked[0].latestSemester).toBe("11410");
     expect(
-      ranked[0].instructors.map((instructor) => instructor.nameZh),
-    ).toEqual(["丙老師"]);
+      rankModuleSearchResults(results, "MATH 1010").map(({ key }) => key)[0],
+    ).toBe("MATH:1010");
+    expect(
+      rankModuleSearchResults(results, "微積分").map(({ key }) => key),
+    ).toEqual(["EE:1355", "PH:1355", "CS:1355", "MA:1010", "MATH:1010"]);
+    expect(rankModuleSearchResults(results, "微積分")[0].latestSemester).toBe(
+      "11410",
+    );
   });
 });

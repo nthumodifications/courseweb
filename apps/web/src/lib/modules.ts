@@ -164,8 +164,10 @@ export const normalizeCourseTitle = (value: string) => {
 };
 
 export const createModuleKey = (department: string, course: string) => {
-  const normalizedDepartment = normalizePart(department);
-  const normalizedCourse = normalizePart(course).replace(/\s+/g, "");
+  const normalizedDepartment = normalizePart(department).toLocaleUpperCase();
+  const normalizedCourse = normalizePart(course)
+    .replace(/\s+/g, "")
+    .toLocaleUpperCase();
 
   if (!normalizedDepartment || !normalizedCourse) {
     throw new Error("A module key needs both department and course");
@@ -175,11 +177,18 @@ export const createModuleKey = (department: string, course: string) => {
 };
 
 export const parseModuleKey = (value: string): ParsedModuleKey | null => {
-  const separator = value.indexOf(":");
-  if (separator < 1 || separator === value.length - 1) return null;
+  const normalized = normalizePart(value).normalize("NFKC");
+  const separator = normalized.indexOf(":");
+  const parts =
+    separator >= 0
+      ? [normalized.slice(0, separator), normalized.slice(separator + 1)]
+      : /^(.*?)(\d+)$/.exec(normalized)?.slice(1);
+  if (!parts || parts.length !== 2) return null;
 
-  const department = normalizePart(value.slice(0, separator));
-  const course = normalizePart(value.slice(separator + 1)).replace(/\s+/g, "");
+  const department = normalizePart(parts[0]).toLocaleUpperCase();
+  const course = normalizePart(parts[1])
+    .replace(/\s+/g, "")
+    .toLocaleUpperCase();
   return department && course ? { department, course } : null;
 };
 
@@ -752,22 +761,49 @@ export const aggregateModuleSearchRows = (
   });
 };
 
-const normalizeCodeQuery = (value: string) =>
-  normalizePart(value)
-    .replace(/[\s:./_-]+/g, "")
-    .toLocaleUpperCase();
+const normalizeSearchText = (value: string) =>
+  value.normalize("NFKC").trim().toLocaleLowerCase();
+
+const getSearchMatchTier = (
+  result: ModuleSearchResult,
+  keyword: string,
+  exactCode: string | null,
+) => {
+  if (
+    exactCode &&
+    createModuleKey(result.department, result.course) === exactCode
+  ) {
+    return 0;
+  }
+
+  const query = normalizeSearchText(keyword);
+  const titles = [result.nameZh, result.nameEn].map(normalizeSearchText);
+  if (titles.some((title) => title.startsWith(query))) return 1;
+  if (titles.some((title) => title.includes(query))) return 2;
+
+  const instructors = result.instructors.flatMap((instructor) => [
+    instructor.nameZh,
+    instructor.nameEn,
+  ]);
+  if (instructors.some((name) => normalizeSearchText(name).includes(query))) {
+    return 3;
+  }
+  return 4;
+};
 
 export const rankModuleSearchResults = (
   results: readonly ModuleSearchResult[],
   keyword: string,
 ) => {
-  const queryCode = normalizeCodeQuery(keyword);
+  const parsedQuery = parseModuleKey(keyword);
+  const exactCode = parsedQuery
+    ? createModuleKey(parsedQuery.department, parsedQuery.course)
+    : null;
   return [...results].sort((left, right) => {
-    const leftExact =
-      normalizeCodeQuery(`${left.department}${left.course}`) === queryCode;
-    const rightExact =
-      normalizeCodeQuery(`${right.department}${right.course}`) === queryCode;
-    if (leftExact !== rightExact) return leftExact ? -1 : 1;
+    const tierDifference =
+      getSearchMatchTier(left, keyword, exactCode) -
+      getSearchMatchTier(right, keyword, exactCode);
+    if (tierDifference !== 0) return tierDifference;
 
     const latestDifference =
       semesterSortValue(right.latestSemester) -
@@ -785,9 +821,14 @@ export const searchModules = async (keyword: string, signal?: AbortSignal) => {
   const trimmedKeyword = keyword.trim();
   if (!trimmedKeyword) return [];
 
+  const parsedQuery = parseModuleKey(trimmedKeyword);
+  const searchKeyword = parsedQuery
+    ? `${parsedQuery.department} ${parsedQuery.course}`
+    : trimmedKeyword;
+
   const supabase = await loadSupabase();
   let request = supabase
-    .rpc("search_courses", { keyword: trimmedKeyword })
+    .rpc("search_courses", { keyword: searchKeyword })
     .select(MODULE_SEARCH_SELECT)
     .order("semester", { ascending: false })
     .limit(MODULE_SEARCH_ROW_LIMIT);
