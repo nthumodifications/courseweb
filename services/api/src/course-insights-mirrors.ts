@@ -1,83 +1,11 @@
 // Worker-local projections of packages/shared course insight lookup data.
 // course-insights-mirrors.test.ts keeps these synchronized with the source.
 
-export const COURSE_INSIGHT_SEMESTERS = [
-  {
-    id: "10810",
-    year: 2019,
-    semester: 1,
-  },
-  {
-    id: "10820",
-    year: 2019,
-    semester: 2,
-  },
-  {
-    id: "10910",
-    year: 2020,
-    semester: 1,
-  },
-  {
-    id: "10920",
-    year: 2020,
-    semester: 2,
-  },
-  {
-    id: "11010",
-    year: 2021,
-    semester: 1,
-  },
-  {
-    id: "11020",
-    year: 2021,
-    semester: 2,
-  },
-  {
-    id: "11110",
-    year: 2022,
-    semester: 1,
-  },
-  {
-    id: "11120",
-    year: 2022,
-    semester: 2,
-  },
-  {
-    id: "11210",
-    year: 2023,
-    semester: 1,
-  },
-  {
-    id: "11220",
-    year: 2023,
-    semester: 2,
-  },
-  {
-    id: "11310",
-    year: 2024,
-    semester: 1,
-  },
-  {
-    id: "11320",
-    year: 2024,
-    semester: 2,
-  },
-  {
-    id: "11410",
-    year: 2025,
-    semester: 1,
-  },
-  {
-    id: "11420",
-    year: 2025,
-    semester: 2,
-  },
-  {
-    id: "11510",
-    year: 2026,
-    semester: 1,
-  },
-] as const;
+import { semesterInfo } from "./semester-info";
+
+export const COURSE_INSIGHT_SEMESTERS = semesterInfo.map(
+  ({ id, year, semester }) => ({ id, year, semester }),
+);
 
 export const COURSE_INSIGHT_BUILDINGS = [
   [
