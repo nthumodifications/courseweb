@@ -7,6 +7,7 @@ const preferences: TimetableDisplayPreferences = {
   align: "center",
   verticalAlign: "top",
   fontSize: "sm",
+  titleBehavior: "fit",
   fontFamily: "system",
   display: {
     title: true,
@@ -17,6 +18,7 @@ const preferences: TimetableDisplayPreferences = {
     credits: false,
   },
   fieldOrder: ["code", "title", "time", "teacher", "venue", "credits"],
+  hiddenCourses: {},
 };
 
 describe("timetable export display preferences", () => {

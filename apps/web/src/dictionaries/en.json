@@ -1360,6 +1360,12 @@
         "base": "Medium",
         "lg": "Large"
       },
+      "title_behavior": "Course title",
+      "title_behavior_options": {
+        "fit": "Fit",
+        "one_line": "1 line",
+        "two_lines": "2 lines"
+      },
       "font_family": "Slot font family",
       "font_family_options": {
         "system": "System",

@@ -4,6 +4,7 @@ import {
   TimetableFontFamily,
   TimetableFontSize,
   TimetableFieldKey,
+  TimetableTitleBehavior,
   DEFAULT_FIELD_ORDER,
 } from "@/hooks/contexts/useUserTimetable";
 import { Switch } from "@courseweb/ui";
@@ -121,6 +122,13 @@ const TimetablePreferences: React.FC<SettingsControlProps> = ({
     });
   };
 
+  const handleTitleBehaviorChange = (value: string) => {
+    onSettingsChange({
+      ...settings,
+      titleBehavior: value as TimetableTitleBehavior,
+    });
+  };
+
   const handleFontFamilyChange = (value: string) => {
     onSettingsChange({
       ...settings,
@@ -176,6 +184,31 @@ const TimetablePreferences: React.FC<SettingsControlProps> = ({
             </SelectItem>
             <SelectItem value="lg">
               {dict.settings.timetable.font_size_options.lg}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="flex flex-row items-center gap-4 py-4">
+        <label className="font-bold flex-1 text-sm">
+          {dict.settings.timetable.title_behavior}
+        </label>
+        <Select
+          value={settings.titleBehavior ?? "fit"}
+          onValueChange={handleTitleBehaviorChange}
+        >
+          <SelectTrigger className="w-[160px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="fit">
+              {dict.settings.timetable.title_behavior_options.fit}
+            </SelectItem>
+            <SelectItem value="1">
+              {dict.settings.timetable.title_behavior_options.one_line}
+            </SelectItem>
+            <SelectItem value="2">
+              {dict.settings.timetable.title_behavior_options.two_lines}
             </SelectItem>
           </SelectContent>
         </Select>

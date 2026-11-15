@@ -1360,6 +1360,12 @@
         "base": "中",
         "lg": "大"
       },
+      "title_behavior": "课程名称",
+      "title_behavior_options": {
+        "fit": "缩小文字",
+        "one_line": "单行",
+        "two_lines": "双行"
+      },
       "font_family": "时段字体",
       "font_family_options": {
         "system": "系统字体",
