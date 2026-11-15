@@ -70,3 +70,48 @@ export const ModuleTermAvailability = ({
     </dl>
   );
 };
+
+/** Small term markers for dense rows and the module header. */
+export const ModuleTermDots = ({
+  semesters,
+  showLabels = false,
+  className,
+}: {
+  semesters: readonly string[];
+  showLabels?: boolean;
+  className?: string;
+}) => {
+  const dict = useDictionary();
+  const labels = dict.course.module.availability;
+  const availability = getTermAvailability(semesters);
+  const ariaLabel = availability
+    .map(
+      ({ term, status }) => `${labels.terms[term]}: ${labels.status[status]}`,
+    )
+    .join(", ");
+
+  return (
+    <span
+      role="img"
+      aria-label={ariaLabel}
+      title={ariaLabel}
+      className={cn(
+        "inline-flex shrink-0 items-center gap-2 text-xs text-muted-foreground",
+        className,
+      )}
+    >
+      {availability.map(({ term, status }) => (
+        <span key={term} className="inline-flex items-center gap-1">
+          <span
+            aria-hidden="true"
+            className={cn(
+              "h-1.5 w-1.5 rounded-full",
+              status === "never" ? "bg-muted-foreground/30" : "bg-foreground",
+            )}
+          />
+          {showLabels && <span>{labels.terms[term]}</span>}
+        </span>
+      ))}
+    </span>
+  );
+};

@@ -11,18 +11,22 @@ export const CoursePageShell = ({
   lang,
   dict,
   inDialog,
+  wide = false,
   children,
 }: {
   lang: string;
   dict: Dictionary;
   inDialog: boolean;
+  wide?: boolean;
   children: ReactNode;
 }) => (
   <div
     className={
       inDialog
         ? "flex min-w-0 flex-col"
-        : "flex min-w-0 flex-col gap-4 px-4 md:px-6 w-full max-w-7xl"
+        : wide
+          ? "flex min-w-0 flex-col gap-4 px-4 md:px-6 w-full"
+          : "flex min-w-0 flex-col gap-4 px-4 md:px-6 w-full max-w-7xl"
     }
   >
     {!inDialog && (
@@ -67,6 +71,7 @@ export const CoursePageState = ({
   lang,
   dict,
   inDialog,
+  wide = false,
   title,
   description,
   children,
@@ -74,6 +79,7 @@ export const CoursePageState = ({
   lang: string;
   dict: Dictionary;
   inDialog: boolean;
+  wide?: boolean;
   title: string;
   description?: string;
   children: ReactNode;
@@ -84,7 +90,7 @@ export const CoursePageState = ({
       title={title}
       description={description}
     />
-    <CoursePageShell lang={lang} dict={dict} inDialog={inDialog}>
+    <CoursePageShell lang={lang} dict={dict} inDialog={inDialog} wide={wide}>
       {children}
     </CoursePageShell>
   </>
@@ -126,6 +132,7 @@ export const CoursePageErrorPage = ({
   lang,
   dict,
   inDialog,
+  wide = false,
   pageTitle,
   error,
   title,
@@ -135,6 +142,7 @@ export const CoursePageErrorPage = ({
   lang: string;
   dict: Dictionary;
   inDialog: boolean;
+  wide?: boolean;
   pageTitle: string;
   error: boolean;
   title: string;
@@ -145,6 +153,7 @@ export const CoursePageErrorPage = ({
     lang={lang}
     dict={dict}
     inDialog={inDialog}
+    wide={wide}
     title={pageTitle}
   >
     <CoursePageErrorState

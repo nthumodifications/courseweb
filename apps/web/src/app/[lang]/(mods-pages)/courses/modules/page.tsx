@@ -5,18 +5,12 @@ import { Helmet } from "react-helmet-async";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { Button, EmptyState, ErrorState, Input } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
-import { ModuleTermAvailability } from "@/components/Courses/ModuleTermAvailability";
+import { ModuleTermDots } from "@/components/Courses/ModuleTermAvailability";
 import { searchModules, type ModuleSearchResult } from "@/lib/modules";
 import { contentLanguage } from "@/helpers/contentLanguage";
 import type { Language } from "@/types/settings";
 
 const MODULE_SEARCH_DEBOUNCE_MS = 250;
-
-const ModuleSearchTag = ({ children }: { children: React.ReactNode }) => (
-  <div className="flex min-w-[52px] flex-row items-center justify-center space-x-2 rounded-md bg-muted px-1 py-1 text-xs text-foreground select-none">
-    {children}
-  </div>
-);
 
 const ModuleSearchResultRow = ({
   result,
@@ -36,50 +30,46 @@ const ModuleSearchResultRow = ({
         : instructor.nameZh,
     )
     .join(contentLang === "en" ? ", " : "、");
+  const latestOffering = `${result.latestSemester.slice(0, 3)}-${result.latestSemester[3]}`;
   return (
     <Link
       to={`/${lang}/courses/module/${encodeURIComponent(result.key)}?title=${encodeURIComponent(result.nameZh)}`}
-      className="group flex min-w-0 flex-row gap-4 py-4 outline-none hover:bg-muted/40 focus-visible:bg-muted/40"
+      title={instructors || dict.course.module.not_available}
+      className="group flex min-h-14 min-w-0 items-center gap-2 py-2 outline-none hover:bg-muted/40 focus-visible:bg-muted/40 sm:gap-3"
     >
-      <div className="min-w-0 flex-1">
-        <div className="mb-2 space-y-1">
-          <p className="text-nthu-500 text-sm font-bold">
-            {result.department} {result.course}
-          </p>
-          <div className="flex min-w-0 flex-row items-start gap-1 text-left font-bold group-hover:underline">
-            <span className="min-w-0 whitespace-normal">{title}</span>
-            <ChevronRight
-              className="mt-1 h-4 w-4 shrink-0"
-              aria-hidden="true"
-            />
-          </div>
-          <p className="text-sm text-muted-foreground">
-            {instructors || dict.course.module.not_available}
-            {" · "}
-            {dict.course.module.recent_offering}{" "}
-            {result.latestSemester.slice(0, 3)}-{result.latestSemester[3]}
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-1 text-sm">
-          <ModuleSearchTag>
-            {result.credits.join(" / ")} {dict.course.module.credits_unit}
-          </ModuleSearchTag>
-        </div>
-        <ModuleTermAvailability
-          semesters={result.semesters}
-          size="sm"
-          className="mt-2"
-        />
-      </div>
+      <span className="w-[5.25rem] shrink-0 font-mono text-sm tabular-nums text-muted-foreground sm:w-24">
+        {result.department} {result.course}
+      </span>
+      <span
+        title={title}
+        className="min-w-0 flex-1 truncate font-medium group-hover:underline"
+      >
+        {title}
+      </span>
+      <span className="shrink-0 whitespace-nowrap text-sm text-muted-foreground">
+        {result.credits.join(contentLang === "en" ? "/" : "、")}{" "}
+        {dict.course.module.credits_unit}
+      </span>
+      <ModuleTermDots semesters={result.semesters} />
+      <span className="flex min-w-0 max-w-[25%] shrink-0 items-center gap-1 text-xs text-muted-foreground sm:max-w-[34%]">
+        <span className="shrink-0 tabular-nums">{latestOffering}</span>
+        <span
+          title={instructors || dict.course.module.not_available}
+          className="min-w-0 truncate"
+        >
+          {instructors || dict.course.module.not_available}
+        </span>
+      </span>
+      <ChevronRight className="h-4 w-4 shrink-0" aria-hidden="true" />
     </Link>
   );
 };
 
 const ModuleSearchSkeleton = () => (
-  <div className="flex animate-pulse flex-col gap-4 py-4">
-    <div className="h-4 w-28 rounded bg-muted" />
-    <div className="h-5 w-3/4 rounded bg-muted" />
-    <div className="h-3 w-1/2 rounded bg-muted" />
+  <div className="flex h-14 animate-pulse items-center gap-3">
+    <div className="h-4 w-20 rounded bg-muted" />
+    <div className="h-4 flex-1 rounded bg-muted" />
+    <div className="h-4 w-16 rounded bg-muted" />
   </div>
 );
 
@@ -127,18 +117,8 @@ const ModulesSearchPage = () => {
     <>
       <Helmet>
         <title>{`${dict.course.module.search_title} | NTHUMods`}</title>
-        <meta name="description" content={dict.course.module.search_prompt} />
       </Helmet>
       <div className="flex min-w-0 w-full flex-col gap-4 px-4 md:px-6">
-        <header className="flex flex-col gap-2">
-          <h1 className="text-xl font-medium">
-            {dict.course.module.search_title}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {dict.course.module.search_description}
-          </p>
-        </header>
-
         <form
           onSubmit={onSubmit}
           className="relative flex w-full items-center gap-1"
@@ -166,22 +146,19 @@ const ModulesSearchPage = () => {
         </form>
 
         {!debouncedQuery ? (
-          <section className="flex flex-col gap-3" aria-live="polite">
+          <section className="flex flex-col gap-2" aria-live="polite">
             <p className="text-sm text-muted-foreground">
-              {dict.course.module.search_prompt}
+              {dict.course.module.search_examples_label}
             </p>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 text-sm">
               {dict.course.module.search_examples.map((example) => (
-                <Button
+                <Link
                   key={example}
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="min-h-11"
-                  onClick={() => setQuery(example)}
+                  to={`/${lang}/courses/modules?q=${encodeURIComponent(example)}`}
+                  className="min-h-10 py-2 text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
                 >
                   {example}
-                </Button>
+                </Link>
               ))}
             </div>
           </section>
@@ -222,6 +199,7 @@ const ModulesSearchPage = () => {
             </div>
           </section>
         )}
+        <div className="h-6" aria-hidden="true" />
       </div>
     </>
   );

@@ -11,7 +11,6 @@ import {
   getCommonTimes,
   getDemandSeries,
   getInstructorInsights,
-  getLanguages,
   getRecentFill,
   summariseScores,
   type ScoreSummary,
@@ -57,17 +56,19 @@ export const ModuleStat = ({
   label,
   hint,
   compact = false,
-}: ModuleStatProps) => (
-  <div className="flex min-w-0 flex-col">
-    <dd
-      className={`break-all font-bold ${compact ? "text-lg leading-6" : value.length > 8 ? "text-lg leading-8" : "text-2xl"}`}
-    >
-      {value}
-    </dd>
-    <dt className="text-sm text-muted-foreground">{label}</dt>
-    {hint && <span className="text-xs text-muted-foreground">{hint}</span>}
-  </div>
-);
+}: ModuleStatProps) =>
+  compact ? (
+    <div className="flex min-w-0 flex-col">
+      <dd className="font-bold tabular-nums">{value}</dd>
+      <dt className="text-sm text-muted-foreground">{label}</dt>
+      {hint && <span className="text-xs text-muted-foreground">{hint}</span>}
+    </div>
+  ) : (
+    <div title={hint} className="flex min-w-0 items-baseline gap-1">
+      <dd className="shrink-0 font-bold tabular-nums">{value}</dd>
+      <dt className="text-sm text-muted-foreground">{label}</dt>
+    </div>
+  );
 
 /** The numbers a student wants first: how full, how graded, when, in what language. */
 export const ModuleStats = ({ variant }: { variant: ModuleVariant }) => {
@@ -79,15 +80,10 @@ export const ModuleStats = ({ variant }: { variant: ModuleVariant }) => {
   const recentFill = getRecentFill(getDemandSeries(variant.offerings));
   const score = summariseScores(scores)[0];
   const time = getCommonTimes(variant.offerings)[0];
-  const languages = getLanguages(variant.offerings)
-    .slice(0, 2)
-    .map((entry) => entry.value)
-    .join(" / ");
-
-  if (recentFill === null && !score && !time && !languages) return null;
+  if (recentFill === null && !score && !time) return null;
 
   return (
-    <dl className="grid grid-cols-2 gap-x-4 gap-y-4">
+    <dl className="flex min-w-0 flex-wrap items-baseline gap-x-4 gap-y-2">
       {recentFill !== null && (
         <ModuleStat
           value={`${Math.round(recentFill * 100)}%`}
@@ -105,7 +101,6 @@ export const ModuleStats = ({ variant }: { variant: ModuleVariant }) => {
         />
       )}
       {time && <ModuleStat value={time.value} label={labels.usual_time} />}
-      {languages && <ModuleStat value={languages} label={labels.language} />}
     </dl>
   );
 };
@@ -237,7 +232,7 @@ export const ModuleDemand = ({ variant }: { variant: ModuleVariant }) => {
       <p className="text-sm text-muted-foreground">
         {dict.course.module.demand.caption}
       </p>
-      <ModuleDemandChart series={series} />
+      <ModuleDemandChart series={series} size="sm" />
     </section>
   );
 };
