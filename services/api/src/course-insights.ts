@@ -124,6 +124,8 @@ export const loadCourseInsightData: CourseInsightDataLoader = async (
   return { historyRows, currentRows };
 };
 
+const INSIGHTS_CACHE_ORIGIN = "https://cache.nthumods.internal/course-insights";
+
 type CacheProvider = () => Cache | undefined;
 
 const getDefaultCache: CacheProvider = () => {
@@ -146,9 +148,10 @@ export const createCourseInsightsApp = (
     const semester = requestedSemester ?? latestSemester;
 
     const cache = cacheProvider();
-    const cacheKeyUrl = new URL(c.req.url);
-    cacheKeyUrl.search = new URLSearchParams({ semester }).toString();
-    const cacheKey = new Request(cacheKeyUrl.toString());
+    // Fixed origin: the key never depends on the incoming host or path.
+    const cacheKey = new Request(
+      `${INSIGHTS_CACHE_ORIGIN}?${new URLSearchParams({ semester })}`,
+    );
     const cacheControl =
       semester === latestSemester ? CURRENT_CACHE_CONTROL : PAST_CACHE_CONTROL;
     if (cache) {
