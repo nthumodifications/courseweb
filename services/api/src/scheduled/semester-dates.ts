@@ -4,7 +4,7 @@ import {
   mergeSemesterRows,
   semesterInfo as bundledSemesterInfo,
   type SemesterInfo,
-} from "@courseweb/shared/semester";
+} from "../semester-info";
 import {
   fetchAcademicCalendarEvents,
   type CalendarApiResponse,

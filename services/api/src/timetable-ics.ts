@@ -6,7 +6,7 @@ import supabase_server from "./config/supabase_server";
 import { fetchAcademicCalendarEvents, getNoClassDates } from "./aca-calendar";
 import { readMergedSemesterInfo } from "./scheduled/semester-dates";
 import type { D1Database } from "@cloudflare/workers-types";
-import { semesterInfo as SEMESTER_INFO } from "@courseweb/shared/semester";
+import { semesterInfo as SEMESTER_INFO } from "./semester-info";
 
 export { SEMESTER_INFO };
 
