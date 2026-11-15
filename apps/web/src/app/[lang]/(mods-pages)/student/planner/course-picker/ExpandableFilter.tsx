@@ -17,6 +17,7 @@ import {
 import { X } from "lucide-react";
 import useDictionary from "@/dictionaries/useDictionary";
 import { activateOnKey } from "@/lib/activate-on-key";
+import { popoverScrollInDialogProps } from "./popoverScrollInDialog";
 
 type ExpandableFilterMode = "checkbox" | "simple";
 
@@ -304,6 +305,7 @@ const ExpandableFilter = ({
       </PopoverTrigger>
 
       <PopoverContent
+        {...popoverScrollInDialogProps}
         className="w-[var(--radix-popover-trigger-width)] p-1 max-h-[300px] overflow-y-auto"
         align="start"
       >

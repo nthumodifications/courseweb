@@ -14,6 +14,7 @@ import { lastSemester } from "@courseweb/shared";
 import { getFormattedClassCode } from "@/helpers/courses";
 import useDictionary from "@/dictionaries/useDictionary";
 import { activateOnKey } from "@/lib/activate-on-key";
+import { popoverScrollInDialogProps } from "./popoverScrollInDialog";
 
 type ExpandableClassFilterProps = {
   limit?: number;
@@ -162,6 +163,7 @@ const ExpandableClassFilter = ({
       </PopoverTrigger>
 
       <PopoverContent
+        {...popoverScrollInDialogProps}
         className="w-[var(--radix-popover-trigger-width)] p-1 max-h-60 overflow-y-auto"
         align="start"
       >
