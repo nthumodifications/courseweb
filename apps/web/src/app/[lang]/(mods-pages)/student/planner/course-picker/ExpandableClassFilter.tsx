@@ -10,10 +10,10 @@ import {
 } from "@courseweb/ui";
 import useCustomRefinementList from "@/app/[lang]/(mods-pages)/courses/useCustomRefinementList";
 import useCustomMenu from "@/app/[lang]/(mods-pages)/courses/useCustomMenu";
-import { lastSemester } from "@courseweb/shared";
 import { getFormattedClassCode } from "@/helpers/courses";
 import useDictionary from "@/dictionaries/useDictionary";
 import { activateOnKey } from "@/lib/activate-on-key";
+import { useDefaultSemesterId } from "@/hooks/useSemesters";
 
 type ExpandableClassFilterProps = {
   limit?: number;
@@ -25,6 +25,7 @@ const ExpandableClassFilter = ({
   placeholder,
 }: ExpandableClassFilterProps) => {
   const dict = useDictionary();
+  const defaultSemester = useDefaultSemesterId();
   const [isOpen, setIsOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
 
@@ -40,8 +41,8 @@ const ExpandableClassFilter = ({
 
   const selectedSemester = useMemo(
     () =>
-      semesterItems.find((item) => item.isRefined)?.value ?? lastSemester.id,
-    [semesterItems],
+      semesterItems.find((item) => item.isRefined)?.value ?? defaultSemester,
+    [defaultSemester, semesterItems],
   );
 
   // Track selected items

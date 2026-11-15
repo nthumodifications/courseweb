@@ -80,6 +80,10 @@
       "holiday": "Holiday"
     }
   },
+  "semester_cutover": {
+    "prompt": "{semester} courses posted · View",
+    "dismiss": "Dismiss"
+  },
   "timetable": {
     "course_changes": {
       "summary": "{count} courses in your timetable changed",

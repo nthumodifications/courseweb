@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import useCustomMenu from "@/app/[lang]/(mods-pages)/courses/useCustomMenu";
 import {
   Select,
@@ -8,33 +8,52 @@ import {
   SelectValue,
 } from "@courseweb/ui";
 import { toPrettySemester } from "@/helpers/semester";
-import { lastSemester, semesterInfo } from "@courseweb/shared";
 import useDictionary from "@/dictionaries/useDictionary";
+import { useDefaultSemesterId, useSemesters } from "@/hooks/useSemesters";
+import { shouldDefaultSemester } from "@/app/[lang]/(mods-pages)/courses/semesterDefault";
 
 const SemesterSelector = () => {
   const dict = useDictionary();
-  const [initialized, setInitialized] = useState(false);
+  const semesters = useSemesters();
+  const defaultSemester = useDefaultSemesterId();
+  const hasUserSelectedSemester = useRef(false);
+  const lastDefaultedSemester = useRef<string>();
   const { items, refine, canRefine } = useCustomMenu({
     attribute: "semester",
   });
 
   // Find the currently selected semester
-  const selected = useMemo(() => {
-    const refined = items.find((item) => item.isRefined);
-    return refined ? refined.value : lastSemester.id;
-  }, [items]);
+  const selected = useMemo(
+    () => items.find((item) => item.isRefined)?.value ?? defaultSemester,
+    [defaultSemester, items],
+  );
 
-  // Set default semester only once on initial load
   useEffect(() => {
-    if (canRefine && !initialized) {
-      if (!items.some((item) => item.isRefined)) {
-        refine(lastSemester.id);
-      }
-      setInitialized(true);
+    if (
+      selected &&
+      !lastDefaultedSemester.current &&
+      !hasUserSelectedSemester.current
+    ) {
+      lastDefaultedSemester.current = selected;
     }
-  }, [canRefine, items, refine, initialized]);
+    if (
+      shouldDefaultSemester({
+        canRefine,
+        hasRefinedItem: Boolean(items.find((item) => item.isRefined)),
+        refinedSemester: selected,
+        hasExplicitSemester: false,
+        hasUserSelectedSemester: hasUserSelectedSemester.current,
+        lastDefaultedSemester: lastDefaultedSemester.current,
+        defaultSemester,
+      })
+    ) {
+      if (selected !== defaultSemester) refine(defaultSemester);
+      lastDefaultedSemester.current = defaultSemester;
+    }
+  }, [canRefine, defaultSemester, items, refine, selected]);
 
   const handleSelect = (v: string) => {
+    hasUserSelectedSemester.current = true;
     if (v !== selected) {
       refine(v);
     }
@@ -53,7 +72,7 @@ const SemesterSelector = () => {
         </SelectValue>
       </SelectTrigger>
       <SelectContent>
-        {[...semesterInfo]
+        {[...semesters]
           .sort((a, b) => Number.parseInt(b.id) - Number.parseInt(a.id))
           .map((item) => (
             <SelectItem value={item.id} key={item.id}>

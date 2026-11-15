@@ -2,6 +2,7 @@ import {
   QueryClient,
   defaultShouldDehydrateQuery,
   type Query,
+  useQueryClient,
 } from "@tanstack/react-query";
 import {
   PersistQueryClientProvider,
@@ -10,6 +11,8 @@ import {
 } from "@tanstack/react-query-persist-client";
 import { PropsWithChildren } from "react";
 import { createIDBPersister } from "@/lib/idb_persister";
+import { useEffect } from "react";
+import { subscribeSemesters } from "@courseweb/shared";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -19,6 +22,21 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+const SemesterDataRevalidator = () => {
+  const client = useQueryClient();
+  useEffect(
+    () =>
+      subscribeSemesters(() => {
+        void client.invalidateQueries({ queryKey: ["courses"] });
+        void client.invalidateQueries({
+          queryKey: ["course-selection-periods"],
+        });
+      }),
+    [client],
+  );
+  return null;
+};
 
 // Keep the default rule (successful queries only): a pending query carries a
 // Promise, which IndexedDB cannot clone, so the whole snapshot would fail.
@@ -49,6 +67,7 @@ const ReactQuery = ({
       persistOptions={persistOptions}
       onSuccess={handleRestore}
     >
+      <SemesterDataRevalidator />
       {children}
     </PersistQueryClientProvider>
   );

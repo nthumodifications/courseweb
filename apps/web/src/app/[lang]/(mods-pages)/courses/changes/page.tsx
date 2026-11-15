@@ -1,11 +1,6 @@
 import { useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import {
-  currentSemester,
-  departments,
-  lastSemester,
-  toPrettySemester,
-} from "@courseweb/shared";
+import { departments, toPrettySemester } from "@courseweb/shared";
 import {
   Button,
   EmptyState,
@@ -29,6 +24,7 @@ import {
   type CourseChangeLabels,
 } from "../[courseId]/courseChanges";
 import { useQuery } from "@tanstack/react-query";
+import { useDefaultSemesterId } from "@/hooks/useSemesters";
 
 const CHANGE_DAY_OPTIONS = [7, 14, 30] as const;
 type ChangeDays = (typeof CHANGE_DAY_OPTIONS)[number];
@@ -44,7 +40,7 @@ const CourseChangesFeedPage = () => {
   const dict = useDictionary();
   const { language } = useSettings();
   const [searchParams, setSearchParams] = useSearchParams();
-  const semester = currentSemester?.id ?? lastSemester.id;
+  const semester = useDefaultSemesterId();
   const departmentCodes = useMemo(
     () => new Set(departments.map((department) => department.code)),
     [],

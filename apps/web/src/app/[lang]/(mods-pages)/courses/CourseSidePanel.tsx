@@ -7,18 +7,19 @@ import TimetableCourseListWithSemester from "./TimetableCourseListWithSemester";
 import FavouritesCourseList from "./FavouritesCourseList";
 import useCustomMenu from "./useCustomMenu";
 import { useMemo } from "react";
-import { lastSemester } from "@courseweb/shared";
+import { useDefaultSemesterId } from "@/hooks/useSemesters";
 
 const CourseSidePanel = () => {
   const dict = useDictionary();
+  const defaultSemester = useDefaultSemesterId();
 
   const { items } = useCustomMenu({
     attribute: "semester",
   });
 
   const semester = useMemo(
-    () => items.find((item) => item.isRefined)?.value ?? lastSemester.id,
-    [items],
+    () => items.find((item) => item.isRefined)?.value ?? defaultSemester,
+    [defaultSemester, items],
   );
 
   return (

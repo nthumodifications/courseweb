@@ -7,7 +7,7 @@ import { MinimalCourse } from "@/types/courses";
 import { renderTimetableSlot } from "@/helpers/timetable_course";
 import TimetableSidebar from "@/components/Timetable/TimetableSidebar";
 import { useSwipeable } from "react-swipeable";
-import { semesterInfo } from "@courseweb/shared";
+import { useSemesters } from "@/hooks/useSemesters";
 import { useHeaderPortal } from "@/components/Portal/HeaderPortal";
 import { useEffect, useRef } from "react";
 import { Helmet } from "react-helmet-async";
@@ -20,6 +20,7 @@ import { intlLocale } from "@/helpers/contentLanguage";
 import CourseChangeNotice from "./CourseChangeNotice";
 
 const TimetablePage = () => {
+  const semesterInfo = useSemesters();
   const {
     getSemesterCourses,
     getSemesterCustomItems,

@@ -7,7 +7,7 @@ import {
 import type { SearchTextRecord } from "./local-search/cache";
 import { fetchJsonWithDeadline, type FetchLike } from "./local-search/deadline";
 import { isLocalSearchEnabled } from "./local-search/feature-flags";
-import { lastSemester } from "@courseweb/shared";
+import { getDefaultSemester } from "@courseweb/shared";
 import { cleanSyllabusFields } from "@/lib/syllabus-text";
 
 export type SearchBackend = "local" | "local-loading" | "fallback";
@@ -196,7 +196,7 @@ export const createResilientSearchClient = (
       : localSearchEnabled;
   const localClient: LocalSearchClient | undefined = shouldUseLocalSearch
     ? createLocalSearchClient({
-        defaultSemester: lastSemester.id,
+        defaultSemester: getDefaultSemester().id,
         ...(options.localSearch === undefined && loadPublicShortNames
           ? { loadShortNames: loadPublicShortNames }
           : {}),

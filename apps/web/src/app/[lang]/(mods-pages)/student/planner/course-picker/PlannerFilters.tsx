@@ -1,13 +1,11 @@
 import useDictionary from "@/dictionaries/useDictionary";
-import { departments, GETargetCodes, semesterInfo } from "@courseweb/shared";
+import { departments, GETargetCodes } from "@courseweb/shared";
 import SemesterSelector from "./SemesterSelector";
 import ExpandableFilter from "./ExpandableFilter";
 import ExpandableClassFilter from "./ExpandableClassFilter";
 import InlineCheckboxFilter from "./InlineCheckboxFilter";
 import CourseAudienceFilter from "@/app/[lang]/(mods-pages)/courses/CourseAudienceFilter";
 import { Language } from "@/types/settings";
-
-const latestSemID = semesterInfo.at(-1)!.id;
 
 const languageSynonyms: Record<string, string> = {
   中: "Chinese",

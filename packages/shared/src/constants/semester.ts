@@ -279,7 +279,9 @@ export const getSemesterRevision = () => semesterRevision;
 
 export const subscribeSemesters = (listener: () => void) => {
   semesterListeners.add(listener);
-  return () => semesterListeners.delete(listener);
+  return () => {
+    semesterListeners.delete(listener);
+  };
 };
 
 export const getSemester = (

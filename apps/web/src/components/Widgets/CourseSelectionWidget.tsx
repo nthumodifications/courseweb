@@ -1,5 +1,4 @@
 import { FC } from "react";
-import { currentSemester, lastSemester } from "@courseweb/shared";
 import { Button } from "@courseweb/ui";
 import { WidgetShell } from "./WidgetShell";
 import CourseSelectionScheduleDialog from "@/components/CourseSelection/CourseSelectionScheduleDialog";
@@ -10,6 +9,7 @@ import {
   getCompactCourseSelectionPeriods,
   getCourseSelectionSchedule,
 } from "@/lib/course-selection-schedule";
+import { useDefaultSemesterId } from "@/hooks/useSemesters";
 
 interface CourseSelectionWidgetProps {
   onRemove?: () => void;
@@ -23,7 +23,7 @@ const CourseSelectionWidget: FC<CourseSelectionWidgetProps> = ({
   isDragging,
 }) => {
   const dict = useDictionary();
-  const semester = currentSemester?.id ?? lastSemester.id;
+  const semester = useDefaultSemesterId();
   const { periods, nowDateKey, isLoading, error } =
     useCourseSelectionPeriods(semester);
   const schedule = getCourseSelectionSchedule(periods, semester);

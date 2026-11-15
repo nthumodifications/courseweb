@@ -80,6 +80,10 @@
       "holiday": "假期"
     }
   },
+  "semester_cutover": {
+    "prompt": "{semester} 課程已公布・查看",
+    "dismiss": "關閉"
+  },
   "timetable": {
     "course_changes": {
       "summary": "課表中有 {count} 門課有異動",
