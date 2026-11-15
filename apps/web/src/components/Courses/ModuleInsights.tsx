@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import useDictionary from "@/dictionaries/useDictionary";
 import { toPrettySemester } from "@/helpers/semester";
+import { contentLanguage } from "@/helpers/contentLanguage";
+import { formatCourseTime } from "@/lib/format-course-times";
 import {
   getModuleBrief,
   getModuleScores,
@@ -65,13 +67,21 @@ export const ModuleStat = ({
     </div>
   ) : (
     <div title={hint} className="flex min-w-0 items-baseline gap-1">
-      <dd className="shrink-0 font-bold tabular-nums">{value}</dd>
+      <dd className="shrink-0 whitespace-nowrap font-bold tabular-nums">
+        {value}
+      </dd>
       <dt className="text-sm text-muted-foreground">{label}</dt>
     </div>
   );
 
 /** The numbers a student wants first: how full, how graded, when, in what language. */
-export const ModuleStats = ({ variant }: { variant: ModuleVariant }) => {
+export const ModuleStats = ({
+  variant,
+  lang,
+}: {
+  variant: ModuleVariant;
+  lang: string;
+}) => {
   const dict = useDictionary();
   const labels = dict.course.module.stats;
   const scores = useModuleScores(variant);
@@ -100,7 +110,12 @@ export const ModuleStats = ({ variant }: { variant: ModuleVariant }) => {
           } · ${score.count} ${labels.classes}`}
         />
       )}
-      {time && <ModuleStat value={time.value} label={labels.usual_time} />}
+      {time && (
+        <ModuleStat
+          value={formatCourseTime(time.value, contentLanguage(lang))}
+          label={labels.usual_time}
+        />
+      )}
     </dl>
   );
 };

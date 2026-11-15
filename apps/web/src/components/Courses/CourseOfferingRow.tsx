@@ -4,6 +4,7 @@ import { toPrettySemester } from "@/helpers/semester";
 import type { ModuleOffering } from "@/lib/modules";
 import { CourseDialogLink } from "@/components/Courses/CourseDialog";
 import { contentLanguage } from "@/helpers/contentLanguage";
+import { formatCourseTime } from "@/lib/format-course-times";
 import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
 
 type Dictionary = ReturnType<typeof useDictionary>;
@@ -32,9 +33,11 @@ const formatInstructors = (
 const formatTimesAndVenues = (
   offering: ModuleOffering,
   unavailable: string,
+  lang: string,
 ) => {
+  const language = contentLanguage(lang);
   const values = offering.times.map((time, index) =>
-    `${time} ${offering.venues[index] ?? ""}`.trim(),
+    `${formatCourseTime(time, language)} ${offering.venues[index] ?? ""}`.trim(),
   );
   return values.length > 0 ? values.join(" · ") : unavailable;
 };
@@ -70,7 +73,7 @@ export const CourseOfferingRow = ({
       formatInstructors(offering, lang, dict.course.module.not_available),
     );
     const timeAndVenue = localizeData(
-      formatTimesAndVenues(offering, dict.course.module.not_available),
+      formatTimesAndVenues(offering, dict.course.module.not_available, lang),
     );
     const hasFill =
       offering.capacity !== null &&
@@ -151,7 +154,11 @@ export const CourseOfferingRow = ({
         </span>
         <span className="mt-1 block truncate text-sm text-muted-foreground">
           {localizeData(
-            formatTimesAndVenues(offering, dict.course.module.not_available),
+            formatTimesAndVenues(
+              offering,
+              dict.course.module.not_available,
+              lang,
+            ),
           )}
         </span>
         {(language || capacity) && (

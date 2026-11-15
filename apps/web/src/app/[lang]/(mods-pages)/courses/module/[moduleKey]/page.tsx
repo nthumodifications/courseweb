@@ -438,7 +438,7 @@ export const ModulePageContent = ({
             }}
           />
 
-          <ModuleStats variant={selectedVariant} />
+          <ModuleStats variant={selectedVariant} lang={lang} />
 
           <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(16rem,1fr)]">
             <div className="flex min-w-0 flex-col gap-4">
