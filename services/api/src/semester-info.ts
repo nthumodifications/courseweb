@@ -3,7 +3,7 @@
  * packages/shared/dist, which is not built in the direct Wrangler deploy job.
  * Keep the bundled rows aligned with packages/shared via timetable-ics.test.ts.
  */
-export type SemesterInfo = {
+export interface SemesterInfo {
   id: string;
   year: number;
   semester: number;
@@ -11,7 +11,7 @@ export type SemesterInfo = {
   ends: Date;
   hasCourses: boolean;
   estimated?: boolean;
-};
+}
 
 type BundledSemesterRow = readonly [
   id: string,

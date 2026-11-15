@@ -306,7 +306,7 @@ const parseSemesterRow = ([
   ends: parseSemesterDate(ends),
 });
 
-export const SEMESTER_INFO: SemesterInfo[] = [
+const bundledSemesterRows: BundledSemesterRow[] = [
   ["10810", "2019-09-09", "2020-01-12"],
   ["10820", "2020-02-17", "2020-06-21"],
   ["10910", "2020-09-14", "2021-01-29"],
@@ -323,7 +323,10 @@ export const SEMESTER_INFO: SemesterInfo[] = [
   ["11420", "2026-02-23", "2026-06-14"],
   ["11510", "2026-09-07", "2026-12-27"],
   ["11520", "2027-02-15", "2027-06-06"],
-].map(parseSemesterRow);
+];
+
+export const SEMESTER_INFO: SemesterInfo[] =
+  bundledSemesterRows.map(parseSemesterRow);
 
 type SemesterInfoCacheEntry = {
   expiresAt: number;

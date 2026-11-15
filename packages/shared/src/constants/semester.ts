@@ -149,26 +149,22 @@ const bundledSemesters: SemesterInfo[] = [
 // Live bindings let importers observe hydrated semester state after API refreshes.
 export let semesterInfo: SemesterInfo[] = [...bundledSemesters];
 
-const dayStart = (date: Date) =>
-  new Date(date.getFullYear(), date.getMonth(), date.getDate());
-
 const dateFromValue = (value: unknown): Date | undefined => {
-  if (value instanceof Date && Number.isFinite(value.getTime())) {
-    return new Date(value.getFullYear(), value.getMonth(), value.getDate());
-  }
   if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
     return undefined;
   }
-  const [year, month, day] = value.split("-").map(Number);
-  const date = new Date(year!, month! - 1, day!);
+  const parsed = new Date(value);
   if (
-    date.getFullYear() !== year ||
-    date.getMonth() !== month! - 1 ||
-    date.getDate() !== day
+    !Number.isFinite(parsed.getTime()) ||
+    parsed.toISOString().slice(0, 10) !== value
   ) {
     return undefined;
   }
-  return date;
+  return new Date(
+    parsed.getUTCFullYear(),
+    parsed.getUTCMonth(),
+    parsed.getUTCDate(),
+  );
 };
 
 const parseSemesterRow = (value: unknown): SemesterInfo | undefined => {
@@ -179,73 +175,15 @@ const parseSemesterRow = (value: unknown): SemesterInfo | undefined => {
   const begins = dateFromValue(row.begins);
   const ends = dateFromValue(row.ends);
   if (!begins || !ends || begins > ends) return undefined;
-  const year = Number(id.slice(0, 3)) + 1911;
-  const semester = Number(id.slice(3, 4));
-  const startMonth = begins.getMonth() + 1;
-  const endMonth = ends.getMonth() + 1;
-  const duration =
-    (Date.UTC(ends.getFullYear(), ends.getMonth(), ends.getDate()) -
-      Date.UTC(begins.getFullYear(), begins.getMonth(), begins.getDate())) /
-      86_400_000 +
-    1;
-  const plausibleMonths =
-    (semester === 1 &&
-      startMonth >= 8 &&
-      startMonth <= 10 &&
-      (endMonth >= 11 || endMonth === 1)) ||
-    (semester === 2 &&
-      startMonth >= 1 &&
-      startMonth <= 4 &&
-      endMonth >= 5 &&
-      endMonth <= 8) ||
-    (semester === 3 &&
-      startMonth >= 5 &&
-      startMonth <= 8 &&
-      endMonth >= 6 &&
-      endMonth <= 10);
-  const minDuration = semester === 3 ? 14 : 70;
-  const maxDuration = 180;
-  if (!plausibleMonths || duration < minDuration || duration > maxDuration) {
-    return undefined;
-  }
   return {
     id,
-    year,
-    semester,
+    year: Number(id.slice(0, 3)) + 1911,
+    semester: Number(id.slice(3, 4)),
     begins,
     ends,
     hasCourses: row.hasCourses === true,
     estimated: row.estimated === true,
   };
-};
-
-/** Merge an API snapshot over the fallback while keeping past fallback dates authoritative. */
-export const mergeSemesterRows = (
-  rows: readonly unknown[],
-  now = new Date(),
-): SemesterInfo[] => {
-  const merged = new Map(bundledSemesters.map((row) => [row.id, row]));
-  const today = dayStart(now);
-  for (const value of rows) {
-    const row = parseSemesterRow(value);
-    if (!row) continue;
-    const bundled = merged.get(row.id);
-    if (bundled && bundled.ends < today) {
-      merged.set(row.id, { ...bundled, hasCourses: row.hasCourses });
-    } else {
-      const overlaps = [...merged.values()].some(
-        (neighbor) =>
-          neighbor.id !== row.id &&
-          row.begins <= neighbor.ends &&
-          neighbor.begins <= row.ends,
-      );
-      if (overlaps) continue;
-      merged.set(row.id, row);
-    }
-  }
-  return [...merged.values()].sort((left, right) =>
-    left.id.localeCompare(right.id),
-  );
 };
 
 const sameSemesterRows = (
@@ -269,7 +207,14 @@ const semesterListeners = new Set<() => void>();
 
 /** Update the live semester bindings from the API or a cached API response. */
 export const hydrateSemesters = (rows: readonly unknown[]): boolean => {
-  const next = mergeSemesterRows(rows);
+  // The API owns date validation, overlap handling, and merging with bundled
+  // data. Only accept structurally valid rows here; a malformed response must
+  // not erase the offline fallback.
+  const next = rows.flatMap((value) => {
+    const row = parseSemesterRow(value);
+    return row ? [row] : [];
+  });
+  if (next.length === 0) return false;
   if (sameSemesterRows(semesterInfo, next)) return false;
   semesterInfo = next;
   currentSemester = getSemester(new Date());

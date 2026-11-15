@@ -5,7 +5,7 @@ import {
   getNextCourseSemester,
   hydrateSemesters,
   lastSemester,
-  mergeSemesterRows,
+  semesterInfo,
   type SemesterInfo,
 } from "./semester";
 
@@ -99,115 +99,53 @@ describe("semester resolution", () => {
   });
 });
 
-describe("semester merge", () => {
-  test("uses a valid future API row and includes new IDs", () => {
-    const merged = mergeSemesterRows(
-      [
-        {
-          id: "11520",
-          begins: "2027-02-16",
-          ends: "2027-06-07",
-          hasCourses: true,
-        },
-        {
-          id: "11530",
-          begins: "2027-06-28",
-          ends: "2027-08-06",
-          hasCourses: true,
-        },
-      ],
-      new Date("2026-12-01"),
-    );
-    expect(merged.find((semester) => semester.id === "11520")?.begins).toEqual(
-      new Date(2027, 1, 16),
-    );
-    expect(merged.find((semester) => semester.id === "11530")?.hasCourses).toBe(
-      true,
-    );
+describe("semester hydration", () => {
+  const serializeDate = (date: Date) =>
+    `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  const initialRows = semesterInfo.map((semester) => ({
+    ...semester,
+    begins: serializeDate(semester.begins),
+    ends: serializeDate(semester.ends),
+  }));
+
+  test("accepts API rows without repeating server plausibility or overlap checks", () => {
+    try {
+      expect(
+        hydrateSemesters([
+          {
+            id: "11510",
+            begins: "2027-03-01",
+            ends: "2027-03-02",
+            hasCourses: true,
+          },
+          {
+            id: "11520",
+            begins: "2027-03-02",
+            ends: "2027-03-03",
+            hasCourses: true,
+          },
+        ]),
+      ).toBe(true);
+      expect(semesterInfo.map(({ id }) => id)).toEqual(["11510", "11520"]);
+      expect(lastSemester.id).toBe("11520");
+    } finally {
+      hydrateSemesters(initialRows);
+    }
   });
 
-  test("replaces an estimated API semester when scraped dates arrive", () => {
-    const estimated = mergeSemesterRows(
-      [
-        {
-          id: "11610",
-          begins: "2027-09-07",
-          ends: "2027-12-27",
-          hasCourses: true,
-          estimated: true,
-        },
-      ],
-      new Date("2027-06-20"),
-    );
-    expect(estimated.find((semester) => semester.id === "11610")).toMatchObject(
-      { estimated: true },
-    );
-
-    const withRealDates = mergeSemesterRows(
-      [
-        {
-          id: "11610",
-          begins: "2027-09-06",
-          ends: "2027-12-26",
-          hasCourses: true,
-          estimated: false,
-        },
-      ],
-      new Date("2027-06-20"),
-    );
+  test("ignores malformed and empty payloads without clearing the fallback", () => {
+    const originalIds = semesterInfo.map(({ id }) => id);
     expect(
-      withRealDates.find((semester) => semester.id === "11610"),
-    ).toMatchObject({
-      begins: new Date(2027, 8, 6),
-      ends: new Date(2027, 11, 26),
-      estimated: false,
-    });
-  });
-
-  test("keeps bundled dates authoritative after a semester has ended", () => {
-    const merged = mergeSemesterRows(
-      [
-        {
-          id: "11520",
-          begins: "2027-02-16",
-          ends: "2027-06-07",
-          hasCourses: true,
-        },
-      ],
-      new Date("2027-06-07"),
-    );
-    const semester = merged.find((item) => item.id === "11520")!;
-    expect(semester.begins).toEqual(new Date(2027, 1, 15));
-    expect(semester.ends).toEqual(new Date(2027, 5, 6));
-    expect(semester.hasCourses).toBe(true);
-  });
-
-  test("ignores malformed rows", () => {
-    expect(
-      mergeSemesterRows([
+      hydrateSemesters([
         {
           id: "11540",
           begins: "2027-02-30",
           ends: "2027-06-01",
           hasCourses: true,
         },
-      ]).some((semester) => semester.id === "11540"),
-    ).toBe(false);
-  });
-
-  test("hydrates the live last-semester binding when course data arrives", () => {
-    expect(
-      hydrateSemesters([
-        {
-          id: "11520",
-          begins: "2027-02-15",
-          ends: "2027-06-06",
-          hasCourses: true,
-        },
       ]),
-    ).toBe(true);
-    expect(lastSemester.id).toBe("11520");
-    hydrateSemesters([]);
-    expect(lastSemester.id).toBe("11510");
+    ).toBe(false);
+    expect(hydrateSemesters([])).toBe(false);
+    expect(semesterInfo.map(({ id }) => id)).toEqual(originalIds);
   });
 });
