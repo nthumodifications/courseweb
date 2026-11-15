@@ -18,6 +18,7 @@ import {
   Megaphone,
   ContactRound,
   History,
+  BarChart3,
 } from "lucide-react";
 import ChumeiIcon from "@/components/Apps/ChumeiIcon";
 
@@ -49,6 +50,14 @@ export const apps: AppDefinition[] = [
     title_en: "Course Changes",
     href: "/courses/changes",
     Icon: History,
+  },
+  {
+    id: "course-insights",
+    category: "courses",
+    title_zh: "課程洞察",
+    title_en: "Course Insights",
+    href: "/courses/insights",
+    Icon: BarChart3,
   },
   {
     id: "modules",

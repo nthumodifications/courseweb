@@ -23,6 +23,7 @@ describe("app categories", () => {
       courses: [
         "courses",
         "course-changes",
+        "course-insights",
         "modules",
         "chat",
         "venues",
@@ -42,7 +43,7 @@ describe("app categories", () => {
     });
 
     expect(
-      Object.values(appIdsByCategory).every((appIds) => appIds.length <= 6),
+      Object.values(appIdsByCategory).every((appIds) => appIds.length <= 7),
     ).toBe(true);
   });
 
