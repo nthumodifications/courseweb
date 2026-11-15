@@ -51,7 +51,7 @@ import {
 } from "@/hooks/useTimetableShare";
 import { useAuth } from "react-oidc-context";
 import { toPrettySemester } from "@/helpers/semester";
-import { semesterInfo } from "@courseweb/shared";
+import { useSemesters } from "@/hooks/useSemesters";
 import client from "@/config/api";
 import { CourseDefinition } from "@/config/supabase";
 import { useNavigate, useParams } from "react-router-dom";
@@ -221,6 +221,7 @@ function GroupsTab({
 }: {
   readonly semester: string;
 }) {
+  const semesters = useSemesters();
   const dict = useDictionary();
   const labels = dict.dialogs.ShareTimetableDialog;
   const [groupName, setGroupName] = useState("");
@@ -238,7 +239,7 @@ function GroupsTab({
   const navigate = useNavigate();
   const { lang } = useParams<{ lang: string }>();
 
-  const recentSemesters = [...semesterInfo].reverse().slice(0, 10);
+  const recentSemesters = [...semesters].reverse().slice(0, 10);
 
   const createMutation = useMutation({
     mutationFn: async () => {

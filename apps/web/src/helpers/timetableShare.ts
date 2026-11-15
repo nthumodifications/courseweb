@@ -1,4 +1,4 @@
-import { lastSemester } from "@courseweb/shared";
+import { getDefaultSemester } from "@courseweb/shared";
 
 export const MAX_TIMETABLE_SHARE_QUERY_LENGTH = 100_000;
 
@@ -57,8 +57,9 @@ export const decodeTimetableShareQuery = (
     lastSerializedSemester = semester;
   });
 
-  const initialSemester = courseCodes[lastSemester.id]
-    ? lastSemester.id
+  const defaultSemester = getDefaultSemester().id;
+  const initialSemester = courseCodes[defaultSemester]
+    ? defaultSemester
     : lastSerializedSemester;
   if (!initialSemester) return null;
 

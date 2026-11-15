@@ -21,7 +21,7 @@ import LocalSearchLifecycle from "@/components/Search/LocalSearchLifecycle";
 import type { ResilientSearchClient } from "@/lib/search-client";
 import { useCourseTextHits } from "@/hooks/useCourseTextHits";
 import useCustomMenu from "@/app/[lang]/(mods-pages)/courses/useCustomMenu";
-import { lastSemester } from "@courseweb/shared";
+import { useDefaultSemesterId } from "@/hooks/useSemesters";
 
 type SearchClient = ResilientSearchClient;
 type InfiniteHitsCache = ReturnType<
@@ -131,12 +131,13 @@ const SearchContainer = ({
   items,
 }: SearchContainerProps) => {
   const dict = useDictionary();
+  const defaultSemester = useDefaultSemesterId();
   const { language } = useSettings();
   const { nbHits, processingTimeMS } = useStats();
   const { status } = useInstantSearch();
   const { items: semesterItems } = useCustomMenu({ attribute: "semester" });
   const semester =
-    semesterItems.find((item) => item.isRefined)?.value ?? lastSemester.id;
+    semesterItems.find((item) => item.isRefined)?.value ?? defaultSemester;
 
   return (
     <div className="flex w-full gap-4">

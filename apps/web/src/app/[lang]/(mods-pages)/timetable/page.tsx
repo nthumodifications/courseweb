@@ -7,9 +7,10 @@ import { MinimalCourse } from "@/types/courses";
 import { renderTimetableSlot } from "@/helpers/timetable_course";
 import TimetableSidebar from "@/components/Timetable/TimetableSidebar";
 import { useSwipeable } from "react-swipeable";
-import { semesterInfo } from "@courseweb/shared";
+import { useSemesters } from "@/hooks/useSemesters";
 import { useHeaderPortal } from "@/components/Portal/HeaderPortal";
 import { useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { serializeJsonLd } from "@/lib/seo";
 import { useSettings } from "@/hooks/contexts/settings";
@@ -20,6 +21,7 @@ import { intlLocale } from "@/helpers/contentLanguage";
 import CourseChangeNotice from "./CourseChangeNotice";
 
 const TimetablePage = () => {
+  const semesterInfo = useSemesters();
   const {
     getSemesterCourses,
     getSemesterCustomItems,
@@ -28,12 +30,24 @@ const TimetablePage = () => {
     colorMap,
     preferences,
   } = useUserTimetable();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [vertical, setVertical] = useLocalStorage("timetable_vertical", true);
   const { language } = useSettings();
   const dict = useDictionary();
   const { setPortalContent, clearPortalContent } = useHeaderPortal();
   const previousSemesterRef = useRef(semester);
   const semesterCourses = getSemesterCourses(semester);
+
+  useEffect(() => {
+    const requestedSemester = searchParams.get("semester");
+    if (!requestedSemester) return;
+    if (semesterInfo.some((item) => item.id === requestedSemester)) {
+      setSemester(requestedSemester);
+    }
+    const nextSearchParams = new URLSearchParams(searchParams);
+    nextSearchParams.delete("semester");
+    setSearchParams(nextSearchParams, { replace: true });
+  }, [searchParams, semesterInfo, setSearchParams, setSemester]);
 
   const timetableData = createTimetableFromCoursesAndCustomItems(
     filterHiddenCourses(

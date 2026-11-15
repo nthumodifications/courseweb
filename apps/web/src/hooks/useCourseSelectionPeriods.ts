@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { lastSemester } from "@courseweb/shared";
+import { getDefaultSemester } from "@courseweb/shared";
 import client from "@/config/api";
 import {
   getTaipeiAcademicCalendarQuery,
@@ -26,7 +26,7 @@ export type UseCourseSelectionPeriodsResult = {
 };
 
 const useCourseSelectionPeriods = (
-  semester = lastSemester.id,
+  semester = getDefaultSemester().id,
 ): UseCourseSelectionPeriodsResult => {
   const { showAcademicCalendar } = useSettings();
   const now = useTime(60_000);

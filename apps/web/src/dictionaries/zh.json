@@ -1685,6 +1685,10 @@
       "action": "前往設定",
       "text": "你可以在設定頁面客製化課表。"
     },
+    "new_semester": {
+      "title": "{semester} 課程已公布",
+      "link": "查看"
+    },
     "dismiss": "關閉公告"
   },
   "applist": {

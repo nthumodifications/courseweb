@@ -6,10 +6,11 @@ import {
   useContext,
   useMemo,
   useLayoutEffect,
+  useRef,
 } from "react";
 import { CourseDefinition } from "@/config/supabase";
 import { RawCourseID } from "@/types/courses";
-import { lastSemester, timetableColors } from "@courseweb/shared";
+import { getDefaultSemester, timetableColors } from "@courseweb/shared";
 import { getSemesterFromID } from "@/helpers/courses";
 import {
   getUnresolvedCourseIds,
@@ -33,6 +34,7 @@ import {
   normalizeHiddenCourses,
   pruneHiddenCourses,
 } from "@/helpers/timetableVisibility";
+import { useDefaultSemesterId } from "@/hooks/useSemesters";
 
 export type TimetableFieldKey =
   | "code"
@@ -204,7 +206,7 @@ const userTimetableContext = createContext<
   isLoading: true,
   isFetchingCourses: false,
   error: null,
-  semester: lastSemester.id,
+  semester: getDefaultSemester().id,
   isCoursesEmpty: true,
   setSemester: () => {},
   preferences: {
@@ -231,6 +233,7 @@ const userTimetableContext = createContext<
 });
 
 const useUserTimetableProvider = (loadCourse = true) => {
+  const defaultSemesterId = useDefaultSemesterId();
   const [
     courses,
     setStoredCourses,
@@ -347,7 +350,17 @@ const useUserTimetableProvider = (loadCourse = true) => {
     [],
     mergeStringArray,
   );
-  const [semester, setSemester] = useState<string>(lastSemester.id);
+  const [semester, setSemesterState] = useState<string>(defaultSemesterId);
+  const hasManuallySelectedSemester = useRef(false);
+  const setSemester = useCallback((nextSemester: string) => {
+    hasManuallySelectedSemester.current = true;
+    setSemesterState(nextSemester);
+  }, []);
+  useEffect(() => {
+    if (!hasManuallySelectedSemester.current) {
+      setSemesterState(defaultSemesterId);
+    }
+  }, [defaultSemesterId]);
   const setTimetableTheme = useCallback(
     (theme: string) => {
       //if theme updated, remap colors and override all

@@ -4,8 +4,7 @@ import { createTimetableFromCoursesAndCustomItems } from "@/helpers/timetable";
 import { MinimalCourse } from "@/types/courses";
 import { CustomTimetableStorageInput } from "@/types/timetable";
 import { normalizeCustomTimetableStorage } from "@/hooks/syncedStorage";
-import { useMemo, useState } from "react";
-import { lastSemester } from "@courseweb/shared";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import SemesterSwitcher from "@/components/Timetable/SemesterSwitcher";
 import { renderTimetableSlot } from "@/helpers/timetable_course";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
@@ -42,6 +41,7 @@ import {
   type DecodedCcXpImportQuery,
 } from "@/helpers/ccxpImport";
 import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
+import { useDefaultSemesterId } from "@/hooks/useSemesters";
 
 const ViewTimetablePage = () => {
   const navigate = useNavigate();
@@ -58,6 +58,7 @@ const ViewTimetablePage = () => {
     customItemsDataReady,
   } = useUserTimetable();
   const dict = useDictionary();
+  const defaultSemester = useDefaultSemesterId();
   const localizeData = useLocalizedZhData();
   const isCcXpImport = searchParams.get("source") === "ccxp";
   const decodedShare = useMemo(
@@ -67,9 +68,21 @@ const ViewTimetablePage = () => {
         : decodeTimetableShareQuery(searchParams),
     [isCcXpImport, searchParams],
   );
-  const [semester, setSemester] = useState<string>(
-    decodedShare?.initialSemester ?? lastSemester.id,
+  const [semester, setSemesterState] = useState<string>(
+    decodedShare?.initialSemester ?? defaultSemester,
   );
+  const hasManuallySelectedSemester = useRef(
+    decodedShare?.initialSemester !== undefined,
+  );
+  const setSemester = useCallback((nextSemester: string) => {
+    hasManuallySelectedSemester.current = true;
+    setSemesterState(nextSemester);
+  }, []);
+  useEffect(() => {
+    if (!hasManuallySelectedSemester.current) {
+      setSemesterState(defaultSemester);
+    }
+  }, [defaultSemester]);
   const colorMap = decodedShare?.colorMap ?? {};
   const sharedCustomItems = useMemo<CustomTimetableStorageInput>(() => {
     const value = searchParams.get("customItems");

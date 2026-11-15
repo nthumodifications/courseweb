@@ -1685,6 +1685,10 @@
       "action": "前往设置",
       "text": "你可以在设置页面客制化课表。"
     },
+    "new_semester": {
+      "title": "{semester} 课程已公布",
+      "link": "查看"
+    },
     "dismiss": "关闭公告"
   },
   "applist": {

@@ -25,6 +25,8 @@ const DEFAULT_TIMETABLE_API_URL = "https://api.nthumods.com";
 const CALENDAR_FEED_CACHE_CONTROL = "private, max-age=900";
 const ACADEMIC_CALENDAR_CACHE_TTL_MS = 60 * 60 * 1000;
 const ACADEMIC_CALENDAR_FAILURE_RETRY_MS = 5 * 60 * 1000;
+const SEMESTER_INFO_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
+const SEMESTER_INFO_FAILURE_RETRY_MS = 5 * 60 * 1000;
 const CALENDAR_TIME_ZONE = "Asia/Taipei";
 
 export const CALENDAR_FEED_INCLUDES = [
@@ -280,41 +282,134 @@ const rejectUnauthorized = (c: any): never => {
 
 type StoredCourses = Record<string, string[]>;
 
-// Worker-local mirror of packages/shared/src/constants/semester.ts. The secure
-// API package cannot safely import the shared package at runtime in this repo;
-// calendar.test.ts compares this table with the canonical source.
-const parseSemesterDate = (value: string) => {
-  const [year, month, day] = value.split(",").map(Number);
-  return new Date(year!, month!, day!);
+// Bundled mirror of packages/shared/src/constants/semester.ts used when the
+// public API is unavailable. Runtime rows come from GET /semesters and are
+// cached in memory so this service follows the public API's live semester data.
+type SemesterInfo = { id: string; begins: Date; ends: Date };
+
+type BundledSemesterRow = readonly [id: string, begins: string, ends: string];
+
+const parseSemesterDate = (value: string) =>
+  new Date(
+    Number(value.slice(0, 4)),
+    Number(value.slice(5, 7)) - 1,
+    Number(value.slice(8, 10)),
+  );
+
+const parseSemesterRow = ([
+  id,
+  begins,
+  ends,
+]: BundledSemesterRow): SemesterInfo => ({
+  id,
+  begins: parseSemesterDate(begins),
+  ends: parseSemesterDate(ends),
+});
+
+const bundledSemesterRows: BundledSemesterRow[] = [
+  ["10810", "2019-09-09", "2020-01-12"],
+  ["10820", "2020-02-17", "2020-06-21"],
+  ["10910", "2020-09-14", "2021-01-29"],
+  ["10920", "2021-02-22", "2021-06-25"],
+  ["11010", "2021-09-13", "2022-01-14"],
+  ["11020", "2022-02-14", "2022-06-17"],
+  ["11110", "2022-09-12", "2023-01-13"],
+  ["11120", "2023-02-13", "2023-06-16"],
+  ["11210", "2023-09-11", "2024-01-12"],
+  ["11220", "2024-02-19", "2024-06-23"],
+  ["11310", "2024-09-02", "2024-12-22"],
+  ["11320", "2025-02-17", "2025-06-08"],
+  ["11410", "2025-09-01", "2025-12-21"],
+  ["11420", "2026-02-23", "2026-06-14"],
+  ["11510", "2026-09-07", "2026-12-27"],
+  ["11520", "2027-02-15", "2027-06-06"],
+];
+
+export const SEMESTER_INFO: SemesterInfo[] =
+  bundledSemesterRows.map(parseSemesterRow);
+
+type SemesterInfoCacheEntry = {
+  expiresAt: number;
+  rows: SemesterInfo[];
+  hasSuccessfulData: boolean;
 };
 
-export const SEMESTER_INFO = `
-10810|2019,8,9|2020,0,12
-10820|2020,1,17|2020,5,21
-10910|2020,8,14|2021,0,29
-10920|2021,1,22|2021,5,25
-11010|2021,8,13|2022,0,14
-11020|2022,1,14|2022,5,17
-11110|2022,8,12|2023,0,13
-11120|2023,1,13|2023,5,16
-11210|2023,8,11|2024,0,12
-11220|2024,1,19|2024,5,23
-11310|2024,8,2|2024,11,22
-11320|2025,1,17|2025,5,8
-11410|2025,8,1|2025,11,21
-11420|2026,1,23|2026,5,14
-11510|2026,8,7|2026,11,27
-`
-  .trim()
-  .split("\n")
-  .map((row) => {
-    const [id, begins, ends] = row.split("|");
-    return {
-      id: id!,
-      begins: parseSemesterDate(begins!),
-      ends: parseSemesterDate(ends!),
+const semesterInfoCache = new Map<string, SemesterInfoCacheEntry>();
+const semesterInfoRequests = new Map<string, Promise<SemesterInfo[]>>();
+
+const normalizeSemesterInfo = (value: unknown): SemesterInfo[] | null => {
+  if (!Array.isArray(value)) return null;
+  const rows = value.flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const row = item as Record<string, unknown>;
+    const id = typeof row["id"] === "string" ? row["id"] : "";
+    const parseDate = (raw: unknown) => {
+      if (typeof raw !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+        return undefined;
+      }
+      const [year, month, day] = raw.split("-").map(Number);
+      const date = new Date(year!, month! - 1, day!);
+      if (
+        date.getFullYear() !== year ||
+        date.getMonth() !== month! - 1 ||
+        date.getDate() !== day
+      ) {
+        return undefined;
+      }
+      return date;
     };
+    const begins = parseDate(row["begins"]);
+    const ends = parseDate(row["ends"]);
+    if (!/^\d{3}(10|20|30)$/.test(id) || !begins || !ends || begins > ends) {
+      return [];
+    }
+    return [{ id, begins, ends }];
   });
+  return rows.length > 0 ? rows : null;
+};
+
+export const getSemesterInfo = async (
+  apiUrl: string,
+): Promise<SemesterInfo[]> => {
+  const key = trimTrailingSlashes(apiUrl);
+  const now = Date.now();
+  const cached = semesterInfoCache.get(key);
+  if (cached && cached.expiresAt > now) return cached.rows;
+
+  const inFlight = semesterInfoRequests.get(key);
+  if (inFlight) return inFlight;
+
+  const request = (async () => {
+    try {
+      const url = new URL("/semesters", `${key}/`);
+      const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
+      if (!response.ok) {
+        throw new Error(`upstream returned ${response.status}`);
+      }
+      const rows = normalizeSemesterInfo(await response.json());
+      if (!rows) throw new Error("upstream returned an unexpected payload");
+      semesterInfoCache.set(key, {
+        expiresAt: Date.now() + SEMESTER_INFO_CACHE_TTL_MS,
+        rows,
+        hasSuccessfulData: true,
+      });
+      return rows;
+    } catch (error) {
+      console.error("Error fetching semester info:", error);
+      const rows = cached?.hasSuccessfulData ? cached.rows : SEMESTER_INFO;
+      semesterInfoCache.set(key, {
+        expiresAt: Date.now() + SEMESTER_INFO_FAILURE_RETRY_MS,
+        rows,
+        hasSuccessfulData: cached?.hasSuccessfulData ?? false,
+      });
+      return rows;
+    } finally {
+      semesterInfoRequests.delete(key);
+    }
+  })();
+  semesterInfoRequests.set(key, request);
+  return request;
+};
 
 const normalizeStoredCourses = (value: unknown): StoredCourses => {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
@@ -348,17 +443,18 @@ const readStoredCourses = async (
   }
 };
 
-const semestersWithCurrentClasses = (courses: StoredCourses) => {
+const semestersWithCurrentClasses = (
+  courses: StoredCourses,
+  semesters: readonly SemesterInfo[],
+) => {
   const now = new Date();
-  const currentSemester = SEMESTER_INFO.find(
+  const currentSemester = semesters.find(
     (semester) => now >= semester.begins && now <= semester.ends,
   );
-  const currentId = currentSemester?.id ?? SEMESTER_INFO.at(-1)?.id ?? "";
+  const currentId = currentSemester?.id ?? semesters.at(-1)?.id ?? "";
   return Object.entries(courses)
     .filter(([id]) => {
-      const knownSemester = SEMESTER_INFO.find(
-        (semester) => semester.id === id,
-      );
+      const knownSemester = semesters.find((semester) => semester.id === id);
       return knownSemester ? knownSemester.ends >= now : id > currentId;
     })
     .sort(([left], [right]) => left.localeCompare(right))
@@ -437,6 +533,8 @@ const academicCalendarFailureWindows = new Set<string>();
 export const clearAcademicCalendarCache = () => {
   academicCalendarCache.clear();
   academicCalendarFailureWindows.clear();
+  semesterInfoCache.clear();
+  semesterInfoRequests.clear();
 };
 
 const normalizeAcademicCalendarEvents = (
@@ -578,28 +676,34 @@ const fetchTimetableCalendars = async (
   c: any,
   courses: StoredCourses,
 ): Promise<string[]> => {
+  const semesters = await getSemesterInfo(timetableApiUrl(c));
   const calendars = await Promise.all(
-    semestersWithCurrentClasses(courses).map(async ([semester, courseIds]) => {
-      const url = new URL("/timetable/calendar.ics", `${timetableApiUrl(c)}/`);
-      url.searchParams.set("semester", semester);
-      url.searchParams.set(`semester_${semester}`, courseIds.join(","));
-      if (url.toString().length > 8000) {
-        console.error("Skipping timetable calendar: URL too long");
-        return null;
-      }
-      try {
-        const response = await fetch(url, {
-          signal: AbortSignal.timeout(5000),
-        });
-        if (!response.ok) {
-          throw new Error(`upstream returned ${response.status}`);
+    semestersWithCurrentClasses(courses, semesters).map(
+      async ([semester, courseIds]) => {
+        const url = new URL(
+          "/timetable/calendar.ics",
+          `${timetableApiUrl(c)}/`,
+        );
+        url.searchParams.set("semester", semester);
+        url.searchParams.set(`semester_${semester}`, courseIds.join(","));
+        if (url.toString().length > 8000) {
+          console.error("Skipping timetable calendar: URL too long");
+          return null;
         }
-        return await response.text();
-      } catch (error) {
-        console.error("Error fetching timetable calendar:", error);
-        return null;
-      }
-    }),
+        try {
+          const response = await fetch(url, {
+            signal: AbortSignal.timeout(5000),
+          });
+          if (!response.ok) {
+            throw new Error(`upstream returned ${response.status}`);
+          }
+          return await response.text();
+        } catch (error) {
+          console.error("Error fetching timetable calendar:", error);
+          return null;
+        }
+      },
+    ),
   );
   return calendars.filter((calendar): calendar is string => calendar !== null);
 };

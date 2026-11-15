@@ -9,36 +9,48 @@ import {
   SelectValue,
 } from "@courseweb/ui";
 import { toPrettySemester } from "@/helpers/semester";
-import { lastSemester, semesterInfo } from "@courseweb/shared";
+import { semesterInfo } from "@courseweb/shared";
 import useDictionary from "@/dictionaries/useDictionary";
 import { shouldDefaultSemester } from "./semesterDefault";
+import { useDefaultSemesterId } from "@/hooks/useSemesters";
 
 const SemesterSelector = () => {
   const dict = useDictionary();
   const [searchParams] = useSearchParams();
   const hasUserSelectedSemester = useRef(false);
-  const hasDefaultedSemester = useRef(false);
+  const lastDefaultedSemester = useRef<string>();
   // refine semester for semester selector
   const { items, refine, canRefine } = useCustomMenu({
     attribute: "semester",
   });
+  const selectedSemester = items.find((item) => item.isRefined)?.value;
+  const defaultSemester = useDefaultSemesterId();
 
   useEffect(() => {
     if (
+      selectedSemester &&
+      !lastDefaultedSemester.current &&
+      searchParams.get("nthu_courses[menu][semester]") === null &&
+      !hasUserSelectedSemester.current
+    ) {
+      lastDefaultedSemester.current = selectedSemester;
+    }
+    if (
       shouldDefaultSemester({
         canRefine,
-        hasRefinedItem: items.some((item) => item.isRefined),
+        hasRefinedItem: Boolean(selectedSemester),
+        refinedSemester: selectedSemester,
         hasExplicitSemester:
           searchParams.get("nthu_courses[menu][semester]") !== null,
         hasUserSelectedSemester: hasUserSelectedSemester.current,
-        hasDefaultedSemester: hasDefaultedSemester.current,
+        lastDefaultedSemester: lastDefaultedSemester.current,
+        defaultSemester,
       })
     ) {
-      // default to the latest semester
-      hasDefaultedSemester.current = true;
-      refine(lastSemester.id);
+      if (selectedSemester !== defaultSemester) refine(defaultSemester);
+      lastDefaultedSemester.current = defaultSemester;
     }
-  }, [canRefine, items, refine, searchParams]);
+  }, [canRefine, defaultSemester, refine, searchParams, selectedSemester]);
 
   const handleSelect = (v: string) => {
     hasUserSelectedSemester.current = true;

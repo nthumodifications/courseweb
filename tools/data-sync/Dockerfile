@@ -44,6 +44,9 @@ COPY --chown=bunuser:nodejs tools/data-sync/tsconfig.json ./tsconfig.json
 COPY --chown=bunuser:nodejs packages/eslint-config ./packages/eslint-config
 
 # Default command - run sync once and exit
+# With no SEMESTER override, sync-courses selects the current semester and
+# fully syncs at most the first published upcoming term.
+ENV SEMESTER=""
 CMD ["bun", "run", "src/sync-courses.ts"]
 
 # Health check
