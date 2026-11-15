@@ -16,6 +16,7 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
+    "type-check": "turbo run type-check --concurrency=1",
     "design-lint": "node tools/design-lint/index.mjs",
     "test:design-lint": "node --test tools/design-lint/baseline.test.mjs",
     "test": "turbo run test",

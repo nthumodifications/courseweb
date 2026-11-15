@@ -731,7 +731,8 @@
         "gpa_scale": "等級制",
         "classes": "個班",
         "usual_time": "最常開課時段",
-        "language": "授課語言"
+        "language": "授課語言",
+        "language_short": "語言"
       },
       "brief": "課程簡介",
       "brief_from": "取自 {semester} 課程大綱",

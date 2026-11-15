@@ -90,6 +90,7 @@ const ModulePrerequisiteList = ({
           {onlyNotTaken
             ? labels.prerequisite_not_taken_sentence
             : `${group.mode === "any" ? labels.prerequisite_group_any : labels.prerequisite_requires}${lang === "en" ? ": " : "："}`}
+          {onlyNotTaken && lang === "en" ? " " : ""}
         </span>
         <span>
           {group.items.map((node, nodeIndex) => (

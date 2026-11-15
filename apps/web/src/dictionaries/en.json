@@ -731,7 +731,8 @@
         "gpa_scale": "GPA scale",
         "classes": "classes",
         "usual_time": "Usual time slot",
-        "language": "Language"
+        "language": "Language",
+        "language_short": "Lang"
       },
       "brief": "About this course",
       "brief_from": "From the {semester} syllabus",

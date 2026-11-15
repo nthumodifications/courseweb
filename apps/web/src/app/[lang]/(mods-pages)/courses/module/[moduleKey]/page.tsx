@@ -396,7 +396,7 @@ export const ModulePageContent = ({
                 {selectedVariant.nameEn}
               </p>
             )}
-            <div className="flex min-w-0 flex-wrap items-center gap-1 text-sm text-muted-foreground">
+            <div className="flex min-w-0 flex-wrap items-center gap-1 text-xs text-muted-foreground">
               <span>
                 {selectedVariant.credits.join(
                   contentLang === "en" ? "/" : "、",
@@ -407,7 +407,7 @@ export const ModulePageContent = ({
               {languages && (
                 <>
                   <span>
-                    {dict.course.module.stats.language} {languages}
+                    {dict.course.module.stats.language_short} {languages}
                   </span>
                   <span aria-hidden="true">{metaSeparator}</span>
                 </>
