@@ -16,10 +16,15 @@ import {
 } from "./push";
 
 const originalFetch = globalThis.fetch;
-const originalNavigator = globalThis.navigator;
-const originalNotification = globalThis.Notification;
-const originalPushManager = (globalThis as { PushManager?: unknown })
-  .PushManager;
+// Restore the exact descriptors afterwards: defineProperty without `writable`
+// leaves a read-only global, which breaks later test files that assign to it.
+const globalKeys = ["window", "navigator", "Notification", "PushManager"];
+const originalGlobals = new Map(
+  globalKeys.map((key) => [
+    key,
+    Object.getOwnPropertyDescriptor(globalThis, key),
+  ]),
+);
 
 const prefs: PushPreferences = {
   courseChanges: true,
@@ -125,18 +130,11 @@ const expectSubscriptionReplacement = async (
 
 afterEach(() => {
   globalThis.fetch = originalFetch;
-  Object.defineProperty(globalThis, "navigator", {
-    configurable: true,
-    value: originalNavigator,
-  });
-  Object.defineProperty(globalThis, "Notification", {
-    configurable: true,
-    value: originalNotification,
-  });
-  Object.defineProperty(globalThis, "PushManager", {
-    configurable: true,
-    value: originalPushManager,
-  });
+  for (const key of globalKeys) {
+    const descriptor = originalGlobals.get(key);
+    if (descriptor) Object.defineProperty(globalThis, key, descriptor);
+    else Reflect.deleteProperty(globalThis, key);
+  }
 });
 
 describe("push API client", () => {
