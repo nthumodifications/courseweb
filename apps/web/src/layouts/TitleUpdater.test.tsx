@@ -5,6 +5,10 @@ import { installTestDom } from "@/testDom";
 
 process.env.VITE_NTHUMODS_AUTH_URL ??= "https://auth.example.test";
 process.env.VITE_COURSEWEB_API_URL ??= "https://api.example.test";
+// TitleUpdater imports the router, which reaches config/supabase; give it a
+// URL so the test doesn't depend on another file having mocked that module.
+process.env.VITE_SUPABASE_URL ??= "https://supabase.example.test";
+process.env.VITE_SUPABASE_ANON_KEY ??= "test-anon-key";
 
 let root: Root | undefined;
 let restoreDom: (() => void) | undefined;

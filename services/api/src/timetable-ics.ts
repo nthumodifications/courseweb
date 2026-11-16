@@ -4,11 +4,11 @@ import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import supabase_server from "./config/supabase_server";
 import { fetchAcademicCalendarEvents, getNoClassDates } from "./aca-calendar";
+import { readMergedSemesterInfo } from "./scheduled/semester-dates";
+import type { D1Database } from "@cloudflare/workers-types";
+import { semesterInfo as SEMESTER_INFO } from "./semester-info";
 
-// ── Worker-local mirror of packages/shared/src/constants/semester.ts ─────────
-// The Worker cannot import @courseweb/shared here: its package export points at
-// dist, which CI does not build, and the source file is outside this package's
-// rootDir. timetable-ics.test.ts compares this table with the canonical source.
+export { SEMESTER_INFO };
 
 export const SCHEDULE_TIME_SLOTS = [
   { time: "1", start: "08:00", end: "08:50" },
@@ -30,24 +30,6 @@ export const SCHEDULE_TIME_SLOTS = [
 const SLOT_INDEX: Record<string, number> = Object.fromEntries(
   SCHEDULE_TIME_SLOTS.map((s, i) => [s.time, i]),
 );
-
-export const SEMESTER_INFO = [
-  { id: "10810", begins: new Date(2019, 8, 9), ends: new Date(2020, 0, 12) },
-  { id: "10820", begins: new Date(2020, 1, 17), ends: new Date(2020, 5, 21) },
-  { id: "10910", begins: new Date(2020, 8, 14), ends: new Date(2021, 0, 29) },
-  { id: "10920", begins: new Date(2021, 1, 22), ends: new Date(2021, 5, 25) },
-  { id: "11010", begins: new Date(2021, 8, 13), ends: new Date(2022, 0, 14) },
-  { id: "11020", begins: new Date(2022, 1, 14), ends: new Date(2022, 5, 17) },
-  { id: "11110", begins: new Date(2022, 8, 12), ends: new Date(2023, 0, 13) },
-  { id: "11120", begins: new Date(2023, 1, 13), ends: new Date(2023, 5, 16) },
-  { id: "11210", begins: new Date(2023, 8, 11), ends: new Date(2024, 0, 12) },
-  { id: "11220", begins: new Date(2024, 1, 19), ends: new Date(2024, 5, 23) },
-  { id: "11310", begins: new Date(2024, 8, 2), ends: new Date(2024, 11, 22) },
-  { id: "11320", begins: new Date(2025, 1, 17), ends: new Date(2025, 5, 8) },
-  { id: "11410", begins: new Date(2025, 8, 1), ends: new Date(2025, 11, 21) },
-  { id: "11420", begins: new Date(2026, 1, 23), ends: new Date(2026, 5, 14) },
-  { id: "11510", begins: new Date(2026, 8, 7), ends: new Date(2026, 11, 27) },
-];
 
 export type CourseRow = {
   raw_id: string;
@@ -437,7 +419,9 @@ const appHandler = new Hono().on(
   ),
   async (c) => {
     const { semester } = c.req.valid("query");
-    const semObj = SEMESTER_INFO.find((s) => s.id === semester);
+    const db = (c.env as { DB?: D1Database } | undefined)?.DB;
+    const semesters = await readMergedSemesterInfo(db);
+    const semObj = semesters.find((s) => s.id === semester);
     // Courses are passed as a comma-separated value under the dynamic key
     // "semester_<id>" (e.g. semester_11420=course1,course2,...)
     const coursesParam = c.req.query(`semester_${semester}`);

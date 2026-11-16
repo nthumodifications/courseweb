@@ -1,12 +1,11 @@
 import useDictionary from "@/dictionaries/useDictionary";
-import { departments, GETargetCodes, semesterInfo } from "@courseweb/shared";
+import { departments, GETargetCodes } from "@courseweb/shared";
 import SemesterSelector from "./SemesterSelector";
 import ExpandableFilter from "./ExpandableFilter";
 import ExpandableClassFilter from "./ExpandableClassFilter";
 import InlineCheckboxFilter from "./InlineCheckboxFilter";
+import CourseAudienceFilter from "@/app/[lang]/(mods-pages)/courses/CourseAudienceFilter";
 import { Language } from "@/types/settings";
-
-const latestSemID = semesterInfo.at(-1)!.id;
 
 const languageSynonyms: Record<string, string> = {
   中: "Chinese",
@@ -57,6 +56,8 @@ const PlannerFilters = ({ lang }: PlannerFiltersProps) => {
             limit={20}
           />
         </div>
+
+        <CourseAudienceFilter />
 
         <div className="flex flex-col gap-2">
           <span className="text-sm">{dict.course.refine.special_tags}</span>

@@ -1,6 +1,7 @@
 export type ThemeRadius = "none" | "sm" | "md" | "lg" | "xl";
 export type ThemeDensity = "compact" | "comfortable" | "spacious";
 export type ThemeBackground = "solid" | "gradient" | "dots" | "lines" | "noise";
+export type TransitionSpeed = "instant" | "fast" | "default" | "slow";
 export type ThemeFont =
   // Chinese-capable faces come first: this is a Traditional Chinese product.
   | "system-tc"
@@ -76,6 +77,7 @@ export interface ThemeConfig {
   backgroundGradientTo?: string; // CSS color string
   backgroundGradientDir?: string; // e.g. '135deg'
   accentOverride?: string; // HSL string override for --primary e.g. "273 43% 54%"
+  transitionSpeed?: TransitionSpeed;
 }
 
 export const DEFAULT_THEME_CONFIG: ThemeConfig = {
@@ -85,6 +87,14 @@ export const DEFAULT_THEME_CONFIG: ThemeConfig = {
   fontScale: 1.0,
   density: "comfortable",
   background: "solid",
+  transitionSpeed: "default",
+};
+
+export const TRANSITION_DURATIONS: Record<TransitionSpeed, string> = {
+  instant: "0ms",
+  fast: "75ms",
+  default: "150ms",
+  slow: "300ms",
 };
 
 export const RADIUS_VALUES: Record<ThemeRadius, string> = {
@@ -195,4 +205,3 @@ export const FONT_ORDER: Record<ThemeFontScript, ThemeFont[]> = {
     (f) => FONT_DEFINITIONS[f].script === "latin",
   ),
 };
-

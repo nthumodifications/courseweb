@@ -16,6 +16,9 @@ import {
   WashingMachine,
   Library,
   Megaphone,
+  ContactRound,
+  History,
+  BarChart3,
 } from "lucide-react";
 import ChumeiIcon from "@/components/Apps/ChumeiIcon";
 
@@ -39,6 +42,22 @@ export const apps: AppDefinition[] = [
     title_en: "Course Search",
     href: "/courses",
     Icon: BookOpen,
+  },
+  {
+    id: "course-changes",
+    category: "courses",
+    title_zh: "課程變更",
+    title_en: "Course Changes",
+    href: "/courses/changes",
+    Icon: History,
+  },
+  {
+    id: "course-insights",
+    category: "courses",
+    title_zh: "課程洞察",
+    title_en: "Course Insights",
+    href: "/courses/insights",
+    Icon: BarChart3,
   },
   {
     id: "modules",
@@ -158,6 +177,14 @@ export const apps: AppDefinition[] = [
     href: "/announcements",
     Icon: Megaphone,
     beta: true,
+  },
+  {
+    id: "directory",
+    category: "facilities",
+    title_zh: "校園通訊錄",
+    title_en: "Campus Directory",
+    href: "/directory",
+    Icon: ContactRound,
   },
   {
     id: "shops",

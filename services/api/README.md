@@ -36,7 +36,7 @@ The NTHU Mods API provides access to:
 - GitHub issue management
 - Data synchronization for planner applications
 - **Model Context Protocol (MCP) server for AI chatbot integration**
-- **Full-text search API powered by Algolia**
+- **Supabase-backed full-text search API**
 
 **Base URL:** `https://api.nthumods.com`
 
@@ -272,7 +272,7 @@ GET /venue/{venueId}/courses?semester=11420
 
 ### Search
 
-Full-text search API powered by Algolia for searching NTHU courses.
+The website searches locally through `/search/chunk` with Supabase `/search/fallback` as the remote tier. The public `/search` API, MCP, and chat search use Supabase. The scraper still writes the Algolia index, but no runtime search path reads it.
 
 #### Search Courses (GET)
 
@@ -284,7 +284,7 @@ GET /search?q=machine%20learning&limit=10&filters=department:'Computer Science'
 
 - `q` (required): Search query
 - `limit` (optional): Number of results (default: 10, max: 100)
-- `filters` (optional): Algolia filters
+- `filters` (optional): Supabase-backed course filters
 - `facetFilters` (optional): Comma-separated facet filters
 - `attributesToRetrieve` (optional): Comma-separated attributes to retrieve
 
@@ -607,7 +607,7 @@ bun run prisma:migration:apply:local
 
 ```
 src/
-├── config/           # Configuration files (Supabase, Algolia)
+├── config/           # Configuration files (Supabase, Algolia write/sync)
 ├── headless-ais/     # CCXP system integration
 ├── scheduled/        # Scheduled tasks (syllabus scraping)
 ├── types/            # TypeScript type definitions

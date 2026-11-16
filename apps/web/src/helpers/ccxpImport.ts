@@ -1,4 +1,4 @@
-import { lastSemester } from "@courseweb/shared";
+import { getDefaultSemester } from "@courseweb/shared";
 
 export const MAX_CCXP_COURSE_IDS = 60;
 export const MAX_CCXP_QUERY_PARTS = 200;
@@ -154,8 +154,9 @@ export const decodeCcXpImportQuery = (
     courseCodes[semester] = ids;
   });
 
-  const initialSemester = courseCodes[lastSemester.id]
-    ? lastSemester.id
+  const defaultSemester = getDefaultSemester().id;
+  const initialSemester = courseCodes[defaultSemester]
+    ? defaultSemester
     : lastSerializedSemester;
   if (!initialSemester) return null;
 

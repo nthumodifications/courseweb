@@ -1,6 +1,6 @@
 import { FC, useMemo } from "react";
 import { WidgetShell } from "./WidgetShell";
-import { semesterInfo } from "@courseweb/shared";
+import type { SemesterInfo } from "@courseweb/shared";
 import useTime from "@/hooks/useTime";
 import { Timer } from "lucide-react";
 import { format, formatDistanceStrict } from "date-fns";
@@ -14,10 +14,13 @@ import useUpcomingEvents, {
 } from "@/hooks/useUpcomingEvents";
 import { getLocale } from "@/helpers/dateLocale";
 import { useSettings } from "@/hooks/contexts/settings";
+import { useLocalStorage } from "usehooks-ts";
+import { differenceInCalendarDays, parseISO } from "date-fns";
+import { useSemesters } from "@/hooks/useSemesters";
 
 const DATE_KEY_FORMAT = "yyyy-MM-dd";
 
-const getSemesterDateRange = (semester: (typeof semesterInfo)[number]) =>
+const getSemesterDateRange = (semester: SemesterInfo) =>
   getTaipeiDateRange(
     format(semester.begins, DATE_KEY_FORMAT),
     format(semester.ends, DATE_KEY_FORMAT),
@@ -81,19 +84,48 @@ const CountdownWidget: FC<CountdownWidgetProps> = ({
   dragHandleProps,
   isDragging,
 }) => {
+  const semesters = useSemesters();
   const dict = useDictionary();
   const date = useTime();
+  const [customTitle] = useLocalStorage("widget_countdown_title", "");
+  const [customDate] = useLocalStorage("widget_countdown_date", "");
   const { nextEvent } = useUpcomingEvents();
   const title = dict.today.countdown.title;
 
   const countdownInfo = useMemo(() => {
-    const current = semesterInfo
+    if (customDate) {
+      const target = parseISO(customDate);
+      if (!Number.isNaN(target.getTime())) {
+        const today = new Date(
+          date.getFullYear(),
+          date.getMonth(),
+          date.getDate(),
+        );
+        const targetDay = new Date(
+          target.getFullYear(),
+          target.getMonth(),
+          target.getDate(),
+        );
+        const days = Math.max(0, differenceInCalendarDays(targetDay, today));
+        return {
+          type: "active" as const,
+          days,
+          semId: "custom",
+          label:
+            customTitle ||
+            dict.settings.calendar.widget_dashboard.widget_settings
+              .countdown_default_label,
+          emoji: days <= 14 ? "🔥" : days <= 30 ? "⏰" : "📚",
+        };
+      }
+    }
+    const current = semesters
       .map((semester) => ({ semester, range: getSemesterDateRange(semester) }))
       .find(({ range }) => range && date >= range.start && date < range.end);
 
     if (!current) {
       // Try to find the next upcoming semester
-      const upcoming = semesterInfo
+      const upcoming = semesters
         .map((semester) => ({
           semester,
           range: getSemesterDateRange(semester),
@@ -132,11 +164,12 @@ const CountdownWidget: FC<CountdownWidgetProps> = ({
       label: dict.today.countdown.days_left,
       emoji: daysLeft <= 14 ? "🔥" : daysLeft <= 30 ? "⏰" : "📚",
     };
-  }, [date, dict]);
+  }, [customDate, customTitle, date, dict, semesters]);
 
   return (
     <WidgetShell
       title={title}
+      widgetType="countdown"
       onRemove={onRemove}
       dragHandleProps={dragHandleProps}
       isDragging={isDragging}

@@ -28,17 +28,22 @@ import dining from "./dining";
 import youbike from "./youbike";
 import { syncPeoOpeningTimes } from "./scheduled/peo-opening-times";
 import { syncSelectionDates } from "./scheduled/selection-dates";
+import { syncSemesterDates } from "./scheduled/semester-dates";
 import { D1Database } from "@cloudflare/workers-types";
 import type { ProviderName } from "./ai/llm";
 import usage from "./usage";
 import { syncUsageTick } from "./usage/collector";
 import contributeGrades from "./contribute-grades";
 import announcements from "./announcements";
+import directory from "./directory";
+import libraries from "./libraries";
+import semesters from "./semesters";
 
 export type Bindings = {
   DB: D1Database;
   SUPABASE_URL: string;
   SUPABASE_SERVICE_ROLE_KEY: string;
+  CALENDAR_API_KEY?: string;
   ALGOLIA_APP_ID: string;
   ALGOLIA_API_KEY: string;
   ALGOLIA_BACKUP_APP_ID?: string;
@@ -51,6 +56,8 @@ export type Bindings = {
   AI_PROVIDER_ORDER?: string;
   SELECTION_LLM_PROVIDER?: ProviderName;
   SELECTION_LLM_MODEL?: string;
+  SEMESTER_LLM_PROVIDER?: ProviderName;
+  SEMESTER_LLM_MODEL?: string;
   AI?: Ai;
   VENUE_RATE_LIMITER: RateLimit;
   AI_RATE_LIMITER?: RateLimit;
@@ -103,6 +110,9 @@ export const app = new Hono<{ Bindings: Bindings }>()
   .route("/dining", dining)
   .route("/youbike", youbike)
   .route("/announcements", announcements)
+  .route("/directory", directory)
+  .route("/libraries", libraries)
+  .route("/semesters", semesters)
   .route("/usage", usage)
   .route("/contribute", contributeGrades);
 
@@ -113,9 +123,11 @@ export default {
       ctx.waitUntil(syncPeoOpeningTimes(env));
     }
     if (event.cron === "0 2 * * *") {
-      // Up to 8 bounded GETs plus two single-attempt AI calls keep official
-      // selection data at <24h maximum staleness within Worker limits.
-      ctx.waitUntil(syncSelectionDates(env));
+      // Selection dates and semester dates share the existing daily calendar
+      // refresh. Each task keeps its previous D1 rows when a refresh fails.
+      ctx.waitUntil(
+        Promise.all([syncSelectionDates(env), syncSemesterDates(env)]),
+      );
     } else if (event.cron === "*/10 * * * *") {
       ctx.waitUntil(syncUsageTick(env));
     } else if (event.cron !== "0 2 * * 1") {

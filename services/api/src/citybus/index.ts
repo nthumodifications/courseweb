@@ -11,7 +11,9 @@ import {
 import {
   buildCityBusEtaResponse,
   getCityBusRealtimeSnapshot,
+  type CityBusBindings,
   type CityBusEtaResponse,
+  type CityBusRealtimeReason,
 } from "./realtime";
 import type {
   CityBusDeparturesResponse,
@@ -19,10 +21,7 @@ import type {
   CityBusStaticData,
 } from "./types";
 
-interface CityBusBindings {
-  TDX_CLIENT_ID?: string;
-  TDX_CLIENT_SECRET?: string;
-}
+type CityBusAppBindings = CityBusBindings;
 
 const staticData = staticDataJson as unknown as CityBusStaticData;
 
@@ -68,20 +67,24 @@ function publicRoutes(): CityBusRoutesResponse {
 }
 
 function responseHeaders() {
-  return { "Cache-Control": "public, max-age=15" };
+  return { "Cache-Control": "public, max-age=10" };
 }
 
 function emptyRealtimeResponse(
   routeId: string,
   directionId: string,
+  reason: CityBusRealtimeReason,
 ): CityBusEtaResponse {
   return {
     routeId,
     directionId,
     stops: [],
     buses: [],
+    vehicles: [],
     updatedAt: null,
+    fetchedAt: null,
     realtime: false,
+    reason,
   };
 }
 
@@ -125,7 +128,16 @@ function liveDeparture(
   return [];
 }
 
-const app = new Hono<{ Bindings: CityBusBindings }>()
+function safeExecutionCtx(c: { executionCtx: ExecutionContext }) {
+  try {
+    return c.executionCtx;
+  } catch {
+    // Outside a Worker (tests, local scripts) there is no execution context.
+    return undefined;
+  }
+}
+
+const app = new Hono<{ Bindings: CityBusAppBindings }>()
   .get("/routes", (c) => {
     return c.json(publicRoutes(), 200, {
       "Cache-Control":
@@ -148,18 +160,23 @@ const app = new Hono<{ Bindings: CityBusBindings }>()
       const direction = findCityBusDirection(route, direction_id);
       if (!direction)
         return c.json({ error: "Unknown city bus direction" }, 404);
-      if (!c.env?.TDX_CLIENT_ID || !c.env?.TDX_CLIENT_SECRET) {
+      // TDX only has live data for the city routes; intercity routes would
+      // need one call each, which the 5/min TDX quota cannot afford.
+      if (route.source !== "city") {
         return c.json(
-          emptyRealtimeResponse(route.id, direction.id),
+          emptyRealtimeResponse(route.id, direction.id, "unsupported"),
           200,
           responseHeaders(),
         );
       }
-      const snapshot = await getCityBusRealtimeSnapshot(route, c.env);
+      const { snapshot, reason } = await getCityBusRealtimeSnapshot(
+        c.env ?? {},
+        safeExecutionCtx(c),
+      );
       return c.json(
         snapshot
           ? buildCityBusEtaResponse(route, direction, snapshot)
-          : emptyRealtimeResponse(route.id, direction.id),
+          : emptyRealtimeResponse(route.id, direction.id, reason),
         200,
         responseHeaders(),
       );
@@ -209,7 +226,10 @@ const app = new Hono<{ Bindings: CityBusBindings }>()
         new Date(),
       );
       let realtime = false;
-      const snapshot = await getCityBusRealtimeSnapshot(route, c.env);
+      const { snapshot } =
+        route.source === "city"
+          ? await getCityBusRealtimeSnapshot(c.env ?? {}, safeExecutionCtx(c))
+          : { snapshot: undefined };
       if (snapshot) {
         const eta = buildCityBusEtaResponse(route, direction, snapshot);
         const liveStop = eta.stops.find((item) => item.stopId === stop.id);

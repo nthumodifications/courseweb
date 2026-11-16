@@ -18,6 +18,7 @@ const AuthCallbackPage = lazyWithRetry(
 // Main pages
 export const routeLoaders = {
   courses: () => import("@/app/[lang]/(mods-pages)/courses/page"),
+  courseChanges: () => import("@/app/[lang]/(mods-pages)/courses/changes/page"),
   courseDetail: () =>
     import("@/app/[lang]/(mods-pages)/courses/[courseId]/page"),
   module: () =>
@@ -39,6 +40,10 @@ const PastReviewsPage = lazyWithRetry(
   () => import("@/app/[lang]/reviews/past/page"),
 );
 const CoursesPage = lazyWithRetry(routeLoaders.courses);
+const CourseChangesFeedPage = lazyWithRetry(routeLoaders.courseChanges);
+const CourseInsightsPage = lazyWithRetry(
+  () => import("@/app/[lang]/(mods-pages)/courses/insights/page"),
+);
 const CourseDetailPage = lazyWithRetry(routeLoaders.courseDetail);
 const ModulePage = lazyWithRetry(routeLoaders.module);
 const InstructorPage = lazyWithRetry(routeLoaders.instructor);
@@ -62,6 +67,9 @@ const LibraryPage = lazyWithRetry(
 );
 const AnnouncementsPage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/announcements/page"),
+);
+const DirectoryPage = lazyWithRetry(
+  () => import("@/app/[lang]/(mods-pages)/directory/page"),
 );
 const BusRoutePage = lazyWithRetry(
   () => import("@/app/[lang]/(mods-pages)/bus/[route]/page"),
@@ -168,6 +176,9 @@ const AdminRecruitmentPage = lazyWithRetry(
 );
 const AdminReviewsPage = lazyWithRetry(
   () => import("@/app/[lang]/admin/reviews/page"),
+);
+const AdminCourseShortNamesPage = lazyWithRetry(
+  () => import("@/app/[lang]/admin/course-short-names/page"),
 );
 
 // Separate layout page
@@ -277,6 +288,20 @@ export const appRoutes = [
                     "Search one NTHU course across its recorded semesters and title variants.",
                   descriptionZh: "跨學期搜尋清大課程的開課紀錄與課名變化。",
                 },
+              },
+              {
+                path: ROUTE_PATHS.courseChanges,
+                element: <CourseChangesFeedPage />,
+                handle: {
+                  title: en.course_changes.meta_title,
+                  titleZh: zh.course_changes.meta_title,
+                  description: en.course_changes.meta_description,
+                  descriptionZh: zh.course_changes.meta_description,
+                },
+              },
+              {
+                path: ROUTE_PATHS.courseInsights,
+                element: <CourseInsightsPage />,
               },
               {
                 path: ROUTE_PATHS.module,
@@ -405,6 +430,16 @@ export const appRoutes = [
                   titleZh: zh.announcements.meta_title,
                   description: en.announcements.meta_description,
                   descriptionZh: zh.announcements.meta_description,
+                },
+              },
+              {
+                path: "directory",
+                element: <DirectoryPage />,
+                handle: {
+                  title: en.directory.meta_title,
+                  titleZh: zh.directory.meta_title,
+                  description: en.directory.meta_description,
+                  descriptionZh: zh.directory.meta_description,
                 },
               },
               {
@@ -657,6 +692,10 @@ export const appRoutes = [
               { path: "announcements", element: <AdminAnnouncementsPage /> },
               { path: "recruitment", element: <AdminRecruitmentPage /> },
               { path: "reviews", element: <AdminReviewsPage /> },
+              {
+                path: "course-short-names",
+                element: <AdminCourseShortNamesPage />,
+              },
               { path: "clients", element: <AdminClientsPage /> },
               { path: "audit", element: <AdminAuditPage /> },
             ],

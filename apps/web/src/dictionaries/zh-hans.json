@@ -393,8 +393,9 @@
           "restrictions": "课程限制",
           "course": "课程"
         },
-        "removed": "不再列于课程数据",
+        "removed": "已从课程数据中移除",
         "reappeared": "重新出现在课程数据中",
+        "feed_link": "查看本系所有变更",
         "empty": "无",
         "true_value": "是",
         "false_value": "否",
@@ -415,6 +416,57 @@
       "taken": "已修课",
       "restriction_prefix": "限制：",
       "note_prefix": "备注：",
+      "audience_tags": {
+        "title": "适用对象",
+        "year_grade": {
+          "year-1": "一年级",
+          "year-2": "二年级",
+          "year-3": "三年级",
+          "year-4": "四年级"
+        },
+        "scoped_years": {
+          "undergraduate": {
+            "year-1": "大一",
+            "year-2": "大二",
+            "year-3": "大三",
+            "year-4": "大四"
+          },
+          "graduate": {
+            "year-1": "研究所一年级",
+            "year-2": "研究所二年级",
+            "year-3": "研究所三年级",
+            "year-4": "研究所四年级"
+          },
+          "master": {
+            "year-1": "硕一",
+            "year-2": "硕二",
+            "year-3": "硕三",
+            "year-4": "硕四"
+          },
+          "doctoral": {
+            "year-1": "博一",
+            "year-2": "博二",
+            "year-3": "博三",
+            "year-4": "博四"
+          }
+        },
+        "undergraduate": "大学部",
+        "graduate": "研究所",
+        "master": "硕士班",
+        "doctoral": "博士班",
+        "own_department": "本系",
+        "male": "男生",
+        "female": "女生",
+        "international": "外籍生",
+        "restriction_suffix": "限定",
+        "exclusion_prefix": "排除",
+        "priority_suffix": "优先",
+        "groups": {
+          "restriction": "限定",
+          "exclusion": "排除",
+          "priority": "优先"
+        }
+      },
       "prerequisites_available": "有挡修",
       "semester_time_venue": "学期／时间地点",
       "instructor": "授课教师",
@@ -516,8 +568,10 @@
         "all_instructors": "所有授课教师",
         "edited": "已编辑",
         "error_already_reviewed": "你已经评价过这门课和这位老师。",
-        "error_rate_limited": "今天添加的评价已达上限，请稍后再试。",
-        "error_report_rate_limited": "今天的检举已达上限，请稍后再试。",
+        "error_rate_limited": "过去 24 小时内添加的评价已达上限，请稍后再试。",
+        "error_rate_limited_hours": "过去 24 小时内添加的评价已达上限，约 {count} 小时后可再添加。",
+        "error_rate_limited_minutes": "过去 24 小时内添加的评价已达上限，约 {count} 分钟后可再添加。",
+        "error_report_rate_limited": "过去 24 小时内的检举已达上限，请稍后再试。",
         "error_banned": "目前无法添加评价。",
         "error_removed": "这则评价已被移除，无法编辑。",
         "error_generic": "评价送出失败，请稍后再试。",
@@ -633,15 +687,55 @@
       "default_section": "一般班",
       "not_available": "—",
       "recent_offering": "最近开课",
+      "filters": {
+        "department": "系所",
+        "credits": "学分",
+        "language": "授课语言",
+        "languageOptions": {
+          "english": "英文授课",
+          "chinese": "中文授课",
+          "bilingual": "中英双语",
+          "other": "其他"
+        },
+        "termOffered": "开课学期",
+        "termOptions": {
+          "fall": "上学期",
+          "spring": "下学期",
+          "both": "上下学期"
+        },
+        "recentlyOffered": "近期开课",
+        "recentOptions": {
+          "3": "近 3 个学期",
+          "6": "近 6 个学期",
+          "10": "近 10 个学期",
+          "latest": "最近学期"
+        },
+        "level": "课程年级",
+        "levelOptions": {
+          "1000": "1000 级",
+          "2000": "2000 级",
+          "3000": "3000 级",
+          "4000": "4000 级",
+          "5000": "5000 级以上"
+        },
+        "englishTaught": "英语授课",
+        "englishTaughtOptions": {
+          "yes": "是"
+        }
+      },
+      "sort": {
+        "label": "排序方式",
+        "relevance": "相关性",
+        "courseCode": "课号",
+        "mostRecent": "最近开课",
+        "timesOffered": "开课次数",
+        "fillRate": "近四学期满班率"
+      },
       "search_title": "搜索课程模块",
       "search_description": "跨学期搜索同一门课的开课纪录。",
       "search_placeholder": "搜索课号、课名或教师……",
       "search_prompt": "输入课号、课名或教师，寻找历年开课纪录。",
-      "search_examples": [
-        "微积分",
-        "程序",
-        "CS 1355"
-      ],
+      "search_examples": ["微积分", "程序", "CS 1355"],
       "search_no_results": "找不到符合的课程模块",
       "search_results": "个课程模块",
       "search_other_modules": "搜索其他课程",
@@ -695,6 +789,68 @@
       "research_portal": "搜索清华研究人才数据库"
     }
   },
+  "course_changes": {
+    "meta_title": "课程变更",
+    "meta_description": "依系所与课程查看清大近期的课程变更。",
+    "title": "课程变更",
+    "days_label": "近期变更",
+    "days_7": "7 天",
+    "days_14": "14 天",
+    "days_30": "30 天",
+    "department_label": "系所",
+    "all_departments": "所有系所",
+    "no_results": "这段期间没有课程变更。",
+    "course_fallback": "无法取得课程数据"
+  },
+  "course_insights": {
+    "title": "课程洞察",
+    "at_a_glance": "本学期概况",
+    "semester_label": "学期",
+    "modules_sections": "课程／班次",
+    "departments": "系所",
+    "seats": "名额",
+    "english_share": "英语授课占比",
+    "change_vs_last_year": "与去年同学期比较",
+    "percentage_points": "{value} 个百分点",
+    "fullest_sections": "最满的班次",
+    "course": "课程",
+    "section": "班次",
+    "enrolled_capacity": "选课人数／名额",
+    "fill_rate": "满额率",
+    "department_demand": "系所需求",
+    "show_all_departments": "显示全部 {count} 个系所",
+    "show_fewer_departments": "收合至前 20 个系所",
+    "show_all_buildings": "显示全部 {count} 栋校舍",
+    "show_fewer_buildings": "收合至前 10 栋校舍",
+    "when_classes_meet": "上课时段",
+    "schedule_table_label": "各星期与节次的班次数",
+    "schedule_cell_label": "星期{day}第{period}节：{count} 班",
+    "new_modules": "本学期新开课",
+    "new_lookback": "前 {count} 个学期未开课",
+    "show_more": "显示更多",
+    "show_less": "收合",
+    "prior_history_unavailable": "没有足够的过往学期数据",
+    "no_new_modules": "没有符合条件的课程",
+    "discontinued_modules": "本学期未开课",
+    "no_discontinued_modules": "没有符合条件的课程",
+    "semester_trends": "历年趋势",
+    "modules": "课程",
+    "average_class_size": "平均选课人数",
+    "busiest_buildings": "开课最多的校舍",
+    "building": "校舍",
+    "sections": "班次",
+    "no_course_data": "这个学期没有课程数据",
+    "no_fullness_data": "没有同时提供选课人数与名额的班次",
+    "no_schedule_data": "没有上课时段数据",
+    "no_building_data": "没有可辨识的校舍数据",
+    "weekday_monday": "一",
+    "weekday_tuesday": "二",
+    "weekday_wednesday": "三",
+    "weekday_thursday": "四",
+    "weekday_friday": "五",
+    "weekday_saturday": "六",
+    "weekday_sunday": "日"
+  },
   "navigation": {
     "today": "今日",
     "courses": "课表",
@@ -706,6 +862,25 @@
     "apps": "应用程序",
     "admin": "管理中心",
     "youbike": "YouBike 2.0"
+  },
+  "admin_short_names": {
+    "title": "课程简称",
+    "empty": "目前没有课程简称。",
+    "locked": "已锁定",
+    "lock": "锁定",
+    "unlock": "解除锁定",
+    "revert": "还原",
+    "reason": "请填写原因",
+    "revision": "版本",
+    "editor": "编辑者",
+    "updated": "更新于",
+    "identity_module": "课程模块",
+    "identity_course_code": "课程代码",
+    "language_zh": "中文",
+    "language_en": "英文",
+    "edit_action": "编辑",
+    "revert_action": "还原",
+    "action_failed": "无法保存变更。"
   },
   "command_palette": {
     "placeholder": "输入指令…",
@@ -801,7 +976,32 @@
     "load_error": "无法加载图书馆座位实时数据",
     "try_again": "重新尝试",
     "data_source": "数据源：",
-    "source_name": "国立清华大学图书馆座位管理系统 (libsms)"
+    "source_name": "国立清华大学图书馆座位管理系统 (libsms)",
+    "lost_found_title": "失物招领",
+    "lost_found_search_placeholder": "搜索物品、日期或地点",
+    "lost_found_show_more": "显示更多",
+    "lost_found_filter_type": "依物品类型筛选",
+    "lost_found_all_types": "全部物品类型",
+    "lost_found_no_results": "找不到符合的失物",
+    "lost_found_refresh": "刷新失物招领",
+    "lost_found_load_error": "目前无法取得失物招领数据",
+    "lost_found_data_source": "失物招领数据源：",
+    "lost_found_source_name": "国立清华大学图书馆失物招领系统"
+  },
+  "directory": {
+    "title": "校园通信录",
+    "meta_title": "校园通信录",
+    "meta_description": "查询清华各单位电话、分机与电子邮件。",
+    "search_placeholder": "搜索单位名称",
+    "extension": "分机",
+    "copy": "复制",
+    "website": "单位网站",
+    "refresh": "刷新",
+    "load_error": "无法取得校园通信录",
+    "try_again": "重新尝试",
+    "no_results": "找不到符合的单位",
+    "data_source": "数据源：",
+    "source_name": "清华通信录"
   },
   "usage_forecast": {
     "learning": "正在学习这些空间平常有多忙——累积约一周数据后会显示预测。",
@@ -880,10 +1080,19 @@
     "meta_title": "校园公告",
     "meta_description": "追踪清大各处室与系所，掌握校园公告与重要时限。",
     "search_placeholder": "搜索公告标题",
+    "followed_tab": "追踪来源",
+    "matches_tab": "符合项目",
     "filter_source": "依追踪来源筛选",
     "all_followed": "所有追踪来源",
     "manage_follows": "管理追踪",
     "manage_follows_description": "选择要显示在公告列表中的校园来源。",
+    "manage_keywords": "管理关键字",
+    "manage_keywords_description": "在所有校园来源中寻找符合的公告。",
+    "keyword_placeholder": "添加关键字",
+    "add_keyword": "添加",
+    "remove_keyword": "移除关键字",
+    "keyword_suggestions": "建议关键字",
+    "suggested_keywords": ["奖学金", "交换", "实习", "征才"],
     "source_search_placeholder": "搜索来源",
     "source_language": {
       "zh_tw": "中文",
@@ -892,6 +1101,9 @@
     "load_error": "目前无法取得校园公告",
     "try_again": "再试一次",
     "no_results": "没有符合的追踪公告",
+    "no_keyword_matches": "没有符合关键字的公告",
+    "no_keywords": "尚未设置关键字",
+    "new_matches_count": "上次造访后添加 {count} 则符合公告",
     "show_more": "显示更多",
     "attribution_prefix": "数据源：",
     "attribution_name": "NTHU-SA 清大学生会 NTHU-Data-API"
@@ -990,7 +1202,19 @@
     "realtime_not_operating": "今日未营运",
     "realtime_updated_at": "更新于 {time}",
     "realtime_tab": "实时",
-    "timetable_tab": "时刻表"
+    "timetable_tab": "时刻表",
+    "map_tab": "地图",
+    "locate_me": "寻找最近站牌",
+    "nearest_stop": "最近站牌：{stop}・{distance}",
+    "location_denied": "未打开定位权限，无法显示最近站牌。",
+    "location_unavailable": "无法取得你的位置。",
+    "map_buses": "{count} 辆行驶中・{time} 更新",
+    "map_no_buses": "此路线目前没有行驶中的公车",
+    "map_live_unavailable": "实时公车位置暂时无法使用。",
+    "bus_marker": "{plate}・{time} 更新",
+    "fallback_unavailable": "实时公车数据暂时无法使用，显示预定时刻表。",
+    "fallback_unsupported": "此路线不提供实时动态，显示预定时刻表。",
+    "fallback_no_bus": "此路线目前没有行驶中的公车，显示预定时刻表。"
   },
   "settings": {
     "navigation_aria": "设置导览",
@@ -1046,6 +1270,13 @@
         "compact": "紧凑",
         "comfortable": "适中",
         "spacious": "宽松"
+      },
+      "transition_speed": {
+        "title": "转场速度",
+        "instant": "立即",
+        "fast": "快速",
+        "default": "预设",
+        "slow": "缓慢"
       },
       "background": {
         "title": "背景",
@@ -1174,6 +1405,12 @@
     },
     "timetable": {
       "title": "时间表",
+      "home_campus": "居住校区",
+      "home_campus_options": {
+        "none": "不设置",
+        "main": "校本部",
+        "nanda": "南大校区"
+      },
       "vertical_preview": "垂直式显示",
       "default_view": {
         "title": "预设查看",
@@ -1209,6 +1446,12 @@
         "base": "中",
         "lg": "大"
       },
+      "title_behavior": "课程名称",
+      "title_behavior_options": {
+        "fit": "缩小文字",
+        "one_line": "单行",
+        "two_lines": "双行"
+      },
       "font_family": "时段字体",
       "font_family_options": {
         "system": "系统字体",
@@ -1218,6 +1461,14 @@
         "serif": "衬线",
         "mono": "等宽",
         "rounded": "圆体"
+      },
+      "auto_color": {
+        "title": "自动配色",
+        "by_department": "依系所自动配色",
+        "by_time_of_day": "依上课时段自动配色",
+        "confirm_title": "要套用自动配色吗？",
+        "confirm_description": "这会覆盖目前学期课程的手动颜色。",
+        "confirm": "套用配色"
       },
       "move_up": "向上移动",
       "move_down": "向下移动",
@@ -1260,7 +1511,20 @@
         "description": "用可自订的小工具格取代今日页面",
         "columns": "栏数",
         "widgets": "小工具",
+        "manage_widgets": "管理小工具",
+        "manage_widgets_description": "选择要显示在今日页面的小工具。",
+        "empty": "没有小工具",
         "view_full_page": "查看完整页面",
+        "widget_settings": {
+          "title": "小工具设置",
+          "weather_days": "预报天数",
+          "countdown_title": "倒数名称",
+          "countdown_date": "目标日期",
+          "countdown_default_label": "剩余天数",
+          "upcoming_days": "日期范围（天）",
+          "upcoming_count": "显示行程数",
+          "reset": "重设"
+        },
         "widget_options": {
           "schedule": {
             "title": "课程表"
@@ -1507,6 +1771,10 @@
       "action": "前往设置",
       "text": "你可以在设置页面客制化课表。"
     },
+    "new_semester": {
+      "title": "{semester} 课程已公布",
+      "link": "查看"
+    },
     "dismiss": "关闭公告"
   },
   "applist": {
@@ -1528,6 +1796,8 @@
     },
     "apps": {
       "courses": "课程查询",
+      "course-changes": "课程变更",
+      "course-insights": "课程洞察",
       "modules": "课程模块",
       "chat": "AI 课程助手",
       "venues": "地点相关课程",
@@ -1538,6 +1808,7 @@
       "sports-venues": "体育场馆使用人数",
       "library": "图书馆实时座位",
       "announcements": "校园公告",
+      "directory": "校园通信录",
       "shops": "餐厅及服务",
       "calendar": "日历",
       "timetable-community": "社区课表",
@@ -1688,14 +1959,19 @@
       "sign_in_required": "请登录以贡献课程日期"
     },
     "ShortNameContributeForm": {
-      "title": "提供课程简称",
-      "description": "提供课程简称，让大家更容易辨识课程。",
+      "title": "编辑课程简称",
+      "description": "使用大家熟悉的简称。",
       "dont_abuse": "请勿滥用系统。",
       "accurate_relevant": "请只填写准确且相关的信息。",
-      "privacy": "送出的内容会包含学号，并公开显示。",
+      "privacy": "简称会公开显示，管理员可查看编辑者。",
       "placeholder": "课程简称",
       "cancel": "取消",
-      "submit": "送出"
+      "submit": "保存",
+      "short_name": "课程简称",
+      "add": "添加课程简称",
+      "no_short_name": "尚无简称",
+      "edit": "编辑",
+      "save_failed": "无法保存简称，请再试一次。"
     },
     "ShareCourseButton": {
       "share_prefix": "分享：",

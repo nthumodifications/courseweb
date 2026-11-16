@@ -1,6 +1,5 @@
 import { Hono } from "hono";
 import { beforeEach, describe, expect, test } from "bun:test";
-import type { SearchClient as AlgoliaSearchClient } from "algoliasearch/lite";
 import {
   createSearchChunkApp,
   type SearchManifestRpcRow,
@@ -234,14 +233,13 @@ describe("local search against the real in-process search-chunk API", () => {
   });
 
   test("fills hits InstantSearch already copied when the text tier lands", async () => {
+    const engine = createEngine();
+    await engine.search("11510", request());
     const resilient = createResilientSearchClient({
-      remoteClient: {
-        search: async () => {
-          throw new Error("remote must not be called");
-        },
-        searchForFacetValues: async () => [],
-      } as unknown as AlgoliaSearchClient,
-      localSearch: engineOptions(appFetch),
+      fallbackFetch: async () => {
+        throw new Error("API fallback must not be called");
+      },
+      localSearch: { ...engineOptions(appFetch), engine },
     });
     let notified = 0;
     resilient.subscribe(() => {
@@ -446,14 +444,15 @@ describe("local search against the real in-process search-chunk API", () => {
     expect(courseLoadCalls).toBe(4);
     expect(local.getStatus()).toBe("error");
 
-    let remoteCalls = 0;
-    const remoteClient = {
-      search: async () => {
-        remoteCalls += 1;
-        return {
-          results: [
-            {
-              hits: [{ objectID: "remote" }],
+    let fallbackCalls = 0;
+    const resilient = createResilientSearchClient({
+      fallbackFetch: async () => {
+        fallbackCalls += 1;
+        return new Response(
+          JSON.stringify({
+            success: true,
+            data: {
+              hits: [{ objectID: "fallback" }],
               nbHits: 1,
               page: 0,
               nbPages: 1,
@@ -463,22 +462,22 @@ describe("local search against the real in-process search-chunk API", () => {
               query: "E",
               params: "",
             },
-          ],
-        };
+          }),
+          { status: 200 },
+        );
       },
-      searchForFacetValues: async () => [],
-    } as unknown as AlgoliaSearchClient;
-    const resilient = createResilientSearchClient({
-      remoteClient,
       localSearch: engineOptions(failedFetch),
     });
-    const remoteResult = (await resilient.search([
+    const fallbackResult = (await resilient.search([
       request({ query: "E" }),
     ] as never)) as {
       results: Array<{ hits: Array<{ objectID: string }> }>;
     };
-    expect(remoteCalls).toBe(1);
-    expect(remoteResult.results[0]?.hits[0]?.objectID).toBe("remote");
+    expect(fallbackCalls).toBe(1);
+    expect(fallbackResult.results[0]?.hits[0]?.objectID).toBe("fallback");
+    for (let attempt = 0; attempt < 20 && courseLoadCalls === 4; attempt += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
     expect(courseLoadCalls).toBe(5);
   });
 });

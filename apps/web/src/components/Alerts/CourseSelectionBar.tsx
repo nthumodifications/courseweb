@@ -1,5 +1,4 @@
 import { X } from "lucide-react";
-import { currentSemester, lastSemester } from "@courseweb/shared";
 import { cn } from "@courseweb/ui";
 import { useMemo } from "react";
 import { useLocalStorage } from "usehooks-ts";
@@ -22,6 +21,7 @@ import {
 import { formatCourseSelectionBarDate } from "@/components/CourseSelection/CourseSelectionSchedule";
 import CourseSelectionScheduleDialog from "@/components/CourseSelection/CourseSelectionScheduleDialog";
 import { contentLanguage } from "@/helpers/contentLanguage";
+import { useDefaultSemesterId } from "@/hooks/useSemesters";
 
 const replaceDate = (template: string, date: string) =>
   template.replace("{date}", date);
@@ -78,7 +78,7 @@ const getBarAnswer = (
 const CourseSelectionBar = () => {
   const dict = useDictionary();
   const { language } = useSettings();
-  const semester = currentSemester?.id ?? lastSemester.id;
+  const semester = useDefaultSemesterId();
   const { periods, nowDateKey, isLoading, error } =
     useCourseSelectionPeriods(semester);
   const [dismissedPeriodIds, setDismissedPeriodIds] = useLocalStorage<string[]>(

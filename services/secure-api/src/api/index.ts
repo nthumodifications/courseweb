@@ -10,6 +10,7 @@ import { createCalendarApp } from "./calendar";
 import { resolveUserStorageMode } from "../storage/userStore";
 import reviewsHandler from "./reviews";
 import pushHandler from "./push";
+import courseShortNamesHandler from "./course-short-names";
 
 const userStorageMode = resolveUserStorageMode();
 
@@ -42,6 +43,7 @@ const app = new Hono()
   .route("/course-dates", courseDatesHandler)
   .route("/reviews", reviewsHandler)
   .route("/push", pushHandler)
+  .route("/course-short-names", courseShortNamesHandler)
   .route("/admin", adminHandler);
 
 export default app;

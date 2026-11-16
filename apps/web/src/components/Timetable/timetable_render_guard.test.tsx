@@ -364,6 +364,74 @@ describe("timetable provider render stability", () => {
     );
 
     expect(fixture.container.textContent).toContain(testCourse.name_en);
+    expect(
+      [...fixture.container.querySelectorAll("[class]")].some((element) =>
+        /line-clamp/.test(element.className),
+      ),
+    ).toBe(false);
+    await fixture.cleanup();
+  });
+
+  test("renders every enabled timetable field in both layouts", async () => {
+    const allFields = {
+      title: true,
+      code: true,
+      time: true,
+      venue: true,
+      teacher: true,
+      credits: true,
+    };
+    const tableDim = {
+      header: { width: 40, height: 40 },
+      timetable: { width: 100, height: 50 },
+    };
+    const fixture = await renderTimetable(
+      <>
+        <TimetableSlotVertical
+          course={{
+            course: testCourse,
+            venue: "DELTA台達217 M9MaMb",
+            dayOfWeek: 0,
+            startTime: 0,
+            endTime: 0,
+            color: "#000000",
+            textColor: "#ffffff",
+          }}
+          tableDim={tableDim}
+        />
+        <TimetableSlotHorizontal
+          course={{
+            course: testCourse,
+            venue: "DELTA台達217 M9MaMb",
+            dayOfWeek: 0,
+            startTime: 0,
+            endTime: 0,
+            color: "#000000",
+            textColor: "#ffffff",
+          }}
+          tableDim={tableDim}
+        />
+      </>,
+      {
+        [PREFERENCES_KEY]: {
+          fontSize: "lg",
+          display: allFields,
+        },
+      },
+    );
+
+    const renderedText = fixture.container.textContent ?? "";
+    const fieldTexts = [
+      testCourse.department + testCourse.course,
+      testCourse.name_en,
+      "08:00–08:50",
+      "Alice Chen",
+      "DELTA台達217 M9MaMb",
+      `${testCourse.credits} cr`,
+    ];
+    for (const fieldText of fieldTexts) {
+      expect(renderedText.split(fieldText)).toHaveLength(3);
+    }
     await fixture.cleanup();
   });
 

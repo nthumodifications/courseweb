@@ -186,6 +186,11 @@ const SettingsPage = () => {
     dict.settings.appearance.density.compact,
     dict.settings.appearance.density.comfortable,
     dict.settings.appearance.density.spacious,
+    dict.settings.appearance.transition_speed.title,
+    dict.settings.appearance.transition_speed.instant,
+    dict.settings.appearance.transition_speed.fast,
+    dict.settings.appearance.transition_speed.default,
+    dict.settings.appearance.transition_speed.slow,
     dict.settings.appearance.background.title,
     dict.settings.appearance.background.from,
     dict.settings.appearance.background.to,
@@ -217,6 +222,8 @@ const SettingsPage = () => {
     ).map((widget) => widget.title),
   ];
   const timetablePreferencesSearchKeywords = [
+    dict.settings.timetable.home_campus,
+    ...Object.values(dict.settings.timetable.home_campus_options),
     dict.settings.timetable.language,
     ...Object.values(dict.settings.timetable.language_options),
     dict.settings.timetable.font_size,
@@ -452,9 +459,9 @@ const SettingsPage = () => {
                   }
                 />
                 <SettingsSearchableBlock
-                  keywords={Object.values(
-                    dict.settings.timetable.theme.options,
-                  ).concat(dict.settings.timetable.theme.title)}
+                  keywords={Object.values(dict.settings.timetable.theme.options)
+                    .concat(dict.settings.timetable.theme.title)
+                    .concat(Object.values(dict.settings.timetable.auto_color))}
                 >
                   <TimetableThemeList />
                 </SettingsSearchableBlock>

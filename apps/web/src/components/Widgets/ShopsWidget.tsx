@@ -85,6 +85,7 @@ const ShopsWidget: FC<ShopsWidgetProps> = ({
   return (
     <WidgetShell
       title={title}
+      widgetType="shops"
       onRemove={onRemove}
       dragHandleProps={dragHandleProps}
       isDragging={isDragging}

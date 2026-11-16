@@ -49,6 +49,7 @@ const SportsVenuesWidget: FC<SportsVenuesWidgetProps> = ({
   return (
     <WidgetShell
       title={title}
+      widgetType="sports-venues"
       onRemove={onRemove}
       dragHandleProps={dragHandleProps}
       isDragging={isDragging}

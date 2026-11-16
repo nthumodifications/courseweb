@@ -10,9 +10,8 @@ on:
   workflow_dispatch:
     inputs:
       semester:
-        description: "Semester to sync (e.g. 11510)"
+        description: "Semester to sync; leave empty for automatic selection"
         required: false
-        default: "11510"
 
 env:
   IMAGE_NAME: ghcr.io/${{ github.repository }}
@@ -59,8 +58,6 @@ jobs:
         env:
           VITE_SUPABASE_URL: https://cmzdlrqfpuktcczvsobs.supabase.co
           VITE_SUPABASE_ANON_KEY: layout-guard-placeholder
-          VITE_ALGOLIA_APP_ID: LAYOUTGUARD
-          VITE_ALGOLIA_SEARCH_KEY: layout-guard-placeholder
         run: |
           bun run build
 
@@ -240,10 +237,6 @@ jobs:
   #     # Create .env file with secrets
   #     - name: Create .env file
   #       run: |
-  #         echo "NEXT_PUBLIC_ALGOLIA_APP_ID=${{ secrets.NEXT_PUBLIC_ALGOLIA_APP_ID }}" >> .env
-  #         echo "NEXT_PUBLIC_ALGOLIA_SEARCH_KEY=${{ secrets.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY }}" >> .env
-  #         echo "NEXT_PUBLIC_ALGOLIA_TEMP_APP_ID=${{ secrets.NEXT_PUBLIC_ALGOLIA_TEMP_APP_ID }}" >> .env
-  #         echo "NEXT_PUBLIC_ALGOLIA_TEMP_SEARCH_KEY=${{ secrets.NEXT_PUBLIC_ALGOLIA_TEMP_SEARCH_KEY }}" >> .env
   #         echo "NEXT_PUBLIC_SENTRY_DSN=${{ secrets.NEXT_PUBLIC_SENTRY_DSN }}" >> .env
   #         echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" >> .env
   #         echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" >> .env
@@ -304,7 +297,7 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID }}
           ALGOLIA_API_KEY: ${{ secrets.ALGOLIA_API_KEY }}
-          SEMESTER: ${{ github.event.inputs.semester || '11510' }}
+          SEMESTER: ${{ github.event.inputs.semester || '' }}
         run: bun run src/sync-courses.ts "$SEMESTER"
 
   build-and-push-data-sync:
@@ -387,5 +380,5 @@ jobs:
         env:
           COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
         run: |
-          curl --fail --request GET "https://delta.nthumods.com/api/v1/deploy?uuid=nwwc8owkwo04c0owgc4kgkc8&force=false" \
+          curl --fail --request POST "https://delta.nthumods.com/api/v1/deploy?uuid=nwwc8owkwo04c0owgc4kgkc8&force=false" \
             --header "Authorization: Bearer $COOLIFY_TOKEN"

@@ -27,17 +27,20 @@ export interface AnnouncementListState {
   page: number;
   search: string;
   sourceFilter: string;
+  view: "followed" | "matches";
 }
 
 export type AnnouncementListAction =
   | { type: "search"; value: string }
   | { type: "sourceFilter"; value: string }
+  | { type: "view"; value: AnnouncementListState["view"] }
   | { type: "showMore" };
 
 export const initialAnnouncementListState: AnnouncementListState = {
   page: 1,
   search: "",
   sourceFilter: "all",
+  view: "followed",
 };
 
 export const announcementListReducer = (
@@ -49,6 +52,8 @@ export const announcementListReducer = (
       return { ...state, page: 1, search: action.value };
     case "sourceFilter":
       return { ...state, page: 1, sourceFilter: action.value };
+    case "view":
+      return { ...state, page: 1, view: action.value };
     case "showMore":
       return { ...state, page: state.page + 1 };
   }

@@ -10,6 +10,7 @@ import {
   HTMLTableElement,
   parseHTML,
 } from "linkedom/worker";
+import { courseAudienceFacetValues } from "./course-audience-tags";
 import type { Course, Department, SyncEnvironment } from "./types";
 import {
   diffCourseRows,
@@ -26,6 +27,23 @@ import {
 } from "./utils";
 
 const baseUrl = `https://www.ccxp.nthu.edu.tw/ccxp/INQUIRE/JH/6/6.2/6.2.9/JH629002.php`;
+
+export const ccxpListingHasCourses = (html: string): boolean | undefined => {
+  const doc = parseHTML(html).document;
+  const table = Array.from(doc.querySelectorAll("table")).find((node) =>
+    (node.textContent?.trim() ?? "").startsWith("科號"),
+  );
+  if (!table) return undefined;
+  const rows = Array.from(table?.querySelectorAll("tr") ?? []);
+  return rows.some((row, index) => {
+    if (index < 2 || index % 2 !== 0) return false;
+    const cells = row.querySelectorAll("td");
+    return Boolean(cells[0]?.textContent?.trim());
+  });
+};
+
+export const shouldSkipUpcomingSemesterScrape = (html: string) =>
+  ccxpListingHasCourses(html) === false;
 
 const CHANGE_LOG_PAGE_SIZE = 1_000;
 const CHANGE_LOG_MAX_PAGES = 10;
@@ -74,7 +92,8 @@ const readExistingCourseRows = async (
       .order("raw_id", { ascending: true })
       .range(offset, offset + CHANGE_LOG_PAGE_SIZE - 1);
 
-    if (error) throw new Error(`Failed to read previous courses: ${error.message}`);
+    if (error)
+      throw new Error(`Failed to read previous courses: ${error.message}`);
 
     rows.push(...((data ?? []) as unknown as CourseSnapshot[]));
     if (!data || data.length < CHANGE_LOG_PAGE_SIZE) break;
@@ -99,7 +118,10 @@ const readPreviouslyRemovedIds = async (
       .order("detected_at", { ascending: false })
       .range(offset, offset + CHANGE_LOG_PAGE_SIZE - 1);
 
-    if (error) throw new Error(`Failed to read previous course changes: ${error.message}`);
+    if (error)
+      throw new Error(
+        `Failed to read previous course changes: ${error.message}`,
+      );
 
     for (const row of data ?? []) {
       if (!latestKindById.has(row.raw_id)) {
@@ -131,7 +153,10 @@ const recordCourseChanges = async (
   const previousRows = await readExistingCourseRows(supabase, semester);
   if (previousRows.length === 0) return;
 
-  const previouslyRemovedIds = await readPreviouslyRemovedIds(supabase, semester);
+  const previouslyRemovedIds = await readPreviouslyRemovedIds(
+    supabase,
+    semester,
+  );
   const activePreviousRows = previousRows.filter(
     (course) => !previouslyRemovedIds.has(course.raw_id),
   );
@@ -147,7 +172,11 @@ const recordCourseChanges = async (
     currentRows as unknown as CourseSnapshot[],
     { previouslyRemovedIds },
   );
-  for (let offset = 0; offset < changes.length; offset += CHANGE_LOG_INSERT_CHUNK_SIZE) {
+  for (
+    let offset = 0;
+    offset < changes.length;
+    offset += CHANGE_LOG_INSERT_CHUNK_SIZE
+  ) {
     const chunk = changes
       .slice(offset, offset + CHANGE_LOG_INSERT_CHUNK_SIZE)
       .map((change) => ({ ...change, detected_at: detectedAt }));
@@ -246,9 +275,7 @@ export const syncCourseRows = async (
     );
   } catch (error) {
     if (error instanceof CourseChangeLogTimeoutError) {
-      console.warn(
-        `${error.message}; continuing with the course upsert`,
-      );
+      console.warn(`${error.message}; continuing with the course upsert`);
     } else {
       console.error(
         "Course change logging failed; continuing with the course upsert:",
@@ -266,6 +293,7 @@ export const syncCourseRows = async (
 export const scrapeArchivedCourses = async (
   env: SyncEnvironment,
   semester: string,
+  options: { skipIfEmpty?: boolean } = {},
 ): Promise<Course[]> => {
   // Fetch landing page with retry
   const landingPageRes = await retryWithBackoff(
@@ -377,7 +405,10 @@ export const scrapeArchivedCourses = async (
 
   console.log(`Found ${departments.length} departments`);
 
-  const fetchCourses = async (department: Department, yearSemester: string) => {
+  const fetchCourses = async (
+    department: Department,
+    yearSemester: string,
+  ): Promise<string> => {
     return await retryWithBackoff(
       async () => {
         const response = await fetch(baseUrl, {
@@ -397,13 +428,30 @@ export const scrapeArchivedCourses = async (
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
-        return response;
+        return response
+          .arrayBuffer()
+          .then((arrayBuffer) =>
+            new TextDecoder("big5").decode(new Uint8Array(arrayBuffer)),
+          );
       },
       3,
       1500,
       `${department.code} courses`,
     );
   };
+
+  let probedDepartment: { code: string; html: string } | undefined;
+  if (options.skipIfEmpty && departments.length > 0) {
+    const department = departments[0]!;
+    const html = await fetchCourses(department, semester);
+    if (shouldSkipUpcomingSemesterScrape(html)) {
+      console.log(
+        `⏭️ CCXP probe found no ${semester} courses in ${department.code}`,
+      );
+      return [];
+    }
+    probedDepartment = { code: department.code, html };
+  }
 
   const normalizedCourses: Course[] = [];
   const failedDepartments: string[] = [];
@@ -417,12 +465,10 @@ export const scrapeArchivedCourses = async (
       try {
         console.log(`Scraping ${department.code} ${semester}...`);
 
-        const response = await fetchCourses(department, semester);
-        const text = await response
-          .arrayBuffer()
-          .then((arrayBuffer) =>
-            new TextDecoder("big5").decode(new Uint8Array(arrayBuffer)),
-          );
+        const text =
+          department.code === probedDepartment?.code
+            ? probedDepartment.html
+            : await fetchCourses(department, semester);
 
         const doc = parseHTML(text).document;
         const tables = doc.querySelectorAll("table");
@@ -661,7 +707,14 @@ export const scrapeArchivedCourses = async (
   if (failedDepartments.length > 0) {
     console.warn(`Failed departments: ${failedDepartments.join(", ")}`);
   }
+  if (failedDepartments.length === departments.length) {
+    throw new Error(`All CCXP department requests failed for ${semester}`);
+  }
   console.log(`Found ${normalizedCourses.length} courses in ${semester}`);
+
+  if (options.skipIfEmpty && normalizedCourses.length === 0) {
+    return normalizedCourses;
+  }
 
   const supabase = createSupabaseClient(env);
   await syncCourseRows(supabase, semester, normalizedCourses);
@@ -895,6 +948,10 @@ export const scrapeSyllabus = async (
             s.match(/.{1,2}/g),
           ),
           courseLevel: course.course[0] + "000",
+          audience: courseAudienceFacetValues({
+            note: course.note,
+            restrictions: course.restrictions,
+          }),
         };
 
         const algolia = createAlgoliaClient(env);
@@ -991,6 +1048,10 @@ export const syncCoursesToAlgolia = async (
             s.match(/.{1,2}/g),
           ),
           courseLevel: course.course[0] + "000",
+          audience: courseAudienceFacetValues({
+            note: course.note,
+            restrictions: course.restrictions,
+          }),
         }),
       );
 

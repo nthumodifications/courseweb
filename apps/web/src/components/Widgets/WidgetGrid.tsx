@@ -34,6 +34,8 @@ import GradesWidget from "./GradesWidget";
 import AnnouncementsWidget from "./AnnouncementsWidget";
 import { cn } from "@/lib/utils";
 import { WidgetErrorBoundary } from "./WidgetErrorBoundary";
+import { WidgetManagementDialog } from "./WidgetManagementDialog";
+import useDictionary from "@/dictionaries/useDictionary";
 
 // Individual sortable widget wrapper
 const SortableWidget: FC<{
@@ -119,6 +121,7 @@ const SortableWidget: FC<{
 
 // Main widget grid component
 const WidgetGrid: FC = () => {
+  const dict = useDictionary();
   const [config, setConfig] = useDashboardConfig();
 
   const sensors = useSensors(
@@ -180,15 +183,24 @@ const WidgetGrid: FC = () => {
         strategy={rectSortingStrategy}
       >
         <div className={cn("grid gap-4 p-4", colClass)}>
-          {activeWidgets.map((widget) => (
-            <SortableWidget
-              key={widget.id}
-              widget={widget}
-              onRemove={handleRemove}
-            />
-          ))}
+          {activeWidgets.length > 0 ? (
+            activeWidgets.map((widget) => (
+              <SortableWidget
+                key={widget.id}
+                widget={widget}
+                onRemove={handleRemove}
+              />
+            ))
+          ) : (
+            <p className="col-span-full text-sm text-muted-foreground">
+              {dict.settings.calendar.widget_dashboard.empty}
+            </p>
+          )}
         </div>
       </SortableContext>
+      <div className="px-4 pb-4">
+        <WidgetManagementDialog />
+      </div>
     </DndContext>
   );
 };

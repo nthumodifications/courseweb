@@ -5,9 +5,8 @@ import { z } from "zod";
 import acaCalendar from "../aca-calendar";
 import bus from "../bus";
 import supabase_server from "../config/supabase_server";
-import { getAlgoliaClients, isAlgoliaUnusableError } from "../config/algolia";
 import sports from "../sports";
-import searchFallback from "../search-fallback";
+import { searchSupabase } from "../search-fallback";
 import weather from "../weather";
 import {
   findFreePeriods,
@@ -33,33 +32,6 @@ import {
 
 const MAX_RESULT_ITEMS = 15;
 const MAX_COMPARE_QUERIES = 8;
-const SEARCH_ATTRIBUTES = [
-  "raw_id",
-  "objectID",
-  "course",
-  "department",
-  "class",
-  "name_zh",
-  "name_en",
-  "teacher_zh",
-  "teacher_en",
-  "credits",
-  "times",
-  "venues",
-  "language",
-  "semester",
-  "brief",
-  "keywords",
-  "restrictions",
-  "note",
-  "prerequisites",
-  "capacity",
-  "enrolled",
-  "closed_mark",
-  "cross_discipline",
-  "ge_type",
-  "ge_target",
-];
 
 type UnknownRecord = Record<string, unknown>;
 
@@ -231,43 +203,13 @@ const searchWithFallback = async (
   department?: string,
 ): Promise<SearchResult> => {
   const filters = buildCourseFilters(semester, department);
-  let lastError: unknown;
-
-  for (const index of getAlgoliaClients(c)) {
-    try {
-      return (await index.search(query, {
-        hitsPerPage: fetchLimit,
-        attributesToRetrieve: SEARCH_ATTRIBUTES,
-        filters: filters || undefined,
-      })) as SearchResult;
-    } catch (error) {
-      lastError = error;
-      if (!isAlgoliaUnusableError(error)) throw error;
-    }
-  }
-
-  const params = new URLSearchParams({
-    q: query,
-    hitsPerPage: String(fetchLimit),
-    attributesToRetrieve: JSON.stringify(SEARCH_ATTRIBUTES),
+  const result = await searchSupabase(c, {
+    query: query.trim(),
+    hitsPerPage: fetchLimit,
+    filters: filters || undefined,
+    useSearchProjection: true,
   });
-  if (filters) params.set("filters", filters);
-
-  try {
-    const payload = asRecord(
-      await requestJson(searchFallback, `/?${params.toString()}`, c),
-    );
-    const data = asRecord(payload.data);
-    return {
-      hits: Array.isArray(data.hits) ? data.hits : [],
-      nbHits: typeof data.nbHits === "number" ? data.nbHits : undefined,
-    };
-  } catch (fallbackError) {
-    let message = "unknown error";
-    if (lastError instanceof Error) message = lastError.message;
-    if (fallbackError instanceof Error) message = fallbackError.message;
-    throw new Error(`Course search unavailable: ${message}`);
-  }
+  return { hits: result.hits, nbHits: result.nbHits };
 };
 
 const searchCourses = async (

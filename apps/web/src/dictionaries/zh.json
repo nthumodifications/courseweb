@@ -393,8 +393,9 @@
           "restrictions": "課程限制",
           "course": "課程"
         },
-        "removed": "不再列於課程資料",
+        "removed": "已從課程資料中移除",
         "reappeared": "重新出現在課程資料中",
+        "feed_link": "查看本系所有變更",
         "empty": "無",
         "true_value": "是",
         "false_value": "否",
@@ -415,6 +416,57 @@
       "taken": "已修課",
       "restriction_prefix": "限制：",
       "note_prefix": "備註：",
+      "audience_tags": {
+        "title": "適用對象",
+        "year_grade": {
+          "year-1": "一年級",
+          "year-2": "二年級",
+          "year-3": "三年級",
+          "year-4": "四年級"
+        },
+        "scoped_years": {
+          "undergraduate": {
+            "year-1": "大一",
+            "year-2": "大二",
+            "year-3": "大三",
+            "year-4": "大四"
+          },
+          "graduate": {
+            "year-1": "研究所一年級",
+            "year-2": "研究所二年級",
+            "year-3": "研究所三年級",
+            "year-4": "研究所四年級"
+          },
+          "master": {
+            "year-1": "碩一",
+            "year-2": "碩二",
+            "year-3": "碩三",
+            "year-4": "碩四"
+          },
+          "doctoral": {
+            "year-1": "博一",
+            "year-2": "博二",
+            "year-3": "博三",
+            "year-4": "博四"
+          }
+        },
+        "undergraduate": "大學部",
+        "graduate": "研究所",
+        "master": "碩士班",
+        "doctoral": "博士班",
+        "own_department": "本系",
+        "male": "男生",
+        "female": "女生",
+        "international": "外籍生",
+        "restriction_suffix": "限定",
+        "exclusion_prefix": "排除",
+        "priority_suffix": "優先",
+        "groups": {
+          "restriction": "限定",
+          "exclusion": "排除",
+          "priority": "優先"
+        }
+      },
       "prerequisites_available": "有擋修",
       "semester_time_venue": "學期／時間地點",
       "instructor": "授課教師",
@@ -516,8 +568,10 @@
         "all_instructors": "所有授課教師",
         "edited": "已編輯",
         "error_already_reviewed": "你已經評價過這門課和這位老師。",
-        "error_rate_limited": "今天新增的評價已達上限，請稍後再試。",
-        "error_report_rate_limited": "今天的檢舉已達上限，請稍後再試。",
+        "error_rate_limited": "過去 24 小時內新增的評價已達上限，請稍後再試。",
+        "error_rate_limited_hours": "過去 24 小時內新增的評價已達上限，約 {count} 小時後可再新增。",
+        "error_rate_limited_minutes": "過去 24 小時內新增的評價已達上限，約 {count} 分鐘後可再新增。",
+        "error_report_rate_limited": "過去 24 小時內的檢舉已達上限，請稍後再試。",
         "error_banned": "目前無法新增評價。",
         "error_removed": "這則評價已被移除，無法編輯。",
         "error_generic": "評價送出失敗，請稍後再試。",
@@ -633,6 +687,50 @@
       "default_section": "一般班",
       "not_available": "—",
       "recent_offering": "最近開課",
+      "filters": {
+        "department": "系所",
+        "credits": "學分",
+        "language": "授課語言",
+        "languageOptions": {
+          "english": "英文授課",
+          "chinese": "中文授課",
+          "bilingual": "中英雙語",
+          "other": "其他"
+        },
+        "termOffered": "開課學期",
+        "termOptions": {
+          "fall": "上學期",
+          "spring": "下學期",
+          "both": "上下學期"
+        },
+        "recentlyOffered": "近期開課",
+        "recentOptions": {
+          "latest": "最近學期",
+          "3": "近 3 個學期",
+          "6": "近 6 個學期",
+          "10": "近 10 個學期"
+        },
+        "level": "課程年級",
+        "levelOptions": {
+          "1000": "1000 級",
+          "2000": "2000 級",
+          "3000": "3000 級",
+          "4000": "4000 級",
+          "5000": "5000 級以上"
+        },
+        "englishTaught": "英語授課",
+        "englishTaughtOptions": {
+          "yes": "是"
+        }
+      },
+      "sort": {
+        "label": "排序方式",
+        "relevance": "相關性",
+        "courseCode": "課號",
+        "mostRecent": "最近開課",
+        "timesOffered": "開課次數",
+        "fillRate": "近四學期滿班率"
+      },
       "search_title": "搜尋課程模組",
       "search_description": "跨學期搜尋同一門課的開課紀錄。",
       "search_placeholder": "搜尋課號、課名或教師……",
@@ -691,6 +789,68 @@
       "research_portal": "搜尋清華研究人才資料庫"
     }
   },
+  "course_changes": {
+    "meta_title": "課程變更",
+    "meta_description": "依系所與課程查看清大近期的課程變更。",
+    "title": "課程變更",
+    "days_label": "近期變更",
+    "days_7": "7 天",
+    "days_14": "14 天",
+    "days_30": "30 天",
+    "department_label": "系所",
+    "all_departments": "所有系所",
+    "no_results": "這段期間沒有課程變更。",
+    "course_fallback": "無法取得課程資料"
+  },
+  "course_insights": {
+    "title": "課程洞察",
+    "at_a_glance": "本學期概況",
+    "semester_label": "學期",
+    "modules_sections": "課程／班次",
+    "departments": "系所",
+    "seats": "名額",
+    "english_share": "英語授課占比",
+    "change_vs_last_year": "與去年同學期比較",
+    "percentage_points": "{value} 個百分點",
+    "fullest_sections": "最滿的班次",
+    "course": "課程",
+    "section": "班次",
+    "enrolled_capacity": "選課人數／名額",
+    "fill_rate": "滿額率",
+    "department_demand": "系所需求",
+    "show_all_departments": "顯示全部 {count} 個系所",
+    "show_fewer_departments": "收合至前 20 個系所",
+    "show_all_buildings": "顯示全部 {count} 棟校舍",
+    "show_fewer_buildings": "收合至前 10 棟校舍",
+    "when_classes_meet": "上課時段",
+    "schedule_table_label": "各星期與節次的班次數",
+    "schedule_cell_label": "星期{day}第{period}節：{count} 班",
+    "new_modules": "本學期新開課",
+    "new_lookback": "前 {count} 個學期未開課",
+    "show_more": "顯示更多",
+    "show_less": "收合",
+    "prior_history_unavailable": "沒有足夠的過往學期資料",
+    "no_new_modules": "沒有符合條件的課程",
+    "discontinued_modules": "本學期未開課",
+    "no_discontinued_modules": "沒有符合條件的課程",
+    "semester_trends": "歷年趨勢",
+    "modules": "課程",
+    "average_class_size": "平均選課人數",
+    "busiest_buildings": "開課最多的校舍",
+    "building": "校舍",
+    "sections": "班次",
+    "no_course_data": "這個學期沒有課程資料",
+    "no_fullness_data": "沒有同時提供選課人數與名額的班次",
+    "no_schedule_data": "沒有上課時段資料",
+    "no_building_data": "沒有可辨識的校舍資料",
+    "weekday_monday": "一",
+    "weekday_tuesday": "二",
+    "weekday_wednesday": "三",
+    "weekday_thursday": "四",
+    "weekday_friday": "五",
+    "weekday_saturday": "六",
+    "weekday_sunday": "日"
+  },
   "navigation": {
     "today": "今日",
     "courses": "課表",
@@ -702,6 +862,25 @@
     "apps": "應用程式",
     "admin": "管理中心",
     "youbike": "YouBike 2.0"
+  },
+  "admin_short_names": {
+    "title": "課程簡稱",
+    "empty": "目前沒有課程簡稱。",
+    "locked": "已鎖定",
+    "lock": "鎖定",
+    "unlock": "解除鎖定",
+    "revert": "還原",
+    "reason": "請填寫原因",
+    "revision": "版本",
+    "editor": "編輯者",
+    "updated": "更新於",
+    "identity_module": "課程模組",
+    "identity_course_code": "課程代碼",
+    "language_zh": "中文",
+    "language_en": "英文",
+    "edit_action": "編輯",
+    "revert_action": "還原",
+    "action_failed": "無法儲存變更。"
   },
   "command_palette": {
     "placeholder": "輸入指令…",
@@ -797,7 +976,32 @@
     "load_error": "無法載入圖書館座位即時資料",
     "try_again": "重新嘗試",
     "data_source": "資料來源：",
-    "source_name": "國立清華大學圖書館座位管理系統 (libsms)"
+    "source_name": "國立清華大學圖書館座位管理系統 (libsms)",
+    "lost_found_title": "失物招領",
+    "lost_found_search_placeholder": "搜尋物品、日期或地點",
+    "lost_found_show_more": "顯示更多",
+    "lost_found_filter_type": "依物品類型篩選",
+    "lost_found_all_types": "全部物品類型",
+    "lost_found_no_results": "找不到符合的失物",
+    "lost_found_refresh": "重新整理失物招領",
+    "lost_found_load_error": "目前無法取得失物招領資料",
+    "lost_found_data_source": "失物招領資料來源：",
+    "lost_found_source_name": "國立清華大學圖書館失物招領系統"
+  },
+  "directory": {
+    "title": "校園通訊錄",
+    "meta_title": "校園通訊錄",
+    "meta_description": "查詢清華各單位電話、分機與電子郵件。",
+    "search_placeholder": "搜尋單位名稱",
+    "extension": "分機",
+    "copy": "複製",
+    "website": "單位網站",
+    "refresh": "重新整理",
+    "load_error": "無法取得校園通訊錄",
+    "try_again": "重新嘗試",
+    "no_results": "找不到符合的單位",
+    "data_source": "資料來源：",
+    "source_name": "清華通訊錄"
   },
   "usage_forecast": {
     "learning": "正在學習這些空間平常有多忙——累積約一週資料後會顯示預測。",
@@ -876,10 +1080,19 @@
     "meta_title": "校園公告",
     "meta_description": "追蹤清大各處室與系所，掌握校園公告與重要時限。",
     "search_placeholder": "搜尋公告標題",
+    "followed_tab": "追蹤來源",
+    "matches_tab": "符合項目",
     "filter_source": "依追蹤來源篩選",
     "all_followed": "所有追蹤來源",
     "manage_follows": "管理追蹤",
     "manage_follows_description": "選擇要顯示在公告列表中的校園來源。",
+    "manage_keywords": "管理關鍵字",
+    "manage_keywords_description": "在所有校園來源中尋找符合的公告。",
+    "keyword_placeholder": "新增關鍵字",
+    "add_keyword": "新增",
+    "remove_keyword": "移除關鍵字",
+    "keyword_suggestions": "建議關鍵字",
+    "suggested_keywords": ["獎學金", "交換", "實習", "徵才"],
     "source_search_placeholder": "搜尋來源",
     "source_language": {
       "zh_tw": "中文",
@@ -888,6 +1101,9 @@
     "load_error": "目前無法取得校園公告",
     "try_again": "再試一次",
     "no_results": "沒有符合的追蹤公告",
+    "no_keyword_matches": "沒有符合關鍵字的公告",
+    "no_keywords": "尚未設定關鍵字",
+    "new_matches_count": "上次造訪後新增 {count} 則符合公告",
     "show_more": "顯示更多",
     "attribution_prefix": "資料來源：",
     "attribution_name": "NTHU-SA 清大學生會 NTHU-Data-API"
@@ -986,7 +1202,19 @@
     "realtime_not_operating": "今日未營運",
     "realtime_updated_at": "更新於 {time}",
     "realtime_tab": "即時",
-    "timetable_tab": "時刻表"
+    "timetable_tab": "時刻表",
+    "map_tab": "地圖",
+    "locate_me": "尋找最近站牌",
+    "nearest_stop": "最近站牌：{stop}・{distance}",
+    "location_denied": "未開啟定位權限，無法顯示最近站牌。",
+    "location_unavailable": "無法取得你的位置。",
+    "map_buses": "{count} 輛行駛中・{time} 更新",
+    "map_no_buses": "此路線目前沒有行駛中的公車",
+    "map_live_unavailable": "即時公車位置暫時無法使用。",
+    "bus_marker": "{plate}・{time} 更新",
+    "fallback_unavailable": "即時公車資料暫時無法使用，顯示預定時刻表。",
+    "fallback_unsupported": "此路線不提供即時動態，顯示預定時刻表。",
+    "fallback_no_bus": "此路線目前沒有行駛中的公車，顯示預定時刻表。"
   },
   "settings": {
     "navigation_aria": "設定導覽",
@@ -1042,6 +1270,13 @@
         "compact": "緊湊",
         "comfortable": "適中",
         "spacious": "寬鬆"
+      },
+      "transition_speed": {
+        "title": "轉場速度",
+        "instant": "立即",
+        "fast": "快速",
+        "default": "預設",
+        "slow": "緩慢"
       },
       "background": {
         "title": "背景",
@@ -1170,6 +1405,12 @@
     },
     "timetable": {
       "title": "時間表",
+      "home_campus": "居住校區",
+      "home_campus_options": {
+        "none": "不設定",
+        "main": "校本部",
+        "nanda": "南大校區"
+      },
       "vertical_preview": "垂直式顯示",
       "default_view": {
         "title": "預設檢視",
@@ -1205,6 +1446,12 @@
         "base": "中",
         "lg": "大"
       },
+      "title_behavior": "課程名稱",
+      "title_behavior_options": {
+        "fit": "縮小文字",
+        "one_line": "單行",
+        "two_lines": "雙行"
+      },
       "font_family": "時段字型",
       "font_family_options": {
         "system": "系統字型",
@@ -1214,6 +1461,14 @@
         "serif": "襯線",
         "mono": "等寬",
         "rounded": "圓體"
+      },
+      "auto_color": {
+        "title": "自動配色",
+        "by_department": "依系所自動配色",
+        "by_time_of_day": "依上課時段自動配色",
+        "confirm_title": "要套用自動配色嗎？",
+        "confirm_description": "這會覆蓋目前學期課程的手動顏色。",
+        "confirm": "套用配色"
       },
       "move_up": "向上移動",
       "move_down": "向下移動",
@@ -1256,7 +1511,20 @@
         "description": "用可自訂的小工具格取代今日頁面",
         "columns": "欄數",
         "widgets": "小工具",
+        "manage_widgets": "管理小工具",
+        "manage_widgets_description": "選擇要顯示在今日頁面的小工具。",
+        "empty": "沒有小工具",
         "view_full_page": "查看完整頁面",
+        "widget_settings": {
+          "title": "小工具設定",
+          "weather_days": "預報天數",
+          "countdown_title": "倒數名稱",
+          "countdown_date": "目標日期",
+          "countdown_default_label": "剩餘天數",
+          "upcoming_days": "日期範圍（天）",
+          "upcoming_count": "顯示行程數",
+          "reset": "重設"
+        },
         "widget_options": {
           "schedule": {
             "title": "課程表"
@@ -1503,6 +1771,10 @@
       "action": "前往設定",
       "text": "你可以在設定頁面客製化課表。"
     },
+    "new_semester": {
+      "title": "{semester} 課程已公布",
+      "link": "查看"
+    },
     "dismiss": "關閉公告"
   },
   "applist": {
@@ -1524,6 +1796,8 @@
     },
     "apps": {
       "courses": "課程查詢",
+      "course-changes": "課程變更",
+      "course-insights": "課程洞察",
       "modules": "課程模組",
       "chat": "AI 課程助手",
       "venues": "地點相關課程",
@@ -1534,6 +1808,7 @@
       "sports-venues": "體育場館使用人數",
       "library": "圖書館即時座位",
       "announcements": "校園公告",
+      "directory": "校園通訊錄",
       "shops": "餐廳及服務",
       "calendar": "日曆",
       "timetable-community": "社群課表",
@@ -1684,14 +1959,19 @@
       "sign_in_required": "請登入以貢獻課程日期"
     },
     "ShortNameContributeForm": {
-      "title": "提供課程簡稱",
-      "description": "提供課程簡稱，讓大家更容易辨識課程。",
+      "title": "編輯課程簡稱",
+      "description": "使用大家熟悉的簡稱。",
       "dont_abuse": "請勿濫用系統。",
       "accurate_relevant": "請只填寫準確且相關的資訊。",
-      "privacy": "送出的內容會包含學號，並公開顯示。",
+      "privacy": "簡稱會公開顯示，管理員可查看編輯者。",
       "placeholder": "課程簡稱",
       "cancel": "取消",
-      "submit": "送出"
+      "submit": "儲存",
+      "short_name": "課程簡稱",
+      "add": "新增課程簡稱",
+      "no_short_name": "尚無簡稱",
+      "edit": "編輯",
+      "save_failed": "無法儲存簡稱，請再試一次。"
     },
     "ShareCourseButton": {
       "share_prefix": "分享：",

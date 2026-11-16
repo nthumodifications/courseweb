@@ -1,4 +1,4 @@
-import { FC, useMemo } from "react";
+import { FC, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useLocalStorage } from "usehooks-ts";
 import { WashingMachine } from "lucide-react";
@@ -20,6 +20,11 @@ import {
 import useDictionary from "@/dictionaries/useDictionary";
 import { contentLanguage } from "@/helpers/contentLanguage";
 import {
+  laundryDormStorageOptions,
+  parseLaundryDormPreference,
+  type LaundryDormPreference,
+} from "@/lib/laundry-dorm-storage";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -33,7 +38,19 @@ interface LaundryWidgetProps {
   isDragging?: boolean;
 }
 
-type WidgetDorm = LaundryDorm | "all";
+const getInitialWidgetDorm = (): LaundryDormPreference => {
+  if (typeof window === "undefined") return "all";
+  try {
+    const shared = localStorage.getItem("laundry_my_dorm");
+    if (shared !== null) {
+      return parseLaundryDormPreference(shared) ?? "all";
+    }
+    const previous = localStorage.getItem("widget_laundry_dorm");
+    return parseLaundryDormPreference(previous) ?? "all";
+  } catch {
+    return "all";
+  }
+};
 
 const sumSummary = (summaries: LaundrySummary[]): LaundrySummary =>
   summaries.reduce(
@@ -68,10 +85,22 @@ const LaundryWidget: FC<LaundryWidgetProps> = ({
   const dict = useDictionary();
   const contentLang = contentLanguage(language);
   const now = useTime(60_000);
-  const [storedDorm, setStoredDorm] = useLocalStorage<WidgetDorm>(
-    "widget_laundry_dorm",
-    "all",
+  const [storedDorm, setStoredDorm] = useLocalStorage<LaundryDormPreference>(
+    "laundry_my_dorm",
+    getInitialWidgetDorm(),
+    laundryDormStorageOptions,
   );
+  useEffect(() => {
+    try {
+      const shared = localStorage.getItem("laundry_my_dorm");
+      const previous = localStorage.getItem("widget_laundry_dorm");
+      const previousDorm = parseLaundryDormPreference(previous);
+      if (shared === null && previousDorm) setStoredDorm(previousDorm);
+      if (previous !== null) localStorage.removeItem("widget_laundry_dorm");
+    } catch {
+      // Storage may be unavailable in private browsing.
+    }
+  }, [setStoredDorm]);
   const dorm =
     storedDorm === "all" || storedDorm in LAUNDRY_DORMS ? storedDorm : "all";
   const { statuses, connectionState } = useLaundryStatus();
@@ -111,6 +140,7 @@ const LaundryWidget: FC<LaundryWidgetProps> = ({
   return (
     <WidgetShell
       title={title}
+      widgetType="laundry"
       onRemove={onRemove}
       dragHandleProps={dragHandleProps}
       isDragging={isDragging}
@@ -118,7 +148,9 @@ const LaundryWidget: FC<LaundryWidgetProps> = ({
       <div className="flex flex-col gap-3 p-4">
         <Select
           value={dorm}
-          onValueChange={(value) => setStoredDorm(value as WidgetDorm)}
+          onValueChange={(value) =>
+            setStoredDorm(value as LaundryDormPreference)
+          }
         >
           <SelectTrigger
             className="h-7 w-full text-xs"

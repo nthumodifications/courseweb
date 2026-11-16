@@ -11,8 +11,13 @@ import {
   TabsList,
   TabsTrigger,
 } from "@courseweb/ui";
-import { ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  ExternalLink,
+  LocateFixed,
+} from "lucide-react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 
@@ -32,16 +37,28 @@ import {
   mergeCityBusEtaIntoTimeline,
   stepCityBusTrip,
   useCityBusEta,
+  getCityBusFallbackReason,
+  getCityBusShapes,
+  getNearestCityBusStop,
   type CityBusRoute,
 } from "@/libs/citybus";
 import { useBusPins, type CityBusPin } from "@/features/bus/busPins";
 import { CityBusLineBadge } from "@/features/bus/CityBusLineBadge";
+import { useUserLocation } from "@/features/bus/useUserLocation";
 import { contentLanguage } from "@/helpers/contentLanguage";
 import {
   BusLineHeader,
   BusStationState,
   BusStopTimeline,
 } from "@/features/bus/BusLineDetailShared";
+
+const CityBusMap = lazy(() => import("@/features/bus/CityBusMap"));
+
+function formatDistance(meters: number) {
+  return meters < 1000
+    ? `${Math.max(10, Math.round(meters / 10) * 10)} m`
+    : `${(meters / 1000).toFixed(1)} km`;
+}
 
 type CityBusDetailsProps = {
   routeId: string;
@@ -151,7 +168,17 @@ const CityBusDetails = ({ routeId }: CityBusDetailsProps) => {
     [now, trips],
   );
   const [selectedTripId, setSelectedTripId] = useState<string>();
-  const [view, setView] = useState<"realtime" | "timetable">("realtime");
+  const [view, setView] = useState<"realtime" | "map" | "timetable">(
+    "realtime",
+  );
+  const location = useUserLocation();
+  const { data: shapes } = useQuery({
+    queryKey: ["citybus_shapes", routeId],
+    queryFn: () => getCityBusShapes(routeId),
+    enabled: route?.source === "city" && view === "map",
+    staleTime: 24 * 60 * 60 * 1000,
+    retry: false,
+  });
   useEffect(() => {
     setSelectedTripId(undefined);
     setView("realtime");
@@ -207,7 +234,47 @@ const CityBusDetails = ({ routeId }: CityBusDetailsProps) => {
           Boolean(getCityBusRealtimeDisplay(item)),
         )),
   );
-  const showingRealtime = realtimeAvailable && view === "realtime";
+  const isCity = route.source === "city";
+  // Fall back to the timetable whenever the chosen view has nothing to show.
+  const effectiveView =
+    (view === "realtime" && !realtimeAvailable) || (view === "map" && !isCity)
+      ? "timetable"
+      : view;
+  const showingRealtime = effectiveView === "realtime";
+  const showingMap = effectiveView === "map";
+  const fallbackReason = getCityBusFallbackReason(
+    realtimeData,
+    realtimeAvailable,
+  );
+  const vehicleCount = realtimeData?.vehicles.length ?? 0;
+  const mapStatus =
+    realtimeAvailable && vehicleCount > 0
+      ? dict.bus.map_buses
+          .replace("{count}", String(vehicleCount))
+          .replace(
+            "{time}",
+            formatCityBusUpdatedAt(
+              realtimeData?.updatedAt ?? realtimeData?.fetchedAt ?? "",
+              contentLang,
+            ),
+          )
+      : fallbackReason === "no_bus_running"
+        ? dict.bus.map_no_buses
+        : dict.bus.map_live_unavailable;
+  const mapStops = directionStops.flatMap((item) =>
+    item.position
+      ? [
+          {
+            id: item.id,
+            name: contentLang === "zh" ? item.nameZh : item.nameEn,
+            position: item.position,
+          },
+        ]
+      : [],
+  );
+  const nearest = location.position
+    ? getNearestCityBusStop(directionStops, location.position)
+    : undefined;
   const realtimeTimeline = realtimeData
     ? mergeCityBusEtaIntoTimeline(
         directionStops.map((item) => item.id),
@@ -286,16 +353,25 @@ const CityBusDetails = ({ routeId }: CityBusDetailsProps) => {
         </div>
       )}
 
-      {realtimeAvailable && (
+      {(realtimeAvailable || isCity) && (
         <Tabs
-          value={view}
-          onValueChange={(value) => setView(value as "realtime" | "timetable")}
+          value={effectiveView}
+          onValueChange={(value) =>
+            setView(value as "realtime" | "map" | "timetable")
+          }
           className="px-4"
         >
           <TabsList className="w-full justify-evenly mb-4">
-            <TabsTrigger className="flex-1" value="realtime">
-              {dict.bus.realtime_tab}
-            </TabsTrigger>
+            {realtimeAvailable && (
+              <TabsTrigger className="flex-1" value="realtime">
+                {dict.bus.realtime_tab}
+              </TabsTrigger>
+            )}
+            {isCity && (
+              <TabsTrigger className="flex-1" value="map">
+                {dict.bus.map_tab}
+              </TabsTrigger>
+            )}
             <TabsTrigger className="flex-1" value="timetable">
               {dict.bus.timetable_tab}
             </TabsTrigger>
@@ -303,7 +379,95 @@ const CityBusDetails = ({ routeId }: CityBusDetailsProps) => {
         </Tabs>
       )}
 
-      {showingRealtime ? (
+      {effectiveView !== "timetable" && isCity && (
+        <div className="flex flex-col gap-1 px-4">
+          {nearest && nearest.meters <= 3000 ? (
+            <button
+              type="button"
+              className="min-h-11 text-left text-sm font-medium text-nthu-500"
+              onClick={() => navigateTo(direction.id, nearest.stop.id)}
+            >
+              {dict.bus.nearest_stop
+                .replace(
+                  "{stop}",
+                  contentLang === "zh"
+                    ? nearest.stop.nameZh
+                    : nearest.stop.nameEn,
+                )
+                .replace("{distance}", formatDistance(nearest.meters))}
+            </button>
+          ) : (
+            location.status !== "ready" && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="min-h-11 w-fit"
+                disabled={location.status === "locating"}
+                onClick={location.request}
+              >
+                <LocateFixed className="mr-2 h-4 w-4" />
+                {dict.bus.locate_me}
+              </Button>
+            )
+          )}
+          {location.status === "denied" && (
+            <p className="text-xs text-muted-foreground">
+              {dict.bus.location_denied}
+            </p>
+          )}
+          {location.status === "unavailable" && (
+            <p className="text-xs text-muted-foreground">
+              {dict.bus.location_unavailable}
+            </p>
+          )}
+        </div>
+      )}
+
+      {effectiveView === "map" && isCity && (
+        <div className="flex flex-col gap-2 px-4">
+          <p className="text-sm font-medium text-muted-foreground">
+            {mapStatus}
+          </p>
+          <Suspense
+            fallback={
+              <div className="h-[22rem] w-full animate-pulse rounded-lg bg-muted" />
+            }
+          >
+            <CityBusMap
+              line={shapes?.[direction.id] ?? []}
+              stops={mapStops}
+              selectedStopId={stop.id}
+              nearestStopId={
+                nearest && nearest.meters <= 3000 ? nearest.stop.id : undefined
+              }
+              vehicles={realtimeData?.vehicles ?? []}
+              user={location.position}
+              busLabel={(vehicle) =>
+                dict.bus.bus_marker
+                  .replace("{plate}", vehicle.plate)
+                  .replace(
+                    "{time}",
+                    formatCityBusUpdatedAt(vehicle.gpsAt, contentLang),
+                  )
+              }
+              onSelectStop={(id) => navigateTo(direction.id, id)}
+            />
+          </Suspense>
+        </div>
+      )}
+
+      {effectiveView === "timetable" && fallbackReason && (
+        <p className="px-4 text-sm text-muted-foreground">
+          {fallbackReason === "unsupported"
+            ? dict.bus.fallback_unsupported
+            : fallbackReason === "no_bus_running"
+              ? dict.bus.fallback_no_bus
+              : dict.bus.fallback_unavailable}
+        </p>
+      )}
+
+      {showingMap ? null : showingRealtime ? (
         <>
           <div className="flex items-center justify-between gap-4 px-4">
             <div className="min-w-0">

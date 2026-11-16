@@ -5,6 +5,7 @@ import {
   parseHTML,
 } from "linkedom/worker";
 import { fullWidthToHalfWidth } from "../utils/characters";
+import { deriveSearchFields } from "../search-projection";
 import { supabaseWithEnv } from "../config/supabase_server";
 import {
   algoliaClientsWithEnv,
@@ -800,15 +801,7 @@ export const scrapeSyllabus = async (
           brief,
           keywords: keywords?.split(",") ?? [],
           content,
-          objectID: raw_id,
-          for_class: [
-            ...(course.elective_for || []),
-            ...(course.compulsory_for || []),
-          ],
-          separate_times: course.times.flatMap((s: string) =>
-            s.match(/.{1,2}/g),
-          ),
-          courseLevel: course.course[0] + "000",
+          ...deriveSearchFields(course),
         };
 
         await retryWithBackoff(
@@ -894,15 +887,10 @@ export const syncCoursesToAlgolia = async (env: Env, semester: string) => {
   let successfulChunks = 0;
   for (const chunk of chunked) {
     try {
-      const algoliaChunk = chunk.map(
-        ({ elective_for, compulsory_for, ...course }) => ({
-          ...course,
-          for_class: [...(elective_for || []), ...(compulsory_for || [])],
-          objectID: course.raw_id,
-          separate_times: course.times.flatMap((s) => s.match(/.{1,2}/g)),
-          courseLevel: course.course[0] + "000",
-        }),
-      );
+      const algoliaChunk = chunk.map((course) => ({
+        ...course,
+        ...deriveSearchFields(course),
+      }));
 
       await retryWithBackoff(
         async () => {
@@ -961,12 +949,9 @@ export const exportCoursesToAlgoliaFile = async (
   // Transform data to Algolia format
   const algoliaData = query
     .map((m) => ({ ...m, ...m.course_syllabus }))
-    .map(({ elective_for, compulsory_for, course_syllabus, ...course }) => ({
+    .map(({ course_syllabus, ...course }) => ({
       ...course,
-      for_class: [...(elective_for || []), ...(compulsory_for || [])],
-      objectID: course.raw_id,
-      separate_times: course.times.flatMap((s) => s.match(/.{1,2}/g) || []),
-      courseLevel: course.course[0] + "000",
+      ...deriveSearchFields(course),
     }));
 
   // Create the JSON file content

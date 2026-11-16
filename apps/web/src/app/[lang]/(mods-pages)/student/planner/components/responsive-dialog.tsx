@@ -23,6 +23,7 @@ interface ResponsiveDialogProps {
   footer?: ReactNode;
   children: ReactNode;
   contentClassName?: string;
+  drawerDismissible?: boolean;
 }
 
 /**
@@ -37,6 +38,7 @@ export function ResponsiveDialog({
   footer,
   children,
   contentClassName,
+  drawerDismissible = true,
 }: ResponsiveDialogProps) {
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
@@ -62,7 +64,11 @@ export function ResponsiveDialog({
   }
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
+    <Drawer
+      open={open}
+      onOpenChange={onOpenChange}
+      dismissible={drawerDismissible}
+    >
       <DrawerContent className="max-h-[90dvh]">
         <DrawerHeader>
           <DrawerTitle>{title}</DrawerTitle>

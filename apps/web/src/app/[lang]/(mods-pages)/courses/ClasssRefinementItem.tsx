@@ -15,8 +15,8 @@ import { useSearchParams } from "react-router-dom";
 import useCustomRefinementList from "./useCustomRefinementList";
 import { getFormattedClassCode } from "@/helpers/courses";
 import useCustomMenu from "@/app/[lang]/(mods-pages)/courses/useCustomMenu";
-import { lastSemester } from "@courseweb/shared";
 import useDictionary from "@/dictionaries/useDictionary";
+import { useDefaultSemesterId } from "@/hooks/useSemesters";
 
 const ClassRefinementItem = ({
   limit = 10,
@@ -32,6 +32,7 @@ const ClassRefinementItem = ({
   defaultSearch?: string;
 }) => {
   const dict = useDictionary();
+  const defaultSemester = useDefaultSemesterId();
   const resolvedPlaceholder = placeholder ?? dict.planner.coursePicker.search;
   const { items, refine, searchForItems } = useCustomRefinementList({
     attribute: "for_class",
@@ -43,8 +44,8 @@ const ClassRefinementItem = ({
   });
 
   const selectedSemester = useMemo(
-    () => semesterItem.find((item) => item.isRefined)?.value ?? lastSemester.id,
-    [semesterItem],
+    () => semesterItem.find((item) => item.isRefined)?.value ?? defaultSemester,
+    [defaultSemester, semesterItem],
   );
 
   const [searchParams] = useSearchParams();
@@ -133,7 +134,7 @@ const ClassRefinementItem = ({
               maxLength={512}
               value={searchValue}
               onValueChange={(value) => search(value)}
-               placeholder={resolvedPlaceholder}
+              placeholder={resolvedPlaceholder}
             />
           )}
           <ScrollArea
@@ -141,7 +142,7 @@ const ClassRefinementItem = ({
             className="h-[300px]"
           >
             <CommandList className="max-h-none">
-             <CommandEmpty>{dict.common.no_results}</CommandEmpty>
+              <CommandEmpty>{dict.common.no_results}</CommandEmpty>
               {items
                 .sort((a, b) => {
                   if (a.isRefined) return -1;

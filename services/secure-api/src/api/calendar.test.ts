@@ -113,6 +113,7 @@ import { sha256hash } from "../utils/sha256";
 const {
   createCalendarApp,
   clearAcademicCalendarCache,
+  getSemesterInfo,
   parseCalendarIncludes,
   SEMESTER_INFO: secureApiSemesterInfo,
   trimTrailingSlashes,
@@ -210,6 +211,7 @@ describe("Calendar API", () => {
     mockCalendarShareUpdateMany.mockClear();
     mockStorageGet.mockReset();
     mockTimetableFetch.mockReset();
+    clearAcademicCalendarCache();
     mockCalendarShareFindFirst.mockResolvedValue(null);
     mockCalendarShareFindMany.mockResolvedValue([]);
     mockCalendarShareUpdateMany.mockResolvedValue({ count: 0 });
@@ -684,7 +686,12 @@ describe("Calendar API", () => {
       const body = await response.text();
 
       expect(body).toContain("UID:current-class");
-      expect(mockTimetableFetch).toHaveBeenCalledTimes(2);
+      expect(
+        mockTimetableFetch.mock.calls.filter(
+          ([input]) =>
+            new URL(String(input)).pathname === "/timetable/calendar.ics",
+        ),
+      ).toHaveLength(2);
     },
   );
 
@@ -1159,11 +1166,22 @@ describe("Calendar API", () => {
           },
         ],
       });
-      mockTimetableFetch.mockResolvedValueOnce(
-        new Response(
-          "BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:duplicate-uid\nSUMMARY:Class\nEND:VEVENT\nEND:VCALENDAR\n",
-          { status: 200 },
-        ),
+      mockTimetableFetch.mockImplementation(async (input: URL) =>
+        input.pathname.endsWith("/semesters")
+          ? new Response(
+              JSON.stringify(
+                canonicalSemesterInfo.map(({ id, begins, ends }) => ({
+                  id,
+                  begins: begins.toISOString().slice(0, 10),
+                  ends: ends.toISOString().slice(0, 10),
+                })),
+              ),
+              { status: 200 },
+            )
+          : new Response(
+              "BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:duplicate-uid\nSUMMARY:Class\nEND:VEVENT\nEND:VCALENDAR\n",
+              { status: 200 },
+            ),
       );
 
       const response = await calendarHandler.request(feedUrl);
@@ -1193,7 +1211,12 @@ describe("Calendar API", () => {
 
     await calendarHandler.request(feedUrl);
 
-    expect(mockTimetableFetch).toHaveBeenCalledTimes(1);
+    expect(
+      mockTimetableFetch.mock.calls.filter(
+        ([input]) =>
+          new URL(String(input)).pathname === "/timetable/calendar.ics",
+      ),
+    ).toHaveLength(1);
   });
 
   test("trims a long adversarial run of trailing slashes quickly", () => {
@@ -1202,18 +1225,79 @@ describe("Calendar API", () => {
   });
 
   serialTest("keeps the secure-api semester mirror in sync with shared", () => {
-    expect(
-      secureApiSemesterInfo.map(({ id, begins, ends }) => [
+    const mirrorFields = (
+      rows: readonly { id: string; begins: Date; ends: Date }[],
+    ) =>
+      rows.map(({ id, begins, ends }) => [
         id,
         begins.getTime(),
         ends.getTime(),
-      ]),
-    ).toEqual(
-      canonicalSemesterInfo.map(({ id, begins, ends }) => [
-        id,
-        begins.getTime(),
-        ends.getTime(),
-      ]),
+      ]);
+
+    expect(mirrorFields(secureApiSemesterInfo)).toEqual(
+      mirrorFields(canonicalSemesterInfo),
     );
   });
+
+  serialTest(
+    "fetches semester rows from the configured API and caches them",
+    async () => {
+      mockTimetableFetch.mockResolvedValue(
+        new Response(
+          JSON.stringify([
+            {
+              id: "11520",
+              begins: "2027-02-15",
+              ends: "2027-06-06",
+              hasCourses: true,
+              estimated: false,
+            },
+          ]),
+          { status: 200 },
+        ),
+      );
+
+      const rows = await getSemesterInfo("https://api.example.test/custom");
+      const cachedRows = await getSemesterInfo(
+        "https://api.example.test/custom",
+      );
+
+      expect(rows.map(({ id, begins, ends }) => [id, begins, ends])).toEqual([
+        ["11520", new Date(2027, 1, 15), new Date(2027, 5, 6)],
+      ]);
+      expect(cachedRows).toEqual(rows);
+      expect(mockTimetableFetch).toHaveBeenCalledTimes(1);
+      const [input, init] = mockTimetableFetch.mock.calls[0]!;
+      expect(new URL(String(input)).href).toBe(
+        "https://api.example.test/semesters",
+      );
+      expect(init?.signal).toBeInstanceOf(AbortSignal);
+    },
+  );
+
+  serialTest(
+    "falls back to the bundled semester mirror when the API fails",
+    async () => {
+      mockTimetableFetch.mockResolvedValue(
+        new Response("unavailable", { status: 503 }),
+      );
+
+      const rows = await getSemesterInfo("https://api.example.test");
+
+      expect(
+        rows.map(({ id, begins, ends }) => [
+          id,
+          begins.getTime(),
+          ends.getTime(),
+        ]),
+      ).toEqual(
+        secureApiSemesterInfo.map(({ id, begins, ends }) => [
+          id,
+          begins.getTime(),
+          ends.getTime(),
+        ]),
+      );
+      expect(rows.some(({ id }) => id === "11520")).toBe(true);
+    },
+  );
 });

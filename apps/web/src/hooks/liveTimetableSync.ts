@@ -23,9 +23,6 @@ export const getLiveTimetablePayload = (
   ),
 });
 
-export const getLiveTimetablePayloadKey = (payload: LiveTimetablePayload) =>
-  JSON.stringify(payload);
-
 export const getPublishedLiveTimetablePayload = (
   share: Pick<SharedTimetable, "semesters" | "courses" | "customItems">,
 ) =>

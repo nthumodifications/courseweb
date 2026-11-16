@@ -258,7 +258,15 @@ function getPinnedDetails(
   });
 }
 
-export function CityBusSelectedLines({ refTime }: { refTime: Date }) {
+export function CityBusSelectedLines({
+  refTime,
+  compact = false,
+  maxItems = Number.POSITIVE_INFINITY,
+}: {
+  refTime: Date;
+  compact?: boolean;
+  maxItems?: number;
+}) {
   const { language } = useSettings();
   const contentLang = contentLanguage(language);
   const dict = useDictionary();
@@ -273,8 +281,8 @@ export function CityBusSelectedLines({ refTime }: { refTime: Date }) {
     staleTime: 60 * 60 * 1000,
   });
   const details = useMemo(
-    () => getPinnedDetails(data?.routes, cityPins),
-    [data?.routes, cityPins],
+    () => getPinnedDetails(data?.routes, cityPins).slice(0, maxItems),
+    [data?.routes, cityPins, maxItems],
   );
   const departureQueries = useQueries({
     queries: details.map(({ pin, direction }) => ({
@@ -364,6 +372,7 @@ export function CityBusSelectedLines({ refTime }: { refTime: Date }) {
             }
             arrival={arrival}
             exactArrival
+            compact={compact}
             detailLine={route.id}
             pin={selectedPin}
             isPinned

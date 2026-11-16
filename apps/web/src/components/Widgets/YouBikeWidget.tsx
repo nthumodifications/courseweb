@@ -1,12 +1,14 @@
-import { FC, useEffect, useMemo, useState } from "react";
+import { FC, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Bike, Star } from "lucide-react";
 import { WidgetShell } from "./WidgetShell";
 import { useSettings } from "@/hooks/contexts/settings";
 import { useYouBikeStations } from "@/hooks/useYouBikeStations";
-import { getPinnedStationIds, togglePinnedStationId } from "@/lib/youbike";
+import { togglePinnedStationId } from "@/lib/youbike";
 import useDictionary from "@/dictionaries/useDictionary";
 import { contentLanguage } from "@/helpers/contentLanguage";
+import { useLocalStorage } from "usehooks-ts";
+import { DEFAULT_PINNED_STATIONS } from "@/lib/youbike";
 import {
   Select,
   SelectContent,
@@ -28,13 +30,12 @@ const YouBikeWidget: FC<YouBikeWidgetProps> = ({
 }) => {
   const dict = useDictionary();
   const { language } = useSettings();
-  const [pinnedIds, setPinnedIds] = useState<string[]>([]);
+  const [pinnedIds, setPinnedIds] = useLocalStorage<string[]>(
+    "courseweb_youbike_pinned_stations",
+    DEFAULT_PINNED_STATIONS,
+  );
   const [stationToAdd, setStationToAdd] = useState("");
   const { data: result, isLoading, error } = useYouBikeStations();
-
-  useEffect(() => {
-    setPinnedIds(getPinnedStationIds());
-  }, []);
 
   const stations = result?.stations ?? [];
   const pinnedStations = useMemo(
@@ -49,12 +50,14 @@ const YouBikeWidget: FC<YouBikeWidgetProps> = ({
     dict.settings.calendar.widget_dashboard.widget_options.youbike.title;
 
   const toggleStation = (id: string) => {
-    setPinnedIds(togglePinnedStationId(id));
+    const next = togglePinnedStationId(id);
+    setPinnedIds(next);
   };
 
   return (
     <WidgetShell
       title={title}
+      widgetType="youbike"
       onRemove={onRemove}
       dragHandleProps={dragHandleProps}
       isDragging={isDragging}

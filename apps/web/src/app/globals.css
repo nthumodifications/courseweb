@@ -3,7 +3,15 @@
 @tailwind utilities;
 
 html {
-  font-family: var(--font-family, "Inter", "PingFang TC", "Microsoft JhengHei", "Noto Sans CJK TC", "Noto Sans TC", sans-serif);
+  font-family: var(
+    --font-family,
+    "Inter",
+    "PingFang TC",
+    "Microsoft JhengHei",
+    "Noto Sans CJK TC",
+    "Noto Sans TC",
+    sans-serif
+  );
   font-size: calc(1rem * var(--font-scale, 1));
 }
 
@@ -79,9 +87,11 @@ body {
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 273 43% 54%;
     /* Inter for Latin, then a Traditional Chinese system stack for CJK. */
-    --font-family: "Inter", "PingFang TC", "Microsoft JhengHei", "Noto Sans CJK TC", "Noto Sans TC", sans-serif;
+    --font-family: "Inter", "PingFang TC", "Microsoft JhengHei",
+      "Noto Sans CJK TC", "Noto Sans TC", sans-serif;
     --font-scale: 1;
     --density-factor: 1;
+    --transition-duration: 150ms;
     --bg-pattern: none;
     --bg-gradient-from: hsl(var(--background));
     --bg-gradient-to: hsl(var(--background));
@@ -237,6 +247,11 @@ html.compact-header header {
 @layer base {
   * {
     @apply border-border;
+  }
+  html[data-transition-speed] *,
+  html[data-transition-speed] *::before,
+  html[data-transition-speed] *::after {
+    transition-duration: var(--transition-duration, 150ms) !important;
   }
   html,
   body {

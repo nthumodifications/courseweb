@@ -20,16 +20,30 @@ describe("app categories", () => {
     );
 
     expect(appIdsByCategory).toEqual({
-      courses: ["courses", "modules", "chat", "venues", "timetable-community"],
+      courses: [
+        "courses",
+        "course-changes",
+        "course-insights",
+        "modules",
+        "chat",
+        "venues",
+        "timetable-community",
+      ],
       studies: ["calendar", "planner", "grades"],
       transport: ["campus-map", "bus", "youbike"],
-      facilities: ["sports-venues", "library", "laundry", "announcements"],
+      facilities: [
+        "sports-venues",
+        "library",
+        "laundry",
+        "announcements",
+        "directory",
+      ],
       services: ["shops"],
       links: ["clubs_info", "chumei", "scholarship"],
     });
 
     expect(
-      Object.values(appIdsByCategory).every((appIds) => appIds.length <= 6),
+      Object.values(appIdsByCategory).every((appIds) => appIds.length <= 7),
     ).toBe(true);
   });
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
+import { valuesEqual } from "./syncedStorage";
 import {
   getLiveTimetablePayload,
-  getLiveTimetablePayloadKey,
   getPublishedLiveTimetablePayload,
 } from "./liveTimetableSync";
 
@@ -41,20 +41,49 @@ describe("live timetable payloads", () => {
     });
   });
 
-  it("matches an already-published live share without scheduling an update", () => {
+  it("matches an already-published live share without key-order differences", () => {
     const share = {
       semesters: ["11510"],
       courses: { "11510": ["11510CS 101000"] },
-      customItems: { "11510": [] },
+      customItems: {
+        "11510": [
+          {
+            title: "Lab",
+            id: "lab",
+            slots: [{ day: 1, start: "09:00", end: "10:00" }],
+            color: "#123456",
+          },
+        ],
+      },
     } as const;
+    const payload = getLiveTimetablePayload(share.semesters, share.courses, {
+      "11510": [
+        {
+          id: "lab",
+          color: "#123456",
+          slots: [{ day: 1, start: "09:00", end: "10:00" }],
+          title: "Lab",
+        },
+      ],
+    });
+
+    expect(valuesEqual(payload, getPublishedLiveTimetablePayload(share))).toBe(
+      true,
+    );
+  });
+
+  it("keeps array order significant in live payload values", () => {
     const payload = getLiveTimetablePayload(
-      share.semesters,
-      share.courses,
-      share.customItems,
+      ["11510"],
+      { "11510": ["course-a", "course-b"] },
+      {},
     );
 
-    expect(getLiveTimetablePayloadKey(payload)).toBe(
-      getLiveTimetablePayloadKey(getPublishedLiveTimetablePayload(share)),
-    );
+    expect(
+      valuesEqual(payload, {
+        courses: { "11510": ["course-b", "course-a"] },
+        customItems: { "11510": [] },
+      }),
+    ).toBe(false);
   });
 });

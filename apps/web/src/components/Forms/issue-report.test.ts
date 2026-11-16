@@ -117,13 +117,18 @@ describe("issue report helpers", () => {
     expect(diagnostics.clientErrorNames).toEqual(["TypeError", "Other"]);
   });
 
-  it("reports only enabled local feature flags", () => {
+  it.each([
+    [undefined, ["local-search"]],
+    ["", ["local-search"]],
+    ["false", []],
+    ["0", []],
+    [" FALSE ", []],
+    ["true", ["local-search"]],
+    [" TRUE ", ["local-search"]],
+  ] as const)("reports effective local-search flag %j", (value, expected) => {
     expect(
-      getEnabledLocalFeatureFlags({ VITE_ENABLE_LOCAL_SEARCH: "true" }),
-    ).toEqual(["local-search"]);
-    expect(
-      getEnabledLocalFeatureFlags({ VITE_ENABLE_LOCAL_SEARCH: "false" }),
-    ).toEqual([]);
+      getEnabledLocalFeatureFlags({ VITE_ENABLE_LOCAL_SEARCH: value }),
+    ).toEqual(expected);
   });
 
   it("keeps diagnostics opt-in and omits them when opted out", () => {

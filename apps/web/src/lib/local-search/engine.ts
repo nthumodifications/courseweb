@@ -28,8 +28,11 @@ import {
 import { searchWithoutWorker } from "./fallback-index";
 import { rankLocalIdsByTerms } from "./ranking";
 import {
+  isCodeLikeTerm,
   isCjkCharacter,
   matchesLocalQueryTerms,
+  needsShortGapCjkRecall,
+  parseCourseCodeQuery,
   queryTerms,
   searchableTokenGroups,
 } from "./tokenizer";
@@ -86,6 +89,13 @@ export type SearchManifestEntry = {
   textFormatVersion?: string;
 };
 
+export type LocalShortNameAlias = {
+  identityType: "module" | "course_code";
+  identityKey: string;
+  language: "zh" | "en";
+  shortName: string;
+};
+
 export type FetchLike = (
   input: RequestInfo | URL,
   init?: RequestInit,
@@ -108,6 +118,7 @@ export type LocalSearchEngineOptions = {
   defaultSemester?: string;
   queryTransform?: (query: string) => string;
   searchTextTransform?: (text: string) => string;
+  loadShortNames?: () => Promise<LocalShortNameAlias[]>;
 };
 
 type LoadedChunk = {
@@ -399,7 +410,7 @@ const hitAttributes = (record: SearchProjectionRecord, value: unknown) => {
   return hit;
 };
 
-/** Return one explicit semester only; multiple semesters must stay remote. */
+/** Return one explicit semester only; multiple semesters use the API fallback. */
 export const semesterFromRequest = (
   request: LocalSearchRequest,
   defaultSemester?: string,
@@ -495,10 +506,13 @@ export class LocalSearchEngine {
   // screen. Views read deferred text back through getText instead.
   private readonly texts = new Map<string, SearchTextRecord>();
   private readonly listeners = new Set<() => void>();
+  private readonly readyListeners = new Set<(semester: string) => void>();
   private status: LocalSearchStatus = "idle";
   private readonly defaultSemester?: string;
   private readonly queryTransform: (query: string) => string;
   private readonly searchTextTransform: (text: string) => string;
+  private readonly loadShortNames?: () => Promise<LocalShortNameAlias[]>;
+  private shortNamesPromise?: Promise<LocalShortNameAlias[]>;
 
   constructor(options: LocalSearchEngineOptions = {}) {
     const env = getEnv();
@@ -515,15 +529,28 @@ export class LocalSearchEngine {
     this.defaultSemester = options.defaultSemester;
     this.queryTransform = options.queryTransform ?? ((query) => query);
     this.searchTextTransform = options.searchTextTransform ?? ((text) => text);
+    this.loadShortNames = options.loadShortNames;
   }
 
   getStatus = () => this.status;
 
+  isReady = (semester: string) => this.loadedChunks.has(semester);
+
   getText = (rawId: string) => this.texts.get(rawId);
+
+  async prefetch(semester = this.defaultSemester): Promise<void> {
+    if (!semester) return;
+    await this.getChunk(semester);
+  }
 
   subscribe = (listener: () => void) => {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
+  };
+
+  subscribeReady = (listener: (semester: string) => void) => {
+    this.readyListeners.add(listener);
+    return () => this.readyListeners.delete(listener);
   };
 
   private setStatus(status: LocalSearchStatus) {
@@ -682,9 +709,50 @@ export class LocalSearchEngine {
 
   private async loadChunk(semester: string): Promise<LoadedChunk> {
     this.setStatus("loading");
+    // Start the optional alias request alongside the chunk download so a slow
+    // auth server never delays the first search by more than the chunk itself.
+    if (this.loadShortNames) {
+      this.shortNamesPromise ??= this.loadShortNames();
+      this.shortNamesPromise.catch(() => {});
+    }
     const source = await this.downloadChunk(semester);
+    if (this.shortNamesPromise) {
+      try {
+        const aliases = await this.shortNamesPromise;
+        const aliasMap = new Map<string, string[]>();
+        for (const alias of aliases) {
+          const key = `${alias.identityType}:${alias.identityKey}`;
+          const names = aliasMap.get(key) ?? [];
+          if (!names.includes(alias.shortName)) names.push(alias.shortName);
+          aliasMap.set(key, names);
+        }
+        const records = source.records.map((record) => {
+          const department = record.department
+            .normalize("NFKC")
+            .trim()
+            .replace(/\s+/gu, " ");
+          const course = record.course.normalize("NFKC").replace(/\s+/gu, "");
+          const moduleKey = `${department}:${course}`;
+          const courseCode = `${department}${course}`
+            .replace(/\s+/gu, "")
+            .toUpperCase();
+          return {
+            ...record,
+            short_names: [
+              ...(aliasMap.get(`module:${moduleKey}`) ?? []),
+              ...(aliasMap.get(`course_code:${courseCode}`) ?? []),
+            ],
+          };
+        });
+        source.records = records;
+      } catch {
+        // Short names are an optional alias source; course chunks remain usable
+        // if the public endpoint is unavailable.
+      }
+    }
     const chunk = await this.buildChunk(source);
     this.loadedChunks.set(semester, chunk);
+    for (const listener of this.readyListeners) listener(semester);
     this.setStatus("ready");
     const cachedText = await this.cachedTextChunk(semester, chunk.manifest);
     if (cachedText) this.mergeTextRecords(chunk, cachedText.texts);
@@ -886,9 +954,10 @@ export class LocalSearchEngine {
         : 20;
     const terms = queryTerms(query);
     const hasSearchTerms = terms.length > 0;
+    const courseCode = parseCourseCodeQuery(originalQuery);
     const refinementMatcher = compileRefinements(params);
     let indexedIds: readonly (string | number)[];
-    if (hasSearchTerms) {
+    if (hasSearchTerms && !courseCode && !needsShortGapCjkRecall(query)) {
       try {
         indexedIds = await chunk.index.search(query, chunk.records.length);
       } catch (error) {
@@ -929,7 +998,13 @@ export class LocalSearchEngine {
         if (
           (shortLatinPrefix
             ? shortLatinPrefix.has(id)
-            : matchesLocalQueryTerms(chunk.searchRecords[id], terms)) &&
+            : matchesLocalQueryTerms(chunk.searchRecords[id], terms, {
+                allowShortLatinPrefixes: !originalQuery
+                  .trim()
+                  .split(/\s+/)
+                  .some(isCodeLikeTerm),
+                courseCode,
+              })) &&
           refinementMatcher(chunk.records[id])
         ) {
           ids.push(id);

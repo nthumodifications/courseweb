@@ -1,0 +1,249 @@
+{
+  "courseInsights": {
+    "semester": "11510",
+    "comparisonSemester": "11410",
+    "snapshot": {
+      "modules": 2785,
+      "sections": 3492,
+      "departments": 145,
+      "seats": 95637,
+      "englishShare": 0.2247995418098511,
+      "averageClassSize": 31.415770609318997
+    },
+    "comparison": {
+      "modules": 2831,
+      "sections": 3543,
+      "departments": 143,
+      "seats": 93212,
+      "englishShare": 0.19983065198983913,
+      "averageClassSize": 30.106626506024096
+    },
+    "fullestCourses": [
+      {
+        "rawId": "11510EECS202000",
+        "moduleKey": "EECS:2020",
+        "department": "EECS",
+        "course": "2020",
+        "class": "0",
+        "nameZh": "訊號與系統",
+        "nameEn": "Signals and Systems",
+        "enrolled": 116,
+        "capacity": 30,
+        "fillRate": 3.8666666666666667
+      },
+      {
+        "rawId": "11510EE  221001",
+        "moduleKey": "EE:2210",
+        "department": "EE",
+        "course": "2210",
+        "class": "1",
+        "nameZh": "電路學",
+        "nameEn": "Electric Circuits",
+        "enrolled": 122,
+        "capacity": 40,
+        "fillRate": 3.05
+      },
+      {
+        "rawId": "11510IEEM513500",
+        "moduleKey": "IEEM:5135",
+        "department": "IEEM",
+        "course": "5135",
+        "class": "0",
+        "nameZh": "人工智慧",
+        "nameEn": "Introduction to Artificial Intelligence",
+        "enrolled": 131,
+        "capacity": 50,
+        "fillRate": 2.62
+      }
+    ],
+    "departments": [
+      {
+        "department": "GE",
+        "sections": 109,
+        "seats": 5206,
+        "fillRate": 0.9559736229635376
+      },
+      {
+        "department": "PHYS",
+        "sections": 79,
+        "seats": 4888,
+        "fillRate": 0.8788870703764321
+      },
+      {
+        "department": "FL",
+        "sections": 142,
+        "seats": 4788,
+        "fillRate": 0.7414456800684346
+      }
+    ],
+    "schedule": {
+      "days": ["M", "T", "W", "R", "F", "S", "U"],
+      "periods": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "n",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "a",
+        "b",
+        "c",
+        "d"
+      ],
+      "counts": [
+        [31, 83, 173, 169, 36, 188, 221, 225, 178, 71, 43, 39, 24, 1],
+        [43, 109, 217, 214, 53, 188, 217, 222, 187, 97, 34, 25, 15, 2],
+        [38, 121, 221, 223, 54, 175, 196, 205, 165, 75, 45, 38, 19, 2],
+        [36, 100, 213, 199, 50, 178, 213, 209, 164, 75, 29, 24, 12, 1],
+        [38, 100, 195, 188, 40, 141, 153, 134, 95, 27, 24, 20, 14, 0],
+        [9, 36, 35, 34, 6, 30, 29, 28, 7, 6, 3, 3, 3, 0],
+        [3, 9, 8, 7, 2, 4, 4, 4, 3, 2, 3, 3, 1, 0]
+      ]
+    },
+    "newLookback": 4,
+    "newModules": [
+      {
+        "key": "AES:5406",
+        "department": "AES",
+        "course": "5406",
+        "nameZh": "環境質譜分析",
+        "nameEn": "Mass Spectrometry for Environmental Analysis"
+      },
+      {
+        "key": "AIA:5007",
+        "department": "AIA",
+        "course": "5007",
+        "nameZh": "實體人工智慧--陽明交大",
+        "nameEn": "Physical AI--NYCU"
+      },
+      {
+        "key": "ANTH:6760",
+        "department": "ANTH",
+        "course": "6760",
+        "nameZh": "身體與文化",
+        "nameEn": "Body and Culture"
+      }
+    ],
+    "discontinuedModules": [
+      {
+        "key": "AES:5201",
+        "department": "AES",
+        "course": "5201",
+        "nameZh": "環境分析化學",
+        "nameEn": "Environmental Analytical Chemistry"
+      },
+      {
+        "key": "AIA:4002",
+        "department": "AIA",
+        "course": "4002",
+        "nameZh": "生成式人工智慧與機器學習導論--台大",
+        "nameEn": "Introduction to Generative Artificial Intelligence and Machine Learning--NTU"
+      },
+      {
+        "key": "AIA:5003",
+        "department": "AIA",
+        "course": "5003",
+        "nameZh": "電腦視覺實務與深度學習--台大",
+        "nameEn": "Computer Vision Practice with Deep Learning--NTU"
+      }
+    ],
+    "trends": [
+      {
+        "semester": "11120",
+        "modules": 2219,
+        "englishShare": 0.20984278879015722,
+        "averageClassSize": null
+      },
+      {
+        "semester": "11220",
+        "modules": 2296,
+        "englishShare": 0.22,
+        "averageClassSize": null
+      },
+      {
+        "semester": "11410",
+        "modules": 2831,
+        "englishShare": 0.19983065198983913,
+        "averageClassSize": 30.106626506024096
+      },
+      {
+        "semester": "11510",
+        "modules": 2785,
+        "englishShare": 0.2247995418098511,
+        "averageClassSize": 31.415770609318997
+      }
+    ],
+    "buildings": [
+      {
+        "code": "HSS",
+        "nameZh": "人文社會學院",
+        "nameEn": "Humanities and Social Sciences Building",
+        "sections": 288
+      },
+      {
+        "code": "EDU",
+        "nameZh": "教育館",
+        "nameEn": "Education Building",
+        "sections": 214
+      },
+      {
+        "code": "TSMC",
+        "nameZh": "台積館",
+        "nameEn": "TSMC Building",
+        "sections": 214
+      },
+      {
+        "code": "GEN II",
+        "nameZh": "第二綜合大樓",
+        "nameEn": "General Building II",
+        "sections": 211
+      },
+      {
+        "code": "Nanda",
+        "nameZh": "南大校區",
+        "nameEn": "Nanda Campus",
+        "sections": 198
+      },
+      {
+        "code": "DELTA",
+        "nameZh": "台達館",
+        "nameEn": "Delta Building",
+        "sections": 173
+      },
+      {
+        "code": "LS II",
+        "nameZh": "生命科學二館",
+        "nameEn": "Life Science Building II",
+        "sections": 121
+      },
+      {
+        "code": "ENG I",
+        "nameZh": "工程一館",
+        "nameEn": "Engineering Building I",
+        "sections": 111
+      },
+      {
+        "code": "GEN III",
+        "nameZh": "第三綜合大樓",
+        "nameEn": "General Building III",
+        "sections": 71
+      },
+      {
+        "code": "ESS",
+        "nameZh": "工科館",
+        "nameEn": "Engineering and System Science Building",
+        "sections": 57
+      },
+      {
+        "code": "CHEM",
+        "nameZh": "化學館",
+        "nameEn": "Chemistry Building",
+        "sections": 52
+      }
+    ]
+  }
+}

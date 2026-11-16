@@ -16,12 +16,17 @@ const { sanitizeCourseHtml } = await import("./sanitizeHtml");
 
 describe("search client boundary behavior", () => {
   test.each([
-    [{ VITE_ENABLE_LOCAL_SEARCH: "1" }, true],
-    [{ VITE_ENABLE_LOCAL_SEARCH: " TRUE " }, true],
-    [{ VITE_ENABLE_LOCAL_SEARCH: "0" }, false],
-    [{}, false],
-  ])("reads local-search flag %j", (env, expected) => {
-    expect(isLocalSearchEnabled(env)).toBe(expected);
+    [undefined, true],
+    ["", true],
+    ["false", false],
+    ["0", false],
+    [" FALSE ", false],
+    ["true", true],
+    [" TRUE ", true],
+  ] as const)("reads local-search flag %j", (value, expected) => {
+    expect(isLocalSearchEnabled({ VITE_ENABLE_LOCAL_SEARCH: value })).toBe(
+      expected,
+    );
   });
 
   test("fills local syllabus text without changing an unchanged hit identity", () => {

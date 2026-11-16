@@ -7,7 +7,7 @@ import {
 } from "@/hooks/useTimetableShare";
 import client from "@/config/api";
 import { toPrettySemester } from "@/helpers/semester";
-import { semesterInfo } from "@courseweb/shared";
+import { useSemesters } from "@/hooks/useSemesters";
 import { MinimalCourse } from "@/types/courses";
 import { createTimetableFromCourses } from "@/helpers/timetable";
 import Timetable from "@/components/Timetable/Timetable";
@@ -220,6 +220,7 @@ function TimetableDetailDialog({
 }
 
 const CommunityPage = () => {
+  const semesterInfo = useSemesters();
   const dict = useDictionary();
   const [selectedSemester, setSelectedSemester] = useState<string>("all");
   const [offset, setOffset] = useState(0);

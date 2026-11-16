@@ -1,0 +1,12 @@
+[
+  {
+    "summary": "115學年度第2學期上課開始 Classes Begin",
+    "start": { "date": "2027-02-15" },
+    "end": { "date": "2027-02-16" }
+  },
+  {
+    "summary": "暑假開始 Summer Vacation Begins",
+    "start": { "date": "2027-06-07" },
+    "end": { "date": "2027-06-08" }
+  }
+]

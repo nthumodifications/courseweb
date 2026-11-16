@@ -25,8 +25,16 @@ export type LocalSearchClient = {
     requests: readonly LocalSearchRequest[],
   ) => Promise<LocalSearchAttempt<readonly LocalFacetResult[]>>;
   getStatus: () => ReturnType<LocalSearchEngine["getStatus"]>;
+  getSemesterFor: (
+    requests: readonly LocalSearchRequest[],
+  ) => string | null | undefined;
+  isEligibleFor: (requests: readonly LocalSearchRequest[]) => boolean;
+  isReadyFor: (requests: readonly LocalSearchRequest[]) => boolean;
+  warmUpFor: (requests: readonly LocalSearchRequest[]) => Promise<boolean>;
   getText: LocalSearchEngine["getText"];
   subscribe: (listener: () => void) => () => void;
+  subscribeReady: (listener: (semester: string) => void) => () => void;
+  prefetch: (semester?: string) => Promise<void>;
   clear: (semester?: string) => Promise<void>;
 };
 
@@ -44,8 +52,8 @@ const uniqueSemester = (
 
 /**
  * Adapter used by the resilient client. It returns handled:false for
- * cross-semester, unrefined, or manifest-unavailable requests so the existing
- * remote chain can remain the fallback tier.
+ * multi-semester or manifest-unavailable requests so the API fallback can
+ * handle the unsupported cases.
  */
 export const createLocalSearchClient = (
   options: LocalSearchClientOptions = {},
@@ -55,6 +63,11 @@ export const createLocalSearchClient = (
     options.defaultSemester ?? engine.getDefaultSemester();
 
   return {
+    getSemesterFor: (requests) => uniqueSemester(requests, defaultSemester),
+    isEligibleFor: (requests) => {
+      const semester = uniqueSemester(requests, defaultSemester);
+      return Boolean(semester);
+    },
     async trySearch(requests) {
       const semester = uniqueSemester(requests, defaultSemester);
       if (!semester) return { handled: false };
@@ -86,8 +99,26 @@ export const createLocalSearchClient = (
       }
     },
     getStatus: engine.getStatus,
+    isReadyFor: (requests) => {
+      const semester = uniqueSemester(requests, defaultSemester);
+      return Boolean(semester && engine.isReady(semester));
+    },
+    async warmUpFor(requests) {
+      const semester = uniqueSemester(requests, defaultSemester);
+      if (!semester) return false;
+      try {
+        await engine.prefetch(semester);
+        return true;
+      } catch (error) {
+        if (error instanceof MissingLocalSearchChunkError) return false;
+        throw error;
+      }
+    },
     getText: engine.getText,
     subscribe: engine.subscribe,
+    subscribeReady: engine.subscribeReady,
+    prefetch: (semester = defaultSemester) =>
+      semester ? engine.prefetch(semester) : Promise.resolve(),
     clear: engine.clear.bind(engine),
   };
 };

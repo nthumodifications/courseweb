@@ -173,9 +173,25 @@ export interface TdxNearStopRecord {
   Direction?: number;
   EventType?: string | number | null;
   A2EventType?: string | number | null;
+  StopSequence?: number;
+  GPSTime?: string;
   Event?: string | number | null;
   BusStatus?: string | number | null;
   SrcUpdateTime?: string;
   UpdateTime?: string;
   DataTime?: string;
+}
+
+export interface TdxPositionRecord {
+  PlateNumb?: string | null;
+  RouteUID?: string;
+  SubRouteUID?: string;
+  Direction?: number;
+  BusPosition?: { PositionLon?: number; PositionLat?: number };
+  Speed?: number;
+  Azimuth?: number;
+  DutyStatus?: number;
+  BusStatus?: number;
+  GPSTime?: string;
+  UpdateTime?: string;
 }

@@ -15,13 +15,13 @@ import {
   useLocalizedZhQuery,
 } from "@/hooks/useLocalizedZh";
 import SearchContainer from "./SearchContainer";
-import { lastSemester } from "@courseweb/shared";
 import CourseSidePanel from "./CourseSidePanel";
 import { createResilientSearchClient } from "@/lib/search-client";
 import useDictionary from "@/dictionaries/useDictionary";
 import { intlLocale } from "@/helpers/contentLanguage";
 import { createCourseSearchRouter } from "@/components/Courses/courseSearchRouting";
 import { serializeJsonLd } from "@/lib/seo";
+import { useDefaultSemesterId } from "@/hooks/useSemesters";
 
 const sessionStorageCache = createInfiniteHitsSessionStorageCache();
 
@@ -40,6 +40,7 @@ const CourseSearchContainer = () => {
     [localizeQuery, localizeSearchText],
   );
   const dict = useDictionary();
+  const defaultSemester = useDefaultSemesterId();
   const department = searchParams.get("department");
   const routing = useMemo(() => ({ router: createCourseSearchRouter() }), []);
 
@@ -47,11 +48,11 @@ const CourseSearchContainer = () => {
     () => ({
       nthu_courses: {
         menu: {
-          semester: lastSemester.id,
+          semester: defaultSemester,
         },
       },
     }),
-    [],
+    [defaultSemester],
   );
 
   const departmentHelmet = department ? (

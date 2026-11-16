@@ -3,6 +3,7 @@ import {
   cleanSyllabusFields,
   normalizeSyllabusKeywords,
 } from "@/lib/syllabus-text";
+import { courseAudienceFacetValues } from "@courseweb/shared";
 
 export const LOCAL_FACETS = [
   "courseLevel",
@@ -17,6 +18,7 @@ export const LOCAL_FACETS = [
   "semester",
   "separate_times",
   "tags",
+  "audience",
   "venues",
 ] as const;
 
@@ -32,6 +34,7 @@ export const SEARCHABLE_FIELDS = [
   "teacher_zh",
   "name_en",
   "teacher_en",
+  "short_names",
 ] as const;
 
 export type SearchProjectionRecord = UnknownRecord & {
@@ -54,6 +57,7 @@ export type SearchProjectionRecord = UnknownRecord & {
   reserve: number | null;
   enrolled: number;
   tags: string[];
+  audience: string[];
   ge_target: string | null;
   ge_type: string | null;
   brief: string | null;
@@ -64,6 +68,7 @@ export type SearchProjectionRecord = UnknownRecord & {
   separate_times: string[];
   for_class: string[];
   courseLevel: string;
+  short_names: string[];
 };
 
 const asString = (value: unknown) => (value == null ? "" : String(value));
@@ -117,6 +122,7 @@ export const prepareSearchRecord = (
     class: asString(input.class),
     name_zh: asString(input.name_zh),
     name_en: asString(input.name_en),
+    short_names: asStringArray(input.short_names),
     teacher_zh: asStringArray(input.teacher_zh),
     teacher_en: asStringArray(input.teacher_en),
     credits: asNullableNumber(input.credits),
@@ -128,6 +134,10 @@ export const prepareSearchRecord = (
     reserve: asNullableNumber(input.reserve),
     enrolled: asNullableNumber(input.enrolled) ?? 0,
     tags: asStringArray(input.tags),
+    audience: courseAudienceFacetValues({
+      note: asNullableString(input.note),
+      restrictions: asNullableString(input.restrictions),
+    }),
     ge_target: asNullableString(input.ge_target),
     ge_type: asNullableString(input.ge_type),
     brief: syllabus.brief,
@@ -163,7 +173,11 @@ export const searchableFieldValues = (record: SearchProjectionRecord) => {
     const value = record[field];
     return (Array.isArray(value) ? value : [value])
       .filter(Boolean)
-      .map((item) => stripHtmlTags(String(item)).toLocaleLowerCase("zh-TW"));
+      .map((item) =>
+        stripHtmlTags(String(item))
+          .normalize("NFKC")
+          .toLocaleLowerCase("zh-TW"),
+      );
   });
   searchableFieldValuesCache.set(record, values);
   return values;

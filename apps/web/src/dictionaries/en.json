@@ -393,8 +393,9 @@
           "restrictions": "Restrictions",
           "course": "Course"
         },
-        "removed": "No longer listed",
-        "reappeared": "Listed again",
+        "removed": "Removed from the course list",
+        "reappeared": "Back in the course list",
+        "feed_link": "See all changes in this department",
         "empty": "None",
         "true_value": "Yes",
         "false_value": "No",
@@ -415,6 +416,57 @@
       "taken": "Taken",
       "restriction_prefix": "Restrictions: ",
       "note_prefix": "Notes: ",
+      "audience_tags": {
+        "title": "Audience",
+        "year_grade": {
+          "year-1": "Year 1",
+          "year-2": "Year 2",
+          "year-3": "Year 3",
+          "year-4": "Year 4"
+        },
+        "scoped_years": {
+          "undergraduate": {
+            "year-1": "Undergraduate Year 1",
+            "year-2": "Undergraduate Year 2",
+            "year-3": "Undergraduate Year 3",
+            "year-4": "Undergraduate Year 4"
+          },
+          "graduate": {
+            "year-1": "Graduate Year 1",
+            "year-2": "Graduate Year 2",
+            "year-3": "Graduate Year 3",
+            "year-4": "Graduate Year 4"
+          },
+          "master": {
+            "year-1": "Master's Year 1",
+            "year-2": "Master's Year 2",
+            "year-3": "Master's Year 3",
+            "year-4": "Master's Year 4"
+          },
+          "doctoral": {
+            "year-1": "Doctoral Year 1",
+            "year-2": "Doctoral Year 2",
+            "year-3": "Doctoral Year 3",
+            "year-4": "Doctoral Year 4"
+          }
+        },
+        "undergraduate": "Undergraduates",
+        "graduate": "Graduate students",
+        "master": "Master's",
+        "doctoral": "Doctoral",
+        "own_department": "Own department",
+        "male": "Male students",
+        "female": "Female students",
+        "international": "International students",
+        "restriction_suffix": "only",
+        "exclusion_prefix": "Excludes",
+        "priority_suffix": "first",
+        "groups": {
+          "restriction": "Only",
+          "exclusion": "Excluded",
+          "priority": "Priority"
+        }
+      },
       "prerequisites_available": "Prerequisites available",
       "semester_time_venue": "Semester / Time & Venue",
       "instructor": "Instructor",
@@ -516,8 +568,10 @@
         "all_instructors": "All instructors",
         "edited": "Edited",
         "error_already_reviewed": "You have already reviewed this course and instructor.",
-        "error_rate_limited": "You have reached today's new-review limit. Try again later.",
-        "error_report_rate_limited": "You have reached today's report limit. Try again later.",
+        "error_rate_limited": "You have reached the limit of new reviews for the past 24 hours. Try again later.",
+        "error_rate_limited_hours": "You have reached the limit of new reviews for the past 24 hours. Try again in about {count} hours.",
+        "error_rate_limited_minutes": "You have reached the limit of new reviews for the past 24 hours. Try again in about {count} minutes.",
+        "error_report_rate_limited": "You have reached the limit of reports for the past 24 hours. Try again later.",
         "error_banned": "You cannot submit a review right now.",
         "error_removed": "This review was removed and cannot be edited.",
         "error_generic": "The review could not be submitted. Try again later.",
@@ -633,6 +687,50 @@
       "default_section": "default",
       "not_available": "—",
       "recent_offering": "Most recent",
+      "filters": {
+        "department": "Department",
+        "credits": "Credits",
+        "language": "Instruction language",
+        "languageOptions": {
+          "english": "English",
+          "chinese": "Chinese",
+          "bilingual": "Chinese and English",
+          "other": "Other"
+        },
+        "termOffered": "Term offered",
+        "termOptions": {
+          "fall": "Fall",
+          "spring": "Spring",
+          "both": "Fall and spring"
+        },
+        "recentlyOffered": "Recently offered",
+        "recentOptions": {
+          "latest": "Latest semester",
+          "3": "Last 3 semesters",
+          "6": "Last 6 semesters",
+          "10": "Last 10 semesters"
+        },
+        "level": "Course level",
+        "levelOptions": {
+          "1000": "1000",
+          "2000": "2000",
+          "3000": "3000",
+          "4000": "4000",
+          "5000": "5000+"
+        },
+        "englishTaught": "English-taught",
+        "englishTaughtOptions": {
+          "yes": "Yes"
+        }
+      },
+      "sort": {
+        "label": "Sort by",
+        "relevance": "Relevance",
+        "courseCode": "Course code",
+        "mostRecent": "Most recently offered",
+        "timesOffered": "Times offered",
+        "fillRate": "Fill rate"
+      },
       "search_title": "Search course modules",
       "search_description": "Search one course across its recorded semesters.",
       "search_placeholder": "Search by course code, title, or instructor...",
@@ -691,6 +789,68 @@
       "research_portal": "Search the NTHU Research Portal"
     }
   },
+  "course_changes": {
+    "meta_title": "Course changes",
+    "meta_description": "See recent changes to NTHU courses, grouped by department and course.",
+    "title": "Course changes",
+    "days_label": "Recent changes",
+    "days_7": "7 days",
+    "days_14": "14 days",
+    "days_30": "30 days",
+    "department_label": "Department",
+    "all_departments": "All departments",
+    "no_results": "No course changes in this period.",
+    "course_fallback": "Course details unavailable"
+  },
+  "course_insights": {
+    "title": "Course Insights",
+    "at_a_glance": "At a glance",
+    "semester_label": "Semester",
+    "modules_sections": "Modules / sections",
+    "departments": "Departments",
+    "seats": "Seats",
+    "english_share": "English-taught share",
+    "change_vs_last_year": "vs same term last year",
+    "percentage_points": "{value} pp",
+    "fullest_sections": "Fullest sections",
+    "course": "Course",
+    "section": "Section",
+    "enrolled_capacity": "Enrolled / capacity",
+    "fill_rate": "Fill",
+    "department_demand": "Department demand",
+    "show_all_departments": "Show all {count} departments",
+    "show_fewer_departments": "Show top 20",
+    "show_all_buildings": "Show all {count} buildings",
+    "show_fewer_buildings": "Show top 10",
+    "when_classes_meet": "Class times",
+    "schedule_table_label": "Sections by weekday and period",
+    "schedule_cell_label": "{day}, period {period}: {count} sections",
+    "new_modules": "New this semester",
+    "new_lookback": "Not offered in the previous {count} semesters",
+    "show_more": "Show more",
+    "show_less": "Show less",
+    "prior_history_unavailable": "Prior-semester history is not available",
+    "no_new_modules": "No modules meet this comparison",
+    "discontinued_modules": "Not offered this semester",
+    "no_discontinued_modules": "No modules meet this comparison",
+    "semester_trends": "Semester trends",
+    "modules": "Modules",
+    "average_class_size": "Average class size",
+    "busiest_buildings": "Busiest buildings",
+    "building": "Building",
+    "sections": "Sections",
+    "no_course_data": "No course data for this semester",
+    "no_fullness_data": "No sections have published enrollment and capacity",
+    "no_schedule_data": "No meeting-time data",
+    "no_building_data": "No mapped building venues",
+    "weekday_monday": "Mon",
+    "weekday_tuesday": "Tue",
+    "weekday_wednesday": "Wed",
+    "weekday_thursday": "Thu",
+    "weekday_friday": "Fri",
+    "weekday_saturday": "Sat",
+    "weekday_sunday": "Sun"
+  },
   "navigation": {
     "today": "Today",
     "courses": "Courses",
@@ -702,6 +862,25 @@
     "apps": "Apps",
     "admin": "Admin Center",
     "youbike": "YouBike 2.0"
+  },
+  "admin_short_names": {
+    "title": "Course short names",
+    "empty": "No short names yet.",
+    "locked": "Locked",
+    "lock": "Lock",
+    "unlock": "Unlock",
+    "revert": "Revert",
+    "reason": "Reason required",
+    "revision": "Revision",
+    "editor": "Edited by",
+    "updated": "Updated",
+    "identity_module": "Course module",
+    "identity_course_code": "Course code",
+    "language_zh": "Chinese",
+    "language_en": "English",
+    "edit_action": "Edit",
+    "revert_action": "Revert",
+    "action_failed": "Could not save this change."
   },
   "command_palette": {
     "placeholder": "Type a command…",
@@ -797,7 +976,32 @@
     "load_error": "Failed to load library vacancy status",
     "try_again": "Try again",
     "data_source": "Data source:",
-    "source_name": "NTHU Library Booking System (libsms)"
+    "source_name": "NTHU Library Booking System (libsms)",
+    "lost_found_title": "Lost and found",
+    "lost_found_search_placeholder": "Search item, date, or location",
+    "lost_found_show_more": "Show more",
+    "lost_found_filter_type": "Filter by item type",
+    "lost_found_all_types": "All item types",
+    "lost_found_no_results": "No matching lost items found",
+    "lost_found_refresh": "Refresh lost and found",
+    "lost_found_load_error": "Lost-and-found data is unavailable",
+    "lost_found_data_source": "Lost-and-found data:",
+    "lost_found_source_name": "NTHU Library Lost and Found System"
+  },
+  "directory": {
+    "title": "Campus Directory",
+    "meta_title": "Campus Directory",
+    "meta_description": "Find NTHU unit phone numbers, extensions, and email addresses.",
+    "search_placeholder": "Search unit names",
+    "extension": "Ext.",
+    "copy": "Copy",
+    "website": "Unit website",
+    "refresh": "Refresh",
+    "load_error": "The campus directory is unavailable",
+    "try_again": "Try again",
+    "no_results": "No matching units found",
+    "data_source": "Data source:",
+    "source_name": "NTHU Telephone Directory"
   },
   "usage_forecast": {
     "learning": "Learning how busy these places usually get — predictions appear after about a week of data.",
@@ -876,10 +1080,19 @@
     "meta_title": "Campus Announcements",
     "meta_description": "Follow NTHU offices and departments to keep up with campus deadlines and news.",
     "search_placeholder": "Search announcement titles",
+    "followed_tab": "Followed sources",
+    "matches_tab": "Matches",
     "filter_source": "Filter by followed source",
     "all_followed": "All followed sources",
     "manage_follows": "Manage follows",
     "manage_follows_description": "Choose the campus sources shown in your feed.",
+    "manage_keywords": "Manage keywords",
+    "manage_keywords_description": "Find matching announcements across all campus sources.",
+    "keyword_placeholder": "Add a keyword",
+    "add_keyword": "Add",
+    "remove_keyword": "Remove keyword",
+    "keyword_suggestions": "Suggested keywords",
+    "suggested_keywords": ["scholarship", "exchange", "internship", "jobs"],
     "source_search_placeholder": "Search sources",
     "source_language": {
       "zh_tw": "Chinese",
@@ -888,6 +1101,9 @@
     "load_error": "Announcements are unavailable",
     "try_again": "Try again",
     "no_results": "No followed announcements found",
+    "no_keyword_matches": "No announcements match your keywords",
+    "no_keywords": "No keywords set",
+    "new_matches_count": "{count} new keyword matches since your last visit",
     "show_more": "Show more",
     "attribution_prefix": "Data:",
     "attribution_name": "NTHU-SA NTHU-Data-API"
@@ -986,7 +1202,19 @@
     "realtime_not_operating": "Not in service today",
     "realtime_updated_at": "Updated {time}",
     "realtime_tab": "Real-time",
-    "timetable_tab": "Timetable"
+    "timetable_tab": "Timetable",
+    "map_tab": "Map",
+    "locate_me": "Find nearest stop",
+    "nearest_stop": "Nearest stop: {stop} · {distance}",
+    "location_denied": "Location permission is off, so the nearest stop can't be shown.",
+    "location_unavailable": "Couldn't get your location.",
+    "map_buses": "{count} running · updated {time}",
+    "map_no_buses": "No bus is running on this route right now",
+    "map_live_unavailable": "Live bus positions are temporarily unavailable.",
+    "bus_marker": "{plate} · updated {time}",
+    "fallback_unavailable": "Live bus data is temporarily unavailable. Showing the scheduled timetable.",
+    "fallback_unsupported": "Live tracking isn't available for this route. Showing the scheduled timetable.",
+    "fallback_no_bus": "No bus is running on this route right now. Showing the scheduled timetable."
   },
   "settings": {
     "navigation_aria": "Settings navigation",
@@ -1042,6 +1270,13 @@
         "compact": "Compact",
         "comfortable": "Default",
         "spacious": "Spacious"
+      },
+      "transition_speed": {
+        "title": "Transition Speed",
+        "instant": "Instant",
+        "fast": "Fast",
+        "default": "Default",
+        "slow": "Slow"
       },
       "background": {
         "title": "Background",
@@ -1170,6 +1405,12 @@
     },
     "timetable": {
       "title": "Timetable",
+      "home_campus": "Home campus",
+      "home_campus_options": {
+        "none": "Not set",
+        "main": "Main Campus",
+        "nanda": "Nanda Campus"
+      },
       "vertical_preview": "Vertical Preview",
       "default_view": {
         "title": "Default View",
@@ -1205,6 +1446,12 @@
         "base": "Medium",
         "lg": "Large"
       },
+      "title_behavior": "Course title",
+      "title_behavior_options": {
+        "fit": "Fit",
+        "one_line": "1 line",
+        "two_lines": "2 lines"
+      },
       "font_family": "Slot font family",
       "font_family_options": {
         "system": "System",
@@ -1214,6 +1461,14 @@
         "serif": "Serif",
         "mono": "Monospace",
         "rounded": "Rounded"
+      },
+      "auto_color": {
+        "title": "Automatic colors",
+        "by_department": "Auto-color by department",
+        "by_time_of_day": "Auto-color by time of day",
+        "confirm_title": "Apply automatic colors?",
+        "confirm_description": "This replaces manual colors for courses in the current semester.",
+        "confirm": "Apply colors"
       },
       "move_up": "Move up",
       "move_down": "Move down",
@@ -1256,7 +1511,20 @@
         "description": "Replace Today page with a customizable widget grid",
         "columns": "Columns",
         "widgets": "Widgets",
+        "manage_widgets": "Manage widgets",
+        "manage_widgets_description": "Choose which widgets appear on Today.",
+        "empty": "No widgets",
         "view_full_page": "View full page",
+        "widget_settings": {
+          "title": "Widget settings",
+          "weather_days": "Forecast days",
+          "countdown_title": "Countdown label",
+          "countdown_date": "Target date",
+          "countdown_default_label": "Days left",
+          "upcoming_days": "Date range (days)",
+          "upcoming_count": "Events shown",
+          "reset": "Reset"
+        },
         "widget_options": {
           "schedule": {
             "title": "Schedule"
@@ -1503,6 +1771,10 @@
       "action": "Go Settings",
       "text": "You can change your theme in the settings page."
     },
+    "new_semester": {
+      "title": "{semester} courses are now available",
+      "link": "View"
+    },
     "dismiss": "Dismiss"
   },
   "applist": {
@@ -1524,6 +1796,8 @@
     },
     "apps": {
       "courses": "Course Search",
+      "course-changes": "Course Changes",
+      "course-insights": "Course Insights",
       "modules": "Course Modules",
       "chat": "AI Course Assistant",
       "venues": "Venues",
@@ -1534,6 +1808,7 @@
       "sports-venues": "Sports Venue Occupancy",
       "library": "Library Vacancy",
       "announcements": "Campus Announcements",
+      "directory": "Campus Directory",
       "shops": "Shops",
       "calendar": "Calendar",
       "timetable-community": "Community Timetables",
@@ -1684,14 +1959,19 @@
       "sign_in_required": "Sign in to contribute dates for this course"
     },
     "ShortNameContributeForm": {
-      "title": "Contribute a short course name",
-      "description": "Add a short name to make this course easier to identify.",
+      "title": "Edit short course name",
+      "description": "Use a short name students recognize.",
       "dont_abuse": "Please do not abuse the system.",
       "accurate_relevant": "Enter only accurate and relevant information.",
-      "privacy": "Your submission will contain your student ID and be publicly visible.",
+      "privacy": "Short names are public. Administrators can see who edited them.",
       "placeholder": "Short course name",
       "cancel": "Cancel",
-      "submit": "Submit"
+      "submit": "Save",
+      "short_name": "Short name",
+      "add": "Add a short name",
+      "no_short_name": "No short name",
+      "edit": "Edit",
+      "save_failed": "Could not save the short name. Try again."
     },
     "ShareCourseButton": {
       "share_prefix": "Share: ",

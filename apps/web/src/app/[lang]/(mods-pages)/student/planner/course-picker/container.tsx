@@ -21,7 +21,6 @@ import {
   DrawerTrigger,
 } from "@courseweb/ui";
 import { Button } from "@courseweb/ui";
-import { lastSemester } from "@courseweb/shared";
 import useDictionary from "@/dictionaries/useDictionary";
 import PlannerFilters from "./PlannerFilters";
 import SearchContainer from "./PlannerSearchContainer";
@@ -36,6 +35,7 @@ import {
   useLocalizedZhData,
   useLocalizedZhQuery,
 } from "@/hooks/useLocalizedZh";
+import { useDefaultSemesterId } from "@/hooks/useSemesters";
 
 type CourseSearchContainerProps = {
   onAdd: (course: MinimalCourse, keepSemester?: boolean) => void;
@@ -136,7 +136,7 @@ const TakenCoursesPanel = ({
 };
 
 /**
- * Number of Algolia refinements currently active. The `semester` menu is
+ * Number of InstantSearch refinements currently active. The `semester` menu is
  * excluded since it always has a value selected (it's a required selector,
  * not an optional filter).
  */
@@ -183,6 +183,7 @@ const FilterDrawerTrigger = () => {
 
 const CourseSearchContainer = (props: CourseSearchContainerProps) => {
   const dict = useDictionary();
+  const defaultSemester = useDefaultSemesterId();
   const { language } = useSettings();
   const localizeQuery = useLocalizedZhQuery();
   const localizeSearchText = useLocalizedZhData();
@@ -202,7 +203,7 @@ const CourseSearchContainer = (props: CourseSearchContainerProps) => {
       initialUiState={{
         nthu_courses: {
           menu: {
-            semester: lastSemester.id,
+            semester: defaultSemester,
           },
         },
       }}

@@ -1,6 +1,6 @@
-import { currentSemester } from "@courseweb/shared";
-import { useMemo } from "react";
+import { getSemester } from "@courseweb/shared";
 import type useDictionary from "@/dictionaries/useDictionary";
+import { useDefaultSemesterId } from "@/hooks/useSemesters";
 
 type Dictionary = ReturnType<typeof useDictionary>;
 
@@ -11,22 +11,20 @@ const CurrentSemesterLabel = ({
   language: "en" | "zh";
   dictionary: Dictionary;
 }) => {
+  useDefaultSemesterId();
   const dict = dictionary;
+  const currentSemester = getSemester(new Date());
   let semesterYear: number | null = null;
   if (currentSemester) {
     semesterYear =
       language === "en" ? currentSemester.year : currentSemester.year - 1911;
   }
-  const currentWeek = useMemo(
-    () =>
-      currentSemester
-        ? Math.floor(
-            (Date.now() - currentSemester.begins.getTime()) /
-              (1000 * 60 * 60 * 24 * 7),
-          ) + 1
-        : null,
-    [],
-  );
+  const currentWeek = currentSemester
+    ? Math.floor(
+        (Date.now() - currentSemester.begins.getTime()) /
+          (1000 * 60 * 60 * 24 * 7),
+      ) + 1
+    : null;
 
   return (
     <p className="whitespace-pre-wrap text-xs text-muted-foreground">

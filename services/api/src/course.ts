@@ -6,6 +6,24 @@ import { z } from "zod";
 import { env } from "hono/adapter";
 import { parseHTML } from "linkedom/worker";
 import { parsePttPostedAt } from "./ptt";
+import courseInsights from "./course-insights";
+import {
+  aggregateModuleSearchRows,
+  encodeModuleSearchIndex,
+  type ModuleSearchRow,
+} from "./module-search-index";
+
+const MODULE_INDEX_SELECT =
+  "semester, department, course, name_zh, name_en, credits, language, teacher_zh, teacher_en, capacity, enrolled";
+const MODULE_INDEX_PAGE_SIZE = 1_000;
+const MODULE_INDEX_PARALLEL_PAGES = 12;
+const MODULE_INDEX_CACHE_CONTROL =
+  "public, max-age=3600, s-maxage=21600, stale-while-revalidate=86400";
+const MODULE_INDEX_CACHE_KEY_URL =
+  "https://api.nthumods.com/course/modules-index";
+
+export const getModuleIndexCacheKey = () =>
+  new Request(MODULE_INDEX_CACHE_KEY_URL);
 
 const getContribDates = async (c: Context, courseId: string) => {
   const { data, error } = await supabase_server(c)
@@ -49,6 +67,14 @@ const courseChangesQueryValidator = zValidator(
   z.object({
     semester: z.string().trim().min(1).max(20),
     days: z.coerce.number().int().min(1).max(365).default(7),
+    department: z
+      .string()
+      .trim()
+      .min(1)
+      .max(20)
+      .regex(/^[A-Za-z0-9]+$/)
+      .optional(),
+    limit: z.coerce.number().int().min(1).max(500).default(500),
   }),
 );
 const courseNoticeChangesQueryValidator = zValidator(
@@ -84,6 +110,54 @@ const queryInChunks = async <T>(
 };
 
 const app = new Hono()
+  .get("/modules-index", async (c) => {
+    const cache = typeof caches === "undefined" ? undefined : caches.default;
+    const cacheKey = getModuleIndexCacheKey();
+    const cached = await cache?.match(cacheKey);
+    if (cached) return cached;
+
+    const supabase = supabase_server(c);
+    const { count, error: countError } = await supabase
+      .from("courses")
+      .select("raw_id", { count: "exact", head: true });
+    if (countError) throw new Error(countError.message);
+
+    const pageCount = Math.ceil((count ?? 0) / MODULE_INDEX_PAGE_SIZE);
+    const pages = Array.from({ length: pageCount }, (_, page) => page);
+    const rows: ModuleSearchRow[] = [];
+    for (
+      let offset = 0;
+      offset < pages.length;
+      offset += MODULE_INDEX_PARALLEL_PAGES
+    ) {
+      const pageGroup = pages.slice(
+        offset,
+        offset + MODULE_INDEX_PARALLEL_PAGES,
+      );
+      const pageRows = await Promise.all(
+        pageGroup.map(async (page) => {
+          const { data, error } = await supabase
+            .from("courses")
+            .select(MODULE_INDEX_SELECT)
+            .order("raw_id", { ascending: true })
+            .range(
+              page * MODULE_INDEX_PAGE_SIZE,
+              (page + 1) * MODULE_INDEX_PAGE_SIZE - 1,
+            );
+          if (error) throw new Error(error.message);
+          return (data ?? []) as unknown as ModuleSearchRow[];
+        }),
+      );
+      rows.push(...pageRows.flat());
+    }
+
+    const payload = encodeModuleSearchIndex(aggregateModuleSearchRows(rows));
+    c.header("Cache-Control", MODULE_INDEX_CACHE_CONTROL);
+    const response = c.json(payload);
+    if (cache) await cache.put(cacheKey, response.clone());
+    return response;
+  })
+  .route("/insights", courseInsights)
   .get("/", courseListQueryValidator, async (c) => {
     const { courses: _courses } = c.req.valid("query");
 
@@ -99,22 +173,72 @@ const app = new Hono()
     return c.json(data);
   })
   .get("/changes", courseChangesQueryValidator, async (c) => {
-    const { semester, days } = c.req.valid("query");
+    const { semester, days, department, limit } = c.req.valid("query");
     const since = new Date(
       Date.now() - days * 24 * 60 * 60 * 1000,
     ).toISOString();
-    const { data, error } = await supabase_server(c)
+    let changesQuery = supabase_server(c)
       .from("course_changes")
       .select("*")
       .eq("semester", semester)
-      .gte("detected_at", since)
+      .gte("detected_at", since);
+    if (department) {
+      const departmentPrefix =
+        department.length === 4
+          ? `${semester}${department}`
+          : `${semester}${department} `;
+      changesQuery = changesQuery.like("raw_id", `${departmentPrefix}%`);
+    }
+    const { data, error } = await changesQuery
       .order("detected_at", { ascending: false })
-      .range(0, 499);
+      .range(0, limit - 1);
     if (error) {
       throw new Error(error.message);
     }
+
+    const changes = data ?? [];
+    const rawIds = [...new Set(changes.map((change) => change.raw_id))];
+    const courseByRawId = new Map<
+      string,
+      {
+        raw_id: string;
+        name_zh: string;
+        name_en: string;
+        department: string;
+        course: string;
+        class: string;
+      }
+    >();
+    if (rawIds.length > 0) {
+      const { data: courses, error: coursesError } = await queryInChunks<{
+        raw_id: string;
+        name_zh: string;
+        name_en: string;
+        department: string;
+        course: string;
+        class: string;
+      }>(rawIds, (chunk) =>
+        supabase_server(c)
+          .from("courses")
+          .select("raw_id, name_zh, name_en, department, course, class")
+          .in("raw_id", chunk),
+      );
+      if (coursesError) {
+        console.error("Failed to enrich course changes:", coursesError);
+      } else {
+        for (const course of courses ?? []) {
+          courseByRawId.set(course.raw_id, course);
+        }
+      }
+    }
+
     c.header("Cache-Control", courseChangeCacheControl);
-    return c.json(data ?? []);
+    return c.json(
+      changes.map((change) => {
+        const course = courseByRawId.get(change.raw_id);
+        return course ? { ...change, course } : change;
+      }),
+    );
   })
   .get("/changes/for-courses", courseNoticeChangesQueryValidator, async (c) => {
     const { courses: _courses, days } = c.req.valid("query");

@@ -455,6 +455,23 @@ const relativeDate = (value: string, lang: "zh" | "en" | "zh-cn") => {
   );
 };
 
+export const rateLimitedMessage = (details: unknown, dict: Dictionary) => {
+  const reviews = dict.course.details.native_reviews;
+  const retryAfter = (details as { retryAfter?: unknown } | undefined)
+    ?.retryAfter;
+  if (typeof retryAfter !== "number" || !(retryAfter > 0))
+    return reviews.error_rate_limited;
+  if (retryAfter < 3600)
+    return reviews.error_rate_limited_minutes.replace(
+      "{count}",
+      String(Math.max(1, Math.ceil(retryAfter / 60))),
+    );
+  return reviews.error_rate_limited_hours.replace(
+    "{count}",
+    String(Math.ceil(retryAfter / 3600)),
+  );
+};
+
 const errorMessage = (
   error: unknown,
   dict: Dictionary,
@@ -473,7 +490,7 @@ const errorMessage = (
     case "rate_limited":
       return operation === "report"
         ? dict.course.details.native_reviews.error_report_rate_limited
-        : dict.course.details.native_reviews.error_rate_limited;
+        : rateLimitedMessage(apiError.details, dict);
     case "banned":
       return dict.course.details.native_reviews.error_banned;
     case "removed":

@@ -16,7 +16,18 @@ import {
   Search,
   Users,
 } from "lucide-react";
-import { Button, cn, ErrorState, Skeleton } from "@courseweb/ui";
+import {
+  Button,
+  cn,
+  ErrorState,
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Skeleton,
+} from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
 import { intlLocale } from "@/helpers/contentLanguage";
 import { useSettings } from "@/hooks/contexts/settings";
@@ -35,6 +46,15 @@ import {
   type SpaceCategory,
 } from "@/lib/library";
 import { useLibraryVacancy } from "@/hooks/useLibraryVacancy";
+import {
+  filterLostAndFoundItems,
+  getLostAndFoundTypes,
+} from "@/lib/library-lost-and-found-core";
+import {
+  useLibraryLostAndFound,
+  type LostAndFoundItem,
+} from "@/lib/library-lost-and-found";
+import { safeExternalUrl } from "@/lib/safe-external-url";
 import {
   pickLibraryForecastSeries,
   shouldShowUsageLearningNotice,
@@ -74,6 +94,172 @@ function getBadgeColor(count: number, isClosed: boolean) {
   if (count > 10) return "text-foreground font-bold";
   return "text-foreground font-bold";
 }
+
+const LostAndFoundSection = () => {
+  const dict = useDictionary();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedType, setSelectedType] = useState("all");
+  const [showAllItems, setShowAllItems] = useState(false);
+  const {
+    data: response,
+    isLoading,
+    error,
+    refetch,
+  } = useLibraryLostAndFound();
+  const items = response?.data ?? [];
+  const types = useMemo(() => getLostAndFoundTypes(items), [items]);
+  const filteredItems = useMemo(
+    () => filterLostAndFoundItems(items, selectedType, searchQuery),
+    [items, searchQuery, selectedType],
+  );
+  const displayedItems = showAllItems
+    ? filteredItems
+    : filteredItems.slice(0, 20);
+  const hasError = Boolean(error) || response?.error === true;
+  const sourceUrl =
+    safeExternalUrl(response?.source.url) ??
+    "https://adage.lib.nthu.edu.tw/find";
+
+  useEffect(() => {
+    setShowAllItems(false);
+  }, [searchQuery, selectedType]);
+
+  return (
+    <section className="flex flex-col border-t border-border pt-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="text-base font-bold text-foreground">
+          {dict.library.lost_found_title}
+        </h2>
+        <button
+          type="button"
+          onClick={() => void refetch()}
+          disabled={isLoading}
+          aria-label={dict.library.lost_found_refresh}
+          title={dict.library.lost_found_refresh}
+          className="rounded p-1 text-muted-foreground hover:text-primary disabled:opacity-50"
+        >
+          <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
+        </button>
+      </div>
+
+      <div className="flex flex-col gap-2 border-b border-border py-3 sm:flex-row">
+        <div className="relative h-8 min-w-0 flex-1">
+          <Search
+            className="absolute left-1.5 top-2 h-3.5 w-3.5 text-muted-foreground"
+            aria-hidden
+          />
+          <Input
+            type="search"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder={dict.library.lost_found_search_placeholder}
+            aria-label={dict.library.lost_found_search_placeholder}
+            className="h-8 pl-6 text-xs"
+          />
+        </div>
+        <Select value={selectedType} onValueChange={setSelectedType}>
+          <SelectTrigger
+            className="h-8 min-w-0 flex-1 sm:w-[180px] sm:flex-none"
+            aria-label={dict.library.lost_found_filter_type}
+          >
+            <SelectValue placeholder={dict.library.lost_found_all_types} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">
+              {dict.library.lost_found_all_types}
+            </SelectItem>
+            {types.map((type) => (
+              <SelectItem key={type} value={type}>
+                {type}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {isLoading ? (
+        <div className="flex flex-col divide-y divide-border">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <div key={index} className="flex flex-row gap-4 py-4">
+              <div className="flex flex-1 flex-col gap-2">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-4 w-64" />
+              </div>
+              <Skeleton className="h-4 w-24" />
+            </div>
+          ))}
+        </div>
+      ) : hasError && items.length === 0 ? (
+        <div className="py-4">
+          <ErrorState
+            title={dict.library.lost_found_load_error}
+            action={
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void refetch()}
+              >
+                {dict.library.try_again}
+              </Button>
+            }
+          />
+        </div>
+      ) : filteredItems.length === 0 ? (
+        <div className="py-4 text-sm text-muted-foreground">
+          {dict.library.lost_found_no_results}
+        </div>
+      ) : (
+        <div className="flex flex-col divide-y divide-border">
+          {displayedItems.map((item: LostAndFoundItem) => (
+            <div key={item.id} className="flex flex-row gap-4 py-4">
+              <div className="flex min-w-0 flex-1 flex-col gap-1">
+                <h3 className="font-bold text-foreground">{item.type}</h3>
+                <p className="text-sm text-foreground">{item.description}</p>
+                <span className="text-xs text-muted-foreground">
+                  {item.location}
+                </span>
+              </div>
+              <time
+                dateTime={item.date}
+                className="whitespace-nowrap text-right text-sm font-bold text-foreground"
+              >
+                {item.date}
+              </time>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!isLoading &&
+        !hasError &&
+        filteredItems.length > displayedItems.length && (
+          <div className="flex items-center gap-4 py-4">
+            <Button variant="outline" onClick={() => setShowAllItems(true)}>
+              {dict.library.lost_found_show_more}
+            </Button>
+          </div>
+        )}
+
+      {hasError && items.length > 0 && (
+        <p className="border-t border-border py-2 text-sm text-muted-foreground">
+          {dict.library.lost_found_load_error}
+        </p>
+      )}
+
+      <div className="pt-4 text-xs text-muted-foreground">
+        {dict.library.lost_found_data_source}{" "}
+        <a
+          href={sourceUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline hover:text-foreground"
+        >
+          {dict.library.lost_found_source_name}
+        </a>
+      </div>
+    </section>
+  );
+};
 
 const LibraryPage = () => {
   const dict = useDictionary();
@@ -389,14 +575,14 @@ const LibraryPage = () => {
           <div className="no-scrollbar flex items-center gap-2 overflow-x-auto whitespace-nowrap">
             {/* Search */}
             <div className="relative flex-1 min-w-[180px]">
-              <Search className="absolute left-2.5 top-2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-1.5 top-2 h-3.5 w-3.5 text-muted-foreground" />
               <input
                 type="text"
                 aria-label={dict.library.search_placeholder}
                 placeholder={dict.library.search_placeholder}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-8 w-full rounded-md border border-input bg-background pl-8 pr-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                className="h-8 w-full rounded-md border border-input bg-background pl-6 pr-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
 
@@ -602,6 +788,8 @@ const LibraryPage = () => {
             })}
           </div>
         )}
+
+        <LostAndFoundSection />
 
         {/* Footer info */}
         <div className="mt-4 border-t border-border pt-4 text-xs text-muted-foreground">
