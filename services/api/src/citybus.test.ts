@@ -236,6 +236,7 @@ describe("city bus data", () => {
     const response = buildCityBusEtaResponse(route, direction, {
       eta: eta83Fixture as TdxEtaRecord[],
       nearStop: nearStopFixture as TdxNearStopRecord[],
+      positions: [],
       updatedAt: "2026-10-08T02:35:35+08:00",
       fetchedAt: Date.now(),
     });
@@ -259,6 +260,7 @@ describe("city bus data", () => {
     const response = buildCityBusEtaResponse(route, direction, {
       eta: etaStatusesFixture as TdxEtaRecord[],
       nearStop: [],
+      positions: [],
       updatedAt: "2026-10-08T02:35:35+08:00",
       fetchedAt: Date.now(),
     });
@@ -280,6 +282,7 @@ describe("city bus data", () => {
           EventType: "arriving",
         },
       ],
+      positions: [],
       updatedAt: null,
       fetchedAt: Date.now(),
     });
@@ -288,8 +291,7 @@ describe("city bus data", () => {
     ]);
   });
 
-  test("uses one token, ETA call, and near-stop call for cached route requests", async () => {
-    installCache();
+  test("serves every route from one city-wide snapshot of three TDX calls", async () => {
     const calls: string[] = [];
     globalThis.fetch = async (input) => {
       const url = String(input);
@@ -303,6 +305,7 @@ describe("city bus data", () => {
         return Response.json(eta83Fixture);
       if (url.includes("RealTimeNearStop"))
         return Response.json(nearStopFixture);
+      if (url.includes("RealTimeByFrequency")) return Response.json([]);
       return new Response(null, { status: 404 });
     };
 
@@ -315,42 +318,130 @@ describe("city bus data", () => {
       new Request("https://api.test/eta?route_id=83&direction_id=HSZ000802"),
       env,
     );
+    const other = await citybus.fetch(
+      new Request("https://api.test/eta?route_id=81&direction_id=HSZ000701"),
+      env,
+    );
     expect(first.status).toBe(200);
     expect(second.status).toBe(200);
+    expect(other.status).toBe(200);
+    // token + ETA + near-stop + positions, once, for all three requests.
     expect(
       calls.filter((url) => url.includes("tdx.transportdata")).length,
-    ).toBe(3);
-    expect((await first.json()).stops).toHaveLength(20);
+    ).toBe(4);
+    const firstBody = await first.json();
+    expect(firstBody.reason).toBe("ok");
+    expect(firstBody.fetchedAt).not.toBeNull();
     expect((await second.json()).directionId).toBe("HSZ000802");
+    // Route 81 has no records in the 83 fixture; it must not borrow its buses.
+    expect((await other.json()).buses).toEqual([]);
   });
 
-  test("reuses a cached route snapshot when upstream fails while it is fresh enough", async () => {
-    installCache();
-    const route = staticData.routes.find((item) => item.id === "83")!;
+  test("explains why there is no live data so the client can show the fallback", async () => {
+    const noKeys = await citybus.fetch(
+      new Request("https://api.test/eta?route_id=83&direction_id=HSZ000801"),
+      {},
+    );
+    expect((await noKeys.json()).reason).toBe("not_configured");
+
+    globalThis.fetch = async (input) =>
+      String(input).includes("/token")
+        ? Response.json({ access_token: "t", expires_in: 1800 })
+        : new Response(null, { status: 429 });
+    const env = { TDX_CLIENT_ID: "client", TDX_CLIENT_SECRET: "secret" };
+    const limited = await citybus.fetch(
+      new Request("https://api.test/eta?route_id=83&direction_id=HSZ000801"),
+      env,
+    );
+    const body = await limited.json();
+    expect(body.realtime).toBe(false);
+    expect(body.reason).toBe("unavailable");
+
+    const intercity = await citybus.fetch(
+      new Request(
+        "https://api.test/eta?route_id=intercity-thb1728&direction_id=" +
+          staticData.routes.find((item) => item.id === "intercity-thb1728")!
+            .directions[0].id,
+      ),
+      env,
+    );
+    expect((await intercity.json()).reason).toBe("unsupported");
+  });
+
+  test("backs off after a TDX failure instead of retrying every request", async () => {
+    let dataCalls = 0;
+    globalThis.fetch = async (input) => {
+      if (String(input).includes("/token"))
+        return Response.json({ access_token: "t", expires_in: 1800 });
+      dataCalls += 1;
+      return new Response(null, { status: 429 });
+    };
+    const env = { TDX_CLIENT_ID: "client", TDX_CLIENT_SECRET: "secret" };
+    await getCityBusRealtimeSnapshot(env);
+    const callsAfterFirst = dataCalls;
+    await getCityBusRealtimeSnapshot(env);
+    await getCityBusRealtimeSnapshot(env);
+    expect(dataCalls).toBe(callsAfterFirst);
+  });
+
+  test("never presents an old snapshot as live", async () => {
     const env = { TDX_CLIENT_ID: "client", TDX_CLIENT_SECRET: "secret" };
     globalThis.fetch = async (input) => {
       const url = String(input);
       if (url.includes("/token"))
-        return Response.json({
-          access_token: "fixture-token",
-          expires_in: 1800,
-        });
-      if (url.includes("EstimatedTimeOfArrival"))
-        return Response.json(eta83Fixture);
-      return Response.json(nearStopFixture);
+        return Response.json({ access_token: "t", expires_in: 1800 });
+      return Response.json(url.includes("EstimatedTime") ? eta83Fixture : []);
     };
-    const first = await getCityBusRealtimeSnapshot(route, env);
-    expect(first).toBeDefined();
-
+    const fresh = await getCityBusRealtimeSnapshot(env);
+    expect(fresh.reason).toBe("ok");
     const originalNow = Date.now;
-    const fetchedAt = first!.fetchedAt;
-    Date.now = () => fetchedAt + 21_000;
-    globalThis.fetch = async () => new Response(null, { status: 429 });
-    const stale = await getCityBusRealtimeSnapshot(route, env);
-    expect(stale?.fetchedAt).toBe(fetchedAt);
-    Date.now = () => fetchedAt + 121_000;
-    expect(await getCityBusRealtimeSnapshot(route, env)).toBeUndefined();
+    const fetchedAt = fresh.snapshot!.fetchedAt;
+    globalThis.fetch = async (input) =>
+      String(input).includes("/token")
+        ? Response.json({ access_token: "t", expires_in: 1800 })
+        : new Response(null, { status: 429 });
+    Date.now = () => fetchedAt + 60_000;
+    expect((await getCityBusRealtimeSnapshot(env)).reason).toBe("ok");
+    Date.now = () => fetchedAt + 200_000;
+    expect((await getCityBusRealtimeSnapshot(env)).reason).toBe("stale");
     Date.now = originalNow;
+  });
+
+  test("lists only recent, in-service buses with their GPS position", () => {
+    const route = staticData.routes.find((item) => item.id === "83")!;
+    const direction = route.directions[0];
+    const now = Date.parse("2026-11-16T12:00:00+08:00");
+    const position = (plate: string, gps: string, extra = {}) => ({
+      PlateNumb: plate,
+      SubRouteUID: direction.id,
+      Direction: 0,
+      BusPosition: { PositionLon: 120.97, PositionLat: 24.8 },
+      Speed: 20,
+      Azimuth: 90,
+      GPSTime: gps,
+      ...extra,
+    });
+    const response = buildCityBusEtaResponse(
+      route,
+      direction,
+      {
+        eta: [],
+        nearStop: [],
+        positions: [
+          position("LIVE-1", "2026-11-16T11:59:30+08:00"),
+          position("PARKED", "2026-11-16T10:33:22+08:00"),
+          position("OFFDUTY", "2026-11-16T11:59:50+08:00", { BusStatus: 98 }),
+          {
+            ...position("OTHER", "2026-11-16T11:59:50+08:00"),
+            SubRouteUID: "X",
+          },
+        ],
+        updatedAt: null,
+        fetchedAt: now,
+      },
+      now,
+    );
+    expect(response.vehicles.map((item) => item.plate)).toEqual(["LIVE-1"]);
   });
 
   test("caches the TDX token until shortly before expiry", async () => {

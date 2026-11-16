@@ -1202,7 +1202,19 @@
     "realtime_not_operating": "Not in service today",
     "realtime_updated_at": "Updated {time}",
     "realtime_tab": "Real-time",
-    "timetable_tab": "Timetable"
+    "timetable_tab": "Timetable",
+    "map_tab": "Map",
+    "locate_me": "Find nearest stop",
+    "nearest_stop": "Nearest stop: {stop} · {distance}",
+    "location_denied": "Location permission is off, so the nearest stop can't be shown.",
+    "location_unavailable": "Couldn't get your location.",
+    "map_buses": "{count} running · updated {time}",
+    "map_no_buses": "No bus is running on this route right now",
+    "map_live_unavailable": "Live bus positions are temporarily unavailable.",
+    "bus_marker": "{plate} · updated {time}",
+    "fallback_unavailable": "Live bus data is temporarily unavailable. Showing the scheduled timetable.",
+    "fallback_unsupported": "Live tracking isn't available for this route. Showing the scheduled timetable.",
+    "fallback_no_bus": "No bus is running on this route right now. Showing the scheduled timetable."
   },
   "settings": {
     "navigation_aria": "Settings navigation",
