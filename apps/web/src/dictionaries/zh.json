@@ -687,6 +687,50 @@
       "default_section": "一般班",
       "not_available": "—",
       "recent_offering": "最近開課",
+      "filters": {
+        "department": "系所",
+        "credits": "學分",
+        "language": "授課語言",
+        "languageOptions": {
+          "english": "英文授課",
+          "chinese": "中文授課",
+          "bilingual": "中英雙語",
+          "other": "其他"
+        },
+        "termOffered": "開課學期",
+        "termOptions": {
+          "fall": "上學期",
+          "spring": "下學期",
+          "both": "上下學期"
+        },
+        "recentlyOffered": "近期開課",
+        "recentOptions": {
+          "latest": "最近學期",
+          "3": "近 3 個學期",
+          "6": "近 6 個學期",
+          "10": "近 10 個學期"
+        },
+        "level": "課程年級",
+        "levelOptions": {
+          "1000": "1000 級",
+          "2000": "2000 級",
+          "3000": "3000 級",
+          "4000": "4000 級",
+          "5000": "5000 級以上"
+        },
+        "englishTaught": "英語授課",
+        "englishTaughtOptions": {
+          "yes": "是"
+        }
+      },
+      "sort": {
+        "label": "排序方式",
+        "relevance": "相關性",
+        "courseCode": "課號",
+        "mostRecent": "最近開課",
+        "timesOffered": "開課次數",
+        "fillRate": "近四學期滿班率"
+      },
       "search_title": "搜尋課程模組",
       "search_description": "跨學期搜尋同一門課的開課紀錄。",
       "search_placeholder": "搜尋課號、課名或教師……",

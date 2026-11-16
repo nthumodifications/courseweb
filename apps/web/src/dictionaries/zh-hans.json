@@ -687,6 +687,50 @@
       "default_section": "一般班",
       "not_available": "—",
       "recent_offering": "最近开课",
+      "filters": {
+        "department": "系所",
+        "credits": "学分",
+        "language": "授课语言",
+        "languageOptions": {
+          "english": "英文授课",
+          "chinese": "中文授课",
+          "bilingual": "中英双语",
+          "other": "其他"
+        },
+        "termOffered": "开课学期",
+        "termOptions": {
+          "fall": "上学期",
+          "spring": "下学期",
+          "both": "上下学期"
+        },
+        "recentlyOffered": "近期开课",
+        "recentOptions": {
+          "3": "近 3 个学期",
+          "6": "近 6 个学期",
+          "10": "近 10 个学期",
+          "latest": "最近学期"
+        },
+        "level": "课程年级",
+        "levelOptions": {
+          "1000": "1000 级",
+          "2000": "2000 级",
+          "3000": "3000 级",
+          "4000": "4000 级",
+          "5000": "5000 级以上"
+        },
+        "englishTaught": "英语授课",
+        "englishTaughtOptions": {
+          "yes": "是"
+        }
+      },
+      "sort": {
+        "label": "排序方式",
+        "relevance": "相关性",
+        "courseCode": "课号",
+        "mostRecent": "最近开课",
+        "timesOffered": "开课次数",
+        "fillRate": "近四学期满班率"
+      },
       "search_title": "搜索课程模块",
       "search_description": "跨学期搜索同一门课的开课纪录。",
       "search_placeholder": "搜索课号、课名或教师……",

@@ -687,6 +687,50 @@
       "default_section": "default",
       "not_available": "—",
       "recent_offering": "Most recent",
+      "filters": {
+        "department": "Department",
+        "credits": "Credits",
+        "language": "Instruction language",
+        "languageOptions": {
+          "english": "English",
+          "chinese": "Chinese",
+          "bilingual": "Chinese and English",
+          "other": "Other"
+        },
+        "termOffered": "Term offered",
+        "termOptions": {
+          "fall": "Fall",
+          "spring": "Spring",
+          "both": "Fall and spring"
+        },
+        "recentlyOffered": "Recently offered",
+        "recentOptions": {
+          "latest": "Latest semester",
+          "3": "Last 3 semesters",
+          "6": "Last 6 semesters",
+          "10": "Last 10 semesters"
+        },
+        "level": "Course level",
+        "levelOptions": {
+          "1000": "1000",
+          "2000": "2000",
+          "3000": "3000",
+          "4000": "4000",
+          "5000": "5000+"
+        },
+        "englishTaught": "English-taught",
+        "englishTaughtOptions": {
+          "yes": "Yes"
+        }
+      },
+      "sort": {
+        "label": "Sort by",
+        "relevance": "Relevance",
+        "courseCode": "Course code",
+        "mostRecent": "Most recently offered",
+        "timesOffered": "Times offered",
+        "fillRate": "Fill rate"
+      },
       "search_title": "Search course modules",
       "search_description": "Search one course across its recorded semesters.",
       "search_placeholder": "Search by course code, title, or instructor...",
