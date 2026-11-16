@@ -10,6 +10,7 @@ import auditHandler from "./audit";
 import recruitmentHandler from "./recruitment";
 import reviewsHandler from "./reviews";
 import shortNamesHandler from "./course-short-names";
+import organisationsHandler from "./organisations";
 
 /**
  * The NTHUMods admin center's API.
@@ -34,6 +35,7 @@ const gated = new Hono<AdminEnv>()
   .route("/recruitment", recruitmentHandler)
   .route("/reviews", reviewsHandler)
   .route("/course-short-names", shortNamesHandler)
+  .route("/organisations", organisationsHandler)
   .route("/clients", clientsHandler)
   .route("/audit", auditHandler);
 

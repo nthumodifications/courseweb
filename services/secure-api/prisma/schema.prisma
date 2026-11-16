@@ -17,6 +17,39 @@ enum AdminRole {
   SUPERUSER
 }
 
+enum OrganisationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  SUSPENDED
+}
+
+enum OrganisationMemberRole {
+  OWNER
+  MANAGER
+  APPROVER
+}
+
+enum SpaceWhoCanBook {
+  ANYONE_SIGNED_IN
+  NTHU_ONLY
+  MEMBERS
+  ALLOW_LIST
+}
+
+enum SpaceApprovalMode {
+  APPROVAL
+  INSTANT
+}
+
+enum BookingStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+  CANCELLED
+  NO_SHOW
+}
+
 model User {
   id                    String               @id @default(uuid())
   userId                String               @unique
@@ -43,6 +76,11 @@ model User {
   shortNameRevisions    CourseShortNameRevision[]
   reviewReports         CourseReviewReport[] @relation("CourseReviewReportReporter")
   resolvedReviewReports CourseReviewReport[] @relation("CourseReviewReportResolver")
+  createdOrganisations  Organisation[] @relation("OrganisationCreator")
+  organisationMemberships OrganisationMember[]
+  bookings              Booking[] @relation("BookingUser")
+  decidedBookings       Booking[] @relation("BookingDecider")
+  spaceAllowListEntries SpaceBookingAllowList[]
 }
 
 model UserStorage {
@@ -311,4 +349,145 @@ model CourseShortNameRevision {
   @@index([entryId, createdAt])
   @@index([editorId, createdAt])
   @@map("course_short_name_revisions")
+}
+
+model Organisation {
+  id                 String               @id @default(uuid())
+  name               String
+  slug               String               @unique
+  description        String
+  contact            String
+  status             OrganisationStatus   @default(PENDING)
+  createdBy          String               @map("created_by")
+  discordWebhookUrl  String?              @map("discord_webhook_url")
+  createdAt          DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime             @updatedAt @map("updated_at") @db.Timestamptz(3)
+  creator            User                 @relation("OrganisationCreator", fields: [createdBy], references: [userId], onDelete: Restrict)
+  members            OrganisationMember[]
+  spaces             Space[]
+
+  @@index([status, createdAt])
+  @@map("organisation")
+}
+
+model OrganisationMember {
+  id              String                 @id @default(uuid())
+  organisationId  String                 @map("organisation_id")
+  userId          String                 @map("user_id")
+  role            OrganisationMemberRole @default(APPROVER)
+  createdAt       DateTime               @default(now()) @map("created_at") @db.Timestamptz(3)
+  organisation    Organisation           @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  user            User                   @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@unique([organisationId, userId])
+  @@index([userId, role])
+  @@map("organisation_member")
+}
+
+model Space {
+  id                       String               @id @default(uuid())
+  organisationId           String               @map("organisation_id")
+  slug                     String
+  name                     String
+  description              String
+  location                 String
+  venueId                  String?              @map("venue_id")
+  isPublic                 Boolean              @default(true) @map("is_public")
+  rules                    String
+  whoCanBook               SpaceWhoCanBook      @default(ANYONE_SIGNED_IN) @map("who_can_book")
+  approvalMode             SpaceApprovalMode    @default(APPROVAL) @map("approval_mode")
+  slotLengthMinutes        Int                  @default(60) @map("slot_length_minutes")
+  minNoticeHours           Int                  @default(0) @map("min_notice_hours")
+  maxLengthMinutes         Int                  @default(240) @map("max_length_minutes")
+  maxActiveBookingsPerUser Int                  @default(3) @map("max_active_bookings_per_user")
+  requireBorrowingUnit      Boolean              @default(false) @map("require_borrowing_unit")
+  requirePurpose            Boolean              @default(true) @map("require_purpose")
+  requireHeadcount          Boolean              @default(false) @map("require_headcount")
+  archivedAt                DateTime?            @map("archived_at") @db.Timestamptz(3)
+  createdAt                 DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt                 DateTime             @updatedAt @map("updated_at") @db.Timestamptz(3)
+  organisation              Organisation         @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  openingHours              SpaceOpeningHours[]
+  blackouts                 SpaceBlackout[]
+  allowList                 SpaceBookingAllowList[]
+  bookings                  Booking[]
+
+  @@unique([organisationId, slug])
+  @@index([organisationId, archivedAt])
+  @@map("space")
+}
+
+model SpaceOpeningHours {
+  id        String   @id @default(uuid())
+  spaceId   String   @map("space_id")
+  weekday   Int
+  opensAt   String   @map("opens_at")
+  closesAt  String   @map("closes_at")
+  space     Space    @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  @@unique([spaceId, weekday])
+  @@map("space_opening_hours")
+}
+
+model SpaceBlackout {
+  id        String   @id @default(uuid())
+  spaceId   String   @map("space_id")
+  startDate DateTime @map("start_date") @db.Date
+  endDate   DateTime @map("end_date") @db.Date
+  reason    String?
+  space     Space    @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  @@index([spaceId, startDate, endDate])
+  @@map("space_blackout")
+}
+
+model SpaceBookingAllowList {
+  id        String   @id @default(uuid())
+  spaceId   String   @map("space_id")
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  space     Space    @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@unique([spaceId, userId])
+  @@map("space_booking_allow_list")
+}
+
+model Booking {
+  id             String        @id @default(uuid())
+  spaceId        String        @map("space_id")
+  userId         String        @map("user_id")
+  startAt        DateTime      @map("start_at") @db.Timestamptz(3)
+  endAt          DateTime      @map("end_at") @db.Timestamptz(3)
+  status         BookingStatus @default(REQUESTED)
+  borrowingUnit  String?       @map("borrowing_unit")
+  purpose        String?
+  headcount      Int?
+  notes          String?
+  decidedBy      String?       @map("decided_by")
+  decidedAt      DateTime?     @map("decided_at") @db.Timestamptz(3)
+  reason         String?
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+  space          Space         @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  user           User          @relation("BookingUser", fields: [userId], references: [userId], onDelete: Cascade)
+  decider        User?         @relation("BookingDecider", fields: [decidedBy], references: [userId], onDelete: SetNull)
+  events         BookingEvent[]
+
+  @@index([spaceId, startAt, endAt])
+  @@index([userId, status, startAt])
+  @@map("booking")
+}
+
+model BookingEvent {
+  id          String   @id @default(uuid())
+  bookingId   String   @map("booking_id")
+  whoUserId   String?  @map("who_user_id")
+  what        String
+  at          DateTime @default(now()) @map("at") @db.Timestamptz(3)
+  details     Json?
+  booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId, at])
+  @@map("booking_event")
 }

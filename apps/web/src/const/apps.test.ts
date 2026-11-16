@@ -33,6 +33,7 @@ describe("app categories", () => {
       transport: ["campus-map", "bus", "youbike"],
       facilities: [
         "sports-venues",
+        "spaces",
         "library",
         "laundry",
         "announcements",
