@@ -102,7 +102,12 @@ describe("BusListingItem keyboard access", () => {
 
     const container = document.createElement("div");
     document.body.appendChild(container);
-    activeRoot = createRoot(container);
+    const renderErrors: unknown[] = [];
+    activeRoot = createRoot(container, {
+      onUncaughtError: (error) => renderErrors.push(error),
+      onCaughtError: (error) => renderErrors.push(error),
+      onRecoverableError: (error) => renderErrors.push(error),
+    });
 
     await act(async () => {
       activeRoot!.render(
@@ -121,7 +126,14 @@ describe("BusListingItem keyboard access", () => {
     });
 
     const row = container.querySelector('[role="button"]');
-    expect(row).not.toBeNull();
+    // React swallows render errors in a root; report them instead of a bare null.
+    expect({
+      rendered: row !== null,
+      renderErrors: renderErrors.map(String),
+    }).toEqual({
+      rendered: true,
+      renderErrors: [],
+    });
     const clickableRow = row as HTMLDivElement;
     const pinButton = container.querySelector("button[aria-label=Pin]");
     expect(pinButton).not.toBeNull();

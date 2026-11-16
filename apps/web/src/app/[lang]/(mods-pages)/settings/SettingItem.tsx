@@ -9,7 +9,7 @@ import {
 
 interface SettingItemProps {
   title: string | ReactNode;
-  description?: string;
+  description?: ReactNode;
   control: ReactNode;
   className?: string;
   id?: string;
@@ -30,7 +30,7 @@ export const SettingItem = ({
   const sectionTitleMatches = useSettingsSearchSectionTitleMatch();
   const isMatch = shouldShowSettingsSearchItem(query, sectionTitleMatches, {
     title: getReactNodeText(title),
-    description,
+    description: getReactNodeText(description),
     searchText,
     keywords: searchKeywords,
   });

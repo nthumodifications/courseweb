@@ -11,6 +11,7 @@ import {
   clearCredentialStorage,
   rememberPostSigninRedirect,
 } from "@/lib/credentialStorage";
+import { cleanupPushSubscriptionOnLogout } from "@/lib/push/push";
 
 export const useAccountActions = () => {
   const {
@@ -35,6 +36,7 @@ export const useAccountActions = () => {
 
   const handleLogout = async () => {
     const idTokenHint = user?.id_token;
+    await cleanupPushSubscriptionOnLogout(user?.access_token);
     clearCredentialStorage();
     await signoutRedirect({
       id_token_hint: idTokenHint,
