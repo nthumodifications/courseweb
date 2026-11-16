@@ -380,5 +380,5 @@ jobs:
         env:
           COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
         run: |
-          curl --fail --request GET "https://delta.nthumods.com/api/v1/deploy?uuid=nwwc8owkwo04c0owgc4kgkc8&force=false" \
+          curl --fail --request POST "https://delta.nthumods.com/api/v1/deploy?uuid=nwwc8owkwo04c0owgc4kgkc8&force=false" \
             --header "Authorization: Bearer $COOLIFY_TOKEN"
