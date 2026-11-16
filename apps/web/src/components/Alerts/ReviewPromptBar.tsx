@@ -2,7 +2,6 @@ import { Info, X } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { useLocalStorage } from "usehooks-ts";
 import { Button } from "@courseweb/ui";
-import { semesterInfo } from "@courseweb/shared";
 import useDictionary from "@/dictionaries/useDictionary";
 import { rememberPostSigninRedirect } from "@/lib/credentialStorage";
 import { createModuleKey } from "@/lib/modules";
@@ -15,11 +14,13 @@ import {
   type ReviewPromptCourse,
   type ReviewPromptDismissals,
 } from "@/lib/review-prompt";
+import { useSemesters } from "@/hooks/useSemesters";
 
 const REVIEW_PROMPT_STORAGE_KEY = "review_prompt_dismissals";
 const THREE_DAYS = 3 * 24 * 60 * 60 * 1000;
 
 const ReviewPromptBar = () => {
+  const semesters = useSemesters();
   const dict = useDictionary();
   const auth = useAuth();
   const timetable = useUserTimetable();
@@ -59,7 +60,7 @@ const ReviewPromptBar = () => {
       ? null
       : getReviewPromptState({
           now,
-          semesters: semesterInfo,
+          semesters,
           timetableCourses,
           myReviews: mine.data?.reviews ?? [],
           dismissedFor,

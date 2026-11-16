@@ -6,6 +6,7 @@ import { z } from "zod";
 import { env } from "hono/adapter";
 import { parseHTML } from "linkedom/worker";
 import { parsePttPostedAt } from "./ptt";
+import courseInsights from "./course-insights";
 import {
   aggregateModuleSearchRows,
   encodeModuleSearchIndex,
@@ -156,6 +157,7 @@ const app = new Hono()
     if (cache) await cache.put(cacheKey, response.clone());
     return response;
   })
+  .route("/insights", courseInsights)
   .get("/", courseListQueryValidator, async (c) => {
     const { courses: _courses } = c.req.valid("query");
 

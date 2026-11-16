@@ -1,3 +1,4 @@
+import "@/lib/semester-runtime";
 import ReactDOM from "react-dom/client";
 import { RouterProvider } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";

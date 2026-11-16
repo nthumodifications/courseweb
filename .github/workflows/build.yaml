@@ -10,9 +10,8 @@ on:
   workflow_dispatch:
     inputs:
       semester:
-        description: "Semester to sync (e.g. 11510)"
+        description: "Semester to sync; leave empty for automatic selection"
         required: false
-        default: "11510"
 
 env:
   IMAGE_NAME: ghcr.io/${{ github.repository }}
@@ -298,7 +297,7 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID }}
           ALGOLIA_API_KEY: ${{ secrets.ALGOLIA_API_KEY }}
-          SEMESTER: ${{ github.event.inputs.semester || '11510' }}
+          SEMESTER: ${{ github.event.inputs.semester || '' }}
         run: bun run src/sync-courses.ts "$SEMESTER"
 
   build-and-push-data-sync:

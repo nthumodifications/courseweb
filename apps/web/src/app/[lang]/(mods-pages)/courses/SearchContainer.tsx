@@ -28,7 +28,6 @@ import CourseSidePanel from "./CourseSidePanel";
 import SearchBox from "@/components/SearchBox/SearchBox";
 import SemesterSelector from "./SemesterSelector";
 import useCustomMenu from "@/app/[lang]/(mods-pages)/courses/useCustomMenu";
-import { lastSemester } from "@courseweb/shared";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { MinimalCourse } from "@/types/courses";
 import { courseEvents } from "@/lib/trackingEvents";
@@ -39,6 +38,7 @@ import { useCourseTextHits } from "@/hooks/useCourseTextHits";
 import type { CourseSyllabusView } from "@/config/supabase";
 import AiSearchBox from "./AiSearchBox";
 import { SearchResultCount } from "@/components/Search/SearchResultCount";
+import { useDefaultSemesterId } from "@/hooks/useSemesters";
 
 type SearchClient = ResilientSearchClient;
 type InfiniteHitsCache = ReturnType<
@@ -163,6 +163,7 @@ const SearchContainer = memo(
     sessionStorageCache: InfiniteHitsCache;
   }) => {
     const dict = useDictionary();
+    const defaultSemester = useDefaultSemesterId();
     const { nbHits, processingTimeMS } = useStats();
     const { status } = useInstantSearch();
     const { query } = useSearchBox();
@@ -174,8 +175,8 @@ const SearchContainer = memo(
     });
 
     const semester = useMemo(
-      () => items.find((item) => item.isRefined)?.value ?? lastSemester.id,
-      [items],
+      () => items.find((item) => item.isRefined)?.value ?? defaultSemester,
+      [defaultSemester, items],
     );
     const { getSemesterCourses } = useUserTimetable();
     const courses = getSemesterCourses(semester);

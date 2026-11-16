@@ -2,7 +2,6 @@ import { useMemo } from "react";
 import { format } from "date-fns";
 import { fromZonedTime } from "date-fns-tz";
 import { useQuery } from "@tanstack/react-query";
-import { semesterInfo } from "@courseweb/shared";
 import { EventData } from "@/types/calendar_event";
 import { MinimalCourse } from "@/types/courses";
 import {
@@ -22,6 +21,7 @@ import useDictionary from "@/dictionaries/useDictionary";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { contentLanguage } from "@/helpers/contentLanguage";
 import { useSettings } from "@/hooks/contexts/settings";
+import { useSemesters } from "@/hooks/useSemesters";
 import {
   addTaipeiDays,
   fromTaipeiDateKey,
@@ -238,6 +238,7 @@ const toError = (error: unknown) => {
 const useUpcomingEvents = (
   options: UseUpcomingEventsOptions = {},
 ): UseUpcomingEventsResult => {
+  const semesterInfo = useSemesters();
   const clock = useTime(60 * 1000);
   const { events: calendarEvents } = useCalendar();
   const {

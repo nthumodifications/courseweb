@@ -7,9 +7,11 @@ describe("semester defaulting", () => {
       shouldDefaultSemester({
         canRefine: true,
         hasRefinedItem: false,
+        refinedSemester: undefined,
         hasExplicitSemester: true,
         hasUserSelectedSemester: false,
-        hasDefaultedSemester: false,
+        lastDefaultedSemester: undefined,
+        defaultSemester: "11510",
       }),
     ).toBe(false);
   });
@@ -19,9 +21,11 @@ describe("semester defaulting", () => {
       shouldDefaultSemester({
         canRefine: true,
         hasRefinedItem: false,
+        refinedSemester: undefined,
         hasExplicitSemester: false,
         hasUserSelectedSemester: true,
-        hasDefaultedSemester: false,
+        lastDefaultedSemester: undefined,
+        defaultSemester: "11510",
       }),
     ).toBe(false);
   });
@@ -31,21 +35,36 @@ describe("semester defaulting", () => {
       shouldDefaultSemester({
         canRefine: true,
         hasRefinedItem: false,
+        refinedSemester: undefined,
         hasExplicitSemester: false,
         hasUserSelectedSemester: false,
-        hasDefaultedSemester: false,
+        lastDefaultedSemester: undefined,
+        defaultSemester: "11510",
       }),
     ).toBe(true);
   });
 
-  test("does not apply the default again after the first visit", () => {
+  test("updates its own previous default when the calendar default changes", () => {
     expect(
       shouldDefaultSemester({
         canRefine: true,
-        hasRefinedItem: false,
+        hasRefinedItem: true,
+        refinedSemester: "11510",
         hasExplicitSemester: false,
         hasUserSelectedSemester: false,
-        hasDefaultedSemester: true,
+        lastDefaultedSemester: "11510",
+        defaultSemester: "11520",
+      }),
+    ).toBe(true);
+    expect(
+      shouldDefaultSemester({
+        canRefine: true,
+        hasRefinedItem: true,
+        refinedSemester: "11420",
+        hasExplicitSemester: false,
+        hasUserSelectedSemester: false,
+        lastDefaultedSemester: "11510",
+        defaultSemester: "11520",
       }),
     ).toBe(false);
   });

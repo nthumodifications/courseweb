@@ -802,6 +802,55 @@
     "no_results": "这段期间没有课程变更。",
     "course_fallback": "无法取得课程数据"
   },
+  "course_insights": {
+    "title": "课程洞察",
+    "at_a_glance": "本学期概况",
+    "semester_label": "学期",
+    "modules_sections": "课程／班次",
+    "departments": "系所",
+    "seats": "名额",
+    "english_share": "英语授课占比",
+    "change_vs_last_year": "与去年同学期比较",
+    "percentage_points": "{value} 个百分点",
+    "fullest_sections": "最满的班次",
+    "course": "课程",
+    "section": "班次",
+    "enrolled_capacity": "选课人数／名额",
+    "fill_rate": "满额率",
+    "department_demand": "系所需求",
+    "show_all_departments": "显示全部 {count} 个系所",
+    "show_fewer_departments": "收合至前 20 个系所",
+    "show_all_buildings": "显示全部 {count} 栋校舍",
+    "show_fewer_buildings": "收合至前 10 栋校舍",
+    "when_classes_meet": "上课时段",
+    "schedule_table_label": "各星期与节次的班次数",
+    "schedule_cell_label": "星期{day}第{period}节：{count} 班",
+    "new_modules": "本学期新开课",
+    "new_lookback": "前 {count} 个学期未开课",
+    "show_more": "显示更多",
+    "show_less": "收合",
+    "prior_history_unavailable": "没有足够的过往学期数据",
+    "no_new_modules": "没有符合条件的课程",
+    "discontinued_modules": "本学期未开课",
+    "no_discontinued_modules": "没有符合条件的课程",
+    "semester_trends": "历年趋势",
+    "modules": "课程",
+    "average_class_size": "平均选课人数",
+    "busiest_buildings": "开课最多的校舍",
+    "building": "校舍",
+    "sections": "班次",
+    "no_course_data": "这个学期没有课程数据",
+    "no_fullness_data": "没有同时提供选课人数与名额的班次",
+    "no_schedule_data": "没有上课时段数据",
+    "no_building_data": "没有可辨识的校舍数据",
+    "weekday_monday": "一",
+    "weekday_tuesday": "二",
+    "weekday_wednesday": "三",
+    "weekday_thursday": "四",
+    "weekday_friday": "五",
+    "weekday_saturday": "六",
+    "weekday_sunday": "日"
+  },
   "navigation": {
     "today": "今日",
     "courses": "课表",
@@ -1355,6 +1404,12 @@
         "base": "中",
         "lg": "大"
       },
+      "title_behavior": "课程名称",
+      "title_behavior_options": {
+        "fit": "缩小文字",
+        "one_line": "单行",
+        "two_lines": "双行"
+      },
       "font_family": "时段字体",
       "font_family_options": {
         "system": "系统字体",
@@ -1674,6 +1729,10 @@
       "action": "前往设置",
       "text": "你可以在设置页面客制化课表。"
     },
+    "new_semester": {
+      "title": "{semester} 课程已公布",
+      "link": "查看"
+    },
     "dismiss": "关闭公告"
   },
   "applist": {
@@ -1696,6 +1755,7 @@
     "apps": {
       "courses": "课程查询",
       "course-changes": "课程变更",
+      "course-insights": "课程洞察",
       "modules": "课程模块",
       "chat": "AI 课程助手",
       "venues": "地点相关课程",

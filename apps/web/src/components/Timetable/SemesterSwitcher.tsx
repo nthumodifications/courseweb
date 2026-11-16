@@ -1,9 +1,10 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { semesterInfo } from "@courseweb/shared";
+import { getDefaultSemester } from "@courseweb/shared";
 import { rocYear } from "@/helpers/roc";
 import { Semester } from "@/types/courses";
 import { Button } from "@courseweb/ui";
 import useDictionary from "@/dictionaries/useDictionary";
+import { useSemesters } from "@/hooks/useSemesters";
 
 const SemesterSwitcher = ({
   semester,
@@ -13,20 +14,23 @@ const SemesterSwitcher = ({
   setSemester: (sem: Semester) => void;
 }) => {
   const dict = useDictionary();
-  const semesterObj = semesterInfo.find((s) => s.id == semester)!;
+  const semesters = useSemesters();
+  const semesterObj =
+    semesters.find((s) => s.id === semester) ?? getDefaultSemester();
 
-  const hasPrev = semesterInfo.slice(1).includes(semesterObj);
-  const hasNext = semesterInfo.indexOf(semesterObj) < semesterInfo.length - 1;
+  const semesterIndex = semesters.indexOf(semesterObj);
+  const hasPrev = semesterIndex > 0;
+  const hasNext = semesterIndex < semesters.length - 1;
 
   const goPrev = () => {
     if (!hasPrev) return;
-    const prevSemester = semesterInfo[semesterInfo.indexOf(semesterObj) - 1];
+    const prevSemester = semesters[semesterIndex - 1];
     setSemester(prevSemester.id);
   };
 
   const goNext = () => {
     if (!hasNext) return;
-    const nextSemester = semesterInfo[semesterInfo.indexOf(semesterObj) + 1];
+    const nextSemester = semesters[semesterIndex + 1];
     setSemester(nextSemester.id);
   };
 

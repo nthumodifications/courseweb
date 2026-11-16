@@ -3,13 +3,13 @@ import { Link, useParams } from "react-router-dom";
 import { Suspense } from "react";
 import { ArrowLeft, Map } from "lucide-react";
 import { Button, EmptyState, ErrorState, Fade } from "@courseweb/ui";
-import { lastSemester } from "@courseweb/shared";
 import { toPrettySemester } from "@/helpers/semester";
 import VenueList from "@/components/Venue/VenueList";
 import client from "@/config/api";
 import useDictionary from "@/dictionaries/useDictionary";
 import { MinimalCourse } from "@/types/courses";
 import { lazyWithRetry } from "@/lib/chunk-recovery";
+import { useDefaultSemesterId } from "@/hooks/useSemesters";
 
 const VenueTimetableDynamic = lazyWithRetry(
   () =>
@@ -92,6 +92,7 @@ const VenuesPage = () => {
 function VenueDetail({ venueId }: { venueId: string }) {
   const { lang } = useParams<{ lang: string }>();
   const dict = useDictionary();
+  const semester = useDefaultSemesterId();
 
   const {
     data: courses,
@@ -99,11 +100,11 @@ function VenueDetail({ venueId }: { venueId: string }) {
     error,
     refetch,
   } = useQuery({
-    queryKey: ["venue-courses", venueId],
+    queryKey: ["venue-courses", venueId, semester],
     queryFn: async () => {
       const res = await client.venue[":venueId"].courses.$get({
         param: { venueId },
-        query: { semester: lastSemester.id },
+        query: { semester },
       });
       if (!res.ok) throw new Error("Failed to load venue courses");
       return res.json();
@@ -152,7 +153,7 @@ function VenueDetail({ venueId }: { venueId: string }) {
       </div>
       <div className="flex flex-col gap-2 px-2 py-4 md:px-6">
         <h2 className="font-bold text-base">
-          {venueId} - {toPrettySemester(lastSemester.id)}{" "}
+          {venueId} - {toPrettySemester(semester)}{" "}
           {dict.course.details.semester}
         </h2>
         <Button asChild variant="outline" size="sm">

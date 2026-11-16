@@ -1,9 +1,9 @@
 import { Button } from "@courseweb/ui";
-import { lastSemester } from "@courseweb/shared";
 import { Undo } from "lucide-react";
 import { useInstantSearch } from "react-instantsearch";
 import type { IndexUiState } from "instantsearch.js";
 import useDictionary from "@/dictionaries/useDictionary";
+import { useDefaultSemesterId } from "@/hooks/useSemesters";
 
 const ResetFiltersButton = ({
   resetToIndexUiState,
@@ -12,13 +12,14 @@ const ResetFiltersButton = ({
 }) => {
   const { setIndexUiState } = useInstantSearch();
   const dict = useDictionary();
+  const defaultSemester = useDefaultSemesterId();
 
   const handleReset = () => {
     setIndexUiState((prev) => {
       if (resetToIndexUiState) return resetToIndexUiState;
       return {
         menu: {
-          semester: prev.menu?.semester ?? lastSemester.id,
+          semester: prev.menu?.semester ?? defaultSemester,
         },
       };
     });

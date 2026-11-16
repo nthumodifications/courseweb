@@ -1,6 +1,6 @@
 import { FC, useMemo } from "react";
 import { WidgetShell } from "./WidgetShell";
-import { semesterInfo } from "@courseweb/shared";
+import type { SemesterInfo } from "@courseweb/shared";
 import useTime from "@/hooks/useTime";
 import { Timer } from "lucide-react";
 import { format, formatDistanceStrict } from "date-fns";
@@ -16,10 +16,11 @@ import { getLocale } from "@/helpers/dateLocale";
 import { useSettings } from "@/hooks/contexts/settings";
 import { useLocalStorage } from "usehooks-ts";
 import { differenceInCalendarDays, parseISO } from "date-fns";
+import { useSemesters } from "@/hooks/useSemesters";
 
 const DATE_KEY_FORMAT = "yyyy-MM-dd";
 
-const getSemesterDateRange = (semester: (typeof semesterInfo)[number]) =>
+const getSemesterDateRange = (semester: SemesterInfo) =>
   getTaipeiDateRange(
     format(semester.begins, DATE_KEY_FORMAT),
     format(semester.ends, DATE_KEY_FORMAT),
@@ -83,6 +84,7 @@ const CountdownWidget: FC<CountdownWidgetProps> = ({
   dragHandleProps,
   isDragging,
 }) => {
+  const semesters = useSemesters();
   const dict = useDictionary();
   const date = useTime();
   const [customTitle] = useLocalStorage("widget_countdown_title", "");
@@ -117,13 +119,13 @@ const CountdownWidget: FC<CountdownWidgetProps> = ({
         };
       }
     }
-    const current = semesterInfo
+    const current = semesters
       .map((semester) => ({ semester, range: getSemesterDateRange(semester) }))
       .find(({ range }) => range && date >= range.start && date < range.end);
 
     if (!current) {
       // Try to find the next upcoming semester
-      const upcoming = semesterInfo
+      const upcoming = semesters
         .map((semester) => ({
           semester,
           range: getSemesterDateRange(semester),
@@ -162,7 +164,7 @@ const CountdownWidget: FC<CountdownWidgetProps> = ({
       label: dict.today.countdown.days_left,
       emoji: daysLeft <= 14 ? "🔥" : daysLeft <= 30 ? "⏰" : "📚",
     };
-  }, [customDate, customTitle, date, dict]);
+  }, [customDate, customTitle, date, dict, semesters]);
 
   return (
     <WidgetShell

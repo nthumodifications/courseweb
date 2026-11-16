@@ -1,5 +1,10 @@
 import { expect, test } from "bun:test";
-import { fetchOcrResult, syncCourseRows } from "./scrapers";
+import {
+  ccxpListingHasCourses,
+  fetchOcrResult,
+  shouldSkipUpcomingSemesterScrape,
+  syncCourseRows,
+} from "./scrapers";
 import type { Course } from "./types";
 
 const course: Course = {
@@ -152,4 +157,42 @@ test("uses one detected_at timestamp across course change insert chunks", async 
   expect(new Date(insertedChanges[0].detected_at).toString()).not.toBe(
     "Invalid Date",
   );
+});
+
+test("upcoming semester probe detects a course in the department listing", () => {
+  expect(
+    ccxpListingHasCourses(
+      "<table><tr><td>科號</td></tr><tr><td>欄位</td></tr><tr><td>11520CS 101</td></tr></table>",
+    ),
+  ).toBe(true);
+});
+
+test("upcoming semester probe skips a listing with no courses", () => {
+  expect(
+    ccxpListingHasCourses(
+      "<table><tr><td>科號</td></tr><tr><td>欄位</td></tr><tr><td></td></tr></table>",
+    ),
+  ).toBe(false);
+});
+
+test("upcoming semester probe treats an unknown listing as inconclusive", () => {
+  expect(ccxpListingHasCourses("<html><body>error</body></html>")).toBe(
+    undefined,
+  );
+});
+
+test("skips only when a valid listing confirms that the term is empty", () => {
+  expect(
+    shouldSkipUpcomingSemesterScrape(
+      "<table><tr><td>科號</td></tr><tr><td>欄位</td></tr><tr><td></td></tr></table>",
+    ),
+  ).toBe(true);
+  expect(
+    shouldSkipUpcomingSemesterScrape(
+      "<table><tr><td>科號</td></tr><tr><td>欄位</td></tr><tr><td>11520CS 101</td></tr></table>",
+    ),
+  ).toBe(false);
+  expect(
+    shouldSkipUpcomingSemesterScrape("<html><body>error</body></html>"),
+  ).toBe(false);
 });

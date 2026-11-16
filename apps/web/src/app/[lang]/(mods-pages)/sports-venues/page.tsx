@@ -25,7 +25,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import useTime from "@/hooks/useTime";
-import { semesterInfo } from "@courseweb/shared";
+import type { SemesterInfo } from "@courseweb/shared";
 import useDictionary from "@/dictionaries/useDictionary";
 import { intlLocale } from "@/helpers/contentLanguage";
 import { useSettings } from "@/hooks/contexts/settings";
@@ -38,6 +38,7 @@ import {
   type UsageSeries,
 } from "@/lib/usage-forecast";
 import { activateOnKey } from "@/lib/activate-on-key";
+import { useSemesters } from "@/hooks/useSemesters";
 import {
   useVenueOccupancy,
   type VenueOccupancy,
@@ -163,12 +164,15 @@ function getOpenStatus(slots: TimeSlot[], now: Date): OpenStatus {
 }
 
 /** Returns the semester name that corresponds to today's date using actual semester dates. */
-function getCurrentSemesterLabel(labels: {
-  first: string;
-  second: string;
-  summer: string;
-  winter: string;
-}): string {
+function getCurrentSemesterLabel(
+  labels: {
+    first: string;
+    second: string;
+    summer: string;
+    winter: string;
+  },
+  semesterInfo: readonly SemesterInfo[],
+): string {
   const now = new Date();
   const active = semesterInfo.find((s) => now >= s.begins && now <= s.ends);
   if (active) return active.semester === 1 ? labels.first : labels.second;
@@ -188,8 +192,9 @@ function getCurrentSemesterLabel(labels: {
 function getBestAvailableSemester(
   semesters: string[],
   labels: Parameters<typeof getCurrentSemesterLabel>[0],
+  semesterInfo: readonly SemesterInfo[],
 ): string {
-  const preferred = getCurrentSemesterLabel(labels);
+  const preferred = getCurrentSemesterLabel(labels, semesterInfo);
   return semesters.find((s) => s.includes(preferred)) ?? semesters[0];
 }
 
@@ -250,13 +255,17 @@ const ScheduleSheet = ({
   now: Date;
 }) => {
   const dict = useDictionary();
+  const semesterInfo = useSemesters();
   const localizeData = useLocalizedZhData();
-  const currentSemesterLabel = getCurrentSemesterLabel({
-    first: dict.sports.semester_first,
-    second: dict.sports.semester_second,
-    summer: dict.sports.semester_break,
-    winter: dict.sports.semester_winter_break,
-  });
+  const currentSemesterLabel = getCurrentSemesterLabel(
+    {
+      first: dict.sports.semester_first,
+      second: dict.sports.semester_second,
+      summer: dict.sports.semester_break,
+      winter: dict.sports.semester_winter_break,
+    },
+    semesterInfo,
+  );
   const bestAvailable = getBestAvailableSemester(
     facility.schedules.map((s) => s.semester),
     {
@@ -265,6 +274,7 @@ const ScheduleSheet = ({
       summer: dict.sports.semester_break,
       winter: dict.sports.semester_winter_break,
     },
+    semesterInfo,
   );
   const [selectedSemester, setSelectedSemester] = useState(bestAvailable);
   const [refreshing, setRefreshing] = useState(false);
@@ -423,6 +433,7 @@ const ScheduleSheet = ({
 };
 
 const SportsVenuesPage = () => {
+  const semesterInfo = useSemesters();
   const now = useTime(60_000); // refresh every minute for status badges
   const dict = useDictionary();
   const localizeData = useLocalizedZhData();
@@ -660,6 +671,7 @@ const SportsVenuesPage = () => {
             summer: dict.sports.semester_break,
             winter: dict.sports.semester_winter_break,
           },
+          semesterInfo,
         )
       : null;
     const todaySlots = (() => {
@@ -832,6 +844,7 @@ const SportsVenuesPage = () => {
                 summer: dict.sports.semester_break,
                 winter: dict.sports.semester_winter_break,
               },
+              semesterInfo,
             );
             const schedule = facility.schedules.find(
               (s) => s.semester === currentSemester,

@@ -46,6 +46,7 @@ export interface SyncEnvironment {
 
 export interface SyncResult {
   success: boolean;
+  skipped?: boolean;
   error?: Error;
   stats?: {
     coursesScraped?: number;

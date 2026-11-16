@@ -6,12 +6,22 @@
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs"
+    },
+    "./semester": {
+      "types": "./dist/semester.d.ts",
+      "import": "./dist/semester.mjs"
+    }
+  },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsup src/index.ts --format cjs,esm --dts --clean",
-    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "build": "tsup src/index.ts src/semester.ts --format cjs,esm --dts --clean",
+    "dev": "tsup src/index.ts src/semester.ts --format cjs,esm --dts --watch",
     "test": "bun test src",
     "lint": "eslint src --ext .ts,.tsx --fix",
     "type-check": "tsc --noEmit",

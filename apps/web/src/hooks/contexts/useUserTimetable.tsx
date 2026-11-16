@@ -6,10 +6,11 @@ import {
   useContext,
   useMemo,
   useLayoutEffect,
+  useRef,
 } from "react";
 import { CourseDefinition } from "@/config/supabase";
 import { RawCourseID } from "@/types/courses";
-import { lastSemester, timetableColors } from "@courseweb/shared";
+import { getDefaultSemester, timetableColors } from "@courseweb/shared";
 import { getSemesterFromID } from "@/helpers/courses";
 import {
   getUnresolvedCourseIds,
@@ -33,6 +34,7 @@ import {
   normalizeHiddenCourses,
   pruneHiddenCourses,
 } from "@/helpers/timetableVisibility";
+import { useDefaultSemesterId } from "@/hooks/useSemesters";
 
 export type TimetableFieldKey =
   | "code"
@@ -52,6 +54,7 @@ export const DEFAULT_FIELD_ORDER: TimetableFieldKey[] = [
 ];
 
 export type TimetableFontSize = "xs" | "sm" | "base" | "lg";
+export type TimetableTitleBehavior = "fit" | "1" | "2";
 export type TimetableFontFamily =
   // Chinese-capable options first — slot text is mostly Chinese course names.
   | "system"
@@ -68,6 +71,13 @@ export const TIMETABLE_FONT_SIZE_CLASSES: Record<TimetableFontSize, string> = {
   sm: "text-xs",
   base: "text-sm",
   lg: "text-base",
+};
+
+export const TIMETABLE_FONT_SIZE_PIXELS: Record<TimetableFontSize, number> = {
+  xs: 10,
+  sm: 12,
+  base: 14,
+  lg: 16,
 };
 
 // Traditional Chinese (Taiwan) system faces. No download: PingFang TC on Apple
@@ -92,6 +102,7 @@ export interface TimetableDisplayPreferences {
   align: "left" | "center" | "right";
   verticalAlign: "top" | "center" | "bottom";
   fontSize: TimetableFontSize;
+  titleBehavior: TimetableTitleBehavior;
   fontFamily: TimetableFontFamily;
   display: {
     title: boolean;
@@ -111,6 +122,7 @@ export const DEFAULT_TIMETABLE_DISPLAY_PREFERENCES: TimetableDisplayPreferences 
     align: "center",
     verticalAlign: "top",
     fontSize: "sm",
+    titleBehavior: "fit",
     fontFamily: "system",
     display: {
       title: true,
@@ -124,12 +136,16 @@ export const DEFAULT_TIMETABLE_DISPLAY_PREFERENCES: TimetableDisplayPreferences 
     hiddenCourses: {},
   };
 
-const normalizeTimetableDisplayPreferences = (
+export const normalizeTimetableDisplayPreferences = (
   value: Partial<TimetableDisplayPreferences> | undefined,
 ): TimetableDisplayPreferences => ({
   ...DEFAULT_TIMETABLE_DISPLAY_PREFERENCES,
   ...value,
   fontSize: value?.fontSize ?? DEFAULT_TIMETABLE_DISPLAY_PREFERENCES.fontSize,
+  titleBehavior:
+    value?.titleBehavior === "1" || value?.titleBehavior === "2"
+      ? value.titleBehavior
+      : DEFAULT_TIMETABLE_DISPLAY_PREFERENCES.titleBehavior,
   fontFamily:
     value?.fontFamily ?? DEFAULT_TIMETABLE_DISPLAY_PREFERENCES.fontFamily,
   display: {
@@ -190,7 +206,7 @@ const userTimetableContext = createContext<
   isLoading: true,
   isFetchingCourses: false,
   error: null,
-  semester: lastSemester.id,
+  semester: getDefaultSemester().id,
   isCoursesEmpty: true,
   setSemester: () => {},
   preferences: {
@@ -198,6 +214,7 @@ const userTimetableContext = createContext<
     align: "center",
     verticalAlign: "top",
     fontSize: "sm",
+    titleBehavior: "fit",
     fontFamily: "system",
     display: {
       title: true,
@@ -216,6 +233,7 @@ const userTimetableContext = createContext<
 });
 
 const useUserTimetableProvider = (loadCourse = true) => {
+  const defaultSemesterId = useDefaultSemesterId();
   const [
     courses,
     setStoredCourses,
@@ -332,7 +350,17 @@ const useUserTimetableProvider = (loadCourse = true) => {
     [],
     mergeStringArray,
   );
-  const [semester, setSemester] = useState<string>(lastSemester.id);
+  const [semester, setSemesterState] = useState<string>(defaultSemesterId);
+  const hasManuallySelectedSemester = useRef(false);
+  const setSemester = useCallback((nextSemester: string) => {
+    hasManuallySelectedSemester.current = true;
+    setSemesterState(nextSemester);
+  }, []);
+  useEffect(() => {
+    if (!hasManuallySelectedSemester.current) {
+      setSemesterState(defaultSemesterId);
+    }
+  }, [defaultSemesterId]);
   const setTimetableTheme = useCallback(
     (theme: string) => {
       //if theme updated, remap colors and override all

@@ -861,11 +861,7 @@ describe("generateTimetableIcs – all semesters", () => {
 });
 
 describe("generateTimetableIcs – no-class dates", () => {
-  const noClassDates = new Set([
-    "2026-10-09",
-    "2026-10-26",
-    "2026-11-11",
-  ]);
+  const noClassDates = new Set(["2026-10-09", "2026-10-26", "2026-11-11"]);
 
   it.each([
     ["F3", "EXDATE:20261009T021000Z"],
@@ -921,10 +917,13 @@ describe("generateTimetableIcs – no-class dates", () => {
 describe("semester data", () => {
   it("keeps the Worker mirror equal to the canonical shared table", () => {
     const normalize = (semesters: typeof SEMESTER_INFO) =>
-      semesters.map(({ id, begins, ends }) => ({
+      semesters.map(({ id, year, semester, begins, ends, hasCourses }) => ({
         id,
+        year,
+        semester,
         begins: begins.getTime(),
         ends: ends.getTime(),
+        hasCourses,
       }));
 
     expect(normalize(SEMESTER_INFO)).toEqual(normalize(canonicalSemesterInfo));
