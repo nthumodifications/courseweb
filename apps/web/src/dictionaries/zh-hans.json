@@ -1199,6 +1199,7 @@
     "direction": "方向",
     "realtime_arriving": "进站中",
     "realtime_last_bus": "末班车已过",
+    "realtime_scheduled": "未发车 · 预定 {time}",
     "realtime_not_operating": "今日未营运",
     "realtime_updated_at": "更新于 {time}",
     "realtime_tab": "实时",

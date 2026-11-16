@@ -9,6 +9,7 @@ import {
   getNearestCityBusStop,
   distanceMeters,
   getCityBusTrips,
+  getCityBusNextScheduledTimes,
   getCityBusTimetable,
   getDistinctCityBusDirections,
   getNextCityBusTripIndex,
@@ -314,6 +315,29 @@ describe("city bus ordering", () => {
 });
 
 describe("city bus trip selection", () => {
+  test("fills realtime rows with the next timetabled time later today", () => {
+    const route = makeRoute([
+      schedule({ Monday: true }, ["08:00", "15:45", "16:30"]),
+      schedule({ Tuesday: true }, ["15:30"]),
+      frequencySchedule({ Monday: true }, "06:00", "22:00"),
+    ]);
+    expect(
+      getCityBusNextScheduledTimes(
+        route,
+        "one",
+        new Date("2026-11-16T15:22:00+08:00"),
+      ),
+    ).toEqual({ stop: "15:45" });
+    // Nothing later today: no next-day time is invented for a live row.
+    expect(
+      getCityBusNextScheduledTimes(
+        route,
+        "one",
+        new Date("2026-11-16T17:00:00+08:00"),
+      ),
+    ).toEqual({});
+  });
+
   test("keeps a cross-midnight trip after the same-day departure", () => {
     const route = makeRoute([schedule({ Monday: true }, ["23:50", "25:10"])]);
     const now = new Date("2026-10-05T23:40:00+08:00");

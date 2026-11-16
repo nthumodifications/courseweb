@@ -620,6 +620,40 @@ export function getCityBusTrips(
   return trips.sort((a, b) => a.absoluteMinutes - b.absoluteMinutes);
 }
 
+/**
+ * Next timetabled time at each stop later today. Used to fill realtime rows
+ * that TDX leaves empty (StopStatus 1, "not departed"), so a route whose next
+ * bus has not left yet shows when it will come instead of a blank list.
+ * Only times the timetable gives for that stop are used, never origin times.
+ */
+export function getCityBusNextScheduledTimes(
+  route: CityBusRoute,
+  directionId: string,
+  now: Date,
+): Record<string, string | undefined> {
+  const direction = route.directions.find((item) => item.id === directionId);
+  const clock = taipeiClock(now);
+  const currentMinutes = clockToMinutes(clock.time);
+  if (!direction || currentMinutes === null) return {};
+  const result: Record<string, string | undefined> = {};
+  const best: Record<string, number> = {};
+  for (const schedule of direction.schedules) {
+    if (schedule.kind === "frequency") continue;
+    if (!scheduleRunsOn(schedule, clock.weekday, clock.date)) continue;
+    for (const item of direction.stops) {
+      for (const value of schedule.timesByStop[item.id] ?? []) {
+        const minutes = timeToMinutes(value);
+        if (minutes === null || minutes < currentMinutes) continue;
+        if (best[item.id] === undefined || minutes < best[item.id]) {
+          best[item.id] = minutes;
+          result[item.id] = minutesToTime(minutes);
+        }
+      }
+    }
+  }
+  return result;
+}
+
 export function getNextCityBusTripIndex(trips: CityBusTrip[], now: Date) {
   const currentMinutes = clockToMinutes(taipeiClock(now).time);
   if (currentMinutes === null) return -1;
