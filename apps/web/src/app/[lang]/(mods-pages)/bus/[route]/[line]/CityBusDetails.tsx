@@ -33,6 +33,7 @@ import {
   getCityBusTrips,
   getDistinctCityBusDirections,
   getNextCityBusTripIndex,
+  getCityBusNextScheduledTimes,
   getScheduleStatus,
   mergeCityBusEtaIntoTimeline,
   stepCityBusTrip,
@@ -275,6 +276,7 @@ const CityBusDetails = ({ routeId }: CityBusDetailsProps) => {
   const nearest = location.position
     ? getNearestCityBusStop(directionStops, location.position)
     : undefined;
+  const scheduledTimes = getCityBusNextScheduledTimes(route, direction.id, now);
   const realtimeTimeline = realtimeData
     ? mergeCityBusEtaIntoTimeline(
         directionStops.map((item) => item.id),
@@ -499,7 +501,16 @@ const CityBusDetails = ({ routeId }: CityBusDetailsProps) => {
               return {
                 id: item.id,
                 station: contentLang === "zh" ? item.nameZh : item.nameEn,
-                time: liveText ?? "",
+                // TDX leaves stops blank before a bus departs; show the
+                // timetable instead so the row still says when one comes.
+                time:
+                  liveText ??
+                  (scheduledTimes[item.id]
+                    ? dict.bus.realtime_scheduled.replace(
+                        "{time}",
+                        scheduledTimes[item.id] ?? "",
+                      )
+                    : ""),
                 state:
                   live?.state === "at_station"
                     ? BusStationState.AT_STATION

@@ -1199,6 +1199,7 @@
     "direction": "Direction",
     "realtime_arriving": "Arriving",
     "realtime_last_bus": "Last bus passed",
+    "realtime_scheduled": "Sched. {time}",
     "realtime_not_operating": "Not in service today",
     "realtime_updated_at": "Updated {time}",
     "realtime_tab": "Real-time",
