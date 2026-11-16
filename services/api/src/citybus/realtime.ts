@@ -4,10 +4,29 @@ import type {
   CityBusStaticStop,
   TdxEtaRecord,
   TdxNearStopRecord,
+  TdxPositionRecord,
 } from "./types";
 
-export const CITYBUS_REALTIME_TTL_MS = 20_000;
-export const CITYBUS_REALTIME_STALE_MS = 120_000;
+/**
+ * TDX allows this key only 5 data requests per minute, so live data is fetched
+ * for the whole city at once (3 calls) and shared by every user through one
+ * snapshot row, instead of being fetched per route. 3 calls / 45s = 4 / min.
+ */
+export const CITYBUS_REFRESH_MS = 45_000;
+/** Past this age a snapshot is not shown as live; the client falls back to the timetable. */
+export const CITYBUS_STALE_MS = 150_000;
+/** A bus whose GPS fix is older than this is parked or offline, not a live vehicle. */
+export const CITYBUS_GPS_MAX_AGE_MS = 180_000;
+const LEASE_MS = 20_000;
+const BACKOFF_MS = 60_000;
+const CITY_KEY = "city:Hsinchu";
+
+export type CityBusRealtimeReason =
+  | "ok"
+  | "not_configured"
+  | "unsupported"
+  | "unavailable"
+  | "stale";
 
 export interface CityBusRealtimeStop {
   stopId: string;
@@ -24,25 +43,64 @@ export interface CityBusRealtimeBus {
   event: string | number | null;
 }
 
+export interface CityBusVehicle {
+  plate: string;
+  lat: number;
+  lon: number;
+  speed: number | null;
+  azimuth: number | null;
+  gpsAt: string;
+  busStatus: number | null;
+  /** The stop this bus most recently reported near, when known. */
+  stopId: string | null;
+}
+
 export interface CityBusEtaResponse {
   routeId: string;
   directionId: string;
   stops: CityBusRealtimeStop[];
   buses: CityBusRealtimeBus[];
+  vehicles: CityBusVehicle[];
   updatedAt: string | null;
+  /** When the server last pulled this data from TDX. */
+  fetchedAt: string | null;
   realtime: boolean;
+  reason: CityBusRealtimeReason;
 }
 
 export interface CityBusSnapshot {
   eta: TdxEtaRecord[];
   nearStop: TdxNearStopRecord[];
+  positions: TdxPositionRecord[];
   updatedAt: string | null;
   fetchedAt: number;
 }
 
-interface CityBusBindings {
+export interface CityBusBindings {
   TDX_CLIENT_ID?: string;
   TDX_CLIENT_SECRET?: string;
+  DB?: D1Like;
+}
+
+export interface D1Like {
+  prepare(query: string): {
+    bind(...values: unknown[]): {
+      first<T = unknown>(): Promise<T | null>;
+      run(): Promise<{ meta?: { changes?: number } }>;
+    };
+  };
+}
+
+interface SnapshotRow {
+  snapshot: CityBusSnapshot | undefined;
+  leaseUntil: number;
+}
+
+interface SnapshotStore {
+  read(): Promise<SnapshotRow | undefined>;
+  acquire(now: number): Promise<boolean>;
+  write(snapshot: CityBusSnapshot): Promise<void>;
+  backoff(until: number): Promise<void>;
 }
 
 interface CacheLike {
@@ -53,10 +111,21 @@ interface CacheLike {
 const TDX_BASE_URL = "https://tdx.transportdata.tw/api/basic/v2/Bus";
 const TDX_TOKEN_URL =
   "https://tdx.transportdata.tw/auth/realms/TDXConnect/protocol/openid-connect/token";
-const memorySnapshots = new Map<string, CityBusSnapshot>();
-const snapshotFlights = new Map<string, Promise<CityBusSnapshot | undefined>>();
+
+// $select keeps the stored snapshot well under D1's 2 MB row limit.
+const ETA_SELECT =
+  "PlateNumb,StopUID,StopID,RouteUID,SubRouteUID,Direction,EstimateTime,StopCountDown,StopStatus,IsLastBus,NextBusTime,SrcUpdateTime,UpdateTime,DataTime";
+const NEAR_STOP_SELECT =
+  "PlateNumb,RouteUID,SubRouteUID,Direction,StopUID,StopID,StopSequence,A2EventType,BusStatus,GPSTime,UpdateTime";
+const POSITION_SELECT =
+  "PlateNumb,RouteUID,SubRouteUID,Direction,BusPosition,Speed,Azimuth,DutyStatus,BusStatus,GPSTime,UpdateTime";
+
+const memoryStoreState: { row: SnapshotRow } = {
+  row: { snapshot: undefined, leaseUntil: 0 },
+};
 let memoryToken: { accessToken: string; expiresAt: number } | undefined;
 let tokenFlight: Promise<string | undefined> | undefined;
+let refreshFlight: Promise<CityBusSnapshot | undefined> | undefined;
 
 function getCache() {
   return (
@@ -66,68 +135,112 @@ function getCache() {
   ).caches?.default;
 }
 
-function routeCacheKey(route: CityBusStaticRoute) {
-  return new Request(
-    `https://nthumods.internal/citybus/realtime/${encodeURIComponent(route.id)}`,
-  );
-}
-
 const tokenCacheKey = new Request(
   "https://nthumods.internal/citybus/tdx-token",
 );
 
-function timestampFor(record: TdxEtaRecord | TdxNearStopRecord) {
-  return (
-    record.SrcUpdateTime ?? record.UpdateTime ?? record.DataTime ?? undefined
-  );
+function memoryStore(): SnapshotStore {
+  return {
+    async read() {
+      return memoryStoreState.row;
+    },
+    async acquire(now) {
+      if (memoryStoreState.row.leaseUntil > now) return false;
+      memoryStoreState.row.leaseUntil = now + LEASE_MS;
+      return true;
+    },
+    async write(snapshot) {
+      memoryStoreState.row = {
+        snapshot,
+        leaseUntil: snapshot.fetchedAt + CITYBUS_REFRESH_MS,
+      };
+    },
+    async backoff(until) {
+      memoryStoreState.row.leaseUntil = until;
+    },
+  };
 }
 
-function latestTimestamp(records: Array<TdxEtaRecord | TdxNearStopRecord>) {
+function d1Store(db: D1Like): SnapshotStore {
+  return {
+    async read() {
+      const row = await db
+        .prepare(
+          'SELECT "payload", "leaseUntil" FROM "CityBusSnapshot" WHERE "key" = ?',
+        )
+        .bind(CITY_KEY)
+        .first<{ payload: string; leaseUntil: number }>();
+      if (!row) return undefined;
+      let snapshot: CityBusSnapshot | undefined;
+      try {
+        snapshot = row.payload
+          ? (JSON.parse(row.payload) as CityBusSnapshot)
+          : undefined;
+      } catch {
+        snapshot = undefined;
+      }
+      return { snapshot, leaseUntil: row.leaseUntil };
+    },
+    async acquire(now) {
+      await db
+        .prepare(
+          'INSERT OR IGNORE INTO "CityBusSnapshot" ("key", "payload", "fetchedAt", "leaseUntil") VALUES (?, \'\', 0, 0)',
+        )
+        .bind(CITY_KEY)
+        .run();
+      // The WHERE clause makes this an atomic compare-and-set across isolates.
+      const result = await db
+        .prepare(
+          'UPDATE "CityBusSnapshot" SET "leaseUntil" = ? WHERE "key" = ? AND "leaseUntil" <= ?',
+        )
+        .bind(now + LEASE_MS, CITY_KEY, now)
+        .run();
+      return (result.meta?.changes ?? 0) > 0;
+    },
+    async write(snapshot) {
+      await db
+        .prepare(
+          'UPDATE "CityBusSnapshot" SET "payload" = ?, "fetchedAt" = ?, "leaseUntil" = ? WHERE "key" = ?',
+        )
+        .bind(
+          JSON.stringify(snapshot),
+          snapshot.fetchedAt,
+          snapshot.fetchedAt + CITYBUS_REFRESH_MS,
+          CITY_KEY,
+        )
+        .run();
+    },
+    async backoff(until) {
+      await db
+        .prepare(
+          'UPDATE "CityBusSnapshot" SET "leaseUntil" = ? WHERE "key" = ?',
+        )
+        .bind(until, CITY_KEY)
+        .run();
+    },
+  };
+}
+
+function storeFor(env: CityBusBindings) {
+  return env.DB ? d1Store(env.DB) : memoryStore();
+}
+
+function timestampFor(
+  record: TdxEtaRecord | TdxNearStopRecord | TdxPositionRecord,
+) {
+  const value = record as TdxEtaRecord & TdxPositionRecord;
+  return value.SrcUpdateTime ?? value.UpdateTime ?? value.DataTime ?? undefined;
+}
+
+function latestTimestamp(
+  records: Array<TdxEtaRecord | TdxNearStopRecord | TdxPositionRecord>,
+) {
   return (
     records
       .map(timestampFor)
       .filter((value): value is string => Boolean(value))
       .sort((a, b) => Date.parse(b) - Date.parse(a))[0] ?? null
   );
-}
-
-async function readCachedSnapshot(route: CityBusStaticRoute) {
-  const memory = memorySnapshots.get(route.id);
-  const cache = getCache();
-  const cachedResponse = cache
-    ? await cache.match(routeCacheKey(route)).catch(() => undefined)
-    : undefined;
-  let cached: CityBusSnapshot | undefined;
-  if (cachedResponse) {
-    try {
-      cached = (await cachedResponse.json()) as CityBusSnapshot;
-    } catch {
-      cached = undefined;
-    }
-  }
-  if (!memory) return cached;
-  if (!cached) return memory;
-  return cached.fetchedAt >= memory.fetchedAt ? cached : memory;
-}
-
-async function writeCachedSnapshot(
-  route: CityBusStaticRoute,
-  snapshot: CityBusSnapshot,
-) {
-  memorySnapshots.set(route.id, snapshot);
-  const cache = getCache();
-  if (!cache) return;
-  await cache
-    .put(
-      routeCacheKey(route),
-      new Response(JSON.stringify(snapshot), {
-        headers: {
-          "Content-Type": "application/json",
-          "Cache-Control": "public, max-age=20, stale-if-error=100",
-        },
-      }),
-    )
-    .catch(() => undefined);
 }
 
 async function readCachedToken() {
@@ -194,7 +307,10 @@ export async function getTdxAccessToken(env: CityBusBindings = {}) {
           client_secret: env.TDX_CLIENT_SECRET!,
         }),
       });
-      if (!response.ok) return undefined;
+      if (!response.ok) {
+        console.warn(`TDX token request failed: ${response.status}`);
+        return undefined;
+      }
       const token = (await response.json()) as {
         access_token?: string;
         expires_in?: number;
@@ -214,72 +330,98 @@ export async function getTdxAccessToken(env: CityBusBindings = {}) {
   return tokenFlight;
 }
 
-function tdxPath(route: CityBusStaticRoute, resource: string) {
-  const scope = route.source === "city" ? "City/Hsinchu" : "InterCity";
-  return `${TDX_BASE_URL}/${resource}/${scope}/${encodeURIComponent(route.tdxRouteName)}?$format=JSON`;
-}
-
-async function fetchJson<T>(url: string, token: string) {
+async function fetchTdx<T>(resource: string, select: string, token: string) {
+  const url = `${TDX_BASE_URL}/${resource}/City/Hsinchu?$select=${select}&$format=JSON`;
   const response = await fetch(url, {
     headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
   });
-  if (!response.ok) return undefined;
-  return (await response.json()) as T;
+  if (!response.ok) {
+    // 429 means the 5/min TDX quota is exhausted; the caller backs off.
+    throw new Error(`TDX ${resource} failed: ${response.status}`);
+  }
+  return (await response.json()) as T[];
 }
 
-async function fetchSnapshot(
-  route: CityBusStaticRoute,
-  token: string,
+async function fetchCitySnapshot(
+  env: CityBusBindings,
 ): Promise<CityBusSnapshot> {
-  const etaResponse = await fetchJson<TdxEtaRecord[]>(
-    tdxPath(route, "EstimatedTimeOfArrival"),
-    token,
-  );
-  if (!etaResponse) throw new Error("TDX ETA request failed");
-  const nearStopResponse = await fetchJson<TdxNearStopRecord[]>(
-    tdxPath(route, "RealTimeNearStop"),
-    token,
-  );
-  if (!nearStopResponse) throw new Error("TDX near-stop request failed");
-  const records = [...etaResponse, ...(nearStopResponse ?? [])];
+  const token = await getTdxAccessToken(env);
+  if (!token) throw new Error("TDX token unavailable");
+  const [eta, nearStop, positions] = await Promise.all([
+    fetchTdx<TdxEtaRecord>("EstimatedTimeOfArrival", ETA_SELECT, token),
+    fetchTdx<TdxNearStopRecord>("RealTimeNearStop", NEAR_STOP_SELECT, token),
+    fetchTdx<TdxPositionRecord>("RealTimeByFrequency", POSITION_SELECT, token),
+  ]);
   return {
-    eta: etaResponse,
-    nearStop: nearStopResponse ?? [],
-    updatedAt: latestTimestamp(records),
+    eta,
+    nearStop,
+    positions,
+    updatedAt: latestTimestamp([...eta, ...nearStop, ...positions]),
     fetchedAt: Date.now(),
   };
 }
 
-export async function getCityBusRealtimeSnapshot(
-  route: CityBusStaticRoute,
-  env: CityBusBindings = {},
-) {
-  if (!env.TDX_CLIENT_ID || !env.TDX_CLIENT_SECRET) return undefined;
-  const now = Date.now();
-  const cached = await readCachedSnapshot(route);
-  if (cached && now - cached.fetchedAt < CITYBUS_REALTIME_TTL_MS) {
-    memorySnapshots.set(route.id, cached);
-    return cached;
+/**
+ * Pulls a fresh city snapshot if (and only if) this caller wins the lease, so
+ * no matter how many isolates or users ask, TDX sees one refresh per interval.
+ */
+async function refreshCitySnapshot(env: CityBusBindings, now: number) {
+  const store = storeFor(env);
+  try {
+    if (!(await store.acquire(now))) return undefined;
+  } catch (error) {
+    console.warn("City bus snapshot lease failed", error);
+    return undefined;
   }
+  try {
+    const snapshot = await fetchCitySnapshot(env);
+    await store.write(snapshot);
+    return snapshot;
+  } catch (error) {
+    console.warn("City bus refresh failed", error);
+    await store.backoff(Date.now() + BACKOFF_MS).catch(() => undefined);
+    return undefined;
+  }
+}
 
-  const flight = snapshotFlights.get(route.id);
-  if (flight) return flight;
-  const next = (async () => {
-    try {
-      const token = await getTdxAccessToken(env);
-      if (!token) return undefined;
-      const snapshot = await fetchSnapshot(route, token);
-      await writeCachedSnapshot(route, snapshot);
-      return snapshot;
-    } catch {
-      const stale = await readCachedSnapshot(route);
-      return stale && Date.now() - stale.fetchedAt < CITYBUS_REALTIME_STALE_MS
-        ? stale
-        : undefined;
+export interface CityBusRealtimeResult {
+  snapshot: CityBusSnapshot | undefined;
+  reason: CityBusRealtimeReason;
+}
+
+export async function getCityBusRealtimeSnapshot(
+  env: CityBusBindings = {},
+  ctx?: { waitUntil(promise: Promise<unknown>): void },
+): Promise<CityBusRealtimeResult> {
+  if (!env.TDX_CLIENT_ID || !env.TDX_CLIENT_SECRET)
+    return { snapshot: undefined, reason: "not_configured" };
+  const now = Date.now();
+  let row: SnapshotRow | undefined;
+  try {
+    row = await storeFor(env).read();
+  } catch (error) {
+    console.warn("City bus snapshot read failed", error);
+  }
+  const cached = row?.snapshot;
+  const age = cached ? now - cached.fetchedAt : Number.POSITIVE_INFINITY;
+
+  let current = cached;
+  if (age >= CITYBUS_REFRESH_MS) {
+    refreshFlight ??= refreshCitySnapshot(env, now).finally(() => {
+      refreshFlight = undefined;
+    });
+    const flight = refreshFlight;
+    if (cached && ctx) {
+      // Serve what we have now; the next request sees the refreshed row.
+      ctx.waitUntil(flight);
+    } else {
+      current = (await flight) ?? cached;
     }
-  })().finally(() => snapshotFlights.delete(route.id));
-  snapshotFlights.set(route.id, next);
-  return next;
+  }
+  if (!current) return { snapshot: undefined, reason: "unavailable" };
+  if (Date.now() - current.fetchedAt > CITYBUS_STALE_MS)
+    return { snapshot: undefined, reason: "stale" };
+  return { snapshot: current, reason: "ok" };
 }
 
 function stopKey(value: string | undefined) {
@@ -297,19 +439,14 @@ function recordMatchesStop(
   );
 }
 
-function recordsForDirection(
-  records: TdxEtaRecord[] | TdxNearStopRecord[],
-  route: CityBusStaticRoute,
+function recordsForDirection<T extends { SubRouteUID?: string }>(
+  records: T[],
   direction: CityBusStaticDirection,
 ) {
-  const exact = records.filter((record) => record.SubRouteUID === direction.id);
-  if (exact.length > 0) return exact;
-  const directionValue = /(?:-1|2)$/.test(direction.id) ? 1 : 0;
-  return records.filter(
-    (record) =>
-      (!record.SubRouteUID || record.SubRouteUID === route.tdxRouteUid) &&
-      record.Direction === directionValue,
-  );
+  // The snapshot covers the whole city and a route can have several variants
+  // (e.g. 23 and 23 A1) that share RouteUID and Direction, so only an exact
+  // SubRouteUID match is safe; looser matching shows another variant's buses.
+  return records.filter((record) => record.SubRouteUID === direction.id);
 }
 
 function usableEta(record: TdxEtaRecord) {
@@ -353,15 +490,55 @@ function stopIdForRecord(
   return stops.find((stop) => recordMatchesStop(record, stop))?.id;
 }
 
+// BusStatus 90, 98 and 99 are non-revenue states (not operating, off duty).
+const HIDDEN_BUS_STATUS = new Set([90, 98, 99]);
+
+function buildVehicles(
+  positions: TdxPositionRecord[],
+  nearStop: TdxNearStopRecord[],
+  stops: CityBusStaticStop[],
+  now: number,
+): CityBusVehicle[] {
+  const vehicles: CityBusVehicle[] = [];
+  for (const record of positions) {
+    const id = plate(record.PlateNumb);
+    const lat = record.BusPosition?.PositionLat;
+    const lon = record.BusPosition?.PositionLon;
+    if (!id || typeof lat !== "number" || typeof lon !== "number") continue;
+    if (!record.GPSTime) continue;
+    const gpsAge = now - Date.parse(record.GPSTime);
+    if (!Number.isFinite(gpsAge) || gpsAge > CITYBUS_GPS_MAX_AGE_MS) continue;
+    if (record.DutyStatus === 2) continue;
+    if (
+      record.BusStatus !== undefined &&
+      HIDDEN_BUS_STATUS.has(record.BusStatus)
+    )
+      continue;
+    const near = nearStop.find((item) => plate(item.PlateNumb) === id);
+    vehicles.push({
+      plate: id,
+      lat,
+      lon,
+      speed: record.Speed ?? null,
+      azimuth: record.Azimuth ?? null,
+      gpsAt: record.GPSTime,
+      busStatus: record.BusStatus ?? null,
+      stopId: near ? (stopIdForRecord(near, stops) ?? null) : null,
+    });
+  }
+  return vehicles;
+}
+
 export function buildCityBusEtaResponse(
   route: CityBusStaticRoute,
   direction: CityBusStaticDirection,
   snapshot: CityBusSnapshot,
+  now = Date.now(),
 ): CityBusEtaResponse {
-  const etaRecords = recordsForDirection(snapshot.eta, route, direction);
-  const nearStopRecords = recordsForDirection(
-    snapshot.nearStop,
-    route,
+  const etaRecords = recordsForDirection(snapshot.eta, direction);
+  const nearStopRecords = recordsForDirection(snapshot.nearStop, direction);
+  const positionRecords = recordsForDirection(
+    snapshot.positions ?? [],
     direction,
   );
   const stops = direction.stops.map((stop) => {
@@ -394,14 +571,22 @@ export function buildCityBusEtaResponse(
     directionId: direction.id,
     stops,
     buses,
+    vehicles: buildVehicles(
+      positionRecords,
+      nearStopRecords,
+      direction.stops,
+      now,
+    ),
     updatedAt: snapshot.updatedAt,
+    fetchedAt: new Date(snapshot.fetchedAt).toISOString(),
     realtime: true,
+    reason: "ok",
   };
 }
 
 export function resetCityBusRealtimeCacheForTests() {
-  memorySnapshots.clear();
-  snapshotFlights.clear();
+  memoryStoreState.row = { snapshot: undefined, leaseUntil: 0 };
   memoryToken = undefined;
   tokenFlight = undefined;
+  refreshFlight = undefined;
 }

@@ -1109,7 +1109,19 @@
     "realtime_not_operating": "今日未营运",
     "realtime_updated_at": "更新于 {time}",
     "realtime_tab": "实时",
-    "timetable_tab": "时刻表"
+    "timetable_tab": "时刻表",
+    "map_tab": "地图",
+    "locate_me": "寻找最近站牌",
+    "nearest_stop": "最近站牌：{stop}・{distance}",
+    "location_denied": "未打开定位权限，无法显示最近站牌。",
+    "location_unavailable": "无法取得你的位置。",
+    "map_buses": "{count} 辆行驶中・{time} 更新",
+    "map_no_buses": "此路线目前没有行驶中的公车",
+    "map_live_unavailable": "实时公车位置暂时无法使用。",
+    "bus_marker": "{plate}・{time} 更新",
+    "fallback_unavailable": "实时公车数据暂时无法使用，显示预定时刻表。",
+    "fallback_unsupported": "此路线不提供实时动态，显示预定时刻表。",
+    "fallback_no_bus": "此路线目前没有行驶中的公车，显示预定时刻表。"
   },
   "settings": {
     "navigation_aria": "设置导览",

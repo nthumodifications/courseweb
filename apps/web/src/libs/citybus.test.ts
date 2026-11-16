@@ -4,7 +4,10 @@ import {
   formatDepartureCountdown,
   formatDepartureTime,
   formatCityBusRealtimeDisplay,
+  getCityBusFallbackReason,
   getCityBusRealtimeDisplay,
+  getNearestCityBusStop,
+  distanceMeters,
   getCityBusTrips,
   getCityBusTimetable,
   getDistinctCityBusDirections,
@@ -347,5 +350,70 @@ describe("city bus trip selection", () => {
     expect(trip?.kind).toBe("frequency");
     expect(trip?.departureTime).toBe("06:00–22:00");
     expect(trip?.timesByStop).toEqual({});
+  });
+});
+
+describe("city bus map helpers", () => {
+  const stops = [
+    { id: "a", position: { lat: 24.8, lon: 120.97 } },
+    { id: "b", position: { lat: 24.79, lon: 120.99 } },
+    { id: "no-position" },
+  ];
+
+  test("measures distances in metres", () => {
+    // 0.01 degrees of latitude is about 1.1 km.
+    const meters = distanceMeters(
+      { lat: 24.8, lon: 120.97 },
+      { lat: 24.81, lon: 120.97 },
+    );
+    expect(meters).toBeGreaterThan(1090);
+    expect(meters).toBeLessThan(1130);
+  });
+
+  test("picks the nearest stop and skips stops without coordinates", () => {
+    const nearest = getNearestCityBusStop(stops, {
+      lat: 24.7905,
+      lon: 120.989,
+    });
+    expect(nearest?.stop.id).toBe("b");
+    expect(nearest?.meters).toBeLessThan(200);
+    expect(getNearestCityBusStop([{ id: "x" }], { lat: 0, lon: 0 })).toBe(
+      undefined,
+    );
+  });
+
+  test("explains why the timetable is shown instead of live data", () => {
+    const base = {
+      routeId: "83",
+      directionId: "d",
+      stops: [],
+      buses: [],
+      vehicles: [],
+      updatedAt: null,
+      fetchedAt: null,
+    };
+    expect(getCityBusFallbackReason(undefined, false)).toBeUndefined();
+    expect(
+      getCityBusFallbackReason({ ...base, realtime: true, reason: "ok" }, true),
+    ).toBeUndefined();
+    expect(getCityBusFallbackReason(null, false)).toBe("unavailable");
+    expect(
+      getCityBusFallbackReason(
+        { ...base, realtime: false, reason: "unsupported" },
+        false,
+      ),
+    ).toBe("unsupported");
+    expect(
+      getCityBusFallbackReason(
+        { ...base, realtime: false, reason: "stale" },
+        false,
+      ),
+    ).toBe("unavailable");
+    expect(
+      getCityBusFallbackReason(
+        { ...base, realtime: true, reason: "ok" },
+        false,
+      ),
+    ).toBe("no_bus_running");
   });
 });

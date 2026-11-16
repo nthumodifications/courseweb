@@ -1109,7 +1109,19 @@
     "realtime_not_operating": "今日未營運",
     "realtime_updated_at": "更新於 {time}",
     "realtime_tab": "即時",
-    "timetable_tab": "時刻表"
+    "timetable_tab": "時刻表",
+    "map_tab": "地圖",
+    "locate_me": "尋找最近站牌",
+    "nearest_stop": "最近站牌：{stop}・{distance}",
+    "location_denied": "未開啟定位權限，無法顯示最近站牌。",
+    "location_unavailable": "無法取得你的位置。",
+    "map_buses": "{count} 輛行駛中・{time} 更新",
+    "map_no_buses": "此路線目前沒有行駛中的公車",
+    "map_live_unavailable": "即時公車位置暫時無法使用。",
+    "bus_marker": "{plate}・{time} 更新",
+    "fallback_unavailable": "即時公車資料暫時無法使用，顯示預定時刻表。",
+    "fallback_unsupported": "此路線不提供即時動態，顯示預定時刻表。",
+    "fallback_no_bus": "此路線目前沒有行駛中的公車，顯示預定時刻表。"
   },
   "settings": {
     "navigation_aria": "設定導覽",
