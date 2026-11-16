@@ -126,13 +126,14 @@ describe("BusListingItem keyboard access", () => {
     });
 
     const row = container.querySelector('[role="button"]');
-    if (!row) {
-      throw new Error(
-        `DEBUG no row; html=${container.innerHTML.slice(0, 300)}; errors=${renderErrors
-          .map((e) => (e instanceof Error ? `${e.message}\n${e.stack}` : String(e)))
-          .join(" || ")}`,
-      );
-    }
+    // React swallows render errors in a root; report them instead of a bare null.
+    expect({
+      rendered: row !== null,
+      renderErrors: renderErrors.map(String),
+    }).toEqual({
+      rendered: true,
+      renderErrors: [],
+    });
     const clickableRow = row as HTMLDivElement;
     const pinButton = container.querySelector("button[aria-label=Pin]");
     expect(pinButton).not.toBeNull();
