@@ -305,37 +305,74 @@ const overlapsForLayout = (
  * Retains the course row overlap behaviour and extends it to real-time custom
  * slots. Every overlapping block receives a column, so both blocks remain
  * readable and clickable even when a custom item crosses a course.
+ *
+ * Blocks are grouped into clusters of transitively overlapping blocks (e.g.
+ * n5 + 678 chained by an X-class 567). Every block in a cluster shares the
+ * same `fraction` (the cluster's column count), so widths and offsets line up;
+ * columns are assigned greedily in start-time order, which uses the minimum
+ * number of columns for interval layouts.
  */
-export const addTimetableFractions = (data: CourseTimeslotData[]) =>
-  data.reduce(
-    (result, current, index) => {
-      const overlapping = data.filter((candidate) =>
-        overlapsForLayout(current, candidate),
-      );
-      const usedColumns = new Set<number>();
-      result.forEach((previous, previousIndex) => {
-        if (previousIndex < index && overlapsForLayout(current, previous)) {
-          usedColumns.add(previous.fractionIndex);
-        }
-      });
-      let fractionIndex = 1;
-      while (usedColumns.has(fractionIndex)) fractionIndex += 1;
-      result.push({
-        ...current,
-        fraction: Math.max(1, overlapping.length),
-        fractionIndex,
-        timeSlots: courseTimeSlotKeys(current),
-      });
-      return result;
-    },
-    [] as Array<
-      CourseTimeslotData & {
-        fraction: number;
-        fractionIndex: number;
-        timeSlots: string[];
+export const addTimetableFractions = (data: CourseTimeslotData[]) => {
+  const ranges = data.map(getTimetableDataTimeRange);
+
+  const clusterOf = data.map((_, index) => index);
+  const findCluster = (index: number): number => {
+    while (clusterOf[index] !== index) {
+      clusterOf[index] = clusterOf[clusterOf[index]!]!;
+      index = clusterOf[index]!;
+    }
+    return index;
+  };
+  data.forEach((left, leftIndex) => {
+    for (
+      let rightIndex = leftIndex + 1;
+      rightIndex < data.length;
+      rightIndex++
+    ) {
+      if (overlapsForLayout(left, data[rightIndex]!)) {
+        clusterOf[findCluster(rightIndex)] = findCluster(leftIndex);
       }
-    >,
-  );
+    }
+  });
+
+  const order = data
+    .map((_, index) => index)
+    .sort(
+      (a, b) =>
+        ranges[a]!.start - ranges[b]!.start ||
+        ranges[b]!.end - ranges[a]!.end ||
+        a - b,
+    );
+
+  const fractionIndexes: number[] = [];
+  const clusterColumns = new Map<number, number>();
+  order.forEach((index) => {
+    const usedColumns = new Set<number>();
+    order.forEach((placed) => {
+      if (
+        fractionIndexes[placed] !== undefined &&
+        overlapsForLayout(data[index]!, data[placed]!)
+      ) {
+        usedColumns.add(fractionIndexes[placed]!);
+      }
+    });
+    let fractionIndex = 1;
+    while (usedColumns.has(fractionIndex)) fractionIndex += 1;
+    fractionIndexes[index] = fractionIndex;
+    const cluster = findCluster(index);
+    clusterColumns.set(
+      cluster,
+      Math.max(clusterColumns.get(cluster) ?? 1, fractionIndex),
+    );
+  });
+
+  return data.map((current, index) => ({
+    ...current,
+    fraction: clusterColumns.get(findCluster(index)) ?? 1,
+    fractionIndex: fractionIndexes[index] ?? 1,
+    timeSlots: courseTimeSlotKeys(current),
+  }));
+};
 
 const timetableDayCodes = "MTWRFSU";
 const getScheduleTimeIndex = ({ time }: { time: string }) =>

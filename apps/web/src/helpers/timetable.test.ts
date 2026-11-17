@@ -308,6 +308,55 @@ describe("course timetable slot parsing", () => {
     ]);
   });
 
+  const layoutOf = (...times: string[]) =>
+    addTimetableFractions(
+      createTimetableFromCourses(
+        times.map((time, index) => ({
+          ...courseWithTimes([time]),
+          raw_id: `11510-CS 1010 ${index + 1}`,
+        })),
+      ),
+    ).map(({ startTime, endTime, fraction, fractionIndex }) => ({
+      startTime,
+      endTime,
+      fraction,
+      fractionIndex,
+    }));
+
+  test("chained X-class overlaps share one column count", () => {
+    // n5 + 678 back to back, with an X-class 567 bridging both.
+    const result = layoutOf("RnR5", "R6R7R8", "R5R6R7");
+
+    expect(new Set(result.map(({ fraction }) => fraction))).toEqual(
+      new Set([2]),
+    );
+    const [n5, s678, x567] = result;
+    expect(n5!.fractionIndex).toBe(s678!.fractionIndex);
+    expect(x567!.fractionIndex).not.toBe(n5!.fractionIndex);
+  });
+
+  test("column assignment does not depend on input order", () => {
+    // A single period, a 678 X-class, then a 789 course on the same day.
+    for (const times of [
+      ["W6", "W7W8W9", "W6W7W8"],
+      ["W6W7W8", "W7W8W9", "W6"],
+      ["W7W8W9", "W6W7W8", "W6"],
+    ]) {
+      const result = layoutOf(...times);
+      expect(result.every(({ fraction }) => fraction === 2)).toBe(true);
+      const column = Object.fromEntries(
+        times.map((time, index) => [time, result[index]!.fractionIndex]),
+      );
+      expect(column["W6"]).toBe(column["W7W8W9"]);
+      expect(column["W6W7W8"]).not.toBe(column["W6"]);
+    }
+  });
+
+  test("non-overlapping blocks on the same day keep full width", () => {
+    const result = layoutOf("M1M2", "M3M4", "T1T2T3T4", "T2T3");
+    expect(result.map(({ fraction }) => fraction)).toEqual([1, 1, 2, 2]);
+  });
+
   test("maps freeform and legacy custom items into timetable slots", () => {
     const freeform = {
       id: "seminar",
