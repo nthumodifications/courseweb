@@ -456,4 +456,68 @@ describe("city bus data", () => {
     expect(await getTdxAccessToken(env)).toBe("fixture-token");
     expect(tokenCalls).toBe(1);
   });
+
+  test("shares one TDX token across isolates through D1", async () => {
+    // Production saw "TDX token request failed: 429" because every new
+    // isolate (and every data centre's cache) asked TDX for its own token.
+    const rows = new Map<string, { payload: string; leaseUntil: number }>();
+    const db = {
+      prepare(query: string) {
+        return {
+          bind(...values: unknown[]) {
+            return {
+              async first<T>() {
+                return (rows.get(String(values[0])) ?? null) as T | null;
+              },
+              async run() {
+                if (query.startsWith("INSERT OR REPLACE"))
+                  rows.set(String(values[0]), {
+                    payload: String(values[1]),
+                    leaseUntil: Number(values[3]),
+                  });
+                return { meta: { changes: 1 } };
+              },
+            };
+          },
+        };
+      },
+    };
+    let tokenCalls = 0;
+    globalThis.fetch = async () => {
+      tokenCalls += 1;
+      return Response.json({ access_token: "shared", expires_in: 86400 });
+    };
+    const env = {
+      TDX_CLIENT_ID: "client",
+      TDX_CLIENT_SECRET: "secret",
+      DB: db,
+    };
+    expect(await getTdxAccessToken(env)).toBe("shared");
+    // A fresh isolate: no memory token, no edge cache.
+    resetCityBusRealtimeCacheForTests();
+    expect(await getTdxAccessToken(env)).toBe("shared");
+    expect(tokenCalls).toBe(1);
+  });
+
+  test("refreshes in the request when the stored snapshot is too old to show", async () => {
+    const env = { TDX_CLIENT_ID: "client", TDX_CLIENT_SECRET: "secret" };
+    globalThis.fetch = async (input) => {
+      const url = String(input);
+      if (url.includes("/token"))
+        return Response.json({ access_token: "t", expires_in: 1800 });
+      return Response.json(url.includes("EstimatedTime") ? eta83Fixture : []);
+    };
+    const first = await getCityBusRealtimeSnapshot(env);
+    const originalNow = Date.now;
+    const later = first.snapshot!.fetchedAt + 600_000;
+    Date.now = () => later;
+    const pending: Promise<unknown>[] = [];
+    const result = await getCityBusRealtimeSnapshot(env, {
+      waitUntil: (promise) => pending.push(promise),
+    });
+    Date.now = originalNow;
+    expect(result.reason).toBe("ok");
+    expect(result.snapshot!.fetchedAt).toBe(later);
+    expect(pending).toHaveLength(0);
+  });
 });
