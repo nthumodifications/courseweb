@@ -1004,7 +1004,7 @@
     "source_name": "清华通信录"
   },
   "usage_forecast": {
-    "learning": "正在学习这些空间平常有多忙——累积约一周数据后会显示预测。",
+    "learning": "正在学习这些空间平常有多忙——累积约两周（含两个周末）数据后会显示预测。",
     "verdict_quieter": "比平常人少",
     "verdict_usual": "和平常差不多",
     "verdict_busier": "比平常人多",
