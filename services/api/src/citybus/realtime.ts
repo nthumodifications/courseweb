@@ -10,9 +10,11 @@ import type {
 /**
  * TDX allows this key only 5 data requests per minute, so live data is fetched
  * for the whole city at once (3 calls) and shared by every user through one
- * snapshot row, instead of being fetched per route. 3 calls / 45s = 4 / min.
+ * snapshot row, instead of being fetched per route. Refreshes are at least a
+ * minute apart: at 45s two refreshes (6 calls) could land in one TDX minute,
+ * get 429 and push the snapshot towards stale.
  */
-export const CITYBUS_REFRESH_MS = 45_000;
+export const CITYBUS_REFRESH_MS = 60_000;
 /** Past this age a snapshot is not shown as live; the client falls back to the timetable. */
 export const CITYBUS_STALE_MS = 150_000;
 /** A bus whose GPS fix is older than this is parked or offline, not a live vehicle. */
@@ -277,23 +279,54 @@ async function writeCachedToken(token: {
     .catch(() => undefined);
 }
 
+const TOKEN_KEY = "tdx:token";
+
+async function readStoredToken(env: CityBusBindings) {
+  if (!env.DB) return undefined;
+  const row = await env.DB.prepare(
+    'SELECT "payload", "leaseUntil" FROM "CityBusSnapshot" WHERE "key" = ?',
+  )
+    .bind(TOKEN_KEY)
+    .first<{ payload: string; leaseUntil: number }>();
+  if (!row?.payload) return undefined;
+  return { accessToken: row.payload, expiresAt: row.leaseUntil };
+}
+
+async function writeStoredToken(
+  env: CityBusBindings,
+  token: { accessToken: string; expiresAt: number },
+) {
+  if (!env.DB) return;
+  await env.DB.prepare(
+    'INSERT OR REPLACE INTO "CityBusSnapshot" ("key", "payload", "fetchedAt", "leaseUntil") VALUES (?, ?, ?, ?)',
+  )
+    .bind(TOKEN_KEY, token.accessToken, Date.now(), token.expiresAt)
+    .run();
+}
+
 export async function getTdxAccessToken(env: CityBusBindings = {}) {
   if (!env.TDX_CLIENT_ID || !env.TDX_CLIENT_SECRET) return undefined;
   const usableBefore = Date.now() + 60_000;
   if (memoryToken && memoryToken.expiresAt > usableBefore)
     return memoryToken.accessToken;
 
-  const cached = await readCachedToken();
-  if (
-    cached?.accessToken &&
-    typeof cached.expiresAt === "number" &&
-    cached.expiresAt > usableBefore
-  ) {
-    memoryToken = {
-      accessToken: cached.accessToken,
-      expiresAt: cached.expiresAt,
-    };
-    return cached.accessToken;
+  // The edge cache is per data centre and isolates come and go, so the token
+  // is also kept in D1. Every isolate then shares one token for its whole
+  // lifetime (TDX issues ~24h tokens) instead of each asking for its own,
+  // which TDX's token endpoint answers with 429 on Cloudflare's shared IPs.
+  for (const read of [readCachedToken, () => readStoredToken(env)]) {
+    const cached = await read().catch(() => undefined);
+    if (
+      cached?.accessToken &&
+      typeof cached.expiresAt === "number" &&
+      cached.expiresAt > usableBefore
+    ) {
+      memoryToken = {
+        accessToken: cached.accessToken,
+        expiresAt: cached.expiresAt,
+      };
+      return cached.accessToken;
+    }
   }
 
   if (!tokenFlight) {
@@ -321,7 +354,12 @@ export async function getTdxAccessToken(env: CityBusBindings = {}) {
         expiresAt: Date.now() + Math.max(60, token.expires_in ?? 1800) * 1000,
       };
       memoryToken = value;
-      await writeCachedToken(value);
+      await Promise.all([
+        writeCachedToken(value),
+        writeStoredToken(env, value).catch((error) =>
+          console.warn("Storing TDX token failed", error),
+        ),
+      ]);
       return value.accessToken;
     })().finally(() => {
       tokenFlight = undefined;
@@ -411,8 +449,10 @@ export async function getCityBusRealtimeSnapshot(
       refreshFlight = undefined;
     });
     const flight = refreshFlight;
-    if (cached && ctx) {
+    if (cached && ctx && age < CITYBUS_STALE_MS) {
       // Serve what we have now; the next request sees the refreshed row.
+      // A snapshot already too old to show is waited on instead, so the
+      // first visitor after a quiet spell gets live data, not "stale".
       ctx.waitUntil(flight);
     } else {
       current = (await flight) ?? cached;
