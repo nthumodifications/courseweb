@@ -272,7 +272,10 @@ async function writeCachedToken(token: {
       new Response(JSON.stringify(token), {
         headers: {
           "Content-Type": "application/json",
-          "Cache-Control": "public, max-age=1800",
+          "Cache-Control": `public, max-age=${Math.max(
+            60,
+            Math.floor((token.expiresAt - Date.now()) / 1000),
+          )}`,
         },
       }),
     )
@@ -314,19 +317,28 @@ export async function getTdxAccessToken(env: CityBusBindings = {}) {
   // is also kept in D1. Every isolate then shares one token for its whole
   // lifetime (TDX issues ~24h tokens) instead of each asking for its own,
   // which TDX's token endpoint answers with 429 on Cloudflare's shared IPs.
-  for (const read of [readCachedToken, () => readStoredToken(env)]) {
-    const cached = await read().catch(() => undefined);
-    if (
-      cached?.accessToken &&
-      typeof cached.expiresAt === "number" &&
-      cached.expiresAt > usableBefore
-    ) {
-      memoryToken = {
-        accessToken: cached.accessToken,
-        expiresAt: cached.expiresAt,
-      };
-      return cached.accessToken;
-    }
+  const usable = (
+    token: { accessToken?: string; expiresAt?: number } | undefined,
+  ): token is { accessToken: string; expiresAt: number } =>
+    Boolean(
+      token?.accessToken &&
+        typeof token.expiresAt === "number" &&
+        token.expiresAt > usableBefore,
+    );
+  const stored = await readStoredToken(env).catch(() => undefined);
+  if (usable(stored)) {
+    memoryToken = stored;
+    return stored.accessToken;
+  }
+  const cached = await readCachedToken();
+  if (usable(cached)) {
+    memoryToken = {
+      accessToken: cached.accessToken,
+      expiresAt: cached.expiresAt,
+    };
+    // Share a token this data centre already holds, so others needn't ask TDX.
+    await writeStoredToken(env, memoryToken).catch(() => undefined);
+    return cached.accessToken;
   }
 
   if (!tokenFlight) {

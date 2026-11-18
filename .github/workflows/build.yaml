@@ -170,23 +170,43 @@ jobs:
     needs: [migrate-db]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     environment: production
+    # Two merges in quick succession run two pipelines; one deploy at a time,
+    # and a run whose commit is no longer main's tip skips its deploy below, so
+    # an older commit can never overwrite a newer one (happened 2026-11-18).
+    concurrency:
+      group: deploy-api-production
+      cancel-in-progress: false
     steps:
       # Checkout the repository
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Skip if a newer commit is on main
+        id: tip
+        run: |
+          git fetch --quiet --depth=1 origin main
+          if [ "$(git rev-parse FETCH_HEAD)" = "$GITHUB_SHA" ]; then
+            echo "latest=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::main moved past $GITHUB_SHA; the newer run deploys."
+            echo "latest=false" >> "$GITHUB_OUTPUT"
+          fi
+
       # Setup Bun
       - name: Setup Bun
+        if: steps.tip.outputs.latest == 'true'
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: latest
 
       # Install dependencies
       - name: Install dependencies
+        if: steps.tip.outputs.latest == 'true'
         run: bun install --frozen-lockfile
 
       # Generate Prisma client for API service
       - name: Generate Prisma client
+        if: steps.tip.outputs.latest == 'true'
         run: |
           cd services/api
           bun run prisma:generate
@@ -196,6 +216,7 @@ jobs:
       # then syncs routes and cron triggers. A route or cron sync failure fails
       # the job even if the Worker code was uploaded.
       - name: Deploy API Service
+        if: steps.tip.outputs.latest == 'true'
         working-directory: services/api
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

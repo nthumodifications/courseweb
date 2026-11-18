@@ -497,6 +497,18 @@ describe("city bus data", () => {
     resetCityBusRealtimeCacheForTests();
     expect(await getTdxAccessToken(env)).toBe("shared");
     expect(tokenCalls).toBe(1);
+
+    // A token only this data centre's edge cache holds is copied into D1.
+    rows.clear();
+    resetCityBusRealtimeCacheForTests();
+    const cache = installCache();
+    await cache.put(
+      new Request("https://nthumods.internal/citybus/tdx-token"),
+      Response.json({ accessToken: "edge", expiresAt: Date.now() + 3_600_000 }),
+    );
+    expect(await getTdxAccessToken(env)).toBe("edge");
+    expect(rows.get("tdx:token")?.payload).toBe("edge");
+    expect(tokenCalls).toBe(1);
   });
 
   test("refreshes in the request when the stored snapshot is too old to show", async () => {
