@@ -1004,7 +1004,7 @@
     "source_name": "清華通訊錄"
   },
   "usage_forecast": {
-    "learning": "正在學習這些空間平常有多忙——累積約一週資料後會顯示預測。",
+    "learning": "正在學習這些空間平常有多忙——累積約兩週（含兩個週末）資料後會顯示預測。",
     "verdict_quieter": "比平常人少",
     "verdict_usual": "和平常差不多",
     "verdict_busier": "比平常人多",

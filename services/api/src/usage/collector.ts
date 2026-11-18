@@ -29,6 +29,8 @@ export const LIBRARY_STATUS_URL =
 export const USAGE_USER_AGENT =
   "NTHUMods-usage-history/1.0 (+https://nthumods.com)";
 export const MAX_PROFILE_REBUILDS_PER_TICK = 2;
+/** A series this far behind its feed's newest sample is no longer reported. */
+const RETIRED_SERIES_MS = 2 * 24 * 60 * 60 * 1000;
 export const SNAPSHOT_CACHE_KEY = (source: UsageSource) =>
   `usage-snapshot:${source}`;
 export const PROFILE_CACHE_KEY = (source: UsageSource, seriesId: string) =>
@@ -300,8 +302,21 @@ export function assembleUsageSnapshot(
 ): UsageSnapshotAssembly {
   const series: UsageSeries[] = [];
   const stateUpdates: UsageSnapshotStateUpdate[] = [];
+  // A feed can rename its series (PEO swapped UUIDs for 2–6 on 2026-11-11).
+  // A series that stopped reporting while the rest of its feed carried on is
+  // retired; listing it as "ready" hid the learning notice for its successor.
+  // Measured against the newest series, so a whole-feed outage hides nothing.
+  const sampledAt = (row: UsageSnapshotRow) =>
+    row.lastSampleAt ? Date.parse(row.lastSampleAt) : Number.NaN;
+  const newestSample = Math.max(
+    ...rows
+      .filter((row) => row.source === source)
+      .map(sampledAt)
+      .filter(Number.isFinite),
+  );
   for (const row of rows) {
     if (row.source !== source) continue;
+    if (sampledAt(row) < newestSample - RETIRED_SERIES_MS) continue;
     const previous = parseState(row);
     const profile =
       profiles.get(`${row.source}:${row.seriesId}`) ??

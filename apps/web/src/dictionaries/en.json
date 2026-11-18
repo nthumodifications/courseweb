@@ -1004,7 +1004,7 @@
     "source_name": "NTHU Telephone Directory"
   },
   "usage_forecast": {
-    "learning": "Learning how busy these places usually get — predictions appear after about a week of data.",
+    "learning": "Learning how busy these places usually get — predictions appear after about two weeks of data, including two weekends.",
     "verdict_quieter": "Quieter than usual",
     "verdict_usual": "About usual",
     "verdict_busier": "Busier than usual",

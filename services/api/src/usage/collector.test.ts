@@ -137,4 +137,47 @@ describe("usage snapshot assembly", () => {
       week: [],
     });
   });
+
+  it("drops series the feed stopped reporting, but not during a whole-feed outage", () => {
+    const now = new Date("2026-11-19T10:30:00.000Z");
+    const row = (seriesId: string, lastSampleAt: string): UsageSnapshotRow => ({
+      source: "gym",
+      seriesId,
+      name: seriesId,
+      current: 0,
+      lastSampleAt,
+      lastValueChangedAt: lastSampleAt,
+      lastSuccessfulAt: lastSampleAt,
+      profileData: null,
+      profileUpdatedAt: null,
+      anomalyType: null,
+      anomalySince: null,
+      anomalySamples: null,
+      anomalyLastObservedAt: null,
+    });
+    const assemble = (rows: UsageSnapshotRow[]) =>
+      assembleUsageSnapshot(
+        "gym",
+        rows,
+        new Map(),
+        new Map(),
+        now,
+        taipeiSlotAt(now),
+      ).response.series.map((item) => item.id);
+
+    // PEO replaced its UUIDs with numeric ids on 2026-11-11.
+    expect(
+      assemble([
+        row("a3a3fd1f-uuid", "2026-11-10T15:50:03.523Z"),
+        row("6", "2026-11-19T10:20:00.000Z"),
+      ]),
+    ).toEqual(["6"]);
+    // Every series went quiet together: keep them all.
+    expect(
+      assemble([
+        row("6", "2026-11-10T15:50:00.000Z"),
+        row("5", "2026-11-10T15:40:00.000Z"),
+      ]),
+    ).toEqual(["6", "5"]);
+  });
 });
