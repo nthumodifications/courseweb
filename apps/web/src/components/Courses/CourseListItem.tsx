@@ -20,6 +20,10 @@ import { MinimalCourse } from "@/types/courses";
 import { InstructorLink } from "./InstructorLink";
 import { pairInstructorNames } from "@/lib/instructors";
 import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
+import {
+  COURSE_INSTRUCTOR_SEPARATOR,
+  decodeCourseText,
+} from "@/lib/course-text";
 
 // Memoize the CourseListItem component
 type CourseListItemCourse = CourseDefinition &
@@ -44,6 +48,7 @@ type CourseListItemProps = {
   showChevron?: boolean;
   compact?: boolean;
   alignSideItemsTop?: boolean;
+  syllabusFullWidth?: boolean;
   priority?: number;
   missingTimeLabel?: string;
   dimmed?: boolean;
@@ -89,6 +94,7 @@ const CourseListItem: FC<CourseListItemProps> = memo((props) => {
     showChevron = true,
     compact = false,
     alignSideItemsTop = false,
+    syllabusFullWidth = false,
     priority,
     missingTimeLabel,
     dimmed = false,
@@ -116,175 +122,211 @@ const CourseListItem: FC<CourseListItemProps> = memo((props) => {
   );
   const titleName = course
     ? useEnglishTitle
-      ? course.name_en
-      : localizeData(course.name_zh)
+      ? decodeCourseText(course.name_en)
+      : localizeData(decodeCourseText(course.name_zh))
     : dict.course.details.favourite_unavailable;
   const titleTeachers = course
     ? useEnglishTitle
-      ? (course.teacher_en ?? [])
-      : course.teacher_zh.map(localizeData)
+      ? (course.teacher_en ?? []).map(decodeCourseText)
+      : course.teacher_zh.map((name) => localizeData(decodeCourseText(name)))
     : [];
   const titleTeacherIdentities = useEnglishTitle
     ? bilingualNames.map(({ nameZh }) => nameZh)
     : titleTeachers;
 
+  const courseHeading = (
+    <div
+      className={`min-w-0 text-left ${compact ? "space-y-0" : "space-y-1 leading-relaxed"}`}
+    >
+      <div className="flex flex-row items-center gap-2">
+        {hasTaken && (
+          <div className="flex min-w-[65px] flex-row items-center justify-center rounded-md bg-primary px-2 py-1 text-sm text-primary-foreground select-none">
+            {dict.course.details.taken}
+          </div>
+        )}
+        {showCourseCode && (
+          <p className="text-nthu-500 text-sm font-bold">
+            {course
+              ? `${course.department} ${course.course}${course.class.padStart(2, "0")}`
+              : missingCourseId}
+          </p>
+        )}
+      </div>
+      <div className="min-w-0 max-w-full text-left">
+        <button
+          className="inline max-w-full text-left font-bold hover:underline cursor-pointer"
+          onClick={() => {
+            if (!courseId) return;
+            if (onCourseClick) {
+              onCourseClick(courseId);
+            } else {
+              openCourse(courseId);
+            }
+          }}
+          onMouseEnter={() => course && handleHover(true)}
+          onMouseLeave={() => course && handleHover(false)}
+        >
+          {titleName}
+        </button>
+        {course && titleTeachers.length > 0 && (
+          <span className="font-bold">
+            {COURSE_INSTRUCTOR_SEPARATOR}
+            <InstructorNames
+              names={titleTeachers}
+              identityNames={titleTeacherIdentities}
+              lang={language}
+            />
+          </span>
+        )}
+        {showChevron && (
+          <ChevronRight
+            className="inline-block h-4 w-4 align-[-0.15em]"
+            aria-hidden="true"
+          />
+        )}
+      </div>
+    </div>
+  );
+
+  const courseMetadata = course ? (
+    <div className={`min-w-0 ${compact ? "space-y-0" : "space-y-1"}`}>
+      {englishNames === "add" && (
+        <div className="text-sm">
+          {decodeCourseText(course.name_en)}
+          {(course.teacher_en ?? []).length > 0 && (
+            <>
+              {COURSE_INSTRUCTOR_SEPARATOR}
+              <InstructorNames
+                names={(course.teacher_en ?? []).map(decodeCourseText)}
+                identityNames={bilingualNames.map(({ nameZh }) => nameZh)}
+                lang={language}
+              />
+            </>
+          )}
+        </div>
+      )}
+      {showVenue && (
+        <div className="flex min-w-0 flex-col gap-1">
+          {course.venues.map((vn, i) => (
+            <div key={i} className="text-muted-foreground text-xs">
+              {`${localizeData(decodeCourseText(vn))} / ${
+                missingTimeLabel &&
+                !hasTimes(course as unknown as MinimalCourse)
+                  ? missingTimeLabel
+                  : course.times![i]
+              }`}
+            </div>
+          ))}
+        </div>
+      )}
+      <CourseTagList
+        course={course}
+        showCredits={showCredits}
+        showEnrollment={showEnrollment}
+        showAdditionalTags={showAdditionalTags}
+        priority={showPriority && showAdditionalTags ? priority : undefined}
+      />
+    </div>
+  ) : null;
+
+  const syllabusDetails =
+    showSyllabusDetails && course ? (
+      <div className="flex min-w-0 flex-col gap-2">
+        {syllabus.brief && (
+          <p
+            className={`text-xs text-muted-foreground${
+              syllabusFullWidth ? " line-clamp-3" : ""
+            }`}
+          >
+            {localizeData(decodeCourseText(syllabus.brief))}
+          </p>
+        )}
+        {course.restrictions && course.restrictions.length > 0 && (
+          <p className="text-xs whitespace-pre-line text-muted-foreground">
+            {dict.course.details.restriction_prefix}
+            {localizeData(decodeCourseText(course.restrictions))}
+          </p>
+        )}
+        {course.note && course.note.length > 0 && (
+          <p className="text-xs whitespace-pre-line text-muted-foreground">
+            {dict.course.details.note_prefix}
+            {localizeData(decodeCourseText(course.note))}
+          </p>
+        )}
+        {course.prerequisites && (
+          <Collapsible>
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="p-0 h-5 text-xs text-muted-foreground hover:text-foreground"
+              >
+                {dict.course.details.prerequisites_available}{" "}
+                <ChevronDown className="h-3 w-3 ml-0.5" />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <p
+                className="whitespace-pre-line text-sm text-muted-foreground"
+                dangerouslySetInnerHTML={{
+                  __html: sanitizeCourseHtml(
+                    localizeData(course.prerequisites),
+                  ),
+                }}
+              />
+            </CollapsibleContent>
+          </Collapsible>
+        )}
+      </div>
+    ) : null;
+
+  const actionColumn = (
+    <div
+      className={`flex shrink-0 flex-col items-end gap-2${
+        alignSideItemsTop || syllabusFullWidth ? " self-start" : ""
+      }`}
+    >
+      {actions ??
+        (course && <SelectCourseButton courseId={course.raw_id as string} />)}
+    </div>
+  );
+
   return (
     <div
-      className={`flex min-w-0 flex-row ${
-        compact ? "gap-2 py-0.5" : "gap-4 py-4"
-      } @container${dimmed ? " opacity-60" : ""}`}
+      className={`min-w-0 @container ${
+        syllabusFullWidth
+          ? "flex flex-col gap-2 py-4"
+          : `flex flex-row ${compact ? "gap-2 py-0.5" : "gap-4 py-4"}`
+      }${dimmed ? " opacity-60" : ""}`}
     >
       {alignSideItemsTop && leading ? (
         <div className="self-start">{leading}</div>
       ) : (
         leading
       )}
-      <div className="min-w-0 flex-1">
-        <div
-          className={`${compact ? "mb-0 space-y-0" : "mb-2 space-y-1"} @md:pt-0`}
-        >
-          <div className="flex flex-row gap-2 items-center">
-            {hasTaken && (
-              <div className="flex min-w-[65px] flex-row items-center justify-center rounded-md bg-primary px-2 py-1 text-sm text-primary-foreground select-none">
-                {dict.course.details.taken}
-              </div>
-            )}
-            {showCourseCode && (
-              <p className="text-nthu-500 text-sm font-bold">
-                {course
-                  ? `${course.department} ${course.course}${course.class.padStart(2, "0")}`
-                  : missingCourseId}
-              </p>
-            )}
+      {syllabusFullWidth ? (
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="flex min-w-0 gap-4">
+            <div className="min-w-0 flex-1">{courseHeading}</div>
+            {actionColumn}
           </div>
-          <div className="flex min-w-0 max-w-full flex-row items-start text-left">
-            <button
-              className="flex min-w-0 max-w-full flex-row items-start gap-1 text-left font-bold hover:underline cursor-pointer"
-              onClick={() => {
-                if (!courseId) return;
-                if (onCourseClick) {
-                  onCourseClick(courseId);
-                } else {
-                  openCourse(courseId);
-                }
-              }}
-              onMouseEnter={() => course && handleHover(true)}
-              onMouseLeave={() => course && handleHover(false)}
-            >
-              <span className="min-w-0 whitespace-normal">{titleName}</span>
-            </button>
-            {course && titleTeachers.length > 0 && (
-              <span className="font-bold">
-                {" - "}
-                <InstructorNames
-                  names={titleTeachers}
-                  identityNames={titleTeacherIdentities}
-                  lang={language}
-                />
-              </span>
-            )}
-            {showChevron && (
-              <ChevronRight
-                className="mt-0.5 h-4 w-4 shrink-0"
-                aria-hidden="true"
-              />
-            )}
-          </div>
-          {englishNames === "add" && course && (
-            <div className="text-sm">
-              {course.name_en}
-              {(course.teacher_en ?? []).length > 0 && (
-                <>
-                  {" - "}
-                  <InstructorNames
-                    names={course.teacher_en ?? []}
-                    identityNames={bilingualNames.map(({ nameZh }) => nameZh)}
-                    lang={language}
-                  />
-                </>
-              )}
-            </div>
-          )}
-          {course && (
-            <>
-              {showVenue && (
-                <div className="flex min-w-0 flex-col gap-1">
-                  {course.venues.map((vn, i) => (
-                    <div key={i} className="text-muted-foreground text-xs">
-                      {`${localizeData(vn)} / ${
-                        missingTimeLabel &&
-                        !hasTimes(course as unknown as MinimalCourse)
-                          ? missingTimeLabel
-                          : course.times![i]
-                      }`}
-                    </div>
-                  ))}
-                </div>
-              )}
-              <CourseTagList
-                course={course}
-                showCredits={showCredits}
-                showEnrollment={showEnrollment}
-                showAdditionalTags={showAdditionalTags}
-                priority={
-                  showPriority && showAdditionalTags ? priority : undefined
-                }
-              />
-            </>
-          )}
+          {courseMetadata}
+          {syllabusDetails}
         </div>
-        {showSyllabusDetails && course && (
-          <div className="flex flex-col gap-2">
-            <p className="text-xs text-muted-foreground">
-              {syllabus.brief ? localizeData(syllabus.brief) : syllabus.brief}
-            </p>
-            {course.restrictions && course.restrictions.length > 0 && (
-              <p className="text-xs whitespace-pre-line text-muted-foreground">
-                {dict.course.details.restriction_prefix}
-                {localizeData(course.restrictions)}
-              </p>
-            )}
-            {course.note && course.note.length > 0 && (
-              <p className="text-xs whitespace-pre-line text-muted-foreground">
-                {dict.course.details.note_prefix}
-                {localizeData(course.note)}
-              </p>
-            )}
-            {course.prerequisites && (
-              <Collapsible>
-                <CollapsibleTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="p-0 h-5 text-xs text-muted-foreground hover:text-foreground"
-                  >
-                    {dict.course.details.prerequisites_available}{" "}
-                    <ChevronDown className="h-3 w-3 ml-0.5" />
-                  </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <p
-                    className="whitespace-pre-line text-sm text-muted-foreground"
-                    dangerouslySetInnerHTML={{
-                      __html: sanitizeCourseHtml(
-                        localizeData(course.prerequisites),
-                      ),
-                    }}
-                  />
-                </CollapsibleContent>
-              </Collapsible>
-            )}
+      ) : (
+        <>
+          <div className="min-w-0 flex-1">
+            <div
+              className={`${compact ? "mb-0 space-y-0" : "mb-2 space-y-1"} @md:pt-0`}
+            >
+              {courseHeading}
+              {courseMetadata}
+            </div>
+            {syllabusDetails}
           </div>
-        )}
-      </div>
-      <div
-        className={`flex min-w-0 shrink-0 flex-col items-end gap-2${
-          alignSideItemsTop ? " self-start" : ""
-        }`}
-      >
-        {actions ??
-          (course && <SelectCourseButton courseId={course.raw_id as string} />)}
-      </div>
+          {actionColumn}
+        </>
+      )}
     </div>
   );
 });

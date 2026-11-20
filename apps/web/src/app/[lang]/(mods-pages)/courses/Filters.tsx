@@ -23,8 +23,8 @@ const geTargetSynonyms: Record<string, string> = GETargetCodes.reduce(
 const Filters = ({ selectedCourses }: { selectedCourses: MinimalCourse[] }) => {
   const dict = useDictionary();
   return (
-    <div className="w-full flex flex-col gap-2">
-      <div className="w-full flex flex-col gap-6">
+    <div className="flex w-full flex-col gap-4">
+      <div className="flex w-full flex-col gap-4">
         <div className="flex flex-col gap-2">
           <span className="text-sm">
             {dict.course.refine.compulsory_elective}
@@ -76,11 +76,9 @@ const Filters = ({ selectedCourses }: { selectedCourses: MinimalCourse[] }) => {
         </div>
       </div>
       {/* Advanced Filters Section */}
-      <div>
-        <h3 className="font-medium text-base mb-2">
-          {dict.course.refine.ge_filters}
-        </h3>
-        <div className="w-full flex flex-col gap-6">
+      <div className="flex flex-col gap-4">
+        <h3 className="font-medium">{dict.course.refine.ge_filters}</h3>
+        <div className="flex w-full flex-col gap-4">
           <div className="flex flex-col gap-2">
             <span className="text-sm">{dict.course.refine.geTarget}</span>
             <InlineCheckboxFilter
@@ -109,11 +107,9 @@ const Filters = ({ selectedCourses }: { selectedCourses: MinimalCourse[] }) => {
           </div>
         </div>
       </div>
-      <div>
-        <h3 className="font-medium text-base mb-2">
-          {dict.course.refine.advanced_filters}
-        </h3>
-        <div className="w-full flex flex-col gap-6">
+      <div className="flex flex-col gap-4">
+        <h3 className="font-medium">{dict.course.refine.advanced_filters}</h3>
+        <div className="flex w-full flex-col gap-4">
           <div className="flex flex-col gap-2">
             <span className="text-sm">{dict.course.refine.venues}</span>
             <ExpandableFilter

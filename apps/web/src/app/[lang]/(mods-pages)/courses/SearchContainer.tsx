@@ -20,7 +20,6 @@ import {
   EmptyState,
   ErrorState,
   ScrollArea,
-  Separator,
   cn,
 } from "@courseweb/ui";
 import { Calendar, FilterIcon } from "lucide-react";
@@ -51,7 +50,7 @@ type CourseInfiniteHitsCache = NonNullable<CourseInfiniteHitsOptions["cache"]>;
 
 // Memoize the Hit component to prevent unnecessary re-renders
 const Hit = memo(({ hit }: { hit: CourseSyllabusView }) => {
-  return <CourseListItem course={hit} />;
+  return <CourseListItem course={hit} syllabusFullWidth />;
 });
 Hit.displayName = "Hit";
 
@@ -192,103 +191,84 @@ const SearchContainer = memo(
     return (
       <div className="flex min-w-0 w-full gap-4">
         <LocalSearchLifecycle searchClient={searchClient} semester={semester} />
-        <div className="hidden md:flex flex-col gap-4 w-72 px-4">
+        <div className="hidden w-64 shrink-0 flex-col gap-4 px-4 xl:flex">
           <div className="flex justify-between items-baseline">
             <span className="font-bold">{dict.course.refine.title}</span>
             <ResetFiltersButton />
           </div>
-          <ScrollArea className="">
+          <ScrollArea className="min-w-0">
             <Filters selectedCourses={courses as MinimalCourse[]} />
           </ScrollArea>
         </div>
 
-        <div className="flex flex-col gap-4 flex-1 px-2">
+        <div className="flex min-w-0 flex-1 flex-col gap-4 px-2">
           <SearchDegradationBanner searchClient={searchClient} />
-          <div className="">
-            <div className="flex flex-wrap items-center gap-1">
-              <div className="w-full shrink-0 sm:w-auto">
-                <SemesterSelector />
-              </div>
-              <Separator
-                orientation="vertical"
-                className="hidden h-full sm:block"
+          <div className="flex min-w-0 w-full flex-wrap items-center gap-1 sm:flex-nowrap">
+            <div className="w-full shrink-0 sm:w-auto">
+              <SemesterSelector />
+            </div>
+            <AiSearchBox
+              enabled={aiSearchEnabled}
+              onEnabledChange={setAiSearchEnabled}
+              semester={semester}
+            >
+              <SearchBox
+                placeholder={dict.course.list.search_placeholder}
+                autoFocus
               />
-              <AiSearchBox
-                enabled={aiSearchEnabled}
-                onEnabledChange={setAiSearchEnabled}
-                semester={semester}
-              >
-                <SearchBox
-                  placeholder={dict.course.list.search_placeholder}
-                  autoFocus
-                />
-              </AiSearchBox>
-              <Separator
-                orientation="vertical"
-                className="hidden h-full sm:block"
-              />
-              <div className="md:hidden">
-                <Drawer>
-                  <DrawerTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label={dict.a11y.course_filters}
-                    >
-                      <FilterIcon size="16" />
-                    </Button>
-                  </DrawerTrigger>
-                  <DrawerContent>
-                    <DrawerTitle className="sr-only">
-                      {dict.a11y.course_filters}
-                    </DrawerTitle>
-                    <ScrollArea className="w-full max-h-[90vh] overflow-auto px-4">
-                      <div className="flex flex-row justify-end px-4 py-2 w-full">
-                        <ResetFiltersButton />
-                      </div>
-                      <Filters selectedCourses={courses as MinimalCourse[]} />
-                    </ScrollArea>
-                  </DrawerContent>
-                </Drawer>
-              </div>
-              <Separator
-                orientation="vertical"
-                className="hidden h-full sm:block"
-              />
-              <div className="md:hidden">
-                <Drawer>
-                  <DrawerTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label={dict.a11y.calendar}
-                    >
-                      <Calendar size="16" />
-                    </Button>
-                  </DrawerTrigger>
-                  <DrawerContent>
-                    <DrawerTitle className="sr-only">
-                      {dict.a11y.calendar}
-                    </DrawerTitle>
-                    <ScrollArea className="w-full max-h-[80vh] overflow-auto p-2">
-                      <CourseSidePanel />
-                    </ScrollArea>
-                  </DrawerContent>
-                </Drawer>
-              </div>
+            </AiSearchBox>
+            <div className="shrink-0 xl:hidden">
+              <Drawer>
+                <DrawerTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={dict.a11y.course_filters}
+                  >
+                    <FilterIcon size="16" />
+                  </Button>
+                </DrawerTrigger>
+                <DrawerContent>
+                  <DrawerTitle className="sr-only">
+                    {dict.a11y.course_filters}
+                  </DrawerTitle>
+                  <ScrollArea className="w-full max-h-[90vh] overflow-auto px-4">
+                    <div className="flex flex-row justify-end px-4 py-2 w-full">
+                      <ResetFiltersButton />
+                    </div>
+                    <Filters selectedCourses={courses as MinimalCourse[]} />
+                  </ScrollArea>
+                </DrawerContent>
+              </Drawer>
+            </div>
+            <div className="shrink-0 xl:hidden">
+              <Drawer>
+                <DrawerTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={dict.a11y.calendar}
+                  >
+                    <Calendar size="16" />
+                  </Button>
+                </DrawerTrigger>
+                <DrawerContent>
+                  <DrawerTitle className="sr-only">
+                    {dict.a11y.calendar}
+                  </DrawerTitle>
+                  <ScrollArea className="w-full max-h-[80vh] overflow-auto p-2">
+                    <CourseSidePanel />
+                  </ScrollArea>
+                </DrawerContent>
+              </Drawer>
             </div>
           </div>
-          <div className="flex items-end">
-            <div className="flex-1">
-              <h2 className="text-xl font-medium">
-                {dict.course.refine.search_results}
-              </h2>
-              <SearchResultCount
-                status={status}
-                nbHits={nbHits}
-                processingTimeMS={processingTimeMS}
-              />
-            </div>
+          <div className="text-muted-foreground">
+            <SearchResultCount
+              status={status}
+              nbHits={nbHits}
+              processingTimeMS={processingTimeMS}
+            />
           </div>
           <InfiniteHits
             showPrevious={false}

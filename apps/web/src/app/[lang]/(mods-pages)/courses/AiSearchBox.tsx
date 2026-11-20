@@ -202,8 +202,8 @@ const AiSearchBox = ({
   };
 
   return (
-    <>
-      <div className="flex min-w-0 basis-full flex-[1_1_15rem] flex-wrap items-center gap-1 sm:basis-auto">
+    <div className="flex min-w-[10rem] flex-[1_1_10rem] flex-col gap-1">
+      <div className="flex min-w-0 items-center gap-1">
         <div className="min-w-0 flex-1">
           {enabled ? (
             <form
@@ -264,11 +264,12 @@ const AiSearchBox = ({
           </Button>
           <Link
             to={`/${lang}/chat`}
-            className="inline-flex h-9 items-center gap-1 rounded-md px-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+            className="inline-flex h-9 shrink-0 items-center gap-1 rounded-md px-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
             title={dict.course.search.ai_search.assistant}
+            aria-label={dict.course.search.ai_search.assistant}
           >
             <span aria-hidden="true">↗</span>
-            <span className="hidden sm:inline">
+            <span className="hidden xl:inline">
               {dict.course.search.ai_search.assistant}
             </span>
           </Link>
@@ -312,7 +313,7 @@ const AiSearchBox = ({
           {error}
         </p>
       )}
-    </>
+    </div>
   );
 };
 

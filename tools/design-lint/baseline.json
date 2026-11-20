@@ -127,7 +127,7 @@
         "apps/web/src/components/CourseDetails/SyllabusSummary.tsx": 2,
         "apps/web/src/components/Courses/AutocompleteShadcn.tsx": 1,
         "apps/web/src/components/Courses/CourseDialog.tsx": 4,
-        "apps/web/src/components/Courses/CourseListItem.tsx": 5,
+        "apps/web/src/components/Courses/CourseListItem.tsx": 4,
         "apps/web/src/components/Courses/CourseOfferingRow.tsx": 1,
         "apps/web/src/components/Courses/ModuleInsights.tsx": 2,
         "apps/web/src/components/Courses/ModuleTermAvailability.tsx": 4,

@@ -26,7 +26,7 @@ import { useDefaultSemesterId } from "@/hooks/useSemesters";
 const sessionStorageCache = createInfiniteHitsSessionStorageCache();
 
 const CourseSearchContainer = () => {
-  const isDesktop = useMediaQuery("(min-width: 1024px)");
+  const isDesktop = useMediaQuery("(min-width: 1280px)");
   const [searchParams] = useSearchParams();
   const { language } = useSettings();
   const localizeQuery = useLocalizedZhQuery();
@@ -126,23 +126,26 @@ const CourseSearchContainer = () => {
         }}
         stalledSearchDelay={500}
       >
-        <div className="flex min-w-0 flex-col h-full max-h-[95dvh] gap-4">
-          <ResizablePanelGroup direction="horizontal" className="h-full w-full">
-            <ResizablePanel className="flex min-w-0 gap-4">
+        <div className="flex h-full min-w-0 flex-col gap-4 max-h-[95dvh]">
+          <ResizablePanelGroup
+            direction="horizontal"
+            className="h-full w-full min-w-0"
+          >
+            <ResizablePanel minSize={55} className="min-w-0">
               <SearchContainer
                 searchClient={searchClient}
                 sessionStorageCache={sessionStorageCache}
               />
             </ResizablePanel>
 
-            <ResizableHandle className="hidden md:block outline-none self-center px-[2px] h-48 mx-4 my-4 rounded-full bg-muted" />
+            <ResizableHandle className="hidden h-48 self-center rounded-full bg-muted px-[2px] outline-none mx-4 my-4 xl:block" />
 
             <ResizablePanel
               collapsible={true}
               collapsedSize={0}
-              minSize={30}
-              defaultSize={isDesktop ? 30 : 0}
-              className="hidden md:block pr-1"
+              minSize={20}
+              defaultSize={isDesktop ? 25 : 0}
+              className="hidden min-w-[16rem] pr-1 xl:block"
             >
               <CourseSidePanel />
             </ResizablePanel>
