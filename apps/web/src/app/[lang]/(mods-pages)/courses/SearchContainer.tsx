@@ -130,7 +130,7 @@ export function InfiniteHits({
       {view === "table" ? (
         <CourseResultsTable courses={hits} loadingRows={isLoading ? 3 : 0} />
       ) : view === "grid" ? (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] items-stretch gap-2 p-2">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] items-stretch gap-2 py-2">
           {hits.map((hit) => (
             <CourseGridCard key={hit.objectID} course={hit} />
           ))}

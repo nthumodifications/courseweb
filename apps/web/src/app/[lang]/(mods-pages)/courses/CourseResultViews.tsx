@@ -132,18 +132,25 @@ const CourseTimeLocations = ({
       {entries.map(({ venue, time }, index) => (
         <div
           key={`${venue ?? ""}-${time ?? ""}-${index}`}
-          className="flex min-w-0 items-start gap-1"
+          className="flex min-w-0 flex-col"
         >
-          {icons && venue && (
-            <MapPin className="h-3 w-3 shrink-0" aria-hidden="true" />
+          {time && (
+            <span className="flex min-w-0 items-center gap-1 text-foreground">
+              {icons && (
+                <Clock className="h-3 w-3 shrink-0" aria-hidden="true" />
+              )}
+              {time}
+            </span>
           )}
-          <span className="min-w-0">
-            {venue ? localizeData(decodeCourseText(venue)) : null}
-            {venue && time ? " / " : null}
-            {time}
-          </span>
-          {icons && time && (
-            <Clock className="h-3 w-3 shrink-0" aria-hidden="true" />
+          {venue && (
+            <span className="flex min-w-0 items-center gap-1">
+              {icons && (
+                <MapPin className="h-3 w-3 shrink-0" aria-hidden="true" />
+              )}
+              <span className="min-w-0 truncate">
+                {localizeData(decodeCourseText(venue))}
+              </span>
+            </span>
           )}
         </div>
       ))}
@@ -151,24 +158,45 @@ const CourseTimeLocations = ({
   );
 };
 
+// "39/40" when the capacity is known; "1 選上" when only the enrolment is, so a
+// bare number is never mistaken for the capacity.
 const getEnrollmentSummary = (
   course: CourseSyllabusView,
   unknownValue: string,
+  enrolledSuffix: string,
 ) => {
-  if (course.enrolled == null && !hasKnownCourseCapacity(course.capacity)) {
+  if (!hasKnownCourseCapacity(course.capacity)) {
+    return course.enrolled == null
+      ? null
+      : `${course.enrolled} ${enrolledSuffix}`;
+  }
+  return `${course.enrolled ?? unknownValue}/${course.capacity}`;
+};
+
+const CourseLanguageBadge = ({ course }: { course: CourseSyllabusView }) => {
+  const dict = useDictionary();
+  if (!course.language || isChineseCourseLanguage(course.language)) {
     return null;
   }
-  return `${course.enrolled ?? unknownValue}${
-    hasKnownCourseCapacity(course.capacity) ? `/${course.capacity}` : ""
-  }`;
+  return (
+    <Badge
+      variant="outline"
+      className="border-transparent bg-primary/10 font-normal text-primary"
+    >
+      {isEnglishCourseLanguage(course.language)
+        ? dict.course.tags.english
+        : course.language}
+    </Badge>
+  );
 };
 
 const CourseSummaryBadges = ({ course }: { course: CourseSyllabusView }) => {
   const dict = useDictionary();
-  const hasLanguage = Boolean(
-    course.language && !isChineseCourseLanguage(course.language),
+  const enrollment = getEnrollmentSummary(
+    course,
+    dict.common.not_available,
+    dict.course.tags.enrolled_suffix,
   );
-  const enrollment = getEnrollmentSummary(course, dict.common.not_available);
 
   return (
     <div className="flex flex-wrap items-center gap-1">
@@ -180,16 +208,7 @@ const CourseSummaryBadges = ({ course }: { course: CourseSyllabusView }) => {
           {enrollment}
         </Badge>
       )}
-      {hasLanguage && (
-        <Badge
-          variant="outline"
-          className="border-transparent bg-primary/10 font-normal text-primary"
-        >
-          {isEnglishCourseLanguage(course.language)
-            ? dict.course.tags.english
-            : course.language}
-        </Badge>
-      )}
+      <CourseLanguageBadge course={course} />
     </div>
   );
 };
@@ -232,16 +251,17 @@ export const CourseResultsTable = ({
   return (
     <Table
       containerClassName="relative w-full overflow-x-auto overflow-y-visible md:overflow-visible"
-      className="min-w-[700px] table-fixed"
+      className="min-w-[540px] table-fixed"
     >
+      {/* Fixed widths keep the actions column on screen next to the filter
+          and timetable panels; the title column takes what is left. */}
       <colgroup>
+        <col className="w-24" />
         <col />
-        <col />
-        <col />
-        <col />
-        <col />
-        <col />
-        <col className="w-28" />
+        <col className="w-32" />
+        <col className="w-12" />
+        <col className="w-20" />
+        <col className="w-24" />
       </colgroup>
       <TableHeader>
         <TableRow className="hover:bg-background">
@@ -251,14 +271,11 @@ export const CourseResultsTable = ({
             columns.time_location,
             columns.credits,
             columns.enrollment,
-            columns.language,
             columns.actions,
           ].map((label) => (
             <TableHead
               key={label}
-              className={`sticky top-0 z-10 h-10 bg-background px-2 py-2 text-sm${
-                label === columns.actions ? " px-1" : ""
-              }`}
+              className="sticky top-0 z-10 h-10 bg-background px-2 py-2 text-sm"
             >
               {label}
             </TableHead>
@@ -273,35 +290,29 @@ export const CourseResultsTable = ({
             onMouseEnter={() => setHoverCourse(course)}
             onMouseLeave={() => setHoverCourse(null)}
           >
-            <TableCell className="whitespace-nowrap px-2 py-3 text-xs text-muted-foreground">
+            <TableCell className="whitespace-nowrap px-2 py-3 align-top text-xs text-muted-foreground">
               {formatCourseCode(course)}
             </TableCell>
             <TableCell className="min-w-0 px-2 py-3 align-top">
-              <CourseResultIdentity course={course} variant="table" />
+              <div className="flex min-w-0 flex-col items-start gap-1">
+                <CourseResultIdentity course={course} variant="table" />
+                <CourseLanguageBadge course={course} />
+              </div>
             </TableCell>
-            <TableCell className="min-w-[190px] px-2 py-3 align-top">
+            <TableCell className="px-2 py-3 align-top">
               <CourseTimeLocations course={course} />
             </TableCell>
-            <TableCell className="whitespace-nowrap px-2 py-3">
+            <TableCell className="whitespace-nowrap px-2 py-3 align-top">
               {course.credits}
             </TableCell>
-            <TableCell className="whitespace-nowrap px-2 py-3">
-              {getEnrollmentSummary(course, dict.common.not_available) ??
-                dict.common.not_available}
+            <TableCell className="whitespace-nowrap px-2 py-3 align-top">
+              {getEnrollmentSummary(
+                course,
+                dict.common.not_available,
+                dict.course.tags.enrolled_suffix,
+              ) ?? dict.common.not_available}
             </TableCell>
-            <TableCell className="px-2 py-3">
-              {course.language && !isChineseCourseLanguage(course.language) && (
-                <Badge
-                  variant="outline"
-                  className="border-transparent bg-primary/10 font-normal text-primary"
-                >
-                  {isEnglishCourseLanguage(course.language)
-                    ? dict.course.tags.english
-                    : course.language}
-                </Badge>
-              )}
-            </TableCell>
-            <TableCell className="whitespace-nowrap px-1 py-3">
+            <TableCell className="whitespace-nowrap px-2 py-3 align-top">
               <SelectCourseButton courseId={course.raw_id} iconOnly />
             </TableCell>
           </TableRow>
@@ -326,7 +337,6 @@ export const CourseResultsTable = ({
             <TableCell className="px-2 py-3">
               <Skeleton className="h-4 w-12" />
             </TableCell>
-            <TableCell className="px-2 py-3" />
             <TableCell className="px-2 py-3">
               <Skeleton className="h-8 w-10" />
             </TableCell>

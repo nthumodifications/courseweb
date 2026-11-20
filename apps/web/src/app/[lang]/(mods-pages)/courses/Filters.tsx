@@ -184,7 +184,7 @@ const Filters = ({
 
   return (
     <div
-      className={`flex min-h-0 flex-col rounded-lg border border-border${
+      className={`flex min-h-0 w-full min-w-0 flex-col rounded-lg border border-border${
         fillHeight ? " h-full" : ""
       }`}
     >
