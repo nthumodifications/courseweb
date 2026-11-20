@@ -8,7 +8,7 @@ const CourseDialog = () => {
     <div
       ref={ref}
       data-course-search-viewport
-      className="min-w-0 md:min-h-0 md:overflow-hidden"
+      className="min-w-0 md:min-h-0 md:overflow-hidden md:pb-4"
       style={height == null ? undefined : { height }}
     >
       <CourseSearchContainer />

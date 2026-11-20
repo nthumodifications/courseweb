@@ -98,8 +98,8 @@ const FilterSection = ({
   count: number;
   children: ReactNode;
 }) => (
-  <AccordionItem value={id} className="border-b border-border last:border-b-0">
-    <AccordionTrigger className="min-h-10 px-2 py-2 text-left text-sm font-medium hover:no-underline">
+  <AccordionItem value={id} className="rounded-md border-0 bg-muted">
+    <AccordionTrigger className="min-h-10 px-3 py-2 text-left text-sm font-medium hover:no-underline">
       <span className="flex min-w-0 items-center gap-2">
         <span>{label}</span>
         {count > 0 && (
@@ -109,7 +109,7 @@ const FilterSection = ({
         )}
       </span>
     </AccordionTrigger>
-    <AccordionContent className="px-2 pb-2">{children}</AccordionContent>
+    <AccordionContent className="px-3 pb-3">{children}</AccordionContent>
   </AccordionItem>
 );
 
@@ -184,20 +184,26 @@ const Filters = ({
 
   return (
     <div
-      className={`flex min-h-0 w-full min-w-0 flex-col rounded-lg border border-border${
+      className={`flex min-h-0 w-full min-w-0 flex-col gap-2${
         fillHeight ? " h-full" : ""
       }`}
     >
-      <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border px-2 py-2">
+      {/* Grey blocks match the timetable's empty cells instead of outlines. */}
+      {/* No right padding: the ghost button's own 12px lines its label up
+          with the section chevrons. */}
+      <div className="flex h-10 shrink-0 items-center justify-between gap-2 pl-3">
         <span className="text-sm font-bold">{dict.course.refine.title}</span>
-        <ResetFiltersButton showLabel />
+        <ResetFiltersButton
+          showLabel
+          className="text-muted-foreground hover:text-foreground"
+        />
       </div>
       <ScrollArea className="min-h-0 flex-1">
         <Accordion
           type="multiple"
           value={openSections}
           onValueChange={onOpenChange}
-          className="w-full"
+          className="flex w-full flex-col gap-1"
         >
           <FilterSection
             id="compulsory"

@@ -225,7 +225,7 @@ const SearchContainer = memo(
       <div className="flex min-h-0 min-w-0 w-full gap-4 md:h-full">
         <LocalSearchLifecycle searchClient={searchClient} semester={semester} />
 
-        <div className="hidden min-h-0 w-64 shrink-0 px-4 xl:flex">
+        <div className="hidden min-h-0 w-64 shrink-0 px-4 @[62rem]/courses:flex">
           <Filters selectedCourses={courses as MinimalCourse[]} fillHeight />
         </div>
 
@@ -245,7 +245,7 @@ const SearchContainer = memo(
               </div>
               <CourseSearchViewSwitch view={view} onViewChange={setView} />
             </div>
-            <div className="order-2 shrink-0 sm:order-3 xl:hidden">
+            <div className="order-2 shrink-0 sm:order-3 @[62rem]/courses:hidden">
               <Drawer>
                 <DrawerTrigger asChild>
                   <Button
@@ -269,7 +269,7 @@ const SearchContainer = memo(
                 </DrawerContent>
               </Drawer>
             </div>
-            <div className="order-2 shrink-0 sm:order-3 xl:hidden">
+            <div className="order-2 shrink-0 sm:order-3 @[62rem]/courses:hidden">
               <Drawer>
                 <DrawerTrigger asChild>
                   <Button

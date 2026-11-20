@@ -9,9 +9,11 @@ import { hasCourseSearchRefinements } from "./courseSearchView";
 const ResetFiltersButton = ({
   resetToIndexUiState,
   showLabel = false,
+  className,
 }: {
   resetToIndexUiState?: IndexUiState;
   showLabel?: boolean;
+  className?: string;
 }) => {
   const { indexUiState, setIndexUiState } = useInstantSearch();
   const dict = useDictionary();
@@ -37,6 +39,7 @@ const ResetFiltersButton = ({
       variant="ghost"
       size={showLabel ? "sm" : "icon"}
       disabled={!canReset}
+      className={className}
       aria-label={showLabel ? undefined : dict.a11y.clear}
     >
       {showLabel ? dict.course.refine.clear : <Undo className="h-4 w-4" />}

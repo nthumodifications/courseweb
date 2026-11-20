@@ -218,17 +218,21 @@ export const CourseGridCard = ({ course }: { course: CourseSyllabusView }) => {
 
   return (
     <article
-      className="flex h-full min-w-0 flex-col gap-2 rounded-lg border border-border bg-card p-4"
+      className="flex h-full min-w-0 flex-col gap-2 rounded-lg border border-border bg-card p-3"
       onMouseEnter={() => setHoverCourse(course)}
       onMouseLeave={() => setHoverCourse(null)}
     >
+      {/* The code sits above the title beside the buttons, so it doesn't
+          get a row of its own as tall as the buttons. */}
       <div className="flex min-w-0 items-start justify-between gap-2">
-        <span className="self-center text-xs text-muted-foreground">
-          {formatCourseCode(course)}
-        </span>
+        <div className="flex min-w-0 flex-col">
+          <span className="text-xs text-muted-foreground">
+            {formatCourseCode(course)}
+          </span>
+          <CourseResultIdentity course={course} variant="grid" />
+        </div>
         <SelectCourseButton courseId={course.raw_id} iconOnly />
       </div>
-      <CourseResultIdentity course={course} variant="grid" />
       <CourseTimeLocations course={course} icons />
       <div className="mt-auto pt-2">
         <CourseSummaryBadges course={course} />
