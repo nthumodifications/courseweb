@@ -126,12 +126,12 @@ const CourseSearchContainer = () => {
         }}
         stalledSearchDelay={500}
       >
-        <div className="flex h-full min-w-0 flex-col gap-4 max-h-[95dvh]">
+        <div className="flex h-full min-h-0 min-w-0 flex-col">
           <ResizablePanelGroup
             direction="horizontal"
-            className="h-full w-full min-w-0"
+            className="h-full min-h-0 w-full min-w-0"
           >
-            <ResizablePanel minSize={55} className="min-w-0">
+            <ResizablePanel minSize={55} className="min-h-0 min-w-0">
               <SearchContainer
                 searchClient={searchClient}
                 sessionStorageCache={sessionStorageCache}
@@ -145,7 +145,7 @@ const CourseSearchContainer = () => {
               collapsedSize={0}
               minSize={20}
               defaultSize={isDesktop ? 25 : 0}
-              className="hidden min-w-[16rem] pr-1 xl:block"
+              className="hidden min-h-0 min-w-[16rem] pr-1 xl:block"
             >
               <CourseSidePanel />
             </ResizablePanel>

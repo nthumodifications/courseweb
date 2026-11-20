@@ -23,8 +23,11 @@ const CourseSidePanel = () => {
   );
 
   return (
-    <Tabs defaultValue="timetable">
-      <TabsList className="w-full min-w-0 justify-evenly">
+    <Tabs
+      defaultValue="timetable"
+      className="flex h-full min-h-0 min-w-0 flex-col"
+    >
+      <TabsList className="w-full min-w-0 shrink-0 justify-evenly">
         <TabsTrigger value="timetable" className="min-w-0 flex-1 px-1">
           <span className="truncate">{dict.course.details.timetable}</span>
         </TabsTrigger>
@@ -35,26 +38,26 @@ const CourseSidePanel = () => {
           <span className="truncate">{dict.course.details.favourites}</span>
         </TabsTrigger>
       </TabsList>
-      <TabsContent value="timetable" className="h-full">
+      <TabsContent value="timetable" className="min-h-0 flex-1">
         {/* Radix wraps the viewport content in a display:table div that grows
             to the table's intrinsic width and clips the last weekdays. */}
-        <ScrollArea className="h-[calc(100vh-12.5rem)] w-full min-w-0 overflow-auto [&_[data-radix-scroll-area-viewport]>div]:!block">
-          <div className="h-full">
+        <ScrollArea className="h-full min-h-0 w-full min-w-0 overflow-auto [&_[data-radix-scroll-area-viewport]>div]:!block">
+          <div className="min-h-full">
             <TimetableWithSemester semester={semester} />
             <TimetableBottomBar />
           </div>
         </ScrollArea>
       </TabsContent>
-      <TabsContent value="list">
-        <ScrollArea className="h-[calc(100vh-12.5rem)] w-full min-w-0 overflow-auto">
-          <div className="py-4 h-full">
+      <TabsContent value="list" className="min-h-0 flex-1">
+        <ScrollArea className="h-full min-h-0 w-full min-w-0 overflow-auto">
+          <div className="min-h-full py-4">
             <TimetableCourseListWithSemester />
           </div>
         </ScrollArea>
       </TabsContent>
-      <TabsContent value="favourites">
-        <ScrollArea className="h-[calc(100vh-12.5rem)] w-full min-w-0 overflow-auto">
-          <div className="p-4 h-full">
+      <TabsContent value="favourites" className="min-h-0 flex-1">
+        <ScrollArea className="h-full min-h-0 w-full min-w-0 overflow-auto">
+          <div className="min-h-full p-4">
             <FavouritesCourseList />
           </div>
         </ScrollArea>

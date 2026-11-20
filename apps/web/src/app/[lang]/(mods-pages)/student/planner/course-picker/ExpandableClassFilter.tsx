@@ -104,21 +104,21 @@ const ExpandableClassFilter = ({
             isOpen ? "ring-2 ring-primary" : "hover:border-primary/50",
           )}
         >
-          <div className="flex flex-1 flex-wrap gap-1 items-center">
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
             {selected.length > 0 ? (
-              <div className="flex flex-wrap gap-1">
+              <div className="flex flex-wrap items-center gap-1">
                 {selected.map((value) => (
                   <Badge
                     key={value}
                     variant="outline"
-                    className="mr-1 mb-1 whitespace-nowrap"
+                    className="inline-flex items-center gap-1 whitespace-nowrap px-2 py-1"
                   >
                     {getFormattedClassCode(value, selectedSemester, "zh")}
                     <button
                       type="button"
                       aria-label={dict.planner.coursePicker.removeFilter}
                       title={dict.planner.coursePicker.removeFilter}
-                      className="ml-0.5 -mr-1 flex-shrink-0 flex items-center justify-center p-2 -m-1"
+                      className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-sm"
                       onClick={(e) => {
                         e.stopPropagation();
                         refine(value);
@@ -154,7 +154,7 @@ const ExpandableClassFilter = ({
               type="button"
               aria-label={dict.planner.coursePicker.clearAll}
               title={dict.planner.coursePicker.clearAll}
-              className="ml-2 flex-shrink-0 flex items-center justify-center p-2.5 -m-1.5"
+              className="ml-2 inline-flex h-8 w-8 shrink-0 items-center justify-center"
               onClick={handleClearAll}
             >
               <X className="h-4 w-4 text-muted-foreground" />

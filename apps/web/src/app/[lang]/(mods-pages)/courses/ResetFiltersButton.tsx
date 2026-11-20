@@ -4,15 +4,21 @@ import { useInstantSearch } from "react-instantsearch";
 import type { IndexUiState } from "instantsearch.js";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useDefaultSemesterId } from "@/hooks/useSemesters";
+import { hasCourseSearchRefinements } from "./courseSearchView";
 
 const ResetFiltersButton = ({
   resetToIndexUiState,
+  showLabel = false,
 }: {
   resetToIndexUiState?: IndexUiState;
+  showLabel?: boolean;
 }) => {
-  const { setIndexUiState } = useInstantSearch();
+  const { indexUiState, setIndexUiState } = useInstantSearch();
   const dict = useDictionary();
   const defaultSemester = useDefaultSemesterId();
+  const canReset = hasCourseSearchRefinements(
+    resetToIndexUiState ?? indexUiState,
+  );
 
   const handleReset = () => {
     setIndexUiState((prev) => {
@@ -29,10 +35,11 @@ const ResetFiltersButton = ({
     <Button
       onClick={handleReset}
       variant="ghost"
-      size="icon"
-      aria-label={dict.a11y.clear}
+      size={showLabel ? "sm" : "icon"}
+      disabled={!canReset}
+      aria-label={showLabel ? undefined : dict.a11y.clear}
     >
-      <Undo className="h-4 w-4" />
+      {showLabel ? dict.course.refine.clear : <Undo className="h-4 w-4" />}
     </Button>
   );
 };

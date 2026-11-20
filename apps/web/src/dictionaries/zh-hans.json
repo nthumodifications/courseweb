@@ -240,6 +240,21 @@
       "dismiss_limited_mode": "关闭有限搜索模式提示",
       "no_more_results": "没有更多结果",
       "no_results": "找不到符合的课程",
+      "views": {
+        "label": "课程显示方式",
+        "list": "列表",
+        "table": "表格",
+        "grid": "卡片",
+        "columns": {
+          "code": "课号",
+          "title": "课程名",
+          "time_location": "时间地点",
+          "credits": "学分",
+          "enrollment": "人数",
+          "language": "语言",
+          "actions": "操作"
+        }
+      },
       "ai_search": {
         "toggle": "启用 AI 搜索",
         "toggle_off": "禁用 AI 搜索",
@@ -2301,6 +2316,7 @@
     "no_results": "找不到结果。",
     "try_again": "再试一次",
     "load_error": "数据加载失败。",
+    "not_available": "—",
     "submit": "送出",
     "save": "保存",
     "error": "错误",

@@ -12,6 +12,10 @@ import { decodeCourseText } from "@/lib/course-text";
 
 export const hasKnownCourseCapacity = (capacity: number | null | undefined) =>
   capacity != null;
+export const isChineseCourseLanguage = (language: string | null | undefined) =>
+  language === "中";
+export const isEnglishCourseLanguage = (language: string | null | undefined) =>
+  language === "英";
 
 const HighlightItem: FC<
   PropsWithChildren<
@@ -88,7 +92,7 @@ const CourseTagList = ({
           <span className="">{dict.course.tags.eighteen_weeks}</span>
         </HighlightItem>
       )}
-      {course.language == "英" ? (
+      {isEnglishCourseLanguage(course.language) ? (
         <HighlightItem className="bg-primary/10 text-primary">
           {dict.course.tags.english}
         </HighlightItem>

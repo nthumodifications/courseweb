@@ -1,8 +1,16 @@
 import CourseSearchContainer from "./CourseSearchContainer";
+import { useFillViewportHeight } from "@/hooks/useFillViewportHeight";
 
 const CourseDialog = () => {
+  const { ref, height } = useFillViewportHeight<HTMLDivElement>();
+
   return (
-    <div className="max-h-[calc(var(--content-height)-36px)]">
+    <div
+      ref={ref}
+      data-course-search-viewport
+      className="min-w-0 md:min-h-0 md:overflow-hidden"
+      style={height == null ? undefined : { height }}
+    >
       <CourseSearchContainer />
     </div>
   );

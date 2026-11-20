@@ -240,6 +240,21 @@
       "dismiss_limited_mode": "關閉有限搜尋模式提示",
       "no_more_results": "沒有更多結果",
       "no_results": "找不到符合的課程",
+      "views": {
+        "label": "課程顯示方式",
+        "list": "列表",
+        "table": "表格",
+        "grid": "卡片",
+        "columns": {
+          "code": "科號",
+          "title": "課名",
+          "time_location": "時間地點",
+          "credits": "學分",
+          "enrollment": "人數",
+          "language": "語言",
+          "actions": "操作"
+        }
+      },
       "ai_search": {
         "toggle": "啟用 AI 搜尋",
         "toggle_off": "停用 AI 搜尋",
@@ -2301,6 +2316,7 @@
     "no_results": "找不到結果。",
     "try_again": "再試一次",
     "load_error": "資料載入失敗。",
+    "not_available": "—",
     "submit": "送出",
     "save": "儲存",
     "error": "錯誤",

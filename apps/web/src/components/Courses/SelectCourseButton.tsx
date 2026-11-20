@@ -7,7 +7,13 @@ import { lastSemester } from "@courseweb/shared";
 import { courseEvents } from "@/lib/trackingEvents";
 import { toggleFavourite } from "@/helpers/favourites";
 
-const SelectCourseButton = ({ courseId }: { courseId: RawCourseID }) => {
+const SelectCourseButton = ({
+  courseId,
+  iconOnly = false,
+}: {
+  courseId: RawCourseID;
+  iconOnly?: boolean;
+}) => {
   const {
     isCourseSelected,
     addCourse,
@@ -39,7 +45,15 @@ const SelectCourseButton = ({ courseId }: { courseId: RawCourseID }) => {
   return (
     <div className="flex flex-row gap-1">
       {isFavouritable && (
-        <Button variant="ghost" onClick={handleToggleFavourite} size="sm">
+        <Button
+          variant="ghost"
+          onClick={handleToggleFavourite}
+          size={iconOnly ? "icon" : "sm"}
+          aria-label={
+            isInFavourites ? dict.a11y.unfavorite : dict.a11y.favorite
+          }
+          title={isInFavourites ? dict.a11y.unfavorite : dict.a11y.favorite}
+        >
           {isInFavourites ? (
             <Heart className="text-red-500 fill-red-500 w-4 h-4" />
           ) : (
@@ -51,25 +65,29 @@ const SelectCourseButton = ({ courseId }: { courseId: RawCourseID }) => {
         <Button
           variant={"destructive"}
           onClick={handleRemoveCourse}
-          size="sm"
+          size={iconOnly ? "icon" : "sm"}
           aria-label={dict.course.item.remove_from_semester}
         >
           <Minus className="w-4 h-4" />
-          <span className="hidden sm:inline">
-            {dict.course.item.remove_from_semester}
-          </span>
+          {!iconOnly && (
+            <span className="hidden sm:inline">
+              {dict.course.item.remove_from_semester}
+            </span>
+          )}
         </Button>
       ) : (
         <Button
           variant="outline"
           onClick={handleAddCourse}
-          size="sm"
+          size={iconOnly ? "icon" : "sm"}
           aria-label={dict.course.item.add_to_semester}
         >
           <Plus className="w-4 h-4" />
-          <span className="hidden sm:inline">
-            {dict.course.item.add_to_semester}
-          </span>
+          {!iconOnly && (
+            <span className="hidden sm:inline">
+              {dict.course.item.add_to_semester}
+            </span>
+          )}
         </Button>
       )}
     </div>

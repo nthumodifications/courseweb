@@ -240,6 +240,21 @@
       "dismiss_limited_mode": "Dismiss limited search mode",
       "no_more_results": "No more results",
       "no_results": "No matching courses",
+      "views": {
+        "label": "Course display",
+        "list": "List",
+        "table": "Table",
+        "grid": "Grid",
+        "columns": {
+          "code": "Code",
+          "title": "Course",
+          "time_location": "Time and location",
+          "credits": "Credits",
+          "enrollment": "Enrollment",
+          "language": "Language",
+          "actions": "Actions"
+        }
+      },
       "ai_search": {
         "toggle": "Enable AI search",
         "toggle_off": "Disable AI search",
@@ -2301,6 +2316,7 @@
     "no_results": "No results found.",
     "try_again": "Try Again",
     "load_error": "The data could not be loaded.",
+    "not_available": "—",
     "submit": "Submit",
     "save": "Save",
     "error": "Error",

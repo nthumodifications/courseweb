@@ -29,6 +29,10 @@ import {
 type CourseListItemCourse = CourseDefinition &
   Partial<Pick<CourseSyllabusView, "brief" | "keywords">>;
 
+export const formatCourseCode = (
+  course: Pick<CourseDefinition, "department" | "course" | "class">,
+) => `${course.department} ${course.course}${course.class.padStart(2, "0")}`;
+
 type EnglishNamesDisplay = "add" | "replace" | "none";
 
 type CourseListItemProps = {
@@ -146,9 +150,7 @@ const CourseListItem: FC<CourseListItemProps> = memo((props) => {
         )}
         {showCourseCode && (
           <p className="text-nthu-500 text-sm font-bold">
-            {course
-              ? `${course.department} ${course.course}${course.class.padStart(2, "0")}`
-              : missingCourseId}
+            {course ? formatCourseCode(course) : missingCourseId}
           </p>
         )}
       </div>

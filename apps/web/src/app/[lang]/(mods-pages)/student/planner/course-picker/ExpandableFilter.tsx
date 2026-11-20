@@ -255,25 +255,23 @@ const ExpandableFilter = ({
             isOpen ? "ring-2 ring-primary" : "hover:border-primary/50",
           )}
         >
-          <div className="flex flex-1 flex-wrap gap-1 items-center">
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
             {refinedItems.length > 0 ? (
-              <div className="flex flex-wrap gap-1">
+              <div className="flex flex-wrap items-center gap-1">
                 {refinedItems.map((item) => {
                   const label = getItemLabel(item);
                   return (
                     <Badge
                       key={item.value}
                       variant="outline"
-                      className="mr-1 mb-1 break-words"
+                      className="inline-flex max-w-full items-center gap-1 px-2 py-1"
                     >
-                      <span className="break-all whitespace-normal">
-                        {label}
-                      </span>
+                      <span className="whitespace-normal">{label}</span>
                       <button
                         type="button"
                         aria-label={`${dict.planner.coursePicker.removeFilter} ${label}`}
                         title={dict.planner.coursePicker.removeFilter}
-                        className="ml-0.5 -mr-1 flex-shrink-0 flex items-center justify-center p-2 -m-1"
+                        className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-sm"
                         onClick={(e) => {
                           e.stopPropagation();
                           refine(item.value);

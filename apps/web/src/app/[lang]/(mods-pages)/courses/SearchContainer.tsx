@@ -8,7 +8,6 @@ import { createInfiniteHitsSessionStorageCache } from "instantsearch.js/es/lib/i
 import useDictionary from "@/dictionaries/useDictionary";
 import CourseListItem from "@/components/Courses/CourseListItem";
 import Filters from "./Filters";
-import ResetFiltersButton from "@/app/[lang]/(mods-pages)/courses/ResetFiltersButton";
 import { useEffect, useRef, memo, useMemo } from "react";
 import CourseListItemSkeleton from "../../../../components/Courses/CourseListItemSkeleton";
 import {
@@ -20,6 +19,7 @@ import {
   EmptyState,
   ErrorState,
   ScrollArea,
+  Skeleton,
   cn,
 } from "@courseweb/ui";
 import { Calendar, FilterIcon } from "lucide-react";
@@ -37,6 +37,12 @@ import { useCourseTextHits } from "@/hooks/useCourseTextHits";
 import type { CourseSyllabusView } from "@/config/supabase";
 import { SearchResultCount } from "@/components/Search/SearchResultCount";
 import { useDefaultSemesterId } from "@/hooks/useSemesters";
+import { useMediaQuery } from "usehooks-ts";
+import CourseSearchViewSwitch, {
+  useCourseSearchView,
+} from "./CourseSearchViewSwitch";
+import type { CourseSearchView } from "./courseSearchView";
+import { CourseGridCard, CourseResultsTable } from "./CourseResultViews";
 
 type SearchClient = ResilientSearchClient;
 type InfiniteHitsCache = ReturnType<
@@ -47,20 +53,34 @@ type CourseInfiniteHitsOptions = NonNullable<
 >;
 type CourseInfiniteHitsCache = NonNullable<CourseInfiniteHitsOptions["cache"]>;
 
-// Memoize the Hit component to prevent unnecessary re-renders
-const Hit = memo(({ hit }: { hit: CourseSyllabusView }) => {
-  return <CourseListItem course={hit} syllabusFullWidth />;
-});
+const Hit = memo(({ hit }: { hit: CourseSyllabusView }) => (
+  <CourseListItem course={hit} syllabusFullWidth />
+));
 Hit.displayName = "Hit";
 
 type InfiniteHitsProps = Omit<CourseInfiniteHitsOptions, "cache"> & {
   cache?: InfiniteHitsCache;
   searchClient: SearchClient;
+  view: CourseSearchView;
 };
+
+const GridSkeleton = () => (
+  <div className="flex h-full min-w-0 flex-col gap-2 rounded-lg border border-border bg-card p-4">
+    <Skeleton className="h-4 w-24" />
+    <Skeleton className="h-5 w-3/4" />
+    <Skeleton className="h-3 w-1/2" />
+    <Skeleton className="h-3 w-full" />
+    <div className="mt-auto flex gap-1 pt-2">
+      <Skeleton className="h-6 w-12" />
+      <Skeleton className="h-6 w-12" />
+    </div>
+  </div>
+);
 
 export function InfiniteHits({
   searchClient,
   cache,
+  view,
   ...props
 }: InfiniteHitsProps) {
   const dict = useDictionary();
@@ -70,59 +90,76 @@ export function InfiniteHits({
     ...props,
   });
   const { status, refresh } = useInstantSearch();
-  const sentinelRef = useRef(null);
+  const isMdUp = useMediaQuery("(min-width: 768px)");
+  const sentinelRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const isLoading = status === "loading" || status === "stalled";
 
-  // Simple intersection observer for infinite loading
   useEffect(() => {
     if (!sentinelRef.current || isLastPage) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting) {
-          showMore();
-        }
+        if (entries[0].isIntersecting) showMore();
       },
       {
-        rootMargin: "200px", // Load earlier for smoother experience
+        root: isMdUp ? scrollRef.current : null,
+        rootMargin: "200px",
       },
     );
 
     observer.observe(sentinelRef.current);
     return () => observer.disconnect();
-  }, [isLastPage, showMore]);
+  }, [isLastPage, isMdUp, showMore]);
+
+  const scrollClassName = isMdUp
+    ? view === "table"
+      ? "min-h-0 flex-1 overflow-auto"
+      : "min-h-0 flex-1 overflow-x-hidden overflow-y-auto"
+    : "overflow-visible";
 
   return (
     <div
       ref={scrollRef}
       className={cn(
-        "relative min-w-0 overflow-y-auto",
+        "relative min-w-0",
+        scrollClassName,
         status !== "idle" ? "opacity-80" : "",
       )}
-      style={{ height: "calc(100vh - 200px)" }}
     >
-      <div className="divide-y divide-border pb-20">
-        {/* Regular items */}
-        {hits.map((hit) => (
-          <div key={hit.objectID} className="min-w-0">
-            <Hit hit={hit} />
-          </div>
-        ))}
+      {view === "table" ? (
+        <CourseResultsTable courses={hits} loadingRows={isLoading ? 3 : 0} />
+      ) : view === "grid" ? (
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] items-stretch gap-2 p-2">
+          {hits.map((hit) => (
+            <CourseGridCard key={hit.objectID} course={hit} />
+          ))}
+          {isLoading &&
+            Array.from({ length: 3 }, (_, index) => (
+              <GridSkeleton key={`loading-${index}`} />
+            ))}
+        </div>
+      ) : (
+        <div className="divide-y divide-border px-2">
+          {hits.map((hit) => (
+            <div key={hit.objectID} className="min-w-0">
+              <Hit hit={hit} />
+            </div>
+          ))}
+          {isLoading && (
+            <>
+              <CourseListItemSkeleton />
+              <CourseListItemSkeleton />
+              <CourseListItemSkeleton />
+            </>
+          )}
+        </div>
+      )}
 
-        {/* Loading skeletons */}
-        {(status === "loading" || status === "stalled") && (
-          <>
-            <CourseListItemSkeleton />
-            <CourseListItemSkeleton />
-            <CourseListItemSkeleton />
-          </>
-        )}
+      <div ref={sentinelRef} className="h-4" />
 
-        {/* Sentinel for infinite loading */}
-        <div ref={sentinelRef} className="h-4" />
-
-        {/* Status messages */}
-        {status === "error" && (
+      {status === "error" && (
+        <div className="px-2 py-4">
           <ErrorState
             title={dict.common.load_error}
             action={
@@ -135,23 +172,24 @@ export function InfiniteHits({
               </Button>
             }
           />
-        )}
+        </div>
+      )}
 
-        {status === "idle" && hits.length === 0 && (
+      {status === "idle" && hits.length === 0 && (
+        <div className="px-2 py-4">
           <EmptyState title={dict.course.search.no_results} />
-        )}
+        </div>
+      )}
 
-        {isLastPage && hits.length > 0 && status === "idle" && (
-          <div className="py-4 text-sm text-muted-foreground">
-            {dict.course.search.no_more_results}
-          </div>
-        )}
-      </div>
+      {isLastPage && hits.length > 0 && status === "idle" && (
+        <div className="px-2 py-4 text-sm text-muted-foreground">
+          {dict.course.search.no_more_results}
+        </div>
+      )}
     </div>
   );
 }
 
-// Memoize the entire SearchContainer component
 const SearchContainer = memo(
   ({
     searchClient,
@@ -166,11 +204,9 @@ const SearchContainer = memo(
     const { status } = useInstantSearch();
     const { query } = useSearchBox();
     const previousNbHitsRef = useRef<number>(0);
+    const { view, setView } = useCourseSearchView();
 
-    const { items } = useCustomMenu({
-      attribute: "semester",
-    });
-
+    const { items } = useCustomMenu({ attribute: "semester" });
     const semester = useMemo(
       () => items.find((item) => item.isRefined)?.value ?? defaultSemester,
       [defaultSemester, items],
@@ -178,7 +214,6 @@ const SearchContainer = memo(
     const { getSemesterCourses } = useUserTimetable();
     const courses = getSemesterCourses(semester);
 
-    // Track search results
     useEffect(() => {
       if (nbHits !== previousNbHitsRef.current && nbHits > 0) {
         courseEvents.search(query || "all", nbHits);
@@ -187,32 +222,28 @@ const SearchContainer = memo(
     }, [nbHits, query]);
 
     return (
-      <div className="flex min-w-0 w-full gap-4">
+      <div className="flex min-h-0 min-w-0 w-full gap-4 md:h-full">
         <LocalSearchLifecycle searchClient={searchClient} semester={semester} />
-        <div className="hidden w-64 shrink-0 flex-col gap-4 px-4 xl:flex">
-          <div className="flex justify-between items-baseline">
-            <span className="font-bold">{dict.course.refine.title}</span>
-            <ResetFiltersButton />
-          </div>
-          <ScrollArea className="min-w-0">
-            <Filters selectedCourses={courses as MinimalCourse[]} />
-          </ScrollArea>
+
+        <div className="hidden min-h-0 w-64 shrink-0 px-4 xl:flex">
+          <Filters selectedCourses={courses as MinimalCourse[]} fillHeight />
         </div>
 
-        <div className="flex min-w-0 flex-1 flex-col gap-4 px-2">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 px-2 md:h-full">
           <SearchDegradationBanner searchClient={searchClient} />
           <div className="flex min-w-0 w-full flex-wrap items-center gap-1 sm:flex-nowrap">
-            {/* Phones: semester + drawer buttons on the first row, search on
-                its own full-width row. From sm up everything shares one row. */}
             <div className="order-1 shrink-0">
               <SemesterSelector />
             </div>
             <div className="order-1 flex-1 sm:hidden" aria-hidden="true" />
-            <div className="order-3 min-w-0 basis-full sm:order-2 sm:flex-1 sm:basis-auto">
-              <SearchBox
-                placeholder={dict.course.list.search_placeholder}
-                autoFocus
-              />
+            <div className="order-3 flex min-w-0 basis-full items-center gap-1 sm:order-2 sm:flex-1 sm:basis-auto">
+              <div className="min-w-0 flex-1">
+                <SearchBox
+                  placeholder={dict.course.list.search_placeholder}
+                  autoFocus
+                />
+              </div>
+              <CourseSearchViewSwitch view={view} onViewChange={setView} />
             </div>
             <div className="order-2 shrink-0 sm:order-3 xl:hidden">
               <Drawer>
@@ -222,19 +253,19 @@ const SearchContainer = memo(
                     size="icon"
                     aria-label={dict.a11y.course_filters}
                   >
-                    <FilterIcon size="16" />
+                    <FilterIcon className="h-4 w-4" />
                   </Button>
                 </DrawerTrigger>
-                <DrawerContent>
+                <DrawerContent className="h-[85dvh] max-h-[85dvh]">
                   <DrawerTitle className="sr-only">
                     {dict.a11y.course_filters}
                   </DrawerTitle>
-                  <ScrollArea className="w-full max-h-[90vh] overflow-auto px-4">
-                    <div className="flex flex-row justify-end px-4 py-2 w-full">
-                      <ResetFiltersButton />
-                    </div>
-                    <Filters selectedCourses={courses as MinimalCourse[]} />
-                  </ScrollArea>
+                  <div className="min-h-0 flex-1 p-4">
+                    <Filters
+                      selectedCourses={courses as MinimalCourse[]}
+                      fillHeight
+                    />
+                  </div>
                 </DrawerContent>
               </Drawer>
             </div>
@@ -246,21 +277,23 @@ const SearchContainer = memo(
                     size="icon"
                     aria-label={dict.a11y.calendar}
                   >
-                    <Calendar size="16" />
+                    <Calendar className="h-4 w-4" />
                   </Button>
                 </DrawerTrigger>
-                <DrawerContent>
+                <DrawerContent className="h-[85dvh] max-h-[85dvh]">
                   <DrawerTitle className="sr-only">
                     {dict.a11y.calendar}
                   </DrawerTitle>
-                  <ScrollArea className="w-full max-h-[80vh] overflow-auto p-2">
-                    <CourseSidePanel />
-                  </ScrollArea>
+                  <div className="min-h-0 flex-1 p-2">
+                    <ScrollArea className="h-full w-full overflow-auto">
+                      <CourseSidePanel />
+                    </ScrollArea>
+                  </div>
                 </DrawerContent>
               </Drawer>
             </div>
           </div>
-          <div className="text-muted-foreground">
+          <div className="shrink-0 text-muted-foreground">
             <SearchResultCount
               status={status}
               nbHits={nbHits}
@@ -271,6 +304,7 @@ const SearchContainer = memo(
             showPrevious={false}
             cache={sessionStorageCache}
             searchClient={searchClient}
+            view={view}
           />
         </div>
       </div>
