@@ -64,7 +64,7 @@ const SemesterSelector = () => {
 
   return (
     <Select value={selected} onValueChange={handleSelect}>
-      <SelectTrigger className="w-36 sm:w-40 xl:w-[12.5rem]">
+      <SelectTrigger className="w-36">
         <SelectValue placeholder={dict.course.refine.semester} />
       </SelectTrigger>
       <SelectContent>

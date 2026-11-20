@@ -20,6 +20,10 @@ const geTargetSynonyms: Record<string, string> = GETargetCodes.reduce(
   {},
 );
 
+// Courses without a GE target index an empty facet value; hide that row.
+const withoutBlankValues = <T extends { value: string }>(items: T[]) =>
+  items.filter((item) => item.value.trim() !== "");
+
 const Filters = ({ selectedCourses }: { selectedCourses: MinimalCourse[] }) => {
   const dict = useDictionary();
   return (
@@ -84,6 +88,7 @@ const Filters = ({ selectedCourses }: { selectedCourses: MinimalCourse[] }) => {
             <InlineCheckboxFilter
               attribute="ge_target"
               synonms={geTargetSynonyms}
+              filterFn={withoutBlankValues}
             />
           </div>
 

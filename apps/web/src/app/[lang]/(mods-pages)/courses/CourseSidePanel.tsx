@@ -36,7 +36,9 @@ const CourseSidePanel = () => {
         </TabsTrigger>
       </TabsList>
       <TabsContent value="timetable" className="h-full">
-        <ScrollArea className="h-[calc(100vh-12.5rem)] w-full min-w-0 overflow-auto">
+        {/* Radix wraps the viewport content in a display:table div that grows
+            to the table's intrinsic width and clips the last weekdays. */}
+        <ScrollArea className="h-[calc(100vh-12.5rem)] w-full min-w-0 overflow-auto [&_[data-radix-scroll-area-viewport]>div]:!block">
           <div className="h-full">
             <TimetableWithSemester semester={semester} />
             <TimetableBottomBar />

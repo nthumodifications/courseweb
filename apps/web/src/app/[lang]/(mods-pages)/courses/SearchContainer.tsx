@@ -9,7 +9,7 @@ import useDictionary from "@/dictionaries/useDictionary";
 import CourseListItem from "@/components/Courses/CourseListItem";
 import Filters from "./Filters";
 import ResetFiltersButton from "@/app/[lang]/(mods-pages)/courses/ResetFiltersButton";
-import { useEffect, useRef, memo, useMemo, useState } from "react";
+import { useEffect, useRef, memo, useMemo } from "react";
 import CourseListItemSkeleton from "../../../../components/Courses/CourseListItemSkeleton";
 import {
   Button,
@@ -35,7 +35,6 @@ import LocalSearchLifecycle from "@/components/Search/LocalSearchLifecycle";
 import type { ResilientSearchClient } from "@/lib/search-client";
 import { useCourseTextHits } from "@/hooks/useCourseTextHits";
 import type { CourseSyllabusView } from "@/config/supabase";
-import AiSearchBox from "./AiSearchBox";
 import { SearchResultCount } from "@/components/Search/SearchResultCount";
 import { useDefaultSemesterId } from "@/hooks/useSemesters";
 
@@ -167,7 +166,6 @@ const SearchContainer = memo(
     const { status } = useInstantSearch();
     const { query } = useSearchBox();
     const previousNbHitsRef = useRef<number>(0);
-    const [aiSearchEnabled, setAiSearchEnabled] = useState(false);
 
     const { items } = useCustomMenu({
       attribute: "semester",
@@ -204,20 +202,19 @@ const SearchContainer = memo(
         <div className="flex min-w-0 flex-1 flex-col gap-4 px-2">
           <SearchDegradationBanner searchClient={searchClient} />
           <div className="flex min-w-0 w-full flex-wrap items-center gap-1 sm:flex-nowrap">
-            <div className="w-full shrink-0 sm:w-auto">
+            {/* Phones: semester + drawer buttons on the first row, search on
+                its own full-width row. From sm up everything shares one row. */}
+            <div className="order-1 shrink-0">
               <SemesterSelector />
             </div>
-            <AiSearchBox
-              enabled={aiSearchEnabled}
-              onEnabledChange={setAiSearchEnabled}
-              semester={semester}
-            >
+            <div className="order-1 flex-1 sm:hidden" aria-hidden="true" />
+            <div className="order-3 min-w-0 basis-full sm:order-2 sm:flex-1 sm:basis-auto">
               <SearchBox
                 placeholder={dict.course.list.search_placeholder}
                 autoFocus
               />
-            </AiSearchBox>
-            <div className="shrink-0 xl:hidden">
+            </div>
+            <div className="order-2 shrink-0 sm:order-3 xl:hidden">
               <Drawer>
                 <DrawerTrigger asChild>
                   <Button
@@ -241,7 +238,7 @@ const SearchContainer = memo(
                 </DrawerContent>
               </Drawer>
             </div>
-            <div className="shrink-0 xl:hidden">
+            <div className="order-2 shrink-0 sm:order-3 xl:hidden">
               <Drawer>
                 <DrawerTrigger asChild>
                   <Button
