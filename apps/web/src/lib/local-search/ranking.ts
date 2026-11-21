@@ -128,11 +128,13 @@ export const rankLocalIdsByTerms = (
 ): readonly number[] => {
   if (!terms.length) return ids;
 
+  const scores = new Map<number, number>();
   const ranked = ids
-    .map((id) => ({
-      id,
-      score: remoteRankScore(records[id]!, terms),
-    }))
+    .map((id) => {
+      const score = remoteRankScore(records[id]!, terms);
+      scores.set(id, score);
+      return { id, score };
+    })
     .sort((left, right) => {
       const scoreDifference = right.score - left.score;
       if (scoreDifference) return scoreDifference;
@@ -144,6 +146,21 @@ export const rankLocalIdsByTerms = (
 
   if (parseCourseCodeQuery(terms.join(" "))) return ranked;
 
+  // Restriction-only matches score 0; keep them after every ranked hit
+  // (including later sections of ranked courses).
+  const scored = ranked.filter((id) => scores.get(id)! > 0);
+  const unscored = ranked.filter((id) => scores.get(id)! <= 0);
+  return [
+    ...groupSections(records, scored),
+    ...groupSections(records, unscored),
+  ];
+};
+
+/** First section of each course, then the remaining sections, keeping order. */
+const groupSections = (
+  records: readonly SearchProjectionRecord[],
+  ranked: readonly number[],
+) => {
   const firstSections: number[] = [];
   const remainingSections: number[] = [];
   const seenCourses = new Set<string>();

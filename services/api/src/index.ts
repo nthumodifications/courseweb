@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import { allowedCorsOrigin } from "./cors-origins";
 import { logger } from "hono/logger";
 import type { Ai, RateLimit } from "@cloudflare/workers-types";
 
@@ -73,8 +74,10 @@ export type Bindings = {
 export const app = new Hono<{ Bindings: Bindings }>()
   .use(
     cors({
-      origin:
-        process.env.NODE_ENV === "production" ? "https://nthumods.com" : "*",
+      origin: (origin) =>
+        process.env.NODE_ENV === "production"
+          ? allowedCorsOrigin(origin)
+          : origin || "*",
       // The search text tier versions its IndexedDB cache by ETag, which a
       // cross-origin fetch cannot read unless it is exposed.
       exposeHeaders: ["ETag"],

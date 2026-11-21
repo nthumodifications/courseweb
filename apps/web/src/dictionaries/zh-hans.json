@@ -240,6 +240,21 @@
       "dismiss_limited_mode": "关闭有限搜索模式提示",
       "no_more_results": "没有更多结果",
       "no_results": "找不到符合的课程",
+      "views": {
+        "label": "课程显示方式",
+        "list": "列表",
+        "table": "表格",
+        "grid": "卡片",
+        "columns": {
+          "code": "科号",
+          "title": "课名",
+          "time_location": "时间地点",
+          "credits": "学分",
+          "enrollment": "人数",
+          "language": "语言",
+          "actions": "操作"
+        }
+      },
       "ai_search": {
         "toggle": "启用 AI 搜索",
         "toggle_off": "禁用 AI 搜索",
@@ -318,6 +333,7 @@
       "title": "筛选",
       "semester": "学期",
       "level": "课程对象",
+      "course_level": "课程等级",
       "language": "授课语言",
       "department": "开课系所",
       "specialization": "一二专选课",
@@ -335,6 +351,8 @@
       "16_weeks": "16 周课程",
       "others": "其他",
       "clear": "清除",
+      "clear_section": "清除",
+      "more_filters": "更多筛选",
       "special_tags": "特殊标签",
       "ge_filters": "通识筛选",
       "timetable_empty": "找没课的时间",
@@ -2301,6 +2319,7 @@
     "no_results": "找不到结果。",
     "try_again": "再试一次",
     "load_error": "数据加载失败。",
+    "not_available": "—",
     "submit": "送出",
     "save": "保存",
     "error": "错误",

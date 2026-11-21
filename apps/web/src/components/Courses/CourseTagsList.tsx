@@ -8,6 +8,15 @@ import {
   PropsWithChildren,
 } from "react";
 import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
+import { decodeCourseText } from "@/lib/course-text";
+import {
+  isChineseCourseLanguage,
+  isEnglishCourseLanguage,
+} from "@/lib/course-language";
+
+export const hasKnownCourseCapacity = (capacity: number | null | undefined) =>
+  capacity != null;
+export { isChineseCourseLanguage, isEnglishCourseLanguage };
 
 const HighlightItem: FC<
   PropsWithChildren<
@@ -42,20 +51,22 @@ const CourseTagList = ({
     <div className="flex flex-row flex-wrap gap-1 text-sm">
       {showAdditionalTags && course.closed_mark && (
         <HighlightItem className="bg-destructive text-destructive-foreground">
-          {localizeData(course.closed_mark)}
+          {localizeData(decodeCourseText(course.closed_mark))}
         </HighlightItem>
       )}
       {showEnrollment && (
         <>
-          <HighlightItem>
-            <span className="">
-              {course.capacity ?? "-"}
-              {(course.reserve ?? 0) > 0 && (
-                <>{` ${dict.course.tags.reserve_prefix} ${course.reserve}`}</>
-              )}{" "}
-              {dict.course.tags.people}
-            </span>
-          </HighlightItem>
+          {hasKnownCourseCapacity(course.capacity) && (
+            <HighlightItem>
+              <span className="">
+                {course.capacity}
+                {(course.reserve ?? 0) > 0 && (
+                  <>{` ${dict.course.tags.reserve_prefix} ${course.reserve}`}</>
+                )}{" "}
+                {dict.course.tags.people}
+              </span>
+            </HighlightItem>
+          )}
           {course.enrolled != undefined && (
             <HighlightItem>
               <span className="">
@@ -82,14 +93,12 @@ const CourseTagList = ({
           <span className="">{dict.course.tags.eighteen_weeks}</span>
         </HighlightItem>
       )}
-      {course.language == "英" ? (
+      {isEnglishCourseLanguage(course.language) ? (
         <HighlightItem className="bg-primary/10 text-primary">
           {dict.course.tags.english}
         </HighlightItem>
       ) : (
-        <HighlightItem className="bg-primary/10 text-primary">
-          {dict.course.tags.chinese}
-        </HighlightItem>
+        <HighlightItem>{dict.course.tags.chinese}</HighlightItem>
       )}
       {showAdditionalTags && course.tags.includes("X-Class") && (
         <HighlightItem className="bg-destructive text-destructive-foreground">
@@ -98,7 +107,9 @@ const CourseTagList = ({
       )}
       {showAdditionalTags && (course.ge_target?.trim() || "").length > 0 && (
         <HighlightItem>
-          {course.ge_target ? localizeData(course.ge_target) : null}{" "}
+          {course.ge_target
+            ? localizeData(decodeCourseText(course.ge_target))
+            : null}{" "}
           {dict.course.tags.general_education}
         </HighlightItem>
       )}

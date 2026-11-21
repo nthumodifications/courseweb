@@ -6,8 +6,11 @@ import type { ResilientSearchClient } from "@/lib/search-client";
 
 const SearchDegradationBanner = ({
   searchClient,
+  inline = false,
 }: {
   searchClient: ResilientSearchClient;
+  /** One line of muted text for a results info row, instead of an Alert. */
+  inline?: boolean;
 }) => {
   const dict = useDictionary();
   const [dismissed, setDismissed] = useState(false);
@@ -23,6 +26,40 @@ const SearchDegradationBanner = ({
   );
   const { refresh } = useInstantSearch();
   if (backend !== "fallback" || dismissed) return null;
+
+  if (inline) {
+    return (
+      <span className="flex min-w-0 items-center gap-1 text-sm text-muted-foreground">
+        <Info className="h-4 w-4 shrink-0" aria-hidden="true" />
+        <span className="truncate">
+          {hasError ? dict.common.load_error : dict.course.search.limited_mode}
+        </span>
+        {hasError ? (
+          <Button
+            type="button"
+            variant="link"
+            size="sm"
+            className="h-8 shrink-0 px-2 text-primary"
+            onClick={refresh}
+          >
+            {dict.common.try_again}
+          </Button>
+        ) : (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 shrink-0"
+            aria-label={dict.course.search.dismiss_limited_mode}
+            title={dict.course.search.dismiss_limited_mode}
+            onClick={() => setDismissed(true)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
+      </span>
+    );
+  }
 
   return (
     <Alert className="flex items-center gap-2 p-2 text-sm">

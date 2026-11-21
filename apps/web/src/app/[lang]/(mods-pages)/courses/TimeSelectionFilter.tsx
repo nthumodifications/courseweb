@@ -266,9 +266,9 @@ const TimeSelectionFilter = ({
       .filter(Boolean);
 
     return (
-      <div className="flex flex-wrap gap-1">
+      <div className="flex flex-wrap items-center gap-1">
         {groupedByDay.map((group) => (
-          <Badge key={group?.day} variant="outline" className="mr-1 mb-1">
+          <Badge key={group?.day} variant="outline">
             {group?.day}: {group?.periods.join(", ")}
           </Badge>
         ))}

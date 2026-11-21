@@ -1,5 +1,5 @@
 import { useSearchBox, UseSearchBoxProps } from "react-instantsearch";
-import { Input, Button } from "@courseweb/ui";
+import { Input, Button, cn } from "@courseweb/ui";
 import { useRef, useState } from "react";
 import { Search } from "lucide-react";
 import useDictionary from "@/dictionaries/useDictionary";
@@ -7,9 +7,15 @@ import useDictionary from "@/dictionaries/useDictionary";
 interface SearchBoxProps extends UseSearchBoxProps {
   placeholder?: string;
   autoFocus?: boolean;
+  className?: string;
 }
 
-const SearchBox = ({ placeholder, autoFocus, ...props }: SearchBoxProps) => {
+const SearchBox = ({
+  placeholder,
+  autoFocus,
+  className,
+  ...props
+}: SearchBoxProps) => {
   const { query, refine, clear } = useSearchBox(props);
   const dict = useDictionary();
   const [inputValue, setInputValue] = useState(query);
@@ -31,7 +37,7 @@ const SearchBox = ({ placeholder, autoFocus, ...props }: SearchBoxProps) => {
   return (
     <form
       onSubmit={onSubmit}
-      className="relative w-full flex items-center gap-1"
+      className="relative flex w-full min-w-0 items-center gap-1"
     >
       <Input
         ref={inputRef}
@@ -44,7 +50,7 @@ const SearchBox = ({ placeholder, autoFocus, ...props }: SearchBoxProps) => {
         autoCorrect="off"
         autoCapitalize="off"
         spellCheck={false}
-        className="flex-1"
+        className={cn("min-w-0 flex-1", className)}
       />
       <Button
         type="submit"

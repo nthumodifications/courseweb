@@ -4,9 +4,9 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@courseweb/ui";
-import { useMediaQuery } from "usehooks-ts";
+import type { ImperativePanelHandle } from "react-resizable-panels";
 import { InstantSearch } from "react-instantsearch";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useSettings } from "@/hooks/contexts/settings";
@@ -25,8 +25,35 @@ import { useDefaultSemesterId } from "@/hooks/useSemesters";
 
 const sessionStorageCache = createInfiniteHitsSessionStorageCache();
 
+// The filter column and the timetable panel need about 62rem of page width.
+// This is measured on the page itself (the @container/courses below), not the
+// window, so collapsing the app sidebar brings them back.
+const WIDE_LAYOUT_MIN_WIDTH = 992;
+
+const useIsWideLayout = () => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [isWide, setIsWide] = useState(false);
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    const observer = new ResizeObserver(([entry]) => {
+      setIsWide(entry.contentRect.width >= WIDE_LAYOUT_MIN_WIDTH);
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+  return { ref, isWide };
+};
+
 const CourseSearchContainer = () => {
-  const isDesktop = useMediaQuery("(min-width: 1024px)");
+  const { ref: layoutRef, isWide } = useIsWideLayout();
+  const sidePanelRef = useRef<ImperativePanelHandle>(null);
+  useEffect(() => {
+    // A panel mounted while narrow starts collapsed; open it once there's room.
+    if (isWide && sidePanelRef.current?.isCollapsed()) {
+      sidePanelRef.current.resize(25);
+    }
+  }, [isWide]);
   const [searchParams] = useSearchParams();
   const { language } = useSettings();
   const localizeQuery = useLocalizedZhQuery();
@@ -126,23 +153,30 @@ const CourseSearchContainer = () => {
         }}
         stalledSearchDelay={500}
       >
-        <div className="flex min-w-0 flex-col h-full max-h-[95dvh] gap-4">
-          <ResizablePanelGroup direction="horizontal" className="h-full w-full">
-            <ResizablePanel className="flex min-w-0 gap-4">
+        <div
+          ref={layoutRef}
+          className="@container/courses flex h-full min-h-0 min-w-0 flex-col"
+        >
+          <ResizablePanelGroup
+            direction="horizontal"
+            className="h-full min-h-0 w-full min-w-0"
+          >
+            <ResizablePanel minSize={55} className="min-h-0 min-w-0">
               <SearchContainer
                 searchClient={searchClient}
                 sessionStorageCache={sessionStorageCache}
               />
             </ResizablePanel>
 
-            <ResizableHandle className="hidden md:block outline-none self-center px-[2px] h-48 mx-4 my-4 rounded-full bg-muted" />
+            <ResizableHandle className="hidden h-48 self-center rounded-full bg-muted px-[2px] outline-none mx-4 my-4 @[62rem]/courses:block" />
 
             <ResizablePanel
               collapsible={true}
               collapsedSize={0}
-              minSize={30}
-              defaultSize={isDesktop ? 30 : 0}
-              className="hidden md:block pr-1"
+              minSize={20}
+              ref={sidePanelRef}
+              defaultSize={25}
+              className="hidden min-h-0 min-w-[16rem] pr-1 @[62rem]/courses:block"
             >
               <CourseSidePanel />
             </ResizablePanel>

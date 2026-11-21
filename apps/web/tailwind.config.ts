@@ -12,6 +12,16 @@ const config: Config = {
     "../../packages/ui/src/**/*.{ts,tsx}",
     "../../packages/shared/src/**/*.{ts,tsx}",
   ],
+  theme: {
+    ...sharedConfig.theme,
+    extend: {
+      ...sharedConfig.theme?.extend,
+      colors: {
+        ...sharedConfig.theme?.extend?.colors,
+        surface: "hsl(var(--surface))",
+      },
+    },
+  },
 };
 
 export default config;

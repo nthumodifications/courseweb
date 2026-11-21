@@ -240,6 +240,21 @@
       "dismiss_limited_mode": "Dismiss limited search mode",
       "no_more_results": "No more results",
       "no_results": "No matching courses",
+      "views": {
+        "label": "Course display",
+        "list": "List",
+        "table": "Table",
+        "grid": "Grid",
+        "columns": {
+          "code": "Code",
+          "title": "Course",
+          "time_location": "Time and location",
+          "credits": "Credits",
+          "enrollment": "Enrollment",
+          "language": "Language",
+          "actions": "Actions"
+        }
+      },
       "ai_search": {
         "toggle": "Enable AI search",
         "toggle_off": "Disable AI search",
@@ -318,6 +333,7 @@
       "title": "Refine",
       "semester": "Semester",
       "level": "Level",
+      "course_level": "Course Level",
       "language": "Instruction Language",
       "department": "Departments",
       "specialization": "Specialization",
@@ -335,6 +351,8 @@
       "16_weeks": "16 Weeks",
       "others": "Others",
       "clear": "Clear all",
+      "clear_section": "Clear",
+      "more_filters": "More filters",
       "special_tags": "Special tags",
       "ge_filters": "GE Filters",
       "timetable_empty": "Find empty",
@@ -2301,6 +2319,7 @@
     "no_results": "No results found.",
     "try_again": "Try Again",
     "load_error": "The data could not be loaded.",
+    "not_available": "—",
     "submit": "Submit",
     "save": "Save",
     "error": "Error",

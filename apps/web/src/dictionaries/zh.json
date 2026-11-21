@@ -240,6 +240,21 @@
       "dismiss_limited_mode": "關閉有限搜尋模式提示",
       "no_more_results": "沒有更多結果",
       "no_results": "找不到符合的課程",
+      "views": {
+        "label": "課程顯示方式",
+        "list": "列表",
+        "table": "表格",
+        "grid": "卡片",
+        "columns": {
+          "code": "科號",
+          "title": "課名",
+          "time_location": "時間地點",
+          "credits": "學分",
+          "enrollment": "人數",
+          "language": "語言",
+          "actions": "操作"
+        }
+      },
       "ai_search": {
         "toggle": "啟用 AI 搜尋",
         "toggle_off": "停用 AI 搜尋",
@@ -318,6 +333,7 @@
       "title": "篩選",
       "semester": "學期",
       "level": "課程對象",
+      "course_level": "課程等級",
       "language": "授課語言",
       "department": "開課系所",
       "specialization": "一二專選課",
@@ -335,6 +351,8 @@
       "16_weeks": "16 週課程",
       "others": "其他",
       "clear": "清除",
+      "clear_section": "清除",
+      "more_filters": "更多篩選",
       "special_tags": "特殊標籤",
       "ge_filters": "通識篩選",
       "timetable_empty": "找沒課的時間",
@@ -2301,6 +2319,7 @@
     "no_results": "找不到結果。",
     "try_again": "再試一次",
     "load_error": "資料載入失敗。",
+    "not_available": "—",
     "submit": "送出",
     "save": "儲存",
     "error": "錯誤",

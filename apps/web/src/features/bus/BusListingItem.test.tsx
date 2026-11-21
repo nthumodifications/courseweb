@@ -41,7 +41,9 @@ mock.module("lucide-react", () => ({
   Timer: actualIcons.Timer,
 }));
 
-const { BusListingItem } = await import("./BusListingItem");
+// A query string gives this file its own module instance, evaluated under the
+// mocks above, even when another test file already loaded BusListingItem.
+const { BusListingItem } = await import("./BusListingItem?bus-listing-test");
 
 mock.module("@/hooks/contexts/settings", () => actualSettings);
 mock.module("@/dictionaries/useDictionary", () => actualDictionary);
