@@ -8,7 +8,10 @@ import {
 } from "@courseweb/shared";
 import { createTimetableFromCourses } from "@/helpers/timetable";
 import { eventsToDisplay } from "./calendar_utils";
-import { timetableToCalendarEvent } from "./timetableToCalendarEvent";
+import {
+  firstClassDate,
+  timetableToCalendarEvent,
+} from "./timetableToCalendarEvent";
 import type { Language } from "@/types/settings";
 import type { CourseTimeslotData } from "@/types/timetable";
 import type { CalendarEvent, CalendarEventInternal } from "./calendar.types";
@@ -274,5 +277,33 @@ describe("timetable calendar event dates", () => {
     expect(event?.start).toEqual(taipeiDate("2026-02-26T15:30"));
     expect(event?.end).toEqual(taipeiDate("2026-02-26T17:20"));
     expect(event?.repeat?.value).toBe(taipeiDate("2026-06-14T00:00").getTime());
+  });
+});
+
+describe("firstClassDate", () => {
+  const key = (date: Date) =>
+    `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+
+  test("adds dayOfWeek days when the semester starts on a Monday", () => {
+    const monday = new Date(2026, 8, 7);
+    for (let day = 0; day < 7; day++) {
+      expect(key(firstClassDate(monday, day))).toBe(key(addDays(monday, day)));
+    }
+  });
+
+  test("keeps classes on their weekday when the semester starts on a Saturday (#1068)", () => {
+    const saturday = new Date(2026, 7, 1);
+    // Monday..Sunday classes land on Aug 3..8, then Sunday Aug 2.
+    expect(
+      [0, 1, 2, 3, 4, 5, 6].map((day) => key(firstClassDate(saturday, day))),
+    ).toEqual([
+      "2026-8-3",
+      "2026-8-4",
+      "2026-8-5",
+      "2026-8-6",
+      "2026-8-7",
+      "2026-8-1",
+      "2026-8-2",
+    ]);
   });
 });
