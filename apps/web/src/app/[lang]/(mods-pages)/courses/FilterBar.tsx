@@ -9,6 +9,7 @@ import {
 } from "@courseweb/ui";
 import { ChevronDown, Filter as FilterIcon } from "lucide-react";
 import type { MinimalCourse } from "@/types/courses";
+import { popoverScrollInDialogProps } from "../student/planner/course-picker/popoverScrollInDialog";
 import useDictionary from "@/dictionaries/useDictionary";
 import {
   AccordionFilterSection,
@@ -74,6 +75,7 @@ const FilterChipPopover = ({
 }) => (
   <FilterChip label={label} count={count}>
     <PopoverContent
+      {...popoverScrollInDialogProps}
       align="start"
       collisionPadding={16}
       className={`max-h-[min(70vh,32rem)] overflow-y-auto p-3 ${
@@ -113,6 +115,7 @@ const MoreFiltersChip = ({
       icon={<FilterIcon className="h-4 w-4" aria-hidden="true" />}
     >
       <PopoverContent
+        {...popoverScrollInDialogProps}
         align="start"
         collisionPadding={16}
         className="w-80 max-h-[min(70vh,32rem)] overflow-y-auto p-3"

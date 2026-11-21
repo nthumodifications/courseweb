@@ -103,6 +103,7 @@
       "more_options": "More",
       "sync_ccxp": "Sync from CCXP",
       "group_dept": "Group dept. by colors",
+      "group_dept_short": "By dept.",
       "sort_by_credits": "Sort by credits"
     },
     "course_actions": {

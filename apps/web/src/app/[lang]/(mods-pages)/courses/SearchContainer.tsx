@@ -144,7 +144,8 @@ export function InfiniteHits({
             ))}
         </div>
       ) : (
-        <div className="divide-y divide-border">
+        // Rows start 12px in, where the text inside the search field starts.
+        <div className="divide-y divide-border px-3">
           {hits.map((hit) => (
             <div key={hit.objectID} className="min-w-0">
               <Hit hit={hit} />
@@ -241,7 +242,7 @@ const SearchContainer = memo(
                 <SearchBox
                   placeholder={dict.course.list.search_placeholder}
                   autoFocus
-                  className="border-transparent bg-surface focus-visible:bg-background focus-visible:ring-offset-0"
+                  filled
                 />
               </div>
               <CourseSearchViewSwitch view={view} onViewChange={setView} />
@@ -278,7 +279,7 @@ const SearchContainer = memo(
               row onto a second line. */}
           {/* Status lives in this row (never above the search) so the
               search bar never moves. */}
-          <div className="flex h-8 shrink-0 items-center justify-between gap-2 text-muted-foreground">
+          <div className="flex h-8 shrink-0 items-center justify-between gap-2 pl-3 text-muted-foreground">
             <div className="flex min-w-0 items-center gap-2">
               <span className="shrink-0">
                 <SearchResultCount

@@ -18,7 +18,10 @@ const config: Config = {
       ...sharedConfig.theme?.extend,
       colors: {
         ...sharedConfig.theme?.extend?.colors,
-        surface: "hsl(var(--surface))",
+        // Soft grey between the theme's muted and background colours, so it
+        // follows every theme preset instead of being a fixed value.
+        surface:
+          "color-mix(in srgb, hsl(var(--muted)) 60%, hsl(var(--background)))",
       },
     },
   },

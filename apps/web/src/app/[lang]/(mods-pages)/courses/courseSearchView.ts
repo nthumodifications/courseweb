@@ -7,9 +7,14 @@ type StorageLike = Pick<Storage, "getItem" | "setItem">;
 const isCourseSearchView = (value: string | null): value is CourseSearchView =>
   value === "list" || value === "table" || value === "grid";
 
+// Every visit starts in List; the choice only lasts for this tab's session so
+// opening a course and coming back keeps it.
 const browserStorage = (): StorageLike | undefined => {
   try {
-    return typeof window === "undefined" ? undefined : window.localStorage;
+    if (typeof window === "undefined") return undefined;
+    // Earlier builds remembered the view across visits; drop that.
+    window.localStorage.removeItem(COURSE_SEARCH_VIEW_KEY);
+    return window.sessionStorage;
   } catch {
     return undefined;
   }
