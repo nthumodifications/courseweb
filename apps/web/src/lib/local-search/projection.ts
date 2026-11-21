@@ -25,7 +25,11 @@ export const LOCAL_FACETS = [
 export type LocalFacet = (typeof LOCAL_FACETS)[number];
 export type UnknownRecord = Record<string, unknown>;
 
-/** The fields included in searchableText and checked by matchesLocalQuery. */
+/**
+ * The fields included in searchableText and checked by matchesLocalQuery.
+ * `restrictions` (課程限制) is last and has no rank weight, so a course that
+ * only matches in its restrictions is listed after every title/teacher/code hit.
+ */
 export const SEARCHABLE_FIELDS = [
   "raw_id",
   "department",
@@ -35,6 +39,7 @@ export const SEARCHABLE_FIELDS = [
   "name_en",
   "teacher_en",
   "short_names",
+  "restrictions",
 ] as const;
 
 export type SearchProjectionRecord = UnknownRecord & {

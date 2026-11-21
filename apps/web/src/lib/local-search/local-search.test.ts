@@ -30,6 +30,7 @@ import { LOCAL_SEARCH_CASES } from "./local-search-cases";
 import { fetchJsonWithIdleTimeout } from "./deadline";
 import type { WorkerRequest } from "./worker-protocol";
 import { normalizeSyllabusKeywords } from "../syllabus-text";
+import { rankLocalIds } from "./ranking";
 import {
   buildFlexSearchIndex,
   searchFlexSearchIndex,
@@ -446,7 +447,39 @@ describe("local course search", () => {
       "name_en",
       "teacher_en",
       "short_names",
+      "restrictions",
     ]);
+  });
+
+  test("finds courses by their restrictions, after title matches", () => {
+    const records = [
+      prepareSearchRecord({
+        ...fixture[0],
+        objectID: "11510MATH101001",
+        raw_id: "11510MATH101001",
+        department: "MATH",
+        course: "1010",
+        name_zh: "微積分一",
+        name_en: "Calculus I",
+        restrictions: "",
+      }),
+      prepareSearchRecord({
+        ...fixture[0],
+        objectID: "11510PHYS101000",
+        raw_id: "11510PHYS101000",
+        department: "PHYS",
+        course: "1010",
+        name_zh: "普通物理",
+        name_en: "General Physics",
+        short_names: [],
+        teacher_zh: ["王"],
+        teacher_en: ["Wang"],
+        restrictions: "需修過微積分一",
+      }),
+    ];
+    expect(matchesLocalQuery(records[1]!, "微積分")).toBe(true);
+    expect(matchesLocalQuery(records[1]!, "需修過")).toBe(true);
+    expect(rankLocalIds(records, [1, 0], "微積分")).toEqual([0, 1]);
   });
 
   test("uses exact two-character tokens and finds Latin text inside CJK", () => {
