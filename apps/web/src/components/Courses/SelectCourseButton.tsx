@@ -10,9 +10,12 @@ import { toggleFavourite } from "@/helpers/favourites";
 const SelectCourseButton = ({
   courseId,
   iconOnly = false,
+  compact = false,
 }: {
   courseId: RawCourseID;
   iconOnly?: boolean;
+  /** 32px icon buttons for dense table rows. */
+  compact?: boolean;
 }) => {
   const {
     isCourseSelected,
@@ -49,6 +52,7 @@ const SelectCourseButton = ({
           variant="ghost"
           onClick={handleToggleFavourite}
           size={iconOnly ? "icon" : "sm"}
+          className={compact ? "h-8 w-8" : undefined}
           aria-label={
             isInFavourites ? dict.a11y.unfavorite : dict.a11y.favorite
           }
@@ -66,6 +70,7 @@ const SelectCourseButton = ({
           variant={"destructive"}
           onClick={handleRemoveCourse}
           size={iconOnly ? "icon" : "sm"}
+          className={compact ? "h-8 w-8" : undefined}
           aria-label={dict.course.item.remove_from_semester}
         >
           <Minus className="w-4 h-4" />
@@ -80,6 +85,7 @@ const SelectCourseButton = ({
           variant="outline"
           onClick={handleAddCourse}
           size={iconOnly ? "icon" : "sm"}
+          className={compact ? "h-8 w-8" : undefined}
           aria-label={dict.course.item.add_to_semester}
         >
           <Plus className="w-4 h-4" />

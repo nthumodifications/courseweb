@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import {
   Badge,
   Skeleton,
@@ -51,9 +51,11 @@ const useCourseDisplayText = (course: CourseSyllabusView) => {
 const CourseResultIdentity = ({
   course,
   variant,
+  titleSuffix,
 }: {
   course: CourseSyllabusView;
   variant: "table" | "grid";
+  titleSuffix?: ReactNode;
 }) => {
   const { openCourse } = useCourseLink();
   const { title, teacherNames, teacherIdentities, language } =
@@ -68,28 +70,36 @@ const CourseResultIdentity = ({
   );
 
   return (
-    <div className="flex min-w-0 flex-col gap-1">
-      <button
-        type="button"
-        className={
-          variant === "grid"
-            ? "line-clamp-2 text-left font-bold leading-relaxed hover:underline"
-            : "text-left font-medium leading-relaxed hover:underline"
-        }
-        onClick={() => openCourse(course.raw_id)}
-      >
-        {title}
-      </button>
+    <div
+      className={`flex min-w-0 flex-col${variant === "grid" ? " gap-1" : ""}`}
+    >
+      <div className="flex min-w-0 items-center gap-2">
+        <button
+          type="button"
+          title={variant === "table" ? title : undefined}
+          className={
+            variant === "grid"
+              ? "line-clamp-2 text-left font-bold leading-relaxed hover:underline"
+              : "min-w-0 truncate text-left font-medium hover:underline"
+          }
+          onClick={() => openCourse(course.raw_id)}
+        >
+          {title}
+        </button>
+        {titleSuffix}
+      </div>
       {identity.length > 0 && (
         <div
           className={`flex min-w-0 items-start gap-1 text-xs text-muted-foreground${
-            variant === "grid" ? " leading-relaxed" : ""
+            variant === "grid" ? " leading-relaxed" : " truncate"
           }`}
         >
           {variant === "grid" && (
             <User className="h-3 w-3 shrink-0" aria-hidden="true" />
           )}
-          <span className="min-w-0">
+          <span
+            className={variant === "table" ? "min-w-0 truncate" : "min-w-0"}
+          >
             {identity.map(({ displayName, name }, index) => (
               <span key={`${name}-${index}`}>
                 {index > 0 ? (language === "en" ? ", " : "、") : ""}
@@ -158,6 +168,26 @@ const CourseTimeLocations = ({
   );
 };
 
+/** Table cell: every time on one line, every venue on the next. */
+const CourseTimeVenueLines = ({ course }: { course: CourseSyllabusView }) => {
+  const localizeData = useLocalizedZhData();
+  const times = (course.times ?? []).filter(Boolean).join(" ");
+  const venues = course.venues
+    .filter(Boolean)
+    .map((venue) => localizeData(decodeCourseText(venue)))
+    .join("、");
+  return (
+    <div className="flex min-w-0 flex-col text-xs">
+      <span className="truncate">{times || "—"}</span>
+      {venues && (
+        <span className="truncate text-muted-foreground" title={venues}>
+          {venues}
+        </span>
+      )}
+    </div>
+  );
+};
+
 // "39/40" when the capacity is known; "1 選上" when only the enrolment is, so a
 // bare number is never mistaken for the capacity.
 const getEnrollmentSummary = (
@@ -181,7 +211,7 @@ const CourseLanguageBadge = ({ course }: { course: CourseSyllabusView }) => {
   return (
     <Badge
       variant="outline"
-      className="border-transparent bg-primary/10 font-normal text-primary"
+      className="shrink-0 border-transparent bg-primary/10 font-normal text-primary"
     >
       {isEnglishCourseLanguage(course.language)
         ? dict.course.tags.english
@@ -251,37 +281,40 @@ export const CourseResultsTable = ({
   const dict = useDictionary();
   const { setHoverCourse } = useUserTimetable();
   const columns = dict.course.search.views.columns;
+  const headers: [string, string][] = [
+    [columns.code, ""],
+    [columns.title, ""],
+    [columns.time_location, ""],
+    [columns.credits, "text-right"],
+    [columns.enrollment, "text-right"],
+    [columns.actions, "sr-only"],
+  ];
 
   return (
     <Table
       containerClassName="relative w-full overflow-x-auto overflow-y-visible md:overflow-visible"
       className="min-w-[540px] table-fixed"
     >
-      {/* Fixed widths keep the actions column on screen next to the filter
-          and timetable panels; the title column takes what is left. */}
+      {/* Every row is two lines: title / teacher, time / venue. Fixed widths
+          keep the actions on screen; the title takes what is left. */}
       <colgroup>
         <col className="w-24" />
         <col />
-        <col className="w-32" />
+        <col className="w-36" />
         <col className="w-12" />
         <col className="w-20" />
-        <col className="w-24" />
+        <col className="w-20" />
       </colgroup>
       <TableHeader>
         <TableRow className="hover:bg-background">
-          {[
-            columns.code,
-            columns.title,
-            columns.time_location,
-            columns.credits,
-            columns.enrollment,
-            columns.actions,
-          ].map((label) => (
+          {headers.map(([label, className]) => (
             <TableHead
               key={label}
-              className="sticky top-0 z-10 h-10 bg-background px-2 py-2 text-sm"
+              className="sticky top-0 z-10 h-8 bg-background px-2 text-xs font-medium"
             >
-              {label}
+              <span className={className ? `block ${className}` : undefined}>
+                {label}
+              </span>
             </TableHead>
           ))}
         </TableRow>
@@ -290,59 +323,64 @@ export const CourseResultsTable = ({
         {courses.map((course) => (
           <TableRow
             key={course.objectID}
-            className="min-h-11"
             onMouseEnter={() => setHoverCourse(course)}
             onMouseLeave={() => setHoverCourse(null)}
           >
-            <TableCell className="whitespace-nowrap px-2 py-3 align-top text-xs text-muted-foreground">
+            <TableCell className="whitespace-nowrap px-2 py-2 text-xs tabular-nums text-muted-foreground">
               {formatCourseCode(course)}
             </TableCell>
-            <TableCell className="min-w-0 px-2 py-3 align-top">
-              <div className="flex min-w-0 flex-col items-start gap-1">
-                <CourseResultIdentity course={course} variant="table" />
-                <CourseLanguageBadge course={course} />
-              </div>
+            <TableCell className="min-w-0 px-2 py-2">
+              <CourseResultIdentity
+                course={course}
+                variant="table"
+                titleSuffix={<CourseLanguageBadge course={course} />}
+              />
             </TableCell>
-            <TableCell className="px-2 py-3 align-top">
-              <CourseTimeLocations course={course} />
+            <TableCell className="px-2 py-2">
+              <CourseTimeVenueLines course={course} />
             </TableCell>
-            <TableCell className="whitespace-nowrap px-2 py-3 align-top">
+            <TableCell className="whitespace-nowrap px-2 py-2 text-right tabular-nums">
               {course.credits}
             </TableCell>
-            <TableCell className="whitespace-nowrap px-2 py-3 align-top">
+            <TableCell className="whitespace-nowrap px-2 py-2 text-right text-xs tabular-nums">
               {getEnrollmentSummary(
                 course,
                 dict.common.not_available,
                 dict.course.tags.enrolled_suffix,
               ) ?? dict.common.not_available}
             </TableCell>
-            <TableCell className="whitespace-nowrap px-2 py-3 align-top">
-              <SelectCourseButton courseId={course.raw_id} iconOnly />
+            <TableCell className="px-2 py-2">
+              <div className="flex justify-end">
+                <SelectCourseButton courseId={course.raw_id} iconOnly compact />
+              </div>
             </TableCell>
           </TableRow>
         ))}
         {Array.from({ length: loadingRows }, (_, index) => (
-          <TableRow key={`loading-${index}`} className="min-h-11">
-            <TableCell className="px-2 py-3">
+          <TableRow key={`loading-${index}`}>
+            <TableCell className="px-2 py-2">
               <Skeleton className="h-4 w-16" />
             </TableCell>
-            <TableCell className="px-2 py-3">
-              <div className="flex flex-col gap-2">
+            <TableCell className="px-2 py-2">
+              <div className="flex flex-col gap-1">
                 <Skeleton className="h-4 w-40" />
                 <Skeleton className="h-3 w-20" />
               </div>
             </TableCell>
-            <TableCell className="px-2 py-3">
-              <Skeleton className="h-4 w-32" />
+            <TableCell className="px-2 py-2">
+              <div className="flex flex-col gap-1">
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-3 w-16" />
+              </div>
             </TableCell>
-            <TableCell className="px-2 py-3">
-              <Skeleton className="h-4 w-8" />
+            <TableCell className="px-2 py-2">
+              <Skeleton className="ml-auto h-4 w-4" />
             </TableCell>
-            <TableCell className="px-2 py-3">
-              <Skeleton className="h-4 w-12" />
+            <TableCell className="px-2 py-2">
+              <Skeleton className="ml-auto h-4 w-12" />
             </TableCell>
-            <TableCell className="px-2 py-3">
-              <Skeleton className="h-8 w-10" />
+            <TableCell className="px-2 py-2">
+              <Skeleton className="ml-auto h-8 w-16" />
             </TableCell>
           </TableRow>
         ))}

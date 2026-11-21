@@ -144,7 +144,7 @@ export function InfiniteHits({
             ))}
         </div>
       ) : (
-        <div className="divide-y divide-border px-2">
+        <div className="divide-y divide-border">
           {hits.map((hit) => (
             <div key={hit.objectID} className="min-w-0">
               <Hit hit={hit} />
@@ -231,7 +231,6 @@ const SearchContainer = memo(
         <LocalSearchLifecycle searchClient={searchClient} semester={semester} />
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 px-2 md:h-full">
-          <SearchDegradationBanner searchClient={searchClient} />
           <div className="flex min-w-0 w-full flex-wrap items-center gap-1 sm:flex-nowrap">
             <div className="order-1 shrink-0">
               <SemesterSelector />
@@ -242,7 +241,7 @@ const SearchContainer = memo(
                 <SearchBox
                   placeholder={dict.course.list.search_placeholder}
                   autoFocus
-                  className="bg-surface border-transparent"
+                  className="border-transparent bg-surface focus-visible:bg-background focus-visible:ring-offset-0"
                 />
               </div>
               <CourseSearchViewSwitch view={view} onViewChange={setView} />
@@ -277,12 +276,19 @@ const SearchContainer = memo(
           </div>
           {/* The reset sits on the count row so it never wraps the chip
               row onto a second line. */}
+          {/* Status lives in this row (never above the search) so the
+              search bar never moves. */}
           <div className="flex h-8 shrink-0 items-center justify-between gap-2 text-muted-foreground">
-            <SearchResultCount
-              status={status}
-              nbHits={nbHits}
-              processingTimeMS={processingTimeMS}
-            />
+            <div className="flex min-w-0 items-center gap-2">
+              <span className="shrink-0">
+                <SearchResultCount
+                  status={status}
+                  nbHits={nbHits}
+                  processingTimeMS={processingTimeMS}
+                />
+              </span>
+              <SearchDegradationBanner searchClient={searchClient} inline />
+            </div>
             {hasFilters && (
               <ResetFiltersButton
                 showLabel
