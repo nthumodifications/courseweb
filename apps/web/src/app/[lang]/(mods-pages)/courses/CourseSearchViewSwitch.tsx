@@ -39,16 +39,19 @@ const CourseSearchViewSwitch = ({
     <div
       role="group"
       aria-label={labels.label}
-      className="flex shrink-0 items-center gap-1"
+      className="flex h-10 shrink-0 items-center gap-1 rounded-md bg-surface p-1"
     >
       {options.map(({ value, label, Icon, className }) => (
         <Tooltip key={value}>
           <TooltipTrigger asChild>
             <Button
               type="button"
-              variant={view === value ? "secondary" : "ghost"}
-              size="icon"
-              className={className}
+              variant="ghost"
+              className={`${className} h-8 w-8 bg-transparent p-0 ${
+                view === value
+                  ? "border border-border bg-background text-foreground hover:bg-background"
+                  : "text-muted-foreground"
+              }`}
               aria-label={label}
               aria-pressed={view === value}
               onClick={() => onViewChange(value)}

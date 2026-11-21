@@ -7,7 +7,6 @@ import {
 import { createInfiniteHitsSessionStorageCache } from "instantsearch.js/es/lib/infiniteHitsCache";
 import useDictionary from "@/dictionaries/useDictionary";
 import CourseListItem from "@/components/Courses/CourseListItem";
-import Filters from "./Filters";
 import { useEffect, useRef, memo, useMemo } from "react";
 import CourseListItemSkeleton from "../../../../components/Courses/CourseListItemSkeleton";
 import {
@@ -22,7 +21,7 @@ import {
   Skeleton,
   cn,
 } from "@courseweb/ui";
-import { Calendar, FilterIcon } from "lucide-react";
+import { Calendar } from "lucide-react";
 import CourseSidePanel from "./CourseSidePanel";
 import SearchBox from "@/components/SearchBox/SearchBox";
 import SemesterSelector from "./SemesterSelector";
@@ -41,7 +40,12 @@ import { useMediaQuery } from "usehooks-ts";
 import CourseSearchViewSwitch, {
   useCourseSearchView,
 } from "./CourseSearchViewSwitch";
-import type { CourseSearchView } from "./courseSearchView";
+import FilterBar from "./FilterBar";
+import ResetFiltersButton from "./ResetFiltersButton";
+import {
+  hasCourseSearchRefinements,
+  type CourseSearchView,
+} from "./courseSearchView";
 import { CourseGridCard, CourseResultsTable } from "./CourseResultViews";
 
 type SearchClient = ResilientSearchClient;
@@ -201,7 +205,8 @@ const SearchContainer = memo(
     const dict = useDictionary();
     const defaultSemester = useDefaultSemesterId();
     const { nbHits, processingTimeMS } = useStats();
-    const { status } = useInstantSearch();
+    const { status, indexUiState } = useInstantSearch();
+    const hasFilters = hasCourseSearchRefinements(indexUiState);
     const { query } = useSearchBox();
     const previousNbHitsRef = useRef<number>(0);
     const { view, setView } = useCourseSearchView();
@@ -222,12 +227,8 @@ const SearchContainer = memo(
     }, [nbHits, query]);
 
     return (
-      <div className="flex min-h-0 min-w-0 w-full gap-4 md:h-full">
+      <div className="flex min-h-0 min-w-0 w-full md:h-full">
         <LocalSearchLifecycle searchClient={searchClient} semester={semester} />
-
-        <div className="hidden min-h-0 w-64 shrink-0 px-4 @[62rem]/courses:flex">
-          <Filters selectedCourses={courses as MinimalCourse[]} fillHeight />
-        </div>
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 px-2 md:h-full">
           <SearchDegradationBanner searchClient={searchClient} />
@@ -241,6 +242,7 @@ const SearchContainer = memo(
                 <SearchBox
                   placeholder={dict.course.list.search_placeholder}
                   autoFocus
+                  className="bg-surface border-transparent"
                 />
               </div>
               <CourseSearchViewSwitch view={view} onViewChange={setView} />
@@ -251,30 +253,7 @@ const SearchContainer = memo(
                   <Button
                     variant="ghost"
                     size="icon"
-                    aria-label={dict.a11y.course_filters}
-                  >
-                    <FilterIcon className="h-4 w-4" />
-                  </Button>
-                </DrawerTrigger>
-                <DrawerContent className="h-[85dvh] max-h-[85dvh]">
-                  <DrawerTitle className="sr-only">
-                    {dict.a11y.course_filters}
-                  </DrawerTitle>
-                  <div className="min-h-0 flex-1 p-4">
-                    <Filters
-                      selectedCourses={courses as MinimalCourse[]}
-                      fillHeight
-                    />
-                  </div>
-                </DrawerContent>
-              </Drawer>
-            </div>
-            <div className="order-2 shrink-0 sm:order-3 @[62rem]/courses:hidden">
-              <Drawer>
-                <DrawerTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
+                    className="h-10 w-10"
                     aria-label={dict.a11y.calendar}
                   >
                     <Calendar className="h-4 w-4" />
@@ -293,12 +272,23 @@ const SearchContainer = memo(
               </Drawer>
             </div>
           </div>
-          <div className="shrink-0 text-muted-foreground">
+          <div className="shrink-0">
+            <FilterBar selectedCourses={courses as MinimalCourse[]} />
+          </div>
+          {/* The reset sits on the count row so it never wraps the chip
+              row onto a second line. */}
+          <div className="flex h-8 shrink-0 items-center justify-between gap-2 text-muted-foreground">
             <SearchResultCount
               status={status}
               nbHits={nbHits}
               processingTimeMS={processingTimeMS}
             />
+            {hasFilters && (
+              <ResetFiltersButton
+                showLabel
+                className="text-muted-foreground hover:text-foreground"
+              />
+            )}
           </div>
           <InfiniteHits
             showPrevious={false}

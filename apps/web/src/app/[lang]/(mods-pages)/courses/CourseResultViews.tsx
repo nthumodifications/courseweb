@@ -218,7 +218,7 @@ export const CourseGridCard = ({ course }: { course: CourseSyllabusView }) => {
 
   return (
     <article
-      className="flex h-full min-w-0 flex-col gap-2 rounded-lg border border-border bg-card p-3"
+      className="flex h-full min-w-0 flex-col gap-2 rounded-lg border border-transparent bg-surface p-3"
       onMouseEnter={() => setHoverCourse(course)}
       onMouseLeave={() => setHoverCourse(null)}
     >
