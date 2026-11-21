@@ -126,16 +126,26 @@ const termFromLabel = (summary: string): number | undefined => {
   return undefined;
 };
 
+// Explicit first-class-day events. NTHU also publishes an administrative
+// "第1學期開始 / Fall Semester Begins" event on Aug 1 (Feb 1 for spring),
+// weeks before classes; timetables anchor weekly classes on `begins`, so that
+// date must never win over the real class start (#1068).
 const classStartPatterns = [
   /上課開始|開始上課|正式上課/u,
-  /開學日?|始業|學期開始/u,
-  /classes?\s+begin/iu,
+  /classes?\s+begins?/iu,
   /start\s+of\s+classes/iu,
+] as const;
+
+const termStartPatterns = [
+  /開學日?|始業|學期開始/u,
   /semester\s+begins?/iu,
 ] as const;
 
 const isClassStart = (summary: string) =>
   classStartPatterns.some((pattern) => pattern.test(summary));
+
+const isTermStart = (summary: string) =>
+  termStartPatterns.some((pattern) => pattern.test(summary));
 
 const hasBeginEvidence = (summary: string) =>
   /上課|開學|始業|開課|classes?/iu.test(summary) ||
@@ -209,6 +219,7 @@ type SemesterEvidence = {
   begins: Array<{ date: string; summary: string }>;
   breaks: Array<{ date: string; summary: string }>;
   ruleBegins: Array<{ date: string; summary: string }>;
+  ruleTermBegins: Array<{ date: string; summary: string }>;
   ruleBreaks: Array<{ date: string; summary: string }>;
   all: Array<{ date: string; summary: string }>;
 };
@@ -217,7 +228,13 @@ const collectEvidence = (events: readonly CalendarEvent[]) => {
   const evidence = new Map<string, SemesterEvidence>();
   const add = (
     id: string | undefined,
-    kind: "begins" | "breaks" | "ruleBegins" | "ruleBreaks" | "all",
+    kind:
+      | "begins"
+      | "breaks"
+      | "ruleBegins"
+      | "ruleTermBegins"
+      | "ruleBreaks"
+      | "all",
     item: { date: string; summary: string },
   ) => {
     if (!id) return;
@@ -225,6 +242,7 @@ const collectEvidence = (events: readonly CalendarEvent[]) => {
       begins: [],
       breaks: [],
       ruleBegins: [],
+      ruleTermBegins: [],
       ruleBreaks: [],
       all: [],
     };
@@ -244,6 +262,8 @@ const collectEvidence = (events: readonly CalendarEvent[]) => {
     }
     if (isClassStart(summary)) {
       add(labeledId, "ruleBegins", { date, summary });
+    } else if (isTermStart(summary)) {
+      add(labeledId, "ruleTermBegins", { date, summary });
     }
     if (hasBreakEvidence(summary)) {
       add(labeledId, "breaks", { date, summary });
@@ -368,15 +388,23 @@ const validateLlmCandidate = (
       /(?:寒假|冬假|暑假|winter|summer|break|vacation)/iu.test(item.summary),
   );
   if (!hasBeginEvent || !hasBreakEvent) return undefined;
+  // An administrative term-start event is not the first class day.
+  if (
+    evidence.ruleBegins.length > 0 &&
+    !evidence.ruleBegins.some((item) => item.date === begins)
+  ) {
+    return undefined;
+  }
   return { begins, ends };
 };
 
 const ruleCandidateFromEvidence = (
   evidence: SemesterEvidence,
 ): Pick<SemesterDate, "begins" | "ends"> | undefined => {
-  const begins = [...evidence.ruleBegins].sort((left, right) =>
-    left.date.localeCompare(right.date),
-  )[0];
+  const earliest = (items: SemesterEvidence["ruleBegins"]) =>
+    [...items].sort((left, right) => left.date.localeCompare(right.date))[0];
+  const begins =
+    earliest(evidence.ruleBegins) ?? earliest(evidence.ruleTermBegins);
   if (!begins) return undefined;
   const breakStart = evidence.ruleBreaks
     .filter((item) => item.date > begins.date)

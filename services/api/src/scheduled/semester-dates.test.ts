@@ -37,6 +37,75 @@ describe("semester date extraction", () => {
     expect(llmExtractor).not.toHaveBeenCalled();
   });
 
+  it("anchors on the first class day, not the administrative term start (#1068)", async () => {
+    const events = [
+      ["2026-08-01", "115學年度第1學期開始 2026 Fall Semester Begins"],
+      [
+        "2026-08-25",
+        "115學年度第1學期第3次選課開始(至27日止) 3rd Course Selection Period (8/25-8/27)",
+      ],
+      [
+        "2026-09-03",
+        "115學年度第1學期加退選開始(至20日止) Add-or-Drop Selection (9/3-9/20)",
+      ],
+      [
+        "2026-09-07",
+        "全校各級學生上課開始、註冊日 1. Class Begin 2. Registration",
+      ],
+      ["2026-12-28", "寒假開始 Winter Break Begins"],
+    ].map(([date, summary]) => ({
+      summary,
+      start: { date },
+      end: { date },
+    }));
+    const llmExtractor = mock(async () => ({
+      semesterId: "11510",
+      begins: "2026-08-01",
+      ends: "2026-12-27",
+      beginsEvidence: "115學年度第1學期開始",
+      endsEvidence: "寒假開始",
+    }));
+
+    const result = await extractSemesterDates(events, {}, llmExtractor, []);
+
+    expect(result.rows).toHaveLength(1);
+    expect(result.rows[0]).toMatchObject({
+      id: "11510",
+      begins: "2026-09-07",
+      ends: "2026-12-27",
+      extractionMethod: "rules",
+    });
+    expect(llmExtractor).not.toHaveBeenCalled();
+  });
+
+  it("rejects an LLM start date that skips the explicit class-start event", async () => {
+    const events = [
+      ["2026-08-01", "115學年度第1學期開始 2026 Fall Semester Begins"],
+      ["2026-09-07", "全校各級學生上課開始、註冊日 Class Begin"],
+      ["2026-12-28", "115學年度第1學期寒假期間"],
+    ].map(([date, summary]) => ({
+      summary,
+      start: { date },
+      end: { date },
+    }));
+
+    const result = await extractSemesterDates(
+      events,
+      {},
+      async () => ({
+        semesterId: "11510",
+        begins: "2026-08-01",
+        ends: "2026-12-27",
+        beginsEvidence: "115學年度第1學期開始",
+        endsEvidence: "115學年度第1學期寒假期間",
+      }),
+      [],
+    );
+
+    expect(result.rows).toEqual([]);
+    expect(result.failed).toEqual(["11510"]);
+  });
+
   it("uses the LLM only when event wording needs interpretation and checks both evidence strings", async () => {
     const result = await extractSemesterDates(fallbackEvents, {}, async () => ({
       semesterId: "11520",

@@ -40,6 +40,7 @@ import { useRxCollection } from "rxdb-hooks";
 import { TimetableSyncDocType } from "@/config/rxdb";
 import CalendarTimetableSyncDialog from "./CalendarTimetableSyncDialog";
 import { toPrettySemester } from "@/helpers/semester";
+import { semesterInfo } from "@courseweb/shared";
 import { useHeaderPortal } from "@/components/Portal/HeaderPortal";
 import UpcomingEvents from "./UpcomingEvents";
 import useDictionary from "@/dictionaries/useDictionary";
@@ -411,6 +412,13 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
     });
   };
 
+  /**
+   * Without semester dates the generator yields no events, which would read as
+   * "every course was removed" and offer to delete the whole timetable.
+   */
+  const canGenerateSemester = (semester: string, slotCount: number) =>
+    slotCount === 0 || semesterInfo.some((row) => row.id === semester);
+
   const persistedEventsForSemester = (semester: string) =>
     events.filter((event) => event.courseId?.slice(0, 5) === semester);
 
@@ -436,6 +444,7 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
 
     for (const semester of semesters) {
       const currentCourses = getCurrentTimetable(semester);
+      if (!canGenerateSemester(semester, currentCourses.length)) continue;
       const diff = reconcileTimetableEvents({
         generated: timetableToCalendarEvent(currentCourses, language),
         persisted: persistedEventsForSemester(semester),
@@ -493,6 +502,7 @@ const Calendar = ({ overlays = [] }: { overlays?: OverlayEntry[] }) => {
     }
 
     const currentCourses = getCurrentTimetable(request.semester);
+    if (!canGenerateSemester(request.semester, currentCourses.length)) return;
     const currentEvents = timetableToCalendarEvent(currentCourses, language);
     const diff = reconcileTimetableEvents({
       generated: currentEvents,

@@ -10,6 +10,17 @@ import { CalendarEvent } from "./calendar.types";
 import { Language } from "@/types/settings";
 import { TAIPEI_TIME_ZONE } from "@/helpers/dates";
 
+/**
+ * First date on or after the semester start that falls on `dayOfWeek`
+ * (0 = Monday). Semester rows come from the scraped academic calendar, so
+ * `begins` is not guaranteed to be a Monday; adding `dayOfWeek` days blindly
+ * shifted every class onto the wrong weekday (#1068).
+ */
+export const firstClassDate = (begins: Date, dayOfWeek: number) => {
+  const jsWeekday = (dayOfWeek + 1) % 7;
+  return addDays(begins, (jsWeekday - begins.getDay() + 7) % 7);
+};
+
 const taipeiDateTime = (date: Date, time: string) =>
   fromZonedTime(
     `${format(date, "yyyy-MM-dd")}T${time}:00.000`,
@@ -30,7 +41,7 @@ export const timetableToCalendarEvent = (
       if (!semester) return null;
       const startTime = parseSlotTime(startSlot.start);
       const endTime = parseSlotTime(endSlot.end);
-      const classDate = addDays(semester.begins, t.dayOfWeek);
+      const classDate = firstClassDate(semester.begins, t.dayOfWeek);
       const startDate = taipeiDateTime(
         classDate,
         `${String(startTime[0]).padStart(2, "0")}:${String(startTime[1]).padStart(2, "0")}`,
