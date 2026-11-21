@@ -307,10 +307,12 @@ export const CourseResultsTable = ({
       </colgroup>
       <TableHeader>
         <TableRow className="hover:bg-background">
-          {headers.map(([label, className]) => (
+          {headers.map(([label, className], index) => (
             <TableHead
               key={label}
-              className="sticky top-0 z-10 h-8 bg-background px-2 text-xs font-medium"
+              className={`sticky top-0 z-10 h-8 bg-background ${
+                index === 0 ? "pl-3 pr-2" : "px-2"
+              } text-xs font-medium`}
             >
               <span className={className ? `block ${className}` : undefined}>
                 {label}
@@ -326,7 +328,7 @@ export const CourseResultsTable = ({
             onMouseEnter={() => setHoverCourse(course)}
             onMouseLeave={() => setHoverCourse(null)}
           >
-            <TableCell className="whitespace-nowrap px-2 py-2 text-xs tabular-nums text-muted-foreground">
+            <TableCell className="whitespace-nowrap py-2 pl-3 pr-2 text-xs tabular-nums text-muted-foreground">
               {formatCourseCode(course)}
             </TableCell>
             <TableCell className="min-w-0 px-2 py-2">

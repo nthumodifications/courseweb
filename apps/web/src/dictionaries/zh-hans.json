@@ -103,6 +103,7 @@
       "more_options": "更多",
       "sync_ccxp": "同步校务系统",
       "group_dept": "依系所分颜色",
+      "group_dept_short": "系所配色",
       "sort_by_credits": "依学分排序"
     },
     "course_actions": {

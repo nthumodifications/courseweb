@@ -105,9 +105,11 @@ const ShareSyncTimetableDialogLazy = lazyWithRetry(
 export const ShareSyncTimetableDialogDynamic = ({
   shareLink,
   webcalLink,
+  children,
 }: {
   shareLink: string;
   webcalLink: string;
+  children?: React.ReactNode;
 }) => (
   <Suspense
     fallback={
@@ -116,10 +118,9 @@ export const ShareSyncTimetableDialogDynamic = ({
       </Button>
     }
   >
-    <ShareSyncTimetableDialogLazy
-      shareLink={shareLink}
-      webcalLink={webcalLink}
-    />
+    <ShareSyncTimetableDialogLazy shareLink={shareLink} webcalLink={webcalLink}>
+      {children}
+    </ShareSyncTimetableDialogLazy>
   </Suspense>
 );
 

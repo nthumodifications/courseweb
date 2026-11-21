@@ -8,12 +8,15 @@ interface SearchBoxProps extends UseSearchBoxProps {
   placeholder?: string;
   autoFocus?: boolean;
   className?: string;
+  /** Soft-grey field that wraps the input and the search button together. */
+  filled?: boolean;
 }
 
 const SearchBox = ({
   placeholder,
   autoFocus,
   className,
+  filled = false,
   ...props
 }: SearchBoxProps) => {
   const { query, refine, clear } = useSearchBox(props);
@@ -37,7 +40,13 @@ const SearchBox = ({
   return (
     <form
       onSubmit={onSubmit}
-      className="relative flex w-full min-w-0 items-center gap-1"
+      className={cn(
+        "relative flex w-full min-w-0 items-center gap-1",
+        // The whole field (input and button) carries the fill and the focus
+        // ring, so no part of it is left a different colour.
+        filled &&
+          "h-10 rounded-md bg-surface pr-1 focus-within:bg-background focus-within:ring-2 focus-within:ring-inset focus-within:ring-ring",
+      )}
     >
       <Input
         ref={inputRef}
@@ -50,12 +59,19 @@ const SearchBox = ({
         autoCorrect="off"
         autoCapitalize="off"
         spellCheck={false}
-        className={cn("min-w-0 flex-1", className)}
+        // An inset ring is never clipped by a dialog or scroll container edge.
+        className={cn(
+          "min-w-0 flex-1 focus-visible:ring-inset focus-visible:ring-offset-0",
+          filled &&
+            "h-10 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0",
+          className,
+        )}
       />
       <Button
         type="submit"
         variant="ghost"
         size="icon"
+        className={filled ? "h-8 w-8 shrink-0 hover:bg-muted" : undefined}
         aria-label={dict.common.search}
         title={dict.common.search}
       >

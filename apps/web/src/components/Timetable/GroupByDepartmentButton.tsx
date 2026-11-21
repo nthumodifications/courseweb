@@ -1,3 +1,4 @@
+import type React from "react";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import useDictionary from "@/dictionaries/useDictionary";
 import { groupColorsByDepartment } from "@/helpers/timetableColors";
@@ -5,10 +6,17 @@ import { Button } from "@courseweb/ui";
 
 type GroupByDepartmentButtonProps = {
   semester: string;
+  /** Replaces the default outline button styling. */
+  className?: string;
+  children?: React.ReactNode;
+  "aria-label"?: string;
 };
 
 const GroupByDepartmentButton = ({
   semester,
+  className,
+  children,
+  "aria-label": ariaLabel,
 }: GroupByDepartmentButtonProps) => {
   const dict = useDictionary();
 
@@ -23,11 +31,13 @@ const GroupByDepartmentButton = ({
 
   return (
     <Button
-      className="w-full"
-      variant="outline"
+      className={className ?? "w-full"}
+      variant={className ? "ghost" : "outline"}
       onClick={handleGroupByDepartment}
+      aria-label={ariaLabel}
+      title={ariaLabel}
     >
-      {dict.timetable.actions.group_dept}
+      {children ?? dict.timetable.actions.group_dept}
     </Button>
   );
 };

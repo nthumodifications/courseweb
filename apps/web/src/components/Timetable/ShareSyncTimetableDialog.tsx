@@ -1,3 +1,4 @@
+import type React from "react";
 import { Copy, Mail, Share } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import useDictionary from "@/dictionaries/useDictionary";
@@ -46,9 +47,11 @@ const ComponentSkeleton = () => {
 const ShareSyncTimetableDialog = ({
   shareLink,
   webcalLink,
+  children,
 }: {
   shareLink: string;
   webcalLink: string;
+  children?: React.ReactNode;
 }) => {
   const [open, setOpen] = useState(false);
   const dict = useDictionary();
@@ -100,9 +103,11 @@ const ShareSyncTimetableDialog = ({
   return (
     <Dialog open={open} onOpenChange={(v) => setOpen(v)}>
       <DialogTrigger asChild>
-        <Button variant="outline">
-          <Share className="w-4 h-4 mr-1" /> {dict.timetable.actions.share}
-        </Button>
+        {children ?? (
+          <Button variant="outline">
+            <Share className="w-4 h-4 mr-1" /> {dict.timetable.actions.share}
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

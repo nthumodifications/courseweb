@@ -149,7 +149,7 @@ const CourseListItem: FC<CourseListItemProps> = memo((props) => {
           </div>
         )}
         {showCourseCode && (
-          <p className="text-nthu-500 text-sm font-bold">
+          <p className="text-sm font-bold text-primary">
             {course ? formatCourseCode(course) : missingCourseId}
           </p>
         )}
@@ -191,7 +191,7 @@ const CourseListItem: FC<CourseListItemProps> = memo((props) => {
   );
 
   const courseMetadata = course ? (
-    <div className={`min-w-0 ${compact ? "space-y-0" : "space-y-1"}`}>
+    <div className={`min-w-0 ${compact ? "space-y-0" : "space-y-2"}`}>
       {englishNames === "add" && (
         <div className="text-sm">
           {decodeCourseText(course.name_en)}
