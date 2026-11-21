@@ -98,7 +98,7 @@
   ],
   "components/CourseDetails/PrerequisiteBlock.tsx": ["全校"],
   "components/CourseDetails/SyllabusSummary.tsx": ["繁重", "輕鬆", "適中"],
-  "components/Courses/CourseTagsList.tsx": ["16周", "18周", "英"],
+  "components/Courses/CourseTagsList.tsx": ["16周", "18周"],
   "components/Timetable/TimetableDots.tsx": [
     "一",
     "三",

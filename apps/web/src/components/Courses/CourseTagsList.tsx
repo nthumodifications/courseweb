@@ -9,13 +9,14 @@ import {
 } from "react";
 import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
 import { decodeCourseText } from "@/lib/course-text";
+import {
+  isChineseCourseLanguage,
+  isEnglishCourseLanguage,
+} from "@/lib/course-language";
 
 export const hasKnownCourseCapacity = (capacity: number | null | undefined) =>
   capacity != null;
-export const isChineseCourseLanguage = (language: string | null | undefined) =>
-  language === "中";
-export const isEnglishCourseLanguage = (language: string | null | undefined) =>
-  language === "英";
+export { isChineseCourseLanguage, isEnglishCourseLanguage };
 
 const HighlightItem: FC<
   PropsWithChildren<

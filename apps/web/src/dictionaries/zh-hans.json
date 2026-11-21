@@ -246,8 +246,8 @@
         "table": "表格",
         "grid": "卡片",
         "columns": {
-          "code": "课号",
-          "title": "课程名",
+          "code": "科号",
+          "title": "课名",
           "time_location": "时间地点",
           "credits": "学分",
           "enrollment": "人数",
