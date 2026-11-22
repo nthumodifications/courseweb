@@ -470,6 +470,7 @@ const verifyTurnstile = async (token: string, secretKey: string) => {
 // Only the routes that cost something are limited; reads stay open.
 const issueRateLimit = rateLimitMiddleware({
   limiter: "ISSUE_RATE_LIMITER",
+  whenUnavailable: "block",
   errorMessage: "Too many issue requests. Please try again in a minute.",
 });
 

@@ -535,6 +535,7 @@ export async function refreshSemester(
 
 const contributionRateLimit = rateLimitMiddleware({
   limiter: "CONTRIBUTE_RATE_LIMITER",
+  whenUnavailable: "block",
   errorMessage: "rate_limited",
 });
 

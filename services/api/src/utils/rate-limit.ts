@@ -35,6 +35,21 @@ export interface RateLimitOptions {
    * Default: 429
    */
   statusCode?: number;
+
+  /**
+   * What to do when the limiter cannot give an answer: its binding is missing
+   * or the call throws.
+   *
+   * - "allow" (default): let the request through. Right for cheap reads, where
+   *   an outage of the limiter should not become an outage of the route.
+   * - "block": answer 503. For routes where the limiter is what stands between
+   *   a caller and something that costs money or writes on our behalf (an LLM
+   *   call, a GitHub issue, a KV write, a request to the school). Running those
+   *   unmetered is worse than being briefly unavailable. A missing binding is
+   *   only blocked in production, so local development and tests still run
+   *   without one.
+   */
+  whenUnavailable?: "allow" | "block";
 }
 
 /**
@@ -97,37 +112,54 @@ export const rateLimitMiddleware = (
     keyGenerator = defaultKeyGenerator,
     errorMessage = "Rate limit exceeded. Please try again later.",
     statusCode = 429,
+    whenUnavailable = "allow",
   } = options;
 
   return async (c, next) => {
+    const unavailable = () => {
+      c.header("Retry-After", "60");
+      return c.json(
+        { error: "Service temporarily unavailable. Please try again later." },
+        503,
+      );
+    };
+
     const key = keyGenerator(c);
     const rateLimiter = c.env?.[limiter] as any;
 
     if (!rateLimiter) {
       console.error(`Rate limiter binding "${limiter}" not found`);
+      if (
+        whenUnavailable === "block" &&
+        process.env.NODE_ENV === "production"
+      ) {
+        return unavailable();
+      }
       // If rate limiter is not configured, allow the request to proceed
       return await next();
     }
 
+    let success: boolean;
     try {
-      const { success } = await rateLimiter.limit({ key });
-
-      if (!success) {
-        return c.json(
-          {
-            error: errorMessage,
-            retryAfter: 60, // Based on the period configured in wrangler.toml
-          },
-          statusCode as any,
-        );
-      }
-
-      await next();
+      ({ success } = await rateLimiter.limit({ key }));
     } catch (error) {
       console.error("Rate limiting error:", error);
+      if (whenUnavailable === "block") return unavailable();
       // On error, allow the request to proceed to avoid blocking legitimate traffic
-      await next();
+      return await next();
     }
+
+    if (!success) {
+      return c.json(
+        {
+          error: errorMessage,
+          retryAfter: 60, // Based on the period configured in wrangler.toml
+        },
+        statusCode as any,
+      );
+    }
+
+    await next();
   };
 };
 

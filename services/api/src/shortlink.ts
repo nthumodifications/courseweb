@@ -30,6 +30,7 @@ async function digest(message: string, algo = "SHA-1") {
 // Only the routes that cost something are limited; reads stay open.
 const shortlinkRateLimit = rateLimitMiddleware({
   limiter: "SHORTLINK_RATE_LIMITER",
+  whenUnavailable: "block",
   errorMessage: "Too many short link requests. Please try again in a minute.",
 });
 
