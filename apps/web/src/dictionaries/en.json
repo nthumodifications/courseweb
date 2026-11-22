@@ -3095,7 +3095,8 @@
   },
   "proxy_login": {
     "title": "NTHUMods Proxy Login Explained",
-    "updated_at": "Last updated: 2025/03/04",
+    "updated_at": "Last updated: 2026/11/23",
+    "retired_notice": "NTHUMods no longer offers proxy login. Our servers do not sign in to CCXP on your behalf and never receive your CCXP password. The rest of this page describes how it used to work and is kept for reference.",
     "what_is": {
       "title": "What is NTHUMods Proxy Login",
       "before_link": "NTHUMods Proxy Login is a tool that helps users securely log into the NTHU Academic Information System (CCXP) through the NTHUMods platform. It uses encryption technology to protect users' accounts and passwords, ensuring information security. This is an essential component of our",

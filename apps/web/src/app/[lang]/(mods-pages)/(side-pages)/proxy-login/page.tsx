@@ -35,6 +35,12 @@ const ProxyLoginExplainerPage = () => {
           </p>
         </div>
 
+        <div role="note" className="border border-border p-4">
+          <p className="text-sm font-medium">
+            {dict.proxy_login.retired_notice}
+          </p>
+        </div>
+
         <section className="flex flex-col gap-4">
           <h2 className="text-base font-bold">
             {dict.proxy_login.what_is.title}

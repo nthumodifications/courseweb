@@ -3095,7 +3095,8 @@
   },
   "proxy_login": {
     "title": "NTHUMods 代理登入說明",
-    "updated_at": "更新時間：2025/03/04",
+    "updated_at": "更新時間：2026/11/23",
+    "retired_notice": "NTHUMods 已停用代理登入。我們的伺服器不會再代替你登入校務資訊系統，也不會收到你的校務系統密碼。以下內容說明的是先前的運作方式，僅供參考。",
     "what_is": {
       "title": "什麼是 NTHUMods 代理登入",
       "before_link": "NTHUMods 代理登入是一個幫助用戶在 NTHUMods 平台上安全登入清華大學校務資訊系統（CCXP）的工具。它使用加密技術來保護用戶的帳戶和密碼，確保用戶的資訊安全。這是使用",
