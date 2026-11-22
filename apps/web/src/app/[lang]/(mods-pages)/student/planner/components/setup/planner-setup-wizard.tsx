@@ -4,6 +4,12 @@ import { useQuery } from "@tanstack/react-query";
 import { useRxCollection } from "rxdb-hooks";
 import { v4 as uuidv4 } from "uuid";
 import {
+  usePlannerTemplates,
+  useMarkPlannerTemplateUsed,
+  type PlannerTemplate,
+} from "@/lib/planner-templates";
+import { plannerTemplateEvents } from "@/lib/trackingEvents";
+import {
   Button,
   Command,
   CommandEmpty,
@@ -44,9 +50,11 @@ import type {
   FolderDocType,
   ItemDocType,
   PlannerDataDocType,
+  SemesterDocType,
 } from "../../rxdb";
 import { createCourseItem } from "../../data/courses";
 import { createFolder, ensureUnsortedFolder } from "../../data/folders";
+import { getSemesters } from "../../data/semesters";
 import {
   createPlannerData,
   getPlannerData,
@@ -65,8 +73,11 @@ import {
   dedupeTimetableCourses,
   enumerateTermsFromEnrollment,
   guessCourseCategory,
+  mergeTemplateAndTimetableItems,
+  normalizePlannerCourseCode,
   parseEnrollmentYearFromStudentId,
 } from "../../lib/setup";
+import { templatePayloadToPlannerDocs } from "../../lib/templates";
 import { normalizeSemesterId } from "../../lib/progress";
 import { formatPlannerText } from "../remake/shared";
 import {
@@ -75,9 +86,10 @@ import {
   TimetableHistoryTerm,
   usePlannerTimetableHistory,
 } from "./timetable-course-selection";
+import { TemplateGalleryDialog } from "../dialogs/template-gallery-dialog";
 
 type ViewChoice = "checklist" | "board" | "matrix";
-type CategoryChoice = "default" | "template" | "none";
+type CategoryChoice = "hosted" | "default" | "file" | "none";
 
 interface CategoryDraft {
   id: string;
@@ -195,6 +207,9 @@ export function PlannerSetupWizard({
   const [requiredCredits, setRequiredCredits] = useState("128");
   const [categoryChoice, setCategoryChoice] =
     useState<CategoryChoice>("default");
+  const [selectedHostedTemplate, setSelectedHostedTemplate] =
+    useState<PlannerTemplate | null>(null);
+  const [templateGalleryOpen, setTemplateGalleryOpen] = useState(false);
   const [categoryDrafts, setCategoryDrafts] = useState<CategoryDraft[]>(() =>
     makeDefaultCategories(t),
   );
@@ -214,6 +229,30 @@ export function PlannerSetupWizard({
   const plannerCol = useRxCollection<PlannerDataDocType>("plannerdata");
   const foldersCol = useRxCollection<FolderDocType>("folders");
   const itemsCol = useRxCollection<ItemDocType>("items");
+  const semesterCol = useRxCollection<SemesterDocType>("semesters");
+  const markTemplateUsed = useMarkPlannerTemplateUsed();
+
+  const hostedTemplatesQuery = usePlannerTemplates(
+    {
+      department: department.trim() || undefined,
+      entranceYear: /^\d{3}$/.test(enrollmentYear) ? enrollmentYear : undefined,
+    },
+    { enabled: Boolean(department.trim() && /^\d{3}$/.test(enrollmentYear)) },
+  );
+  const hasHostedTemplates =
+    (hostedTemplatesQuery.data?.templates.length ?? 0) > 0;
+
+  useEffect(() => {
+    if (
+      selectedHostedTemplate &&
+      (selectedHostedTemplate.department !== department ||
+        selectedHostedTemplate.entranceYear !== enrollmentYear)
+    ) {
+      setSelectedHostedTemplate(null);
+      setTemplateError(false);
+      if (categoryChoice === "hosted") setCategoryChoice("default");
+    }
+  }, [categoryChoice, department, enrollmentYear, selectedHostedTemplate]);
 
   const {
     data: departmentOptions = [],
@@ -274,7 +313,13 @@ export function PlannerSetupWizard({
   );
   const activeFolders = useMemo(() => {
     if (categoryChoice === "none") return [];
-    if (categoryChoice === "template")
+    if (categoryChoice === "hosted")
+      return (selectedHostedTemplate?.payload.folders ?? []).map((folder) => ({
+        id: folder.key,
+        title: folder.title,
+        order: folder.order,
+      }));
+    if (categoryChoice === "file")
       return (templateFolders ?? []).map((folder, index) => ({
         id: folder.id,
         title: folder.title,
@@ -285,7 +330,7 @@ export function PlannerSetupWizard({
       title: folder.title,
       order: index,
     }));
-  }, [categoryChoice, categoryDrafts, templateFolders]);
+  }, [categoryChoice, categoryDrafts, selectedHostedTemplate, templateFolders]);
   const selectedCourses = useMemo(
     () =>
       dedupeTimetableCourses(selectedHistoryCourses(terms, selectedTermIds)),
@@ -312,7 +357,10 @@ export function PlannerSetupWizard({
   };
 
   const skipStep = () => {
-    if (step === 1 && categoryChoice === "template" && !templateFolders) {
+    if (step === 1 && categoryChoice === "file" && !templateFolders) {
+      setCategoryChoice("default");
+    }
+    if (step === 1 && categoryChoice === "hosted" && !selectedHostedTemplate) {
       setCategoryChoice("default");
     }
     if (step === 2) {
@@ -364,7 +412,10 @@ export function PlannerSetupWizard({
 
   const finishSetup = async () => {
     if (!plannerCol || !foldersCol || !itemsCol || saving) return;
-    if (categoryChoice === "template" && !templateFolders) {
+    if (
+      (categoryChoice === "file" && !templateFolders) ||
+      (categoryChoice === "hosted" && !selectedHostedTemplate)
+    ) {
       setTemplateError(true);
       return;
     }
@@ -397,48 +448,65 @@ export function PlannerSetupWizard({
         ),
         description: null,
       };
+      const existingSemesters = semesterCol
+        ? await getSemesters(semesterCol)
+        : [];
+      const hostedTemplateDocs =
+        categoryChoice === "hosted" && selectedHostedTemplate
+          ? templatePayloadToPlannerDocs(selectedHostedTemplate.payload, {
+              enrollmentYear: safeEnrollmentYear,
+              existingSemesters,
+            })
+          : null;
       const folderDocs: FolderDocType[] =
         categoryChoice === "none"
           ? []
-          : categoryChoice === "template"
-            ? ((templateFolders ?? [])
-                .filter(
-                  (folder) =>
-                    folder.id !== "_unsorted" && folder.id !== "planner-1",
-                )
-                .map((folder, index) => ({
-                  ...folder,
-                  color: FOLDER_COLOR_NAMES[index % FOLDER_COLOR_NAMES.length],
-                  expanded: false,
-                })) as FolderDocType[])
-            : categoryDrafts
-                .filter((folder) => folder.title.trim())
-                .map((folder, index) => ({
-                  id: folder.id,
-                  title: folder.title.trim(),
-                  parent: folder.parent,
-                  min: Math.max(0, Number(folder.min) || 0),
-                  max: 0,
-                  metric: "credits" as const,
-                  requireChildValidation: false,
-                  titlePlacement: "top",
-                  order:
-                    folder.parent === "planner-1"
-                      ? categoryDrafts
-                          .filter(
-                            (candidate) => candidate.parent === "planner-1",
-                          )
-                          .findIndex((candidate) => candidate.id === folder.id)
-                      : categoryDrafts
-                          .filter(
-                            (candidate) => candidate.parent === folder.parent,
-                          )
-                          .findIndex((candidate) => candidate.id === folder.id),
-                  color:
-                    folder.color ||
-                    FOLDER_COLOR_NAMES[index % FOLDER_COLOR_NAMES.length],
-                  expanded: false,
-                }));
+          : categoryChoice === "hosted"
+            ? (hostedTemplateDocs?.folders ?? [])
+            : categoryChoice === "file"
+              ? ((templateFolders ?? [])
+                  .filter(
+                    (folder) =>
+                      folder.id !== "_unsorted" && folder.id !== "planner-1",
+                  )
+                  .map((folder, index) => ({
+                    ...folder,
+                    color:
+                      FOLDER_COLOR_NAMES[index % FOLDER_COLOR_NAMES.length],
+                    expanded: false,
+                  })) as FolderDocType[])
+              : categoryDrafts
+                  .filter((folder) => folder.title.trim())
+                  .map((folder, index) => ({
+                    id: folder.id,
+                    title: folder.title.trim(),
+                    parent: folder.parent,
+                    min: Math.max(0, Number(folder.min) || 0),
+                    max: 0,
+                    metric: "credits" as const,
+                    requireChildValidation: false,
+                    titlePlacement: "top",
+                    order:
+                      folder.parent === "planner-1"
+                        ? categoryDrafts
+                            .filter(
+                              (candidate) => candidate.parent === "planner-1",
+                            )
+                            .findIndex(
+                              (candidate) => candidate.id === folder.id,
+                            )
+                        : categoryDrafts
+                            .filter(
+                              (candidate) => candidate.parent === folder.parent,
+                            )
+                            .findIndex(
+                              (candidate) => candidate.id === folder.id,
+                            ),
+                    color:
+                      folder.color ||
+                      FOLDER_COLOR_NAMES[index % FOLDER_COLOR_NAMES.length],
+                    expanded: false,
+                  }));
 
       const existingPlanner = await getPlannerData(plannerCol);
       if (existingPlanner) {
@@ -457,14 +525,20 @@ export function PlannerSetupWizard({
       for (const folder of folderDocs) await createFolder(foldersCol, folder);
       await ensureUnsortedFolder(foldersCol);
 
-      const courseItems = selectedCourses.map((course, index) => {
+      const timetableItems = selectedCourses.map((course, index) => {
         const rawId = course.raw_id ?? "";
-        const requestedParent = assignments[rawId];
-        const parent =
-          requestedParent === "_unsorted" ||
-          folderDocs.some((folder) => folder.id === requestedParent)
-            ? requestedParent
-            : guessCourseCategory(course, department, folderDocs);
+        const assignmentKey =
+          rawId || `${course.plannerSemester}:${course.course}`;
+        const requestedParent = assignments[assignmentKey];
+        const requestedFolderId =
+          categoryChoice === "hosted" && requestedParent
+            ? hostedTemplateDocs?.folderIdByKey.get(requestedParent)
+            : requestedParent;
+        const guessedParent = guessCourseCategory(
+          course,
+          department,
+          folderDocs,
+        );
         const title = [course.name_zh, course.name_en]
           .filter(Boolean)
           .map(decodeCourseText)
@@ -472,6 +546,19 @@ export function PlannerSetupWizard({
         const id = rawId
           ? rawId.replace(/^\d{5}/, "").trim()
           : `${course.department} ${course.course}${course.class}`.trim();
+        const normalizedCode = normalizePlannerCourseCode(id);
+        const matchingTemplateItem = hostedTemplateDocs?.items.find(
+          (item) => normalizePlannerCourseCode(item.id) === normalizedCode,
+        );
+        const parent =
+          requestedParent === "_unsorted"
+            ? "_unsorted"
+            : requestedFolderId &&
+                folderDocs.some((folder) => folder.id === requestedFolderId)
+              ? requestedFolderId
+              : guessedParent !== "_unsorted"
+                ? guessedParent
+                : (matchingTemplateItem?.parent ?? "_unsorted");
         return {
           uuid: uuidv4(),
           id,
@@ -480,12 +567,32 @@ export function PlannerSetupWizard({
           credits: course.credits ?? 0,
           parent: parent || "_unsorted",
           status: "planned",
-          order: index,
+          order: (hostedTemplateDocs?.items.length ?? 0) + index,
           dependson: [],
           semester: course.plannerSemester,
         } as ItemDocType;
       });
+      const courseItems = hostedTemplateDocs
+        ? mergeTemplateAndTimetableItems(
+            hostedTemplateDocs.items,
+            timetableItems,
+          )
+        : timetableItems;
+      if (hostedTemplateDocs?.semesters.length && semesterCol) {
+        await semesterCol.bulkInsert(hostedTemplateDocs.semesters);
+      }
       for (const item of courseItems) await createCourseItem(itemsCol, item);
+
+      if (selectedHostedTemplate && categoryChoice === "hosted") {
+        void markTemplateUsed
+          .mutateAsync(selectedHostedTemplate.id)
+          .catch(() => undefined);
+        plannerTemplateEvents.applied(
+          selectedHostedTemplate.id,
+          selectedHostedTemplate.department,
+          "replace",
+        );
+      }
 
       try {
         window.localStorage.setItem("planner:view", viewChoice);
@@ -514,438 +621,498 @@ export function PlannerSetupWizard({
   ];
 
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 md:px-6 md:py-6">
-      <div className="mx-auto w-full max-w-[560px] space-y-5">
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-xs font-medium text-muted-foreground">
-            {formatPlannerText(t.stepIndicator, {
-              current: step + 1,
-              total: stageLabels.length,
-              name: stageLabels[step],
-            })}
-          </p>
-          <Button type="button" variant="ghost" size="sm" onClick={onDismiss}>
-            {t.later}
-          </Button>
-        </div>
+    <>
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 md:px-6 md:py-6">
+        <div className="mx-auto w-full max-w-[560px] space-y-5">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-xs font-medium text-muted-foreground">
+              {formatPlannerText(t.stepIndicator, {
+                current: step + 1,
+                total: stageLabels.length,
+                name: stageLabels[step],
+              })}
+            </p>
+            <Button type="button" variant="ghost" size="sm" onClick={onDismiss}>
+              {t.later}
+            </Button>
+          </div>
 
-        <div className="space-y-1">
-          <h2 className="text-xl font-bold">{stageLabels[step]}</h2>
-          <p className="text-sm text-muted-foreground">
-            {
-              [
-                t.basicDescription,
-                t.categoriesDescription,
-                t.coursesDescription,
-                t.viewDescription,
-              ][step]
-            }
-          </p>
-        </div>
+          <div className="space-y-1">
+            <h2 className="text-xl font-bold">{stageLabels[step]}</h2>
+            <p className="text-sm text-muted-foreground">
+              {
+                [
+                  t.basicDescription,
+                  t.categoriesDescription,
+                  t.coursesDescription,
+                  t.viewDescription,
+                ][step]
+              }
+            </p>
+          </div>
 
-        {step === 0 && (
-          <div className="space-y-4">
-            <div className="space-y-1.5">
-              <Label>{t.departmentLabel}</Label>
-              {departmentLoadFailed ? (
-                <Input
-                  value={department}
-                  onChange={(event) => setDepartment(event.target.value)}
-                  placeholder={t.departmentPlaceholder}
-                />
-              ) : (
-                <Popover
-                  open={departmentPickerOpen}
-                  onOpenChange={setDepartmentPickerOpen}
-                  modal
-                >
-                  <PopoverTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={departmentPickerOpen}
-                      className="w-full justify-between font-normal"
-                      disabled={departmentsLoading}
-                    >
-                      <span className="truncate">
-                        {department ||
-                          (departmentsLoading
-                            ? dict.common.loading
-                            : t.departmentPlaceholder)}
-                      </span>
-                      <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent
-                    className="w-[min(520px,calc(100vw-2rem))] p-1"
-                    align="start"
-                  >
-                    <Command>
-                      <CommandInput
-                        placeholder={dict.common.search}
-                        autoFocus
-                      />
-                      <CommandList>
-                        <CommandEmpty>{dict.common.no_results}</CommandEmpty>
-                        <CommandGroup>
-                          {departmentOptions.map((entry) => (
-                            <CommandItem
-                              key={`${entry.name}-${entry.college}`}
-                              value={`${entry.name} ${entry.college}`}
-                              keywords={[entry.name, entry.college]}
-                              onSelect={() => {
-                                setDepartment(entry.name);
-                                setDepartmentPickerOpen(false);
-                              }}
-                            >
-                              <Check
-                                className={`mr-2 h-4 w-4 ${department === entry.name ? "opacity-100" : "opacity-0"}`}
-                              />
-                              {entry.name} ({entry.college})
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              )}
-            </div>
-
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          {step === 0 && (
+            <div className="space-y-4">
               <div className="space-y-1.5">
-                <Label htmlFor="planner-setup-enrollment">
-                  {t.enrollmentYearLabel}
-                </Label>
-                <Input
-                  id="planner-setup-enrollment"
-                  type="number"
-                  min="100"
-                  max={rocYearNow()}
-                  value={enrollmentYear}
-                  onChange={(event) => {
-                    setEnrollmentYear(event.target.value);
-                    setEnrollmentFromId(false);
-                    setEnrollmentEdited(true);
-                  }}
-                />
-                {enrollmentFromId && (
-                  <p className="text-xs text-muted-foreground">
-                    {t.studentIdHint}
-                  </p>
+                <Label>{t.departmentLabel}</Label>
+                {departmentLoadFailed ? (
+                  <Input
+                    value={department}
+                    onChange={(event) => setDepartment(event.target.value)}
+                    placeholder={t.departmentPlaceholder}
+                  />
+                ) : (
+                  <Popover
+                    open={departmentPickerOpen}
+                    onOpenChange={setDepartmentPickerOpen}
+                    modal
+                  >
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={departmentPickerOpen}
+                        className="w-full justify-between font-normal"
+                        disabled={departmentsLoading}
+                      >
+                        <span className="truncate">
+                          {department ||
+                            (departmentsLoading
+                              ? dict.common.loading
+                              : t.departmentPlaceholder)}
+                        </span>
+                        <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      className="w-[min(520px,calc(100vw-2rem))] p-1"
+                      align="start"
+                    >
+                      <Command>
+                        <CommandInput
+                          placeholder={dict.common.search}
+                          autoFocus
+                        />
+                        <CommandList>
+                          <CommandEmpty>{dict.common.no_results}</CommandEmpty>
+                          <CommandGroup>
+                            {departmentOptions.map((entry) => (
+                              <CommandItem
+                                key={`${entry.name}-${entry.college}`}
+                                value={`${entry.name} ${entry.college}`}
+                                keywords={[entry.name, entry.college]}
+                                onSelect={() => {
+                                  setDepartment(entry.name);
+                                  setDepartmentPickerOpen(false);
+                                }}
+                              >
+                                <Check
+                                  className={`mr-2 h-4 w-4 ${department === entry.name ? "opacity-100" : "opacity-0"}`}
+                                />
+                                {entry.name} ({entry.college})
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 )}
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="planner-setup-graduation">
-                  {t.graduationYearLabel}
-                </Label>
-                <Input
-                  id="planner-setup-graduation"
-                  type="number"
-                  min="100"
-                  value={graduationYear}
-                  onChange={(event) => {
-                    setGraduationYear(event.target.value);
-                    setGraduationYearEdited(true);
-                  }}
-                />
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="planner-setup-enrollment">
+                    {t.enrollmentYearLabel}
+                  </Label>
+                  <Input
+                    id="planner-setup-enrollment"
+                    type="number"
+                    min="100"
+                    max={rocYearNow()}
+                    value={enrollmentYear}
+                    onChange={(event) => {
+                      setEnrollmentYear(event.target.value);
+                      setEnrollmentFromId(false);
+                      setEnrollmentEdited(true);
+                    }}
+                  />
+                  {enrollmentFromId && (
+                    <p className="text-xs text-muted-foreground">
+                      {t.studentIdHint}
+                    </p>
+                  )}
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="planner-setup-graduation">
+                    {t.graduationYearLabel}
+                  </Label>
+                  <Input
+                    id="planner-setup-graduation"
+                    type="number"
+                    min="100"
+                    value={graduationYear}
+                    onChange={(event) => {
+                      setGraduationYear(event.target.value);
+                      setGraduationYearEdited(true);
+                    }}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="planner-setup-credits">
+                    {t.requiredCreditsLabel}
+                  </Label>
+                  <Input
+                    id="planner-setup-credits"
+                    type="number"
+                    min="0"
+                    value={requiredCredits}
+                    onChange={(event) => setRequiredCredits(event.target.value)}
+                  />
+                </div>
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="planner-setup-credits">
-                  {t.requiredCreditsLabel}
-                </Label>
-                <Input
-                  id="planner-setup-credits"
-                  type="number"
-                  min="0"
-                  value={requiredCredits}
-                  onChange={(event) => setRequiredCredits(event.target.value)}
-                />
-              </div>
+
+              {requirementPdf && (
+                <a
+                  href={requirementPdf.pdfUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-sm text-primary underline underline-offset-4"
+                >
+                  <FileText className="h-4 w-4" />
+                  {formatPlannerText(t.requirementsPdf, {
+                    year: requirementPdf.year,
+                  })}
+                </a>
+              )}
             </div>
+          )}
 
-            {requirementPdf && (
-              <a
-                href={requirementPdf.pdfUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-sm text-primary underline underline-offset-4"
+          {step === 1 && (
+            <div className="space-y-3">
+              <RadioGroup
+                value={categoryChoice}
+                onValueChange={(value) => {
+                  setCategoryChoice(value as CategoryChoice);
+                  setTemplateError(false);
+                }}
+                className="space-y-2"
               >
-                <FileText className="h-4 w-4" />
-                {formatPlannerText(t.requirementsPdf, {
-                  year: requirementPdf.year,
-                })}
-              </a>
-            )}
-          </div>
-        )}
+                {[
+                  ...(hasHostedTemplates
+                    ? [{ value: "hosted" as const, label: "hosted" }]
+                    : []),
+                  { value: "default" as const, label: "default" },
+                  { value: "file" as const, label: "template" },
+                  { value: "none" as const, label: "none" },
+                ].map(({ value: choice, label }) => (
+                  <Label
+                    key={choice}
+                    htmlFor={`planner-setup-category-${choice}`}
+                    className="flex cursor-pointer items-start gap-3 rounded-md border border-border p-3"
+                  >
+                    <RadioGroupItem
+                      id={`planner-setup-category-${choice}`}
+                      value={choice}
+                      className="mt-1"
+                    />
+                    <span className="min-w-0">
+                      <span className="block text-sm font-medium">
+                        {t[`categoryChoice_${label}`]}
+                      </span>
+                      <span className="block text-xs leading-relaxed text-muted-foreground">
+                        {t[`categoryChoice_${label}_description`]}
+                      </span>
+                    </span>
+                  </Label>
+                ))}
+              </RadioGroup>
 
-        {step === 1 && (
-          <div className="space-y-3">
+              {categoryChoice === "default" && (
+                <div className="space-y-3 rounded-md border border-border p-3">
+                  {requirementPdf && (
+                    <a
+                      href={requirementPdf.pdfUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 text-sm text-primary underline underline-offset-4"
+                    >
+                      <FileText className="h-4 w-4" />
+                      {t.categoryPdf}
+                    </a>
+                  )}
+                  <div className="space-y-2">
+                    {categoryDrafts.map((folder) => (
+                      <div
+                        key={folder.id}
+                        className={`flex min-w-0 items-center gap-2 ${folder.parent !== "planner-1" ? "ml-4" : ""}`}
+                      >
+                        <span
+                          className={`h-2.5 w-2.5 shrink-0 rounded-full ${getFolderColorDotClass(folder.color)}`}
+                        />
+                        <Input
+                          value={folder.title}
+                          onChange={(event) =>
+                            changeDraft(folder.id, {
+                              title: event.target.value,
+                            })
+                          }
+                          aria-label={t.categoryNameLabel}
+                          className="h-8 min-w-0 flex-1"
+                        />
+                        <Input
+                          type="number"
+                          min="0"
+                          value={folder.min}
+                          onChange={(event) =>
+                            changeDraft(folder.id, { min: event.target.value })
+                          }
+                          aria-label={t.minimumCreditsLabel}
+                          placeholder={t.minimumCreditsPlaceholder}
+                          className="h-8 w-24 shrink-0"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 shrink-0"
+                          onClick={() => removeCategory(folder.id)}
+                          aria-label={t.removeCategory}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addCategory}
+                  >
+                    <Plus className="mr-1.5 h-4 w-4" />
+                    {t.addCategory}
+                  </Button>
+                </div>
+              )}
+
+              {categoryChoice === "hosted" && (
+                <div className="space-y-2 rounded-md border border-border p-3">
+                  {selectedHostedTemplate ? (
+                    <p className="text-sm text-muted-foreground">
+                      {formatPlannerText(t.hostedTemplateSelected, {
+                        name: selectedHostedTemplate.title,
+                      })}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      {t.hostedTemplateNotSelected}
+                    </p>
+                  )}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setTemplateGalleryOpen(true)}
+                  >
+                    {selectedHostedTemplate
+                      ? t.changeHostedTemplate
+                      : t.chooseHostedTemplate}
+                  </Button>
+                  {templateError && !selectedHostedTemplate && (
+                    <p className="text-xs text-red-500">
+                      {t.hostedTemplateRequired}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {categoryChoice === "file" && (
+                <div className="space-y-2 rounded-md border border-border p-3">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".json,application/json"
+                    className="hidden"
+                    onChange={(event) =>
+                      void selectTemplateFile(event.target.files?.[0])
+                    }
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    {t.chooseTemplateFile}
+                  </Button>
+                  {templateName && (
+                    <p className="text-xs text-muted-foreground">
+                      {formatPlannerText(t.templateLoaded, {
+                        name: templateName,
+                        count: templateFolders?.length ?? 0,
+                      })}
+                    </p>
+                  )}
+                  {templateError && (
+                    <p className="text-xs text-red-500">{t.templateError}</p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {step === 2 && (
+            <div className="space-y-3">
+              {!history.isReady && (
+                <p className="text-sm text-muted-foreground">
+                  {t.loadingHistory}
+                </p>
+              )}
+              {history.isReady && history.hasError && (
+                <p className="text-sm text-muted-foreground">
+                  {t.historyLoadError}
+                </p>
+              )}
+              {history.isReady && !history.hasError && (
+                <TimetableCourseSelection
+                  terms={terms}
+                  currentSemesterId={currentSemesterId}
+                  folders={activeFolders}
+                  department={department}
+                  selectedTermIds={selectedTermIds}
+                  onToggleTerm={selectHistoryTerm}
+                  assignments={assignments}
+                  onAssignmentChange={(rawId, folderId) =>
+                    setAssignments((previous) => ({
+                      ...previous,
+                      [rawId]: folderId,
+                    }))
+                  }
+                  lang={lang}
+                />
+              )}
+            </div>
+          )}
+
+          {step === 3 && (
             <RadioGroup
-              value={categoryChoice}
-              onValueChange={(value) =>
-                setCategoryChoice(value as CategoryChoice)
-              }
+              value={viewChoice}
+              onValueChange={(value) => setViewChoice(value as ViewChoice)}
               className="space-y-2"
             >
-              {(["default", "template", "none"] as const).map((choice) => (
+              {(
+                [
+                  [
+                    "checklist",
+                    ListChecks,
+                    dict.planner.remake.viewChecklist,
+                    t.viewChecklistDescription,
+                  ],
+                  [
+                    "board",
+                    CalendarRange,
+                    dict.planner.remake.viewBoard,
+                    t.viewBoardDescription,
+                  ],
+                  [
+                    "matrix",
+                    Grid2X2,
+                    dict.planner.remake.viewMatrix,
+                    t.viewMatrixDescription,
+                  ],
+                ] as const
+              ).map(([value, Icon, title, description]) => (
                 <Label
-                  key={choice}
-                  htmlFor={`planner-setup-category-${choice}`}
+                  key={value}
+                  htmlFor={`planner-setup-view-${value}`}
                   className="flex cursor-pointer items-start gap-3 rounded-md border border-border p-3"
                 >
                   <RadioGroupItem
-                    id={`planner-setup-category-${choice}`}
-                    value={choice}
+                    id={`planner-setup-view-${value}`}
+                    value={value}
                     className="mt-1"
                   />
-                  <span className="min-w-0">
-                    <span className="block text-sm font-medium">
-                      {t[`categoryChoice_${choice}`]}
-                    </span>
+                  <Icon className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />
+                  <span>
+                    <span className="block text-sm font-medium">{title}</span>
                     <span className="block text-xs leading-relaxed text-muted-foreground">
-                      {t[`categoryChoice_${choice}_description`]}
+                      {description}
                     </span>
                   </span>
                 </Label>
               ))}
             </RadioGroup>
+          )}
 
-            {categoryChoice === "default" && (
-              <div className="space-y-3 rounded-md border border-border p-3">
-                {requirementPdf && (
-                  <a
-                    href={requirementPdf.pdfUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-sm text-primary underline underline-offset-4"
-                  >
-                    <FileText className="h-4 w-4" />
-                    {t.categoryPdf}
-                  </a>
-                )}
-                <div className="space-y-2">
-                  {categoryDrafts.map((folder) => (
-                    <div
-                      key={folder.id}
-                      className={`flex min-w-0 items-center gap-2 ${folder.parent !== "planner-1" ? "ml-4" : ""}`}
-                    >
-                      <span
-                        className={`h-2.5 w-2.5 shrink-0 rounded-full ${getFolderColorDotClass(folder.color)}`}
-                      />
-                      <Input
-                        value={folder.title}
-                        onChange={(event) =>
-                          changeDraft(folder.id, { title: event.target.value })
-                        }
-                        aria-label={t.categoryNameLabel}
-                        className="h-8 min-w-0 flex-1"
-                      />
-                      <Input
-                        type="number"
-                        min="0"
-                        value={folder.min}
-                        onChange={(event) =>
-                          changeDraft(folder.id, { min: event.target.value })
-                        }
-                        aria-label={t.minimumCreditsLabel}
-                        placeholder={t.minimumCreditsPlaceholder}
-                        className="h-8 w-24 shrink-0"
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 shrink-0"
-                        onClick={() => removeCategory(folder.id)}
-                        aria-label={t.removeCategory}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={step === 0 || saving}
+              onClick={() => setStep((previous) => Math.max(0, previous - 1))}
+            >
+              {common.back}
+            </Button>
+            <div className="ml-auto flex items-center gap-2">
+              {step < 3 && (
                 <Button
                   type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addCategory}
+                  variant="ghost"
+                  disabled={saving}
+                  onClick={skipStep}
                 >
-                  <Plus className="mr-1.5 h-4 w-4" />
-                  {t.addCategory}
+                  {t.skipStep}
                 </Button>
-              </div>
-            )}
-
-            {categoryChoice === "template" && (
-              <div className="space-y-2 rounded-md border border-border p-3">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".json,application/json"
-                  className="hidden"
-                  onChange={(event) =>
-                    void selectTemplateFile(event.target.files?.[0])
-                  }
-                />
+              )}
+              {step < 3 ? (
                 <Button
                   type="button"
-                  variant="outline"
-                  onClick={() => fileInputRef.current?.click()}
+                  disabled={saving}
+                  onClick={() => {
+                    if (
+                      step === 1 &&
+                      ((categoryChoice === "file" && !templateFolders) ||
+                        (categoryChoice === "hosted" &&
+                          !selectedHostedTemplate))
+                    ) {
+                      setTemplateError(true);
+                      return;
+                    }
+                    setStep((previous) => Math.min(3, previous + 1));
+                  }}
                 >
-                  {t.chooseTemplateFile}
+                  {t.nextStep}
                 </Button>
-                {templateName && (
-                  <p className="text-xs text-muted-foreground">
-                    {formatPlannerText(t.templateLoaded, {
-                      name: templateName,
-                      count: templateFolders?.length ?? 0,
-                    })}
-                  </p>
-                )}
-                {templateError && (
-                  <p className="text-xs text-red-500">{t.templateError}</p>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
-        {step === 2 && (
-          <div className="space-y-3">
-            {!history.isReady && (
-              <p className="text-sm text-muted-foreground">
-                {t.loadingHistory}
-              </p>
-            )}
-            {history.isReady && history.hasError && (
-              <p className="text-sm text-muted-foreground">
-                {t.historyLoadError}
-              </p>
-            )}
-            {history.isReady && !history.hasError && (
-              <TimetableCourseSelection
-                terms={terms}
-                currentSemesterId={currentSemesterId}
-                folders={activeFolders}
-                department={department}
-                selectedTermIds={selectedTermIds}
-                onToggleTerm={selectHistoryTerm}
-                assignments={assignments}
-                onAssignmentChange={(rawId, folderId) =>
-                  setAssignments((previous) => ({
-                    ...previous,
-                    [rawId]: folderId,
-                  }))
-                }
-                lang={lang}
-              />
-            )}
-          </div>
-        )}
-
-        {step === 3 && (
-          <RadioGroup
-            value={viewChoice}
-            onValueChange={(value) => setViewChoice(value as ViewChoice)}
-            className="space-y-2"
-          >
-            {(
-              [
-                [
-                  "checklist",
-                  ListChecks,
-                  dict.planner.remake.viewChecklist,
-                  t.viewChecklistDescription,
-                ],
-                [
-                  "board",
-                  CalendarRange,
-                  dict.planner.remake.viewBoard,
-                  t.viewBoardDescription,
-                ],
-                [
-                  "matrix",
-                  Grid2X2,
-                  dict.planner.remake.viewMatrix,
-                  t.viewMatrixDescription,
-                ],
-              ] as const
-            ).map(([value, Icon, title, description]) => (
-              <Label
-                key={value}
-                htmlFor={`planner-setup-view-${value}`}
-                className="flex cursor-pointer items-start gap-3 rounded-md border border-border p-3"
-              >
-                <RadioGroupItem
-                  id={`planner-setup-view-${value}`}
-                  value={value}
-                  className="mt-1"
-                />
-                <Icon className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />
-                <span>
-                  <span className="block text-sm font-medium">{title}</span>
-                  <span className="block text-xs leading-relaxed text-muted-foreground">
-                    {description}
-                  </span>
-                </span>
-              </Label>
-            ))}
-          </RadioGroup>
-        )}
-
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-4">
-          <Button
-            type="button"
-            variant="outline"
-            disabled={step === 0 || saving}
-            onClick={() => setStep((previous) => Math.max(0, previous - 1))}
-          >
-            {common.back}
-          </Button>
-          <div className="ml-auto flex items-center gap-2">
-            {step < 3 && (
-              <Button
-                type="button"
-                variant="ghost"
-                disabled={saving}
-                onClick={skipStep}
-              >
-                {t.skipStep}
-              </Button>
-            )}
-            {step < 3 ? (
-              <Button
-                type="button"
-                disabled={saving}
-                onClick={() => {
-                  if (
-                    step === 1 &&
-                    categoryChoice === "template" &&
-                    !templateFolders
-                  ) {
-                    setTemplateError(true);
-                    return;
-                  }
-                  setStep((previous) => Math.min(3, previous + 1));
-                }}
-              >
-                {t.nextStep}
-              </Button>
-            ) : (
-              <Button
-                type="button"
-                disabled={saving}
-                onClick={() => void finishSetup()}
-              >
-                {saving ? dict.common.loading : t.finish}
-              </Button>
-            )}
+              ) : (
+                <Button
+                  type="button"
+                  disabled={saving}
+                  onClick={() => void finishSetup()}
+                >
+                  {saving ? dict.common.loading : t.finish}
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+      <TemplateGalleryDialog
+        open={templateGalleryOpen}
+        onOpenChange={setTemplateGalleryOpen}
+        planner={null}
+        folders={[]}
+        items={[]}
+        semesters={[]}
+        onApplied={() => undefined}
+        selectionOnly
+        initialDepartment={department}
+        initialEntranceYear={enrollmentYear}
+        onTemplateSelected={(template) => {
+          setSelectedHostedTemplate(template);
+          setCategoryChoice("hosted");
+          setTemplateError(false);
+        }}
+      />
+    </>
   );
 }

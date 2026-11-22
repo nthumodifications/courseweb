@@ -55,6 +55,10 @@ interface TemplateGalleryDialogProps {
   items: ItemDocType[];
   semesters: SemesterDocType[];
   onApplied: () => void;
+  selectionOnly?: boolean;
+  initialDepartment?: string;
+  initialEntranceYear?: string;
+  onTemplateSelected?: (template: PlannerTemplate) => void;
 }
 
 const metadataLine = (template: PlannerTemplateSummary, format: string) =>
@@ -74,6 +78,10 @@ export function TemplateGalleryDialog({
   items,
   semesters,
   onApplied,
+  selectionOnly = false,
+  initialDepartment,
+  initialEntranceYear,
+  onTemplateSelected,
 }: TemplateGalleryDialogProps) {
   const dict = useDictionary();
   const t = dict.planner.templates;
@@ -132,13 +140,16 @@ export function TemplateGalleryDialog({
     setSelectedId("");
     setReportOpen(false);
     setPdfUrl(null);
-    setDepartment(
-      planner?.department && allDepartments.includes(planner.department)
-        ? planner.department
-        : "all",
-    );
-    setEntranceYear(planner?.enrollmentYear || "all");
-  }, [open, planner?.department, planner?.enrollmentYear, allDepartments]);
+    setDepartment(initialDepartment || planner?.department || "all");
+    setEntranceYear(initialEntranceYear || planner?.enrollmentYear || "all");
+  }, [
+    open,
+    planner?.department,
+    planner?.enrollmentYear,
+    allDepartments,
+    initialDepartment,
+    initialEntranceYear,
+  ]);
 
   useEffect(() => {
     if (!open || !template) return;
@@ -219,6 +230,11 @@ export function TemplateGalleryDialog({
   };
 
   const applyTemplate = async (selected: PlannerTemplate) => {
+    if (selectionOnly) {
+      onTemplateSelected?.(selected);
+      onOpenChange(false);
+      return;
+    }
     if (!plannerCol || !foldersCol || !itemsCol || !semesterCol) return;
     const hasExistingPlan =
       items.length > 0 || folders.some((folder) => folder.id !== "_unsorted");
@@ -500,6 +516,10 @@ export function TemplateGalleryDialog({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{t.allDepartments}</SelectItem>
+                  {department !== "all" &&
+                    !allDepartments.includes(department) && (
+                      <SelectItem value={department}>{department}</SelectItem>
+                    )}
                   {allDepartments.map((value) => (
                     <SelectItem key={value} value={value}>
                       {value}

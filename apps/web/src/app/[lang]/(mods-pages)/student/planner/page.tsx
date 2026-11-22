@@ -60,6 +60,7 @@ import { SemesterManagement } from "./semester-management";
 import { PlannerSettings } from "./planner-settings";
 import { CourseDetailsDialog } from "./components/dialogs/course-details-dialog";
 import { CourseEditDialog } from "./components/dialogs/course-edit-dialog";
+import { TemplateGalleryDialog } from "./components/dialogs/template-gallery-dialog";
 import { PlannerAddCourseDialog } from "./components/dialogs/planner-add-course-dialog";
 import { PlannerSetupWizard } from "./components/setup/planner-setup-wizard";
 import { PlannerTour } from "./components/setup/planner-tour";
@@ -140,10 +141,12 @@ function PlannerProgressStrip({
 
 function EmptyPlanner({
   onImportTemplate,
+  onOpenTemplates,
   onOpenAddCourse,
   onStartSetup,
 }: {
   onImportTemplate: () => void;
+  onOpenTemplates: () => void;
   onOpenAddCourse: () => void;
   onStartSetup: () => void;
 }) {
@@ -162,6 +165,9 @@ function EmptyPlanner({
           <Button type="button" onClick={onOpenAddCourse}>
             <Plus className="mr-2 h-4 w-4" />
             {t.addCourse}
+          </Button>
+          <Button type="button" variant="outline" onClick={onOpenTemplates}>
+            {dict.planner.templates.navLabel}
           </Button>
           <Button type="button" variant="outline" onClick={onStartSetup}>
             {t.startSetup}
@@ -199,6 +205,7 @@ function GraduationPlanner() {
   const [semesterManagementOpen, setSemesterManagementOpen] = useState(false);
   const [plannerSettingsOpen, setPlannerSettingsOpen] = useState(false);
   const [timetableImportOpen, setTimetableImportOpen] = useState(false);
+  const [templateGalleryOpen, setTemplateGalleryOpen] = useState(false);
   const [setupDismissed, setSetupDismissed] = useState(false);
   const [setupPreferenceReady, setSetupPreferenceReady] = useState(false);
   const [plannerDataReady, setPlannerDataReady] = useState(false);
@@ -427,6 +434,8 @@ function GraduationPlanner() {
     setAddCourseOpen(true);
   };
 
+  const openTemplateGallery = () => setTemplateGalleryOpen(true);
+
   const updateCourse = async (
     item: ItemDocType,
     updates: Partial<ItemDocType>,
@@ -639,6 +648,10 @@ function GraduationPlanner() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={openTemplateGallery}>
+                  <FolderCog className="mr-2 h-4 w-4" />
+                  {dict.planner.templates.navLabel}
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setTimetableImportOpen(true)}>
                   <CalendarRange className="mr-2 h-4 w-4" />
                   {t.importFromTimetable}
@@ -736,6 +749,10 @@ function GraduationPlanner() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={openTemplateGallery}>
+                  <FolderCog className="mr-2 h-4 w-4" />
+                  {dict.planner.templates.navLabel}
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setTimetableImportOpen(true)}>
                   <CalendarRange className="mr-2 h-4 w-4" />
                   {t.importFromTimetable}
@@ -837,6 +854,7 @@ function GraduationPlanner() {
           ) : hasEmptyPlanner ? (
             <EmptyPlanner
               onImportTemplate={() => setFolderManagementOpen(true)}
+              onOpenTemplates={openTemplateGallery}
               onOpenAddCourse={() => openAddCourse()}
               onStartSetup={() => {
                 setSetupDismissed(false);
@@ -927,6 +945,19 @@ function GraduationPlanner() {
           folders={folderData}
           items={courseData}
           currentSemesterId={normalizedNow}
+        />
+        <TemplateGalleryDialog
+          open={templateGalleryOpen}
+          onOpenChange={setTemplateGalleryOpen}
+          planner={plannerInfo}
+          folders={folderData}
+          items={courseData}
+          semesters={semesterData}
+          onApplied={() => {
+            void handlePlannerUpdated();
+            void handleFoldersUpdated();
+            void handleSemestersUpdated();
+          }}
         />
         <PlannerTour
           open={tourActive}

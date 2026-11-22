@@ -19,6 +19,7 @@ type PlannerTemplateDocs = {
   folders: FolderDocType[];
   items: ItemDocType[];
   semesters: SemesterDocType[];
+  folderIdByKey: Map<string, string>;
 };
 
 export const plannerToTemplatePayload = ({
@@ -196,5 +197,6 @@ export const templatePayloadToPlannerDocs = (
     folders: convertedFolders,
     items: convertedItems,
     semesters: newSemesters,
+    folderIdByKey: folderIds,
   };
 };

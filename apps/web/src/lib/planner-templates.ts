@@ -179,7 +179,10 @@ const useInvalidateTemplates = () => {
   return () =>
     queryClient.invalidateQueries({ queryKey: plannerTemplateKeys.all });
 };
-export const usePlannerTemplates = (filters: PlannerTemplateFilters = {}) => {
+export const usePlannerTemplates = (
+  filters: PlannerTemplateFilters = {},
+  options: { enabled?: boolean } = {},
+) => {
   const auth = useAuth();
   const token = useTemplateToken();
   const identity =
@@ -187,7 +190,7 @@ export const usePlannerTemplates = (filters: PlannerTemplateFilters = {}) => {
   return useQuery({
     queryKey: plannerTemplateKeys.list(filters, identity),
     queryFn: () => listPlannerTemplates(filters, token),
-    enabled: !filters.mine || Boolean(token),
+    enabled: (options.enabled ?? true) && (!filters.mine || Boolean(token)),
   });
 };
 export const usePlannerTemplateDepartments = () =>

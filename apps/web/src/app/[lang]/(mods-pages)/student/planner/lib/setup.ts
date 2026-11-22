@@ -148,3 +148,50 @@ export function dedupeTimetableCourses<T extends CourseIdentity>(
     return true;
   });
 }
+
+/** Keep template placement while letting a timetable entry supply its real term. */
+export function mergeTemplateAndTimetableItems<T extends CourseIdentity>(
+  templateItems: T[],
+  timetableItems: T[],
+): T[] {
+  const merged = [...templateItems];
+  for (const timetableItem of timetableItems) {
+    const timetableCode = normalizePlannerCourseCode(
+      timetableItem.id ?? courseCodeFromRawId(timetableItem.raw_id),
+    );
+    const matchIndex = merged.findIndex((templateItem) => {
+      const templateRawCode = normalizePlannerCourseCode(
+        courseCodeFromRawId(templateItem.raw_id),
+      );
+      const timetableRawCode = normalizePlannerCourseCode(
+        courseCodeFromRawId(timetableItem.raw_id),
+      );
+      if (templateRawCode && templateRawCode === timetableRawCode) {
+        return true;
+      }
+      const templateCode = normalizePlannerCourseCode(
+        templateItem.id ?? courseCodeFromRawId(templateItem.raw_id),
+      );
+      return Boolean(timetableCode && templateCode === timetableCode);
+    });
+
+    if (matchIndex < 0) {
+      merged.push(timetableItem);
+      continue;
+    }
+
+    const templateItem = merged[matchIndex]!;
+    const mergedItem = { ...templateItem, ...timetableItem } as T & {
+      uuid?: string;
+      order?: number;
+      dependson?: unknown[];
+    };
+    const original = templateItem as typeof mergedItem;
+    if (original.uuid !== undefined) mergedItem.uuid = original.uuid;
+    if (original.order !== undefined) mergedItem.order = original.order;
+    if (original.dependson !== undefined)
+      mergedItem.dependson = original.dependson;
+    merged[matchIndex] = mergedItem;
+  }
+  return merged;
+}

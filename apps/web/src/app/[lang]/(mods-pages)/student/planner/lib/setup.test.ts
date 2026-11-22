@@ -4,6 +4,7 @@ import {
   dedupeTimetableCourses,
   enumerateTermsFromEnrollment,
   guessCourseCategory,
+  mergeTemplateAndTimetableItems,
   mergeTimetableCourses,
   normalizePlannerCourseCode,
   parseEnrollmentYearFromStudentId,
@@ -86,5 +87,46 @@ describe("planner first-run setup helpers", () => {
       ]),
     ).toEqual([incoming[2]]);
     expect(normalizePlannerCourseCode("11410 CS1010 ")).toBe("cs1010");
+  });
+
+  test("timetable courses replace matching template terms and keep other plan items", () => {
+    const template = [
+      {
+        id: "CS1010",
+        raw_id: null,
+        semester: "11510",
+        parent: "major-required",
+        uuid: "template-course",
+        order: 3,
+        dependson: ["prerequisite"],
+      },
+      { id: "MATH100", raw_id: null, semester: null },
+    ];
+    const timetable = [
+      {
+        id: "CS1010",
+        raw_id: "11220CS1010",
+        semester: "11220",
+        parent: "major-required",
+        uuid: "timetable-course",
+        order: 0,
+        dependson: [],
+      },
+      { id: "PHYS100", raw_id: "11310PHYS100", semester: "11310" },
+    ];
+
+    expect(mergeTemplateAndTimetableItems(template, timetable)).toEqual([
+      {
+        id: "CS1010",
+        raw_id: "11220CS1010",
+        semester: "11220",
+        parent: "major-required",
+        uuid: "template-course",
+        order: 3,
+        dependson: ["prerequisite"],
+      },
+      { id: "MATH100", raw_id: null, semester: null },
+      { id: "PHYS100", raw_id: "11310PHYS100", semester: "11310" },
+    ]);
   });
 });
