@@ -10,6 +10,9 @@ import {
 import courses from "./courses";
 
 const STUDENT_MARKER = "STUDENT-111000001";
+// Shaped like a real session ID, so the request is not refused before the
+// handler reaches the code under test.
+const SESSION = "abcdefghij0123456789";
 
 const latestLandingPage = `<html><body><form>
   <select><option value="">-</option><option value="11510">11510</option></select>
@@ -56,13 +59,13 @@ const post = (path: string, fields: Record<string, string>) =>
  */
 describe("school pages fetched for a student stay out of the logs", () => {
   it.each([
-    ["/latest", latestLandingPage, { ACIXSTORE: "session" }],
+    ["/latest", latestLandingPage, { ACIXSTORE: SESSION }],
     [
       "/hidden-course-selection",
       studentPage,
-      { ACIXSTORE: "session", dept: "CS" },
+      { ACIXSTORE: SESSION, dept: "CS" },
     ],
-    ["/class-detailed", studentPage, { ACIXSTORE: "session" }],
+    ["/class-detailed", studentPage, { ACIXSTORE: SESSION }],
   ])("POST %s", async (path, html, fields) => {
     const upstream = respondWith(html);
 
