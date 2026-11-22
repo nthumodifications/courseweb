@@ -198,10 +198,7 @@ export function PlannerCourseActions({
             </DropdownMenuItem>
           )}
           <DropdownMenuSeparator />
-          <DropdownMenuItem
-            className="text-destructive"
-            onClick={requestDelete}
-          >
+          <DropdownMenuItem className="text-red-500" onClick={requestDelete}>
             {t.deleteCourse}
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -308,7 +305,7 @@ export function PlannerCourseRow({
               type="button"
               variant="ghost"
               size={compact ? "icon" : "sm"}
-              className={`${compact ? "h-7 w-7 px-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 [@media(hover:none)]:opacity-100" : "h-7 min-w-[4.5rem] gap-1 px-2"} text-xs ${!item.semester && !compact ? "text-destructive" : status === "in-progress" ? "text-primary" : "text-muted-foreground"}`}
+              className={`${compact ? "h-7 w-7 px-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 [@media(hover:none)]:opacity-100" : "h-7 min-w-[4.5rem] gap-1 px-2"} text-xs ${!item.semester && !compact ? "text-red-500" : status === "in-progress" ? "text-primary" : "text-muted-foreground"}`}
               aria-label={`${t.changeTerm}: ${term}`}
               title={`${t.changeTerm}: ${term}`}
             >
@@ -341,7 +338,7 @@ export function PlannerCourseRow({
         </DropdownMenu>
       )}
       {status === "failed" ? (
-        <span className="rounded-sm border border-destructive bg-destructive px-1.5 py-1 text-xs font-medium text-destructive-foreground">
+        <span className="rounded-sm bg-red-500/10 px-1.5 py-1 text-xs font-medium text-red-500">
           {t.statusFailed}
         </span>
       ) : status === "in-progress" && showInProgressStatus ? (
@@ -386,7 +383,7 @@ export const RequirementSummary = ({
         })}
       </span>
       {remaining > 0 ? (
-        <span className="font-medium text-destructive">
+        <span className="font-medium text-red-500">
           {formatPlannerText(t.missingCount, { count: remaining })}
         </span>
       ) : progress?.satisfied ? (

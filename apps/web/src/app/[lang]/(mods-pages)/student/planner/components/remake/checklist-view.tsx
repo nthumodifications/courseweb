@@ -155,7 +155,7 @@ export function ChecklistView(props: PlannerViewProps) {
                     {folder.title}
                   </span>
                   <span
-                    className={`shrink-0 text-xs ${remaining ? "text-destructive" : "text-muted-foreground"}`}
+                    className={`shrink-0 text-xs ${remaining ? "text-red-500" : "text-muted-foreground"}`}
                   >
                     {remaining
                       ? formatPlannerText(t.remainingShort, {

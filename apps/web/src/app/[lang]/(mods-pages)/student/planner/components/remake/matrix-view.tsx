@@ -159,7 +159,7 @@ export function MatrixView(props: MatrixViewProps) {
                   <button
                     key={item.uuid}
                     type="button"
-                    className={`mb-1 block w-full truncate rounded px-1.5 py-1 text-left text-xs ${status === "failed" ? "border border-destructive/30 bg-destructive/10 text-destructive line-through" : status === "planned" ? "border border-dashed border-primary/40 bg-primary/5" : "bg-muted/50 hover:bg-muted"}`}
+                    className={`mb-1 block w-full truncate rounded px-1.5 py-1 text-left text-xs ${status === "failed" ? "border border-red-500/30 bg-red-500/10 text-red-500 line-through" : status === "planned" ? "border border-dashed border-primary/40 bg-primary/5" : "bg-muted/50 hover:bg-muted"}`}
                     title={decodeCourseText(item.title)}
                     onClick={() => props.onViewDetails(item)}
                   >
@@ -185,7 +185,7 @@ export function MatrixView(props: MatrixViewProps) {
                 <button
                   key={item.uuid}
                   type="button"
-                  className={`mb-1 block w-full truncate rounded px-1.5 py-1 text-left text-xs ${status === "failed" ? "border border-destructive/30 bg-destructive/10 text-destructive line-through" : "border border-dashed border-border bg-muted/20 text-foreground"}`}
+                  className={`mb-1 block w-full truncate rounded px-1.5 py-1 text-left text-xs ${status === "failed" ? "border border-red-500/30 bg-red-500/10 text-red-500 line-through" : "border border-dashed border-border bg-muted/20 text-foreground"}`}
                   title={decodeCourseText(item.title)}
                   onClick={() => props.onViewDetails(item)}
                 >
@@ -282,7 +282,7 @@ export function MatrixView(props: MatrixViewProps) {
                 <button
                   key={item.uuid}
                   type="button"
-                  className={`block w-full rounded px-2 py-1 text-left text-sm ${effectiveStatus(item, props.now) === "failed" ? "bg-destructive/10 text-destructive" : "hover:bg-muted"}`}
+                  className={`block w-full rounded px-2 py-1 text-left text-sm ${effectiveStatus(item, props.now) === "failed" ? "bg-red-500/10 text-red-500" : "hover:bg-muted"}`}
                   title={decodeCourseText(item.title)}
                   onClick={() => props.onViewDetails(item)}
                 >
@@ -309,7 +309,7 @@ export function MatrixView(props: MatrixViewProps) {
                 <button
                   key={item.uuid}
                   type="button"
-                  className={`block w-full rounded px-2 py-1 text-left text-sm ${status === "failed" ? "bg-destructive/10 text-destructive" : "border border-dashed border-border bg-muted/20 hover:bg-muted/40"}`}
+                  className={`block w-full rounded px-2 py-1 text-left text-sm ${status === "failed" ? "bg-red-500/10 text-red-500" : "border border-dashed border-border bg-muted/20 hover:bg-muted/40"}`}
                   title={decodeCourseText(item.title)}
                   onClick={() => props.onViewDetails(item)}
                 >
@@ -475,7 +475,7 @@ export function MatrixView(props: MatrixViewProps) {
               return (
                 <div
                   key={termId}
-                  className={`flex items-center border-l border-border/60 px-2 text-xs ${credits === 0 ? "font-medium text-destructive" : "font-medium"}`}
+                  className={`flex items-center border-l border-border/60 px-2 text-xs ${credits === 0 ? "font-medium text-red-500" : "font-medium"}`}
                 >
                   {credits}
                 </div>

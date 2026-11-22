@@ -121,7 +121,7 @@ function PlannerProgressStrip({
           <span>{formatPlannerText(t.plannedLegend, { count: planned })}</span>
         </div>
         {remaining > 0 && (
-          <span className="ml-auto text-xs font-medium text-destructive">
+          <span className="ml-auto text-xs font-medium text-red-500">
             {formatPlannerText(t.remainingPlan, { count: remaining })}
           </span>
         )}

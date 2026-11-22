@@ -315,7 +315,7 @@ export function SemesterBoardView(props: SemesterBoardViewProps) {
                           courses: yearItems.length,
                         })}
                         {failedCount > 0 && (
-                          <span className="text-destructive">
+                          <span className="text-red-500">
                             {` • ${formatPlannerText(t.failedCount, { count: failedCount })}`}
                           </span>
                         )}
