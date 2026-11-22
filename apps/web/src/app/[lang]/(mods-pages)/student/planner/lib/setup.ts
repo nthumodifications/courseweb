@@ -177,13 +177,15 @@ export function guessCourseCategory(
     CourseDefinition,
     "ge_type" | "compulsory_for" | "elective_for"
   > &
-    Partial<Pick<CourseDefinition, "course">>,
+    Partial<Pick<CourseDefinition, "course" | "department">>,
   department: string,
   folders: SetupFolder[],
   enrollmentYear: string | number,
   detectedTag?: string,
 ): string {
-  const courseCode = course.course?.trim().toUpperCase() ?? "";
+  const courseCode = `${course.department ?? ""}${course.course ?? ""}`
+    .replace(/\s+/g, "")
+    .toUpperCase();
   const prefixCategory = courseCode.startsWith("LANG")
     ? ["英文", "English"]
     : courseCode.startsWith("PE")

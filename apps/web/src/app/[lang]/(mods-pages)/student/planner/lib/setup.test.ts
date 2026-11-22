@@ -95,7 +95,7 @@ describe("planner first-run setup helpers", () => {
 
     expect(
       guessCourseCategory(
-        { ...noDepartmentTags, course: "LANG1101" },
+        { ...noDepartmentTags, department: "LANG", course: "5000" },
         "CS",
         folders,
         "112",
@@ -103,7 +103,7 @@ describe("planner first-run setup helpers", () => {
     ).toBe("english");
     expect(
       guessCourseCategory(
-        { ...noDepartmentTags, course: "PE1001" },
+        { ...noDepartmentTags, department: "PE  ", course: "1001" },
         "CS",
         folders,
         "112",
