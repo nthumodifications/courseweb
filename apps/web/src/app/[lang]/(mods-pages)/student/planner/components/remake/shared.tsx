@@ -217,6 +217,10 @@ interface PlannerCourseRowProps
   now: string;
   showSemester?: boolean;
   showCode?: boolean;
+  enableDrag?: boolean;
+  compact?: boolean;
+  showInProgressStatus?: boolean;
+  rowId?: string;
   categoryFolder?: FolderDocType;
   onOpenDetails?: (item: ItemDocType) => void;
 }
@@ -227,6 +231,10 @@ export function PlannerCourseRow({
   semesters,
   showSemester = false,
   showCode = false,
+  enableDrag = true,
+  compact = false,
+  showInProgressStatus = true,
+  rowId,
   categoryFolder,
   onOpenDetails,
   ...actions
@@ -242,6 +250,7 @@ export function PlannerCourseRow({
     useDraggable({
       id: `planner-course-${item.uuid}`,
       data: { type: "course", course: item },
+      disabled: !enableDrag,
     });
   const dragStyle = transform
     ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` }
@@ -249,20 +258,23 @@ export function PlannerCourseRow({
 
   return (
     <div
+      id={rowId}
       ref={setNodeRef}
       style={dragStyle}
-      className={`group flex min-h-11 flex-wrap items-center gap-2 border-b border-border/70 px-1 py-2 ${isDragging ? "opacity-40" : ""} ${status === "failed" ? "opacity-75" : ""}`}
+      className={`group flex items-center border-b border-border/70 ${compact ? "h-8 min-h-8 flex-nowrap gap-1" : "min-h-11 flex-wrap gap-2 px-1 py-2"} ${isDragging ? "opacity-40" : ""}`}
     >
-      <button
-        type="button"
-        {...attributes}
-        {...listeners}
-        className="hidden h-7 w-5 shrink-0 touch-none cursor-grab text-muted-foreground sm:flex sm:items-center sm:justify-center"
-        aria-label={t.dragHint}
-        title={t.dragHint}
-      >
-        <GripVertical className="h-4 w-4" />
-      </button>
+      {enableDrag && (
+        <button
+          type="button"
+          {...attributes}
+          {...listeners}
+          className="flex h-7 w-4 shrink-0 touch-none cursor-grab items-center justify-center text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 [@media(hover:none)]:opacity-100"
+          aria-label={t.dragHint}
+          title={t.dragHint}
+        >
+          <GripVertical className="h-4 w-4" />
+        </button>
+      )}
       {categoryFolder && (
         <span
           className={`h-2 w-2 shrink-0 rounded-full ${getCategoryColorClass(categoryFolder)}`}
@@ -275,12 +287,12 @@ export function PlannerCourseRow({
       )}
       <button
         type="button"
-        className="min-w-0 flex-1 basis-40 text-left leading-5"
+        className={`min-w-0 flex-1 text-left leading-5 ${compact ? "truncate text-xs" : "basis-40"}`}
         onClick={() => onOpenDetails?.(item)}
         title={decodeCourseText(item.title)}
       >
         <span className="font-medium">{title.primary}</span>
-        {title.secondary && (
+        {!compact && title.secondary && (
           <span className="ml-1 text-xs text-muted-foreground">
             {title.secondary}
           </span>
@@ -295,18 +307,22 @@ export function PlannerCourseRow({
             <Button
               type="button"
               variant="ghost"
-              size="sm"
-              className={`h-7 min-w-[4.5rem] gap-1 px-2 text-xs ${!item.semester ? "text-destructive" : status === "in-progress" ? "text-primary" : "text-muted-foreground"}`}
+              size={compact ? "icon" : "sm"}
+              className={`${compact ? "h-7 w-7 px-1" : "h-7 min-w-[4.5rem] gap-1 px-2"} text-xs ${!item.semester && !compact ? "text-destructive" : status === "in-progress" ? "text-primary" : "text-muted-foreground"}`}
               aria-label={`${t.changeTerm}: ${term}`}
               title={`${t.changeTerm}: ${term}`}
             >
-              <span>{item.semester ? term : t.noneTerm}</span>
-              {status === "in-progress" && (
+              <span className={compact ? "sr-only" : ""}>
+                {item.semester ? term : t.noneTerm}
+              </span>
+              {!compact && status === "in-progress" && (
                 <span className="rounded-sm bg-primary/10 px-1 py-1 text-[10px] text-primary">
                   {t.currentTerm}
                 </span>
               )}
-              <CalendarDays className="ml-1 h-3 w-3" />
+              <CalendarDays
+                className={`${compact ? "h-3.5 w-3.5" : "ml-1 h-3 w-3"}`}
+              />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="max-h-72 overflow-y-auto">
@@ -325,10 +341,10 @@ export function PlannerCourseRow({
         </DropdownMenu>
       )}
       {status === "failed" ? (
-        <span className="rounded-sm bg-destructive/10 px-1.5 py-1 text-xs font-medium text-destructive">
+        <span className="rounded-sm border border-destructive bg-destructive px-1.5 py-1 text-xs font-medium text-destructive-foreground">
           {t.statusFailed}
         </span>
-      ) : status === "in-progress" ? (
+      ) : status === "in-progress" && showInProgressStatus ? (
         <span className="rounded-sm bg-primary/10 px-1.5 py-1 text-xs font-medium text-primary">
           {t.statusInProgress}
         </span>

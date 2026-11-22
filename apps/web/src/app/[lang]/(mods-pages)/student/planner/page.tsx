@@ -376,6 +376,44 @@ function GraduationPlanner() {
     setSelectedCourse(item);
     setEditOpen(true);
   };
+  const scrollToPendingTarget = (kind: "unscheduled" | "unsorted") => {
+    setPendingOnly(true);
+    if (view === "matrix" && kind === "unscheduled") {
+      const matrix = document.getElementById("planner-matrix-scroll");
+      matrix?.scrollTo({ left: matrix.scrollWidth, behavior: "smooth" });
+      return;
+    }
+
+    const isWideBoard = window.matchMedia("(min-width: 1024px)").matches;
+    const targetId =
+      view === "checklist"
+        ? kind === "unscheduled"
+          ? "planner-unscheduled"
+          : "planner-unsorted"
+        : view === "matrix"
+          ? "planner-unsorted"
+          : kind === "unscheduled"
+            ? isWideBoard
+              ? "planner-unscheduled"
+              : "planner-unscheduled-mobile"
+            : "planner-unsorted";
+    requestAnimationFrame(() => {
+      const target =
+        document.getElementById(targetId) ??
+        (view === "board"
+          ? document.getElementById(
+              isWideBoard
+                ? "planner-unscheduled"
+                : "planner-unscheduled-mobile",
+            )
+          : null);
+      target?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+        inline: "nearest",
+      });
+    });
+  };
   const handleCourseSave = async (item: ItemDocType) => {
     await updateCourse(item, { ...item });
     setEditOpen(false);
@@ -474,43 +512,90 @@ function GraduationPlanner() {
     onChangeSemester: handleChangeSemester,
     onSetFailed: handleSetFailed,
   };
+  const subtitleParts = [
+    plannerInfo?.department,
+    plannerInfo?.enrollmentYear
+      ? formatPlannerText(t.subtitleEnrollment, {
+          enrollmentYear: plannerInfo.enrollmentYear,
+        })
+      : undefined,
+    plannerInfo?.graduationYear
+      ? formatPlannerText(t.subtitleGraduation, {
+          graduationYear: plannerInfo.graduationYear,
+        })
+      : undefined,
+  ].filter(Boolean);
 
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
       <div className="-mt-4 flex h-[calc(100vh-var(--header-height))] min-h-0 w-full flex-col overflow-hidden">
-        <header className="flex shrink-0 flex-col gap-3 border-b border-border px-4 py-3 md:flex-row md:items-center md:justify-between md:px-6">
-          <div className="min-w-0">
-            <h1 className="truncate text-lg font-bold md:text-xl">
-              {plannerInfo?.title || t.titleFallback}
-            </h1>
-            <p className="truncate text-xs text-muted-foreground sm:text-sm">
-              {formatPlannerText(t.subtitle, {
-                department: plannerInfo?.department ?? "",
-                enrollmentYear: plannerInfo?.enrollmentYear ?? "",
-                graduationYear: plannerInfo?.graduationYear ?? "",
-              })}
-            </p>
+        <header className="flex shrink-0 flex-col gap-2 border-b border-border px-4 py-3 md:flex-row md:items-center md:justify-between md:gap-3 md:px-6">
+          <div className="flex min-w-0 items-start justify-between gap-2 md:block">
+            <div className="min-w-0">
+              <h1 className="truncate text-lg font-bold md:text-xl">
+                {plannerInfo?.title || t.titleFallback}
+              </h1>
+              {subtitleParts.length > 0 && (
+                <p className="whitespace-normal text-xs text-muted-foreground sm:text-sm">
+                  {subtitleParts.join(` ${t.subtitleSeparator} `)}
+                </p>
+              )}
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-9 w-9 shrink-0 md:hidden"
+                  aria-label={t.settingsAriaLabel}
+                  title={t.settingsMenu}
+                >
+                  <Settings2 className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setFolderManagementOpen(true)}>
+                  <FolderCog className="mr-2 h-4 w-4" />
+                  {t.manageCategories}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setSemesterManagementOpen(true)}
+                >
+                  <CalendarRange className="mr-2 h-4 w-4" />
+                  {t.manageSemesters}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setPlannerSettingsOpen(true)}>
+                  <Settings2 className="mr-2 h-4 w-4" />
+                  {t.plannerSettings}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex w-full min-w-0 items-center gap-2 md:w-auto md:flex-nowrap">
             <Tabs
+              className="min-w-0 flex-1 md:flex-none"
               value={view}
               onValueChange={(value) => setView(value as PlannerView)}
             >
-              <TabsList className="h-10 w-full sm:w-auto">
+              <TabsList className="h-10 w-full md:w-auto">
                 <TabsTrigger
                   value="checklist"
-                  className="h-8 gap-1.5 px-2 sm:px-3"
+                  className="h-8 flex-1 gap-1.5 px-2 md:flex-initial md:px-3"
                 >
                   <ListChecks className="h-4 w-4" />
                   <span>{t.viewChecklist}</span>
                 </TabsTrigger>
-                <TabsTrigger value="board" className="h-8 gap-1.5 px-2 sm:px-3">
+                <TabsTrigger
+                  value="board"
+                  className="h-8 flex-1 gap-1.5 px-2 md:flex-initial md:px-3"
+                >
                   <CalendarRange className="h-4 w-4" />
                   <span>{t.viewBoard}</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="matrix"
-                  className="h-8 gap-1.5 px-2 sm:px-3"
+                  className="h-8 flex-1 gap-1.5 px-2 md:flex-initial md:px-3"
                 >
                   <Grid2X2 className="h-4 w-4" />
                   <span>{t.viewMatrix}</span>
@@ -535,11 +620,12 @@ function GraduationPlanner() {
             </Button>
             <Button
               type="button"
-              className="h-10"
+              className="h-9 shrink-0 px-3 md:h-10"
               onClick={() => openAddCourse()}
             >
-              <Plus className="mr-1.5 h-4 w-4" />
-              {t.addCourse}
+              <Plus className="h-4 w-4 md:mr-1.5" />
+              <span className="md:hidden">{t.addCourseCompact}</span>
+              <span className="hidden md:inline">{t.addCourse}</span>
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -547,7 +633,7 @@ function GraduationPlanner() {
                   type="button"
                   variant="outline"
                   size="icon"
-                  className="h-10 w-10"
+                  className="hidden h-10 w-10 md:inline-flex"
                   aria-label={t.settingsAriaLabel}
                   title={t.settingsMenu}
                 >
@@ -574,40 +660,60 @@ function GraduationPlanner() {
           </div>
         </header>
 
-        <PlannerProgressStrip
-          done={overall.done}
-          inProgress={overall.inProgress}
-          planned={overall.planned}
-          required={overall.required}
-          remaining={overall.remaining}
-        />
+        {!hasEmptyPlanner && (
+          <PlannerProgressStrip
+            done={overall.done}
+            inProgress={overall.inProgress}
+            planned={overall.planned}
+            required={overall.required}
+            remaining={overall.remaining}
+          />
+        )}
 
         {pendingCount > 0 && (
-          <div className="shrink-0 px-4 pt-3 md:px-6">
-            <button
-              type="button"
-              className="flex w-full flex-wrap items-center gap-2 rounded-lg bg-muted/50 px-3 py-2 text-left hover:bg-muted"
-              onClick={() => {
-                setPendingOnly((previous) => !previous);
-                contentRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-              }}
-            >
-              <TriangleAlert className="h-4 w-4 text-destructive" />
-              <span className="font-medium text-destructive">
+          <div className="shrink-0 px-4 pt-2 md:px-6">
+            <div className="flex min-w-0 items-center gap-2 overflow-x-auto whitespace-nowrap rounded-md bg-muted/40 px-2 py-1.5 text-xs">
+              <TriangleAlert className="h-3.5 w-3.5 shrink-0 text-amber-500" />
+              <span className="shrink-0 font-medium text-muted-foreground">
                 {formatPlannerText(t.pendingNotice, { count: pendingCount })}
               </span>
-              <span className="text-xs text-muted-foreground">
-                {formatPlannerText(t.pendingDescription, {
-                  unscheduled: unscheduledCount,
-                  unsorted: unsortedCount,
-                })}
-              </span>
-              {pendingOnly && (
-                <span className="ml-auto text-xs font-medium text-primary">
-                  {t.clearPendingFilter}
+              {unscheduledCount > 0 && (
+                <button
+                  type="button"
+                  className="shrink-0 text-muted-foreground hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  onClick={() => scrollToPendingTarget("unscheduled")}
+                >
+                  {formatPlannerText(t.pendingUnscheduled, {
+                    count: unscheduledCount,
+                  })}
+                </button>
+              )}
+              {unscheduledCount > 0 && unsortedCount > 0 && (
+                <span className="text-muted-foreground/60">
+                  {t.subtitleSeparator}
                 </span>
               )}
-            </button>
+              {unsortedCount > 0 && (
+                <button
+                  type="button"
+                  className="shrink-0 text-muted-foreground hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  onClick={() => scrollToPendingTarget("unsorted")}
+                >
+                  {formatPlannerText(t.pendingUnsorted, {
+                    count: unsortedCount,
+                  })}
+                </button>
+              )}
+              {pendingOnly && (
+                <button
+                  type="button"
+                  className="ml-auto shrink-0 font-medium text-primary"
+                  onClick={() => setPendingOnly(false)}
+                >
+                  {t.clearPendingFilter}
+                </button>
+              )}
+            </div>
           </div>
         )}
 

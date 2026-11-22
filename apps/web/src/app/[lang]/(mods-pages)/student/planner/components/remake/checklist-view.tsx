@@ -37,6 +37,9 @@ export function ChecklistView(props: PlannerViewProps) {
           item.status !== "failed",
       )
     : props.items;
+  const firstUnscheduledId = visibleItems.find(
+    (item) => !item.semester && item.status !== "failed",
+  )?.uuid;
   const childrenOf = (parentId: string) =>
     props.folders
       .filter((folder) => folder.parent === parentId)
@@ -84,6 +87,12 @@ export function ChecklistView(props: PlannerViewProps) {
                 folders={props.folders}
                 showSemester
                 showCode
+                enableDrag={false}
+                rowId={
+                  item.uuid === firstUnscheduledId
+                    ? "planner-unscheduled"
+                    : undefined
+                }
                 onOpenDetails={props.onViewDetails}
                 onViewDetails={props.onViewDetails}
                 onEdit={props.onEdit}
@@ -127,60 +136,8 @@ export function ChecklistView(props: PlannerViewProps) {
         </div>
       )}
       <div className="flex min-h-0 flex-1 overflow-hidden">
-        <aside className="hidden w-[280px] shrink-0 overflow-y-auto border-r border-border lg:block">
-          <div className="border-b border-border p-4">
-            <div className="font-medium">
-              {formatPlannerText(t.requiredProgress, {
-                done: props.overall.done,
-                required: props.overall.required,
-              })}
-            </div>
-            {props.overall.remaining > 0 && (
-              <div className="mt-1 text-xs font-medium text-destructive">
-                {formatPlannerText(t.remainingPlan, {
-                  count: props.overall.remaining,
-                })}
-              </div>
-            )}
-            <div className="mt-2 flex h-2 overflow-hidden rounded-full bg-muted">
-              <span
-                className="h-full bg-primary"
-                style={{
-                  width: `${props.overall.required ? (props.overall.done / props.overall.required) * 100 : 0}%`,
-                }}
-              />
-              <span
-                className="h-full bg-primary/55"
-                style={{
-                  width: `${props.overall.required ? (props.overall.inProgress / props.overall.required) * 100 : 0}%`,
-                }}
-              />
-              <span
-                className="h-full"
-                style={{
-                  width: `${props.overall.required ? (props.overall.planned / props.overall.required) * 100 : 0}%`,
-                  backgroundImage:
-                    "repeating-linear-gradient(135deg, hsl(var(--primary) / .35) 0 3px, transparent 3px 5px)",
-                }}
-              />
-            </div>
-            <div className="mt-2 flex flex-wrap gap-2 text-[10px] text-muted-foreground">
-              <span>
-                {formatPlannerText(t.doneLegend, { count: props.overall.done })}
-              </span>
-              <span>
-                {formatPlannerText(t.inProgressLegend, {
-                  count: props.overall.inProgress,
-                })}
-              </span>
-              <span>
-                {formatPlannerText(t.plannedLegend, {
-                  count: props.overall.planned,
-                })}
-              </span>
-            </div>
-          </div>
-          <nav className="space-y-1">
+        <aside className="hidden w-[300px] shrink-0 overflow-y-auto border-r border-border lg:block">
+          <nav className="space-y-1 p-3">
             {rootFolders.map((folder) => {
               const progress = props.progress.get(folder.id);
               const remaining = progress?.remaining ?? 0;
@@ -188,13 +145,13 @@ export function ChecklistView(props: PlannerViewProps) {
                 <button
                   key={folder.id}
                   type="button"
-                  className="flex min-h-10 w-full items-center gap-2 rounded-md px-2 text-left hover:bg-muted"
+                  className="flex min-h-10 w-full items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-muted"
                   onClick={() => scrollToCategory(folder.id)}
                 >
                   <span
                     className={`h-2 w-2 shrink-0 rounded-full ${getFolderColorDotClass(folder.color)}`}
                   />
-                  <span className="min-w-0 flex-1 truncate font-medium">
+                  <span className="min-w-0 flex-1 whitespace-normal break-words font-medium leading-snug">
                     {folder.title}
                   </span>
                   <span
@@ -268,7 +225,7 @@ export function ChecklistView(props: PlannerViewProps) {
             (item) =>
               item.parent === "_unsorted" || item.parent === "planner-1",
           ) && (
-            <section className="mb-6">
+            <section id="planner-unsorted" className="mb-6 scroll-mt-4">
               <div className="flex min-h-10 flex-wrap items-center gap-2 border-b border-border px-1 py-2">
                 <span className="h-2 w-2 shrink-0 rounded-full bg-muted-foreground" />
                 <h2 className="text-base font-bold">
@@ -284,6 +241,12 @@ export function ChecklistView(props: PlannerViewProps) {
                   folders={props.folders}
                   showSemester
                   showCode
+                  enableDrag={false}
+                  rowId={
+                    item.uuid === firstUnscheduledId
+                      ? "planner-unscheduled"
+                      : undefined
+                  }
                   onOpenDetails={props.onViewDetails}
                   onViewDetails={props.onViewDetails}
                   onEdit={props.onEdit}

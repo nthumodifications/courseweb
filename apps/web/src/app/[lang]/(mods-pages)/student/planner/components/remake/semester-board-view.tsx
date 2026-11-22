@@ -68,6 +68,9 @@ function TermCard({
   const credits = items
     .filter((item) => effectiveStatus(item, now) !== "failed")
     .reduce((sum, item) => sum + item.credits, 0);
+  const firstUnsortedId = items.find(
+    (item) => item.parent === "_unsorted",
+  )?.uuid;
 
   return (
     <section
@@ -97,6 +100,10 @@ function TermCard({
             semesters={semesters}
             folders={folders}
             categoryFolder={getPlannerItemCategory(item, folders)}
+            rowId={
+              item.uuid === firstUnsortedId ? "planner-unsorted" : undefined
+            }
+            showInProgressStatus={false}
             onOpenDetails={onViewDetails}
             onViewDetails={onViewDetails}
             onEdit={onEdit}
@@ -152,7 +159,9 @@ function UnscheduledCourse({
         semesters={props.semesters}
         folders={props.folders}
         categoryFolder={category}
+        compact
         showSemester
+        showInProgressStatus={false}
         onOpenDetails={props.onViewDetails}
         onViewDetails={props.onViewDetails}
         onEdit={props.onEdit}
@@ -200,6 +209,7 @@ export function SemesterBoardView(props: SemesterBoardViewProps) {
     t.yearLabels[Math.min(yearNumber - 1, t.yearLabels.length - 1)];
   const renderPendingRail = (mobile: boolean) => (
     <aside
+      id={mobile ? "planner-unscheduled-mobile" : "planner-unscheduled"}
       className={`${mobile ? "mb-2 border-b border-border pb-3 lg:hidden" : "hidden w-60 shrink-0 border-l border-border p-4 lg:block"}`}
     >
       <div className="mb-1 flex items-center gap-2">
@@ -259,8 +269,6 @@ export function SemesterBoardView(props: SemesterBoardViewProps) {
               const isPastYear = ids.every(
                 (term) => comparePlannerSemesters(term, props.now) < 0,
               );
-              const isCollapsed =
-                isPastYear && expandedYears[yearNumber] !== true;
               const yearItems = props.items.filter((item) =>
                 ids.some(
                   (term) =>
@@ -269,6 +277,11 @@ export function SemesterBoardView(props: SemesterBoardViewProps) {
                       normalizeSemesterId(term),
                 ),
               );
+              const hasPendingCourse = yearItems.some(isPlannerItemPending);
+              const isCollapsed =
+                isPastYear &&
+                expandedYears[yearNumber] !== true &&
+                !(props.pendingOnly && hasPendingCourse);
               const yearCredits = yearItems
                 .filter((item) => effectiveStatus(item, props.now) !== "failed")
                 .reduce((sum, item) => sum + item.credits, 0);

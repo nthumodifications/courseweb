@@ -13,7 +13,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@courseweb/ui";
-import { InstantSearch, useInstantSearch, useMenu } from "react-instantsearch";
+import {
+  InstantSearch,
+  useInstantSearch,
+  useMenu,
+  useSearchBox,
+} from "react-instantsearch";
 import { Plus } from "lucide-react";
 import type { CourseSyllabusView } from "@/config/supabase";
 import type { ResilientSearchClient } from "@/lib/search-client";
@@ -95,6 +100,7 @@ function AddSearchContent({
     showPrevious: false,
   });
   const { status } = useInstantSearch();
+  const { query } = useSearchBox();
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const [assignments, setAssignments] = useState<
     Record<string, CourseAssignment>
@@ -109,13 +115,13 @@ function AddSearchContent({
 
   useEffect(() => {
     const target = sentinelRef.current;
-    if (!target || isLastPage) return;
+    if (!query.trim() || !target || isLastPage) return;
     const observer = new IntersectionObserver((entries) => {
       if (entries.some((entry) => entry.isIntersecting)) showMore();
     });
     observer.observe(target);
     return () => observer.disconnect();
-  }, [isLastPage, showMore]);
+  }, [isLastPage, query, showMore]);
 
   const uniqueHits = useMemo(() => {
     const grouped = new Map<string, CourseSyllabusView[]>();
@@ -130,10 +136,11 @@ function AddSearchContent({
     return [...grouped.entries()].map(([code, offers]) => ({
       code,
       course: offers[0],
-      offeredTerms: [...new Set(offers.map(termFromHit).filter(Boolean))].sort(
-        (left, right) =>
-          normalizeSemesterId(right).localeCompare(normalizeSemesterId(left)),
-      ),
+      offeredTerms: [
+        ...new Set(
+          offers.map(termFromHit).filter(Boolean).map(normalizeSemesterId),
+        ),
+      ].sort((left, right) => right.localeCompare(left)),
     }));
   }, [hits]);
 
@@ -185,11 +192,45 @@ function AddSearchContent({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="border-b border-border p-4 md:px-4">
-        <SearchBox
-          placeholder={t.searchPlaceholder}
-          autoFocus
-          className="h-10"
-        />
+        <div className="flex flex-col gap-2 md:flex-row md:items-center">
+          <SearchBox
+            placeholder={t.searchPlaceholder}
+            autoFocus
+            className="h-10 min-w-0 flex-1"
+          />
+          <div className="flex shrink-0 items-center gap-2">
+            <Label
+              htmlFor="planner-add-term-filter"
+              className="text-xs text-muted-foreground"
+            >
+              {t.offeredTermLabel}
+            </Label>
+            <Select
+              value={filterSemester}
+              onValueChange={(value) => {
+                setFilterSemester(value);
+                refine(value === ALL_VALUE ? "" : value);
+              }}
+            >
+              <SelectTrigger
+                id="planner-add-term-filter"
+                className="h-9 w-36 text-xs"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL_VALUE}>
+                  {dict.planner.coursePicker.all}
+                </SelectItem>
+                {semesterFilters.map((filter) => (
+                  <SelectItem key={filter.value} value={filter.value}>
+                    {formatPlannerSemester(filter.value)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
         <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
           <span className="shrink-0 text-sm text-muted-foreground">
             {t.addTo}
@@ -240,218 +281,192 @@ function AddSearchContent({
             {t.rowAssignmentHint}
           </span>
         </div>
-        <div className="mt-2 flex items-center gap-2">
-          <Label
-            htmlFor="planner-add-term-filter"
-            className="text-xs text-muted-foreground"
-          >
-            {t.termLabel}
-          </Label>
-          <Select
-            value={filterSemester}
-            onValueChange={(value) => {
-              setFilterSemester(value);
-              refine(value === ALL_VALUE ? "" : value);
-            }}
-          >
-            <SelectTrigger
-              id="planner-add-term-filter"
-              className="h-8 w-40 text-xs"
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL_VALUE}>
-                {dict.planner.coursePicker.all}
-              </SelectItem>
-              {semesterFilters.map((filter) => (
-                <SelectItem key={filter.value} value={filter.value}>
-                  {formatPlannerSemester(filter.value)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto px-4 md:px-4">
-        {uniqueHits.map(({ code, course, offeredTerms }) => {
-          const existing = existingByCode.get(code) ?? [];
-          const alreadyAdded = addedCodes[code];
-          const completed = existing.find(
-            (item) =>
-              effectiveStatus(item, now) === "completed" &&
-              Boolean(item.semester),
-          );
-          const blocked = existing.length > 0 || alreadyAdded;
-          const termId = assignments[code]?.semesterId ?? defaultSemesterId;
-          const folderId = assignments[code]?.folderId ?? defaultFolderId;
-          const rawId = courseCodeFromHit(course);
-          const teacher = (course.teacher_zh ?? [])
-            .map(decodeCourseText)
-            .join(", ");
-          const recentTerms = offeredTerms
-            .slice(0, 3)
-            .map(formatPlannerSemester)
-            .join(", ");
-          const title = [course.name_zh, course.name_en]
-            .filter(Boolean)
-            .map(decodeCourseText);
+        {!query.trim() && (
+          <p className="py-6 text-center text-sm text-muted-foreground">
+            {t.searchHint}
+          </p>
+        )}
+        {query.trim() &&
+          uniqueHits.map(({ code, course, offeredTerms }) => {
+            const existing = existingByCode.get(code) ?? [];
+            const alreadyAdded = addedCodes[code];
+            const completed = existing.find(
+              (item) =>
+                effectiveStatus(item, now) === "completed" &&
+                Boolean(item.semester),
+            );
+            const blocked = existing.length > 0 || alreadyAdded;
+            const termId = assignments[code]?.semesterId ?? defaultSemesterId;
+            const folderId = assignments[code]?.folderId ?? defaultFolderId;
+            const rawId = courseCodeFromHit(course);
+            const teacher = (course.teacher_zh ?? [])
+              .map(decodeCourseText)
+              .join(", ");
+            const recentTerms = offeredTerms
+              .slice(0, 3)
+              .map(formatPlannerSemester)
+              .join(t.termListSeparator);
+            const title = [course.name_zh, course.name_en]
+              .filter(Boolean)
+              .map(decodeCourseText);
 
-          return (
-            <div
-              key={
-                code ||
-                course.raw_id ||
-                `${course.department}-${course.course}-${course.class}`
-              }
-              className={`flex flex-col gap-3 border-b border-border py-3 sm:flex-row sm:items-center ${blocked ? "opacity-55" : ""}`}
-            >
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-baseline gap-2">
-                  <span className="font-medium">{title[0]}</span>
-                  {title[1] && (
-                    <span className="text-xs text-muted-foreground">
-                      {title[1]}
-                    </span>
-                  )}
-                  {alreadyAdded && (
-                    <span className="rounded bg-muted px-1.5 py-1 text-xs">
-                      {t.resultAdded}
-                    </span>
-                  )}
-                  {!alreadyAdded && completed?.semester && (
-                    <span className="rounded bg-muted px-1.5 py-1 text-xs">
-                      {formatPlannerText(t.alreadyTaken, {
-                        semester: formatPlannerSemester(completed.semester),
-                      })}
-                    </span>
-                  )}
-                  {!alreadyAdded && existing.length > 0 && !completed && (
-                    <span className="rounded bg-muted px-1.5 py-1 text-xs">
-                      {t.alreadyPlanned}
-                    </span>
-                  )}
-                </div>
-                <div className="mt-1 flex flex-wrap gap-1.5 text-xs text-muted-foreground">
-                  <span>{rawId}</span>
-                  <span>•</span>
-                  <span>
-                    {formatPlannerText(t.credits, {
-                      count: course.credits ?? 0,
-                    })}
-                  </span>
-                  {teacher && (
-                    <>
-                      <span>•</span>
-                      <span>{teacher}</span>
-                    </>
-                  )}
-                  {recentTerms && (
-                    <>
-                      <span>•</span>
-                      <span>
-                        {formatPlannerText(t.recentTerms, {
-                          terms: recentTerms,
+            return (
+              <div
+                key={
+                  code ||
+                  course.raw_id ||
+                  `${course.department}-${course.course}-${course.class}`
+                }
+                className={`flex flex-col gap-3 border-b border-border py-3 sm:flex-row sm:items-center ${blocked ? "opacity-55" : ""}`}
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-baseline gap-2">
+                    <span className="font-medium">{title[0]}</span>
+                    {title[1] && (
+                      <span className="text-xs text-muted-foreground">
+                        {title[1]}
+                      </span>
+                    )}
+                    {alreadyAdded && (
+                      <span className="rounded bg-muted px-1.5 py-1 text-xs">
+                        {t.resultAdded}
+                      </span>
+                    )}
+                    {!alreadyAdded && completed?.semester && (
+                      <span className="rounded bg-muted px-1.5 py-1 text-xs">
+                        {formatPlannerText(t.alreadyTaken, {
+                          semester: formatPlannerSemester(completed.semester),
                         })}
                       </span>
-                    </>
-                  )}
+                    )}
+                    {!alreadyAdded && existing.length > 0 && !completed && (
+                      <span className="rounded bg-muted px-1.5 py-1 text-xs">
+                        {t.alreadyPlanned}
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-1 flex flex-wrap gap-1.5 text-xs text-muted-foreground">
+                    <span>{rawId}</span>
+                    <span>•</span>
+                    <span>
+                      {formatPlannerText(t.credits, {
+                        count: course.credits ?? 0,
+                      })}
+                    </span>
+                    {teacher && (
+                      <>
+                        <span>•</span>
+                        <span>{teacher}</span>
+                      </>
+                    )}
+                    {recentTerms && (
+                      <>
+                        <span>•</span>
+                        <span>
+                          {formatPlannerText(t.recentTerms, {
+                            terms: recentTerms,
+                          })}
+                        </span>
+                      </>
+                    )}
+                  </div>
                 </div>
+                {!blocked && (
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <Select
+                      value={folderId}
+                      onValueChange={(value) =>
+                        setAssignments((previous) => ({
+                          ...previous,
+                          [code]: { ...previous[code], folderId: value },
+                        }))
+                      }
+                    >
+                      <SelectTrigger
+                        className="h-8 w-full sm:w-36"
+                        aria-label={t.categoryLabel}
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="planner-1">
+                          {t.noneCategory}
+                        </SelectItem>
+                        {visibleFolders.map((folder) => (
+                          <SelectItem key={folder.id} value={folder.id}>
+                            {folder.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select
+                      value={termId || NONE_VALUE}
+                      onValueChange={(value) =>
+                        setAssignments((previous) => ({
+                          ...previous,
+                          [code]: {
+                            ...previous[code],
+                            semesterId: value === NONE_VALUE ? "" : value,
+                          },
+                        }))
+                      }
+                    >
+                      <SelectTrigger
+                        className="h-8 w-full sm:w-28"
+                        aria-label={t.termLabel}
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={NONE_VALUE}>{t.noneTerm}</SelectItem>
+                        {semesterOptions.map((semesterId) => (
+                          <SelectItem key={semesterId} value={semesterId}>
+                            {formatPlannerSemester(semesterId)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="h-8 shrink-0"
+                      disabled={isAddingCode[code]}
+                      onClick={() =>
+                        void handleAdd(
+                          course,
+                          code,
+                          defaultFolderId,
+                          defaultSemesterId,
+                        )
+                      }
+                    >
+                      <Plus className="mr-1 h-3.5 w-3.5" />
+                      {isAddingCode[code] ? dict.common.loading : t.resultAdd}
+                    </Button>
+                  </div>
+                )}
+                {blocked && !alreadyAdded && !completed && (
+                  <span className="shrink-0 text-xs text-muted-foreground">
+                    {t.alreadyPlanned}
+                  </span>
+                )}
               </div>
-              {!blocked && (
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                  <Select
-                    value={folderId}
-                    onValueChange={(value) =>
-                      setAssignments((previous) => ({
-                        ...previous,
-                        [code]: { ...previous[code], folderId: value },
-                      }))
-                    }
-                  >
-                    <SelectTrigger
-                      className="h-8 w-full sm:w-36"
-                      aria-label={t.categoryLabel}
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="planner-1">
-                        {t.noneCategory}
-                      </SelectItem>
-                      {visibleFolders.map((folder) => (
-                        <SelectItem key={folder.id} value={folder.id}>
-                          {folder.title}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select
-                    value={termId || NONE_VALUE}
-                    onValueChange={(value) =>
-                      setAssignments((previous) => ({
-                        ...previous,
-                        [code]: {
-                          ...previous[code],
-                          semesterId: value === NONE_VALUE ? "" : value,
-                        },
-                      }))
-                    }
-                  >
-                    <SelectTrigger
-                      className="h-8 w-full sm:w-28"
-                      aria-label={t.termLabel}
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={NONE_VALUE}>{t.noneTerm}</SelectItem>
-                      {semesterOptions.map((semesterId) => (
-                        <SelectItem key={semesterId} value={semesterId}>
-                          {formatPlannerSemester(semesterId)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    type="button"
-                    size="sm"
-                    className="h-8 shrink-0"
-                    disabled={isAddingCode[code]}
-                    onClick={() =>
-                      void handleAdd(
-                        course,
-                        code,
-                        defaultFolderId,
-                        defaultSemesterId,
-                      )
-                    }
-                  >
-                    <Plus className="mr-1 h-3.5 w-3.5" />
-                    {isAddingCode[code] ? dict.common.loading : t.resultAdd}
-                  </Button>
-                </div>
-              )}
-              {blocked && !alreadyAdded && !completed && (
-                <span className="shrink-0 text-xs text-muted-foreground">
-                  {t.alreadyPlanned}
-                </span>
-              )}
-            </div>
-          );
-        })}
-        {status === "loading" && (
+            );
+          })}
+        {query.trim() && status === "loading" && (
           <p className="py-4 text-center text-sm text-muted-foreground">
             {t.searching}
           </p>
         )}
-        {status === "idle" && uniqueHits.length === 0 && (
+        {query.trim() && status === "idle" && uniqueHits.length === 0 && (
           <p className="py-6 text-center text-sm text-muted-foreground">
             {t.noResults}
           </p>
         )}
         <div ref={sentinelRef} className="h-8" />
-        {!isLastPage && uniqueHits.length > 0 && (
+        {query.trim() && !isLastPage && uniqueHits.length > 0 && (
           <Button
             type="button"
             variant="ghost"
