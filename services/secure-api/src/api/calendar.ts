@@ -529,10 +529,19 @@ const academicCalendarCache = new Map<
   }
 >();
 const academicCalendarFailureWindows = new Set<string>();
+// The cache above is keyed on a date window that moves every day, so at
+// midnight the entry that holds yesterday's good data is no longer the one
+// being looked up. This keeps the last successful answer per upstream, so a
+// failure just after the date rolls over still has something to fall back on.
+const lastSuccessfulAcademicCalendar = new Map<
+  string,
+  AcademicCalendarEvent[]
+>();
 
 export const clearAcademicCalendarCache = () => {
   academicCalendarCache.clear();
   academicCalendarFailureWindows.clear();
+  lastSuccessfulAcademicCalendar.clear();
   semesterInfoCache.clear();
   semesterInfoRequests.clear();
 };
@@ -583,11 +592,12 @@ const fetchAcademicCalendarEvents = async (
   const today = dateKeyFromNow(now);
   const start = addDateKey(today, -30);
   const end = addDateKey(today, 240);
-  const cacheKey = `${timetableApiUrl(c)}|${start}|${end}`;
+  const apiUrl = timetableApiUrl(c);
+  const cacheKey = `${apiUrl}|${start}|${end}`;
   const cached = academicCalendarCache.get(cacheKey);
   if (cached && cached.expiresAt > now.getTime()) return cached.events;
 
-  const url = new URL("/acacalendar", `${timetableApiUrl(c)}/`);
+  const url = new URL("/acacalendar", `${apiUrl}/`);
   url.searchParams.set("start", start);
   url.searchParams.set("end", end);
   try {
@@ -602,6 +612,7 @@ const fetchAcademicCalendarEvents = async (
       events,
       hasSuccessfulData: true,
     });
+    lastSuccessfulAcademicCalendar.set(apiUrl, events);
     academicCalendarFailureWindows.delete(cacheKey);
     return events;
   } catch (error) {
@@ -609,12 +620,15 @@ const fetchAcademicCalendarEvents = async (
       academicCalendarFailureWindows.add(cacheKey);
       console.error("Error fetching academic calendar:", error);
     }
+    const staleEvents = cached?.hasSuccessfulData
+      ? cached.events
+      : lastSuccessfulAcademicCalendar.get(apiUrl);
     academicCalendarCache.set(cacheKey, {
       expiresAt: now.getTime() + ACADEMIC_CALENDAR_FAILURE_RETRY_MS,
-      events: cached?.hasSuccessfulData ? cached.events : [],
-      hasSuccessfulData: cached?.hasSuccessfulData ?? false,
+      events: staleEvents ?? [],
+      hasSuccessfulData: staleEvents !== undefined,
     });
-    return cached?.hasSuccessfulData ? cached.events : [];
+    return staleEvents ?? [];
   }
 };
 

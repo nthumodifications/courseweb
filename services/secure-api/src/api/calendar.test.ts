@@ -945,6 +945,48 @@ describe("Calendar API", () => {
   );
 
   serialTest(
+    "serves the last successful academic data when the failure falls on the next Taipei date",
+    async () => {
+      clearAcademicCalendarCache();
+      const feedUrl = await prepareTimetableFeed();
+      let academicRequests = 0;
+      mockTimetableFetch.mockImplementation(async (input: URL) => {
+        if (!input.pathname.endsWith("/acacalendar")) {
+          return new Response("BEGIN:VCALENDAR\r\nEND:VCALENDAR\r\n");
+        }
+        academicRequests += 1;
+        return academicRequests === 1
+          ? new Response(
+              JSON.stringify([
+                { id: "before-midnight", summary: "Stale", date: "2026-10-20" },
+              ]),
+              { status: 200 },
+            )
+          : new Response("unavailable", { status: 503 });
+      });
+
+      // 23:30 in Taipei, then 00:30 the next day: the request window, and so
+      // the cache entry, is a different one by the time the upstream fails.
+      setSystemTime(new Date("2026-10-14T15:30:00.000Z"));
+      try {
+        const first = await calendarHandler.request(
+          `${feedUrl}&include=academic`,
+        );
+        expect(await first.text()).toContain("UID:aca-before-midnight");
+
+        setSystemTime(new Date("2026-10-14T16:30:00.000Z"));
+        const second = await calendarHandler.request(
+          `${feedUrl}&include=academic`,
+        );
+        expect(await second.text()).toContain("UID:aca-before-midnight");
+        expect(academicRequests).toBe(2);
+      } finally {
+        setSystemTime();
+      }
+    },
+  );
+
+  serialTest(
     "uses a new academic request window after the Taipei date rolls over",
     async () => {
       clearAcademicCalendarCache();
