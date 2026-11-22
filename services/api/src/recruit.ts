@@ -21,14 +21,27 @@ const OPEN_ROLE_IDS = [
 
 const OPEN_ROLES = OPEN_ROLE_IDS.map((id) => ({ id }));
 
+/**
+ * Applicant links are rendered as anchors in the admin center, so only http(s)
+ * is accepted. `z.string().url()` alone also passes `javascript:` and `data:`.
+ */
+const httpUrl = z
+  .string()
+  .url()
+  .max(500)
+  .refine((value) => {
+    const { protocol } = new URL(value);
+    return protocol === "https:" || protocol === "http:";
+  }, "Links must be http(s) URLs");
+
 const applicationSchema = z.object({
   role: z.enum(OPEN_ROLE_IDS),
   statement: z.string().trim().min(20).max(5000),
   contactPreference: z.enum(["email", "discord", "either"]),
   links: z
     .object({
-      github: z.string().url().max(500).optional(),
-      portfolio: z.string().url().max(500).optional(),
+      github: httpUrl.optional(),
+      portfolio: httpUrl.optional(),
     })
     .default({}),
 });
