@@ -5,7 +5,13 @@ import {
   PlannerDataDocType,
 } from "@/app/[lang]/(mods-pages)/student/planner/rxdb";
 import { FolderNavItem } from "../folder-nav/folder-nav-item";
-import { FileText, Search, FolderTree, Cog } from "lucide-react";
+import {
+  FileText,
+  Search,
+  FolderTree,
+  Cog,
+  LayoutTemplate,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import useDictionary from "@/dictionaries/useDictionary";
 import { getStatusLabel } from "@/app/[lang]/(mods-pages)/student/planner/lib/status";
@@ -31,6 +37,7 @@ interface FolderNavigationProps {
   getChildFolders: (parentId: string | null) => FolderDocType[];
   onOpenFolderManagement: () => void;
   onOpenPlannerSettings: () => void;
+  onOpenTemplates: () => void;
   hasUnsortedItems?: boolean;
 }
 
@@ -50,6 +57,7 @@ export function FolderNavigation({
   getChildFolders,
   onOpenFolderManagement,
   onOpenPlannerSettings,
+  onOpenTemplates,
   hasUnsortedItems = false,
 }: FolderNavigationProps) {
   const dict = useDictionary();
@@ -116,16 +124,28 @@ export function FolderNavigation({
           <h1 className="text-lg font-bold">
             {plannerInfo?.title || dict.planner.sidebar.defaultTitle}
           </h1>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-11 w-11"
-            aria-label={dict.planner.sidebar.settingsAriaLabel}
-            title={dict.planner.sidebar.settingsAriaLabel}
-            onClick={onOpenPlannerSettings}
-          >
-            <Cog className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-11 w-11"
+              aria-label={dict.planner.templates.navLabel}
+              title={dict.planner.templates.navLabel}
+              onClick={onOpenTemplates}
+            >
+              <LayoutTemplate className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-11 w-11"
+              aria-label={dict.planner.sidebar.settingsAriaLabel}
+              title={dict.planner.sidebar.settingsAriaLabel}
+              onClick={onOpenPlannerSettings}
+            >
+              <Cog className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
         <p className="text-sm text-muted-foreground">
           {plannerInfo?.department || ""} {plannerInfo?.enrollmentYear || ""}{" "}

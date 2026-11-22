@@ -455,3 +455,23 @@ export const engagementEvents = {
     });
   },
 };
+
+export const plannerTemplateEvents = {
+  opened: (templateId?: string) =>
+    trackEvent("template_opened", {
+      ...(templateId ? { template_id: templateId } : {}),
+      timestamp: new Date().toISOString(),
+    }),
+  applied: (templateId: string, department: string, mode: "add" | "replace") =>
+    trackEvent("template_applied", {
+      template_id: templateId,
+      department,
+      mode,
+      timestamp: new Date().toISOString(),
+    }),
+  published: (templateId: string) =>
+    trackEvent("template_published", {
+      template_id: templateId,
+      timestamp: new Date().toISOString(),
+    }),
+};

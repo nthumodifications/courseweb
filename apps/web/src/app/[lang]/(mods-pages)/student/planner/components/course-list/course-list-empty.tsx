@@ -22,6 +22,7 @@ interface CourseListEmptyProps {
   onOpenFolderManagement?: () => void;
   onOpenSemesterManagement?: () => void;
   onOpenCourseSearch?: () => void;
+  onOpenTemplateGallery?: () => void;
   createCourseOpen: boolean;
   setCreateCourseOpen: (open: boolean) => void;
   onCreateCourse: (newCourse: any) => Promise<void>;
@@ -36,6 +37,7 @@ export function CourseListEmpty({
   onOpenFolderManagement,
   onOpenSemesterManagement,
   onOpenCourseSearch,
+  onOpenTemplateGallery,
   createCourseOpen,
   setCreateCourseOpen,
   onCreateCourse,
@@ -57,6 +59,14 @@ export function CourseListEmpty({
         ) : (
           <div className="max-w-lg text-center">
             <h3 className="text-xl font-bold mb-6">{t.getStartedTitle}</h3>
+            <div className="mb-4 flex flex-wrap items-center justify-center gap-2 text-sm">
+              <span className="text-muted-foreground">
+                {dict.planner.templates.startText}
+              </span>
+              <Button onClick={onOpenTemplateGallery}>
+                {dict.planner.templates.startButton}
+              </Button>
+            </div>
             <div className="space-y-6 text-left">
               <div className="bg-muted/50 p-4 rounded-lg flex items-start">
                 <div className="bg-primary/20 text-primary rounded-full w-8 h-8 flex items-center justify-center mr-4 flex-shrink-0">
@@ -87,7 +97,9 @@ export function CourseListEmpty({
                   <p className="text-muted-foreground mb-2 text-sm">
                     {t.step2Description}
                   </p>
-                  <p className="text-muted-foreground mb-2 text-xs">{t.step2Hint}</p>
+                  <p className="text-muted-foreground mb-2 text-xs">
+                    {t.step2Hint}
+                  </p>
                   <div className="flex space-x-2 mb-1">
                     <Badge className="bg-green-500/10 dark:bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/30 flex items-center gap-1">
                       {getStatusIcon("completed", "h-3 w-3")}

@@ -1,5 +1,15 @@
 import { useState, useEffect, useRef } from "react";
-import { Save, X, Trash2, Download, Upload, RefreshCw } from "lucide-react";
+import { useAuth } from "react-oidc-context";
+import {
+  Save,
+  X,
+  Trash2,
+  Download,
+  Upload,
+  RefreshCw,
+  MoreHorizontal,
+  Share2,
+} from "lucide-react";
 import {
   Accordion,
   AccordionContent,
@@ -14,6 +24,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   Button,
+  Badge,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -28,6 +39,10 @@ import {
   TabsList,
   TabsTrigger,
   Textarea,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
   toast,
 } from "@courseweb/ui";
 import {
@@ -51,6 +66,14 @@ import { getCourseItems } from "./data/courses";
 import { getFolders, ensureUnsortedFolder } from "./data/folders";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useConfirm } from "./lib/use-confirm";
+import {
+  useCreatePlannerTemplate,
+  useDeletePlannerTemplate,
+  usePlannerTemplates,
+  useUpdatePlannerTemplate,
+} from "@/lib/planner-templates";
+import { plannerToTemplatePayload } from "./lib/templates";
+import { plannerTemplateEvents } from "@/lib/trackingEvents";
 
 interface PlannerSettingsProps {
   isOpen: boolean;
@@ -66,7 +89,13 @@ export function PlannerSettings({
   const dict = useDictionary();
   const ps = dict.planner.settings as Record<string, string>;
   const common = dict.planner.common;
+  const templateText = dict.planner.templates;
+  const auth = useAuth();
   const { confirm, ConfirmDialog } = useConfirm();
+  const myTemplatesQuery = usePlannerTemplates({ mine: true });
+  const createTemplate = useCreatePlannerTemplate();
+  const updateTemplate = useUpdatePlannerTemplate();
+  const deleteTemplate = useDeletePlannerTemplate();
 
   // Static schema kept for `z.infer` typing; the resolver actually used by
   // the form is built below via `useMemo` so validation messages can be
@@ -86,6 +115,13 @@ export function PlannerSettings({
   const [activeTab, setActiveTab] = useState("basic");
   const [importConfirmOpen, setImportConfirmOpen] = useState(false);
   const [importData, setImportData] = useState<any>(null);
+  const [publishTitle, setPublishTitle] = useState("");
+  const [publishDescription, setPublishDescription] = useState("");
+  const [publishDepartment, setPublishDepartment] = useState("");
+  const [publishYear, setPublishYear] = useState("");
+  const [departmentSuggestions, setDepartmentSuggestions] = useState<string[]>(
+    [],
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const plannerCol = useRxCollection<PlannerDataDocType>("plannerdata");
@@ -144,6 +180,9 @@ export function PlannerSettings({
             description: data.description || "",
           });
           setIsNewPlanner(false);
+          setPublishTitle(data.title || "");
+          setPublishDepartment(data.department || "");
+          setPublishYear(data.enrollmentYear || "");
         } else {
           // No planner exists, prepare for creating a new one
           reset({
@@ -156,6 +195,9 @@ export function PlannerSettings({
             description: "",
           });
           setIsNewPlanner(true);
+          setPublishTitle("");
+          setPublishDepartment("");
+          setPublishYear("");
         }
       } catch (error) {
         console.error("Error loading planner data:", error);
@@ -172,6 +214,34 @@ export function PlannerSettings({
     if (isOpen) {
       setActiveTab("basic");
     }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    let active = true;
+    fetch(`${import.meta.env.VITE_COURSEWEB_API_URL}/graduation/colleges`)
+      .then(async (response) =>
+        response.ok
+          ? ((await response.json()) as {
+              colleges?: { departments?: { name?: string }[] }[];
+            })
+          : null,
+      )
+      .then((result) => {
+        if (!active) return;
+        const names = (result?.colleges ?? []).flatMap((college) =>
+          (college.departments ?? [])
+            .map((department) => department.name)
+            .filter((name): name is string => Boolean(name)),
+        );
+        setDepartmentSuggestions([...new Set(names)]);
+      })
+      .catch(() => {
+        if (active) setDepartmentSuggestions([]);
+      });
+    return () => {
+      active = false;
+    };
   }, [isOpen]);
 
   // Handle save with form validation
@@ -295,6 +365,89 @@ export function PlannerSettings({
     });
     if (!ok) return;
     await handleConfirmAction("resetPlanner");
+  };
+
+  const captureCurrentPlanner = async () => {
+    if (!plannerCol || !semesterCol || !courseCol || !foldersCol) {
+      throw new Error("Planner data is not ready");
+    }
+    const [planner, currentFolders, currentItems, currentSemesters] =
+      await Promise.all([
+        getPlannerData(plannerCol),
+        getFolders(foldersCol),
+        getCourseItems(courseCol),
+        getSemesters(semesterCol),
+      ]);
+    if (!planner)
+      throw new Error("Create a planner before publishing a template");
+    return {
+      title: publishTitle.trim() || planner.title,
+      description: publishDescription.trim(),
+      department: publishDepartment.trim() || planner.department,
+      entranceYear: publishYear.trim() || planner.enrollmentYear,
+      requiredCredits: planner.requiredCredits,
+      payload: plannerToTemplatePayload({
+        planner,
+        folders: currentFolders,
+        items: currentItems,
+        semesters: currentSemesters,
+      }),
+    };
+  };
+
+  const handlePublishTemplate = async () => {
+    try {
+      const values = await captureCurrentPlanner();
+      const result = await createTemplate.mutateAsync(values);
+      plannerTemplateEvents.published(result.template.id);
+      toast({ title: templateText.publishSuccess });
+    } catch {
+      toast({
+        title: templateText.publishFailed,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUpdateTemplate = async (
+    id: string,
+    title: string,
+    description: string,
+  ) => {
+    try {
+      const values = await captureCurrentPlanner();
+      await updateTemplate.mutateAsync({
+        id,
+        values: {
+          ...values,
+          title,
+          description,
+        },
+      });
+      toast({ title: templateText.updateSuccess });
+    } catch {
+      toast({
+        title: templateText.updateFailed,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteTemplate = async (id: string) => {
+    const accepted = await confirm({
+      title: templateText.deleteConfirmTitle,
+      description: templateText.deleteConfirmDescription,
+      confirmLabel: templateText.delete,
+      cancelLabel: common.cancel,
+      destructive: true,
+    });
+    if (!accepted) return;
+    try {
+      await deleteTemplate.mutateAsync(id);
+      toast({ title: templateText.deleteSuccess });
+    } catch {
+      toast({ title: templateText.deleteFailed, variant: "destructive" });
+    }
   };
 
   // Handle file selection for import
@@ -699,6 +852,206 @@ export function PlannerSettings({
                             />
                           </div>
                         </div>
+                      </AccordionContent>
+                    </AccordionItem>
+
+                    <AccordionItem value="publish" className="border-border">
+                      <AccordionTrigger className="text-sm py-2">
+                        <div className="flex items-center">
+                          <Share2 className="h-4 w-4 mr-2" />
+                          {templateText.publishTitle}
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <section className="space-y-3">
+                          <p className="text-xs text-muted-foreground">
+                            {templateText.publishDescription}
+                          </p>
+                          {auth.isAuthenticated && !auth.user?.expired ? (
+                            <>
+                              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                                <div>
+                                  <Label
+                                    htmlFor="planner-template-title"
+                                    className="text-xs"
+                                  >
+                                    {templateText.titleLabel}
+                                  </Label>
+                                  <Input
+                                    id="planner-template-title"
+                                    value={publishTitle}
+                                    onChange={(event) =>
+                                      setPublishTitle(event.target.value)
+                                    }
+                                    maxLength={100}
+                                    className="mt-1 h-8"
+                                  />
+                                </div>
+                                <div>
+                                  <Label
+                                    htmlFor="planner-template-department"
+                                    className="text-xs"
+                                  >
+                                    {templateText.departmentLabel}
+                                  </Label>
+                                  <Input
+                                    id="planner-template-department"
+                                    list="planner-template-departments"
+                                    value={publishDepartment}
+                                    onChange={(event) =>
+                                      setPublishDepartment(event.target.value)
+                                    }
+                                    maxLength={100}
+                                    className="mt-1 h-8"
+                                  />
+                                  <datalist id="planner-template-departments">
+                                    {departmentSuggestions.map((department) => (
+                                      <option
+                                        key={department}
+                                        value={department}
+                                      />
+                                    ))}
+                                  </datalist>
+                                </div>
+                                <div>
+                                  <Label
+                                    htmlFor="planner-template-year"
+                                    className="text-xs"
+                                  >
+                                    {templateText.yearLabel}
+                                  </Label>
+                                  <Input
+                                    id="planner-template-year"
+                                    value={publishYear}
+                                    onChange={(event) =>
+                                      setPublishYear(event.target.value)
+                                    }
+                                    maxLength={3}
+                                    className="mt-1 h-8"
+                                  />
+                                </div>
+                                <div>
+                                  <Label
+                                    htmlFor="planner-template-description"
+                                    className="text-xs"
+                                  >
+                                    {templateText.descriptionLabel}
+                                  </Label>
+                                  <Textarea
+                                    id="planner-template-description"
+                                    value={publishDescription}
+                                    onChange={(event) =>
+                                      setPublishDescription(event.target.value)
+                                    }
+                                    maxLength={1000}
+                                    rows={2}
+                                    className="mt-1"
+                                  />
+                                </div>
+                              </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="w-full"
+                                onClick={() => void handlePublishTemplate()}
+                                disabled={createTemplate.isPending}
+                              >
+                                {templateText.publishTemplate}
+                              </Button>
+                              <div className="space-y-1">
+                                <h4 className="text-sm font-medium">
+                                  {templateText.myTemplates}
+                                </h4>
+                                {myTemplatesQuery.isLoading ? (
+                                  <p className="text-xs text-muted-foreground">
+                                    {templateText.loading}
+                                  </p>
+                                ) : myTemplatesQuery.data?.templates.length ? (
+                                  <div className="divide-y divide-border">
+                                    {myTemplatesQuery.data.templates.map(
+                                      (entry) => (
+                                        <div
+                                          key={entry.id}
+                                          className="flex items-center justify-between gap-2 py-2"
+                                        >
+                                          <div className="min-w-0">
+                                            <div className="flex items-center gap-2 text-sm font-medium">
+                                              <span className="truncate">
+                                                {entry.title}
+                                              </span>
+                                              {entry.status === "hidden" && (
+                                                <Badge variant="secondary">
+                                                  {templateText.hidden}
+                                                </Badge>
+                                              )}
+                                            </div>
+                                            <p className="text-xs text-muted-foreground">
+                                              {templateText.usedCount.replace(
+                                                "{count}",
+                                                String(entry.useCount),
+                                              )}
+                                            </p>
+                                          </div>
+                                          <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                              <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8"
+                                                aria-label={
+                                                  templateText.moreActions
+                                                }
+                                              >
+                                                <MoreHorizontal className="h-4 w-4" />
+                                              </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                              <DropdownMenuItem
+                                                onClick={() =>
+                                                  void handleUpdateTemplate(
+                                                    entry.id,
+                                                    entry.title,
+                                                    entry.description,
+                                                  )
+                                                }
+                                              >
+                                                {templateText.updateCurrentPlan}
+                                              </DropdownMenuItem>
+                                              <DropdownMenuItem
+                                                onClick={() =>
+                                                  void handleDeleteTemplate(
+                                                    entry.id,
+                                                  )
+                                                }
+                                              >
+                                                {templateText.delete}
+                                              </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                          </DropdownMenu>
+                                        </div>
+                                      ),
+                                    )}
+                                  </div>
+                                ) : (
+                                  <p className="text-xs text-muted-foreground">
+                                    {templateText.myTemplatesEmpty}
+                                  </p>
+                                )}
+                              </div>
+                            </>
+                          ) : (
+                            <div className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
+                              <span>{templateText.signInPrompt}</span>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => void auth.signinRedirect()}
+                              >
+                                {templateText.signIn}
+                              </Button>
+                            </div>
+                          )}
+                        </section>
                       </AccordionContent>
                     </AccordionItem>
                   </Accordion>

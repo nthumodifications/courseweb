@@ -61,6 +61,7 @@ import { CourseDetailsDialog } from "./components/dialogs/course-details-dialog"
 import { CourseEditDialog } from "./components/dialogs/course-edit-dialog";
 import { BulkActionsMenu } from "./components/bulk-actions/bulk-actions-menu";
 import { CourseSearchDialog } from "./components/dialogs/course-search-dialog";
+import { TemplateGalleryDialog } from "./components/dialogs/template-gallery-dialog";
 
 function GraduationPlanner() {
   const dict = useDictionary();
@@ -95,6 +96,7 @@ function GraduationPlanner() {
   const [folderManagementOpen, setFolderManagementOpen] = useState(false);
   const [semesterManagementOpen, setSemesterManagementOpen] = useState(false);
   const [plannerSettingsOpen, setPlannerSettingsOpen] = useState(false);
+  const [templateGalleryOpen, setTemplateGalleryOpen] = useState(false);
 
   // Progress stats
   const [completedCredits, setCompletedCredits] = useState(0);
@@ -387,6 +389,10 @@ function GraduationPlanner() {
     setPlannerInfo(updatedPlanner ?? null);
   };
 
+  const openTemplateGallery = () => {
+    setTemplateGalleryOpen(true);
+  };
+
   // Course operations
   const handleCourseAdded = async (
     newCourse: MinimalCourse,
@@ -595,6 +601,7 @@ function GraduationPlanner() {
             getChildFolders={getChildFoldersFromState}
             onOpenFolderManagement={() => setFolderManagementOpen(true)}
             onOpenPlannerSettings={() => setPlannerSettingsOpen(true)}
+            onOpenTemplates={openTemplateGallery}
           />
         )}
 
@@ -678,6 +685,7 @@ function GraduationPlanner() {
                     setSemesterManagementOpen(true)
                   }
                   onOpenCourseSearch={() => setCourseSearchOpen(true)}
+                  onOpenTemplateGallery={openTemplateGallery}
                   createCourseOpen={createCourseOpen}
                   setCreateCourseOpen={setCreateCourseOpen}
                   onCreateCourse={handleCreateCourse}
@@ -754,7 +762,9 @@ function GraduationPlanner() {
             <button
               type="button"
               className={`flex flex-col items-center justify-center gap-1 py-2 min-h-[44px] ${
-                mobileView === "folders" ? "text-primary" : "text-muted-foreground"
+                mobileView === "folders"
+                  ? "text-primary"
+                  : "text-muted-foreground"
               }`}
               onClick={() => setMobileView("folders")}
             >
@@ -766,7 +776,9 @@ function GraduationPlanner() {
             <button
               type="button"
               className={`flex flex-col items-center justify-center gap-1 py-2 min-h-[44px] ${
-                mobileView === "courses" ? "text-primary" : "text-muted-foreground"
+                mobileView === "courses"
+                  ? "text-primary"
+                  : "text-muted-foreground"
               }`}
               onClick={() => setMobileView("courses")}
             >
@@ -778,7 +790,9 @@ function GraduationPlanner() {
             <button
               type="button"
               className={`flex flex-col items-center justify-center gap-1 py-2 min-h-[44px] ${
-                mobileView === "semester" ? "text-primary" : "text-muted-foreground"
+                mobileView === "semester"
+                  ? "text-primary"
+                  : "text-muted-foreground"
               }`}
               onClick={() => setMobileView("semester")}
             >
@@ -844,6 +858,20 @@ function GraduationPlanner() {
           isOpen={plannerSettingsOpen}
           onClose={() => setPlannerSettingsOpen(false)}
           onSettingsUpdated={handlePlannerUpdated}
+        />
+
+        <TemplateGalleryDialog
+          open={templateGalleryOpen}
+          onOpenChange={setTemplateGalleryOpen}
+          planner={plannerInfo}
+          folders={folderData}
+          items={courseData}
+          semesters={semesterData}
+          onApplied={() => {
+            void handlePlannerUpdated();
+            void handleFoldersUpdated();
+            void handleSemestersUpdated();
+          }}
         />
 
         {/* Bulk Action Menu */}
