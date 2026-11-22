@@ -4,12 +4,14 @@ import { logger } from "hono/logger";
 import api from "./api";
 import { getVapidConfig } from "./config/push";
 import { startPushNotifier } from "./push/notifier";
+import { securityHeaders } from "./middleware/securityHeaders";
 
 if (process.env["PUSH_NOTIFIER_ENABLED"] === "true" && getVapidConfig()) {
   startPushNotifier();
 }
 
 export const app = new Hono()
+  .use(securityHeaders())
   .use(logger())
   .get("/", async (c) => {
     return c.text("Hello, world!");

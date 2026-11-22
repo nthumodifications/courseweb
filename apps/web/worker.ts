@@ -44,6 +44,37 @@ function cacheControlForStaticPath(pathname: string): string | undefined {
   return undefined;
 }
 
+/**
+ * Baseline browser protections, added to every response this Worker returns.
+ *
+ * Pages may be framed by this site only. The app frames itself to renew a
+ * session silently, so that has to keep working; another site framing a page
+ * (to overlay it and capture clicks) does not.
+ *
+ * HSTS deliberately omits includeSubDomains: this is the apex domain, and the
+ * directive would apply to every subdomain whether or not it serves HTTPS.
+ *
+ * This is not a full Content-Security-Policy. Restricting script sources needs
+ * an inventory of what the app loads and is left as its own change.
+ */
+function withSecurityHeaders(response: Response): Response {
+  const headers = new Headers(response.headers);
+  headers.set("X-Content-Type-Options", "nosniff");
+  headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  headers.set("Strict-Transport-Security", "max-age=15552000");
+  if (isHtmlResponse(response)) {
+    headers.set("X-Frame-Options", "SAMEORIGIN");
+    if (!headers.has("Content-Security-Policy")) {
+      headers.set("Content-Security-Policy", "frame-ancestors 'self'");
+    }
+  }
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
 function isHtmlResponse(response: Response): boolean {
   return (
     response.headers
@@ -1223,7 +1254,7 @@ async function generateSitemap(env: Env): Promise<Response> {
   }
 }
 
-export default {
+const router = {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
 
@@ -1281,5 +1312,11 @@ export default {
     }
 
     return fetchNavigation(request, env);
+  },
+};
+
+export default {
+  async fetch(request: Request, env: Env): Promise<Response> {
+    return withSecurityHeaders(await router.fetch(request, env));
   },
 };

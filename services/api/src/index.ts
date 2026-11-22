@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { secureHeaders } from "hono/secure-headers";
 import { cors } from "hono/cors";
 import { allowedCorsOrigin } from "./cors-origins";
 import { logger } from "hono/logger";
@@ -72,6 +73,11 @@ export type Bindings = {
 };
 
 export const app = new Hono<{ Bindings: Bindings }>()
+  // Baseline browser protections on every response: no MIME sniffing, no
+  // cross-site framing, HTTPS only. This is a public API that other origins
+  // are meant to load, so the resource policy is opened up rather than left at
+  // the middleware's same-origin default.
+  .use(secureHeaders({ crossOriginResourcePolicy: "cross-origin" }))
   .use(
     cors({
       origin: (origin) =>
