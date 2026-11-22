@@ -67,6 +67,7 @@ export type Bindings = {
   SHORTLINK_RATE_LIMITER?: RateLimit;
   ISSUE_RATE_LIMITER?: RateLimit;
   CONTRIBUTE_RATE_LIMITER?: RateLimit;
+  SHARE_LOOKUP_RATE_LIMITER?: RateLimit;
   TDX_CLIENT_ID?: string;
   TDX_CLIENT_SECRET?: string;
 };

@@ -92,6 +92,14 @@ namespace_id = "1007"
   limit = 30
   period = 60
 
+[[ratelimits]]
+name = "SHARE_LOOKUP_RATE_LIMITER"
+namespace_id = "1008"
+
+  [ratelimits.simple]
+  limit = 120
+  period = 60
+
 [triggers]
 crons = ["0 2 * * 1", "0 2 * * *", "*/10 * * * *"] # PEO Monday; calendar dates daily; usage every 10 minutes
 
