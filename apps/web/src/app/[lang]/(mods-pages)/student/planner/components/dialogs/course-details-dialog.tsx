@@ -15,6 +15,7 @@ import {
   SemesterDocType,
 } from "@/app/[lang]/(mods-pages)/student/planner/rxdb";
 import { CourseStatus } from "../../types";
+import { decodeCourseText } from "@/lib/course-text";
 
 interface CourseDetailsDialogProps {
   open: boolean;
@@ -22,6 +23,7 @@ interface CourseDetailsDialogProps {
   selectedCourse: ItemDocType;
   folderData: FolderDocType[];
   semesterData: SemesterDocType[];
+  displayStatus: CourseStatus;
   onEdit: () => void;
 }
 
@@ -31,6 +33,7 @@ export function CourseDetailsDialog({
   selectedCourse,
   folderData,
   semesterData,
+  displayStatus,
   onEdit,
 }: CourseDetailsDialogProps) {
   const { openCourse } = useCourseLink();
@@ -39,13 +42,13 @@ export function CourseDetailsDialog({
   // The RxDB item schema stores `status` as a loose `string | null` (no enum
   // in the JSON schema), while the shared status helpers expect the
   // `CourseStatus` union used everywhere else in the planner.
-  const status = selectedCourse.status as CourseStatus | null | undefined;
+  const status = displayStatus;
 
   return (
     <ResponsiveDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={selectedCourse.title}
+      title={decodeCourseText(selectedCourse.title)}
       description={`${selectedCourse.id} • ${selectedCourse.credits} ${dict.course.credits}`}
       contentClassName="sm:max-w-3xl max-h-[85vh] overflow-y-auto"
       footer={
@@ -115,13 +118,15 @@ export function CourseDetailsDialog({
               <div className="bg-muted/50 p-2 rounded-md">
                 <p className="text-xs text-muted-foreground">{t.instructor}</p>
                 <p className="font-medium">
-                  {selectedCourse.instructor || t.unassigned}
+                  {decodeCourseText(selectedCourse.instructor || t.unassigned)}
                 </p>
               </div>
               <div className="bg-muted/50 p-2 rounded-md">
                 <p className="text-xs text-muted-foreground">{t.description}</p>
                 <p className="text-sm whitespace-pre-wrap">
-                  {selectedCourse.description || t.noDescription}
+                  {decodeCourseText(
+                    selectedCourse.description || t.noDescription,
+                  )}
                 </p>
               </div>
             </div>

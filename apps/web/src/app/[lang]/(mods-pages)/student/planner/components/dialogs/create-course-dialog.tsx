@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Button,
   Input,
@@ -13,11 +13,18 @@ import { CourseStatus } from "../../types";
 import { v4 as uuidv4 } from "uuid";
 import { ResponsiveDialog } from "@/app/[lang]/(mods-pages)/student/planner/components/responsive-dialog";
 import useDictionary from "@/dictionaries/useDictionary";
+import {
+  FolderDocType,
+  SemesterDocType,
+} from "@/app/[lang]/(mods-pages)/student/planner/rxdb";
 
 interface CreateCourseDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   selectedFolder?: string | null;
+  selectedSemester?: string | null;
+  folders?: FolderDocType[];
+  semesters?: SemesterDocType[];
   onCreateCourse: (newCourse: {
     uuid: string;
     id: string;
@@ -27,6 +34,7 @@ interface CreateCourseDialogProps {
     parent: string | null;
     order: number;
     dependson: string[];
+    semester?: string;
   }) => Promise<void>;
 }
 
@@ -40,13 +48,15 @@ const initialFormData = {
   id: "",
   title: "",
   credits: 3,
-  status: "planned" as CourseStatus,
 };
 
 export function CreateCourseDialog({
   open,
   onOpenChange,
   selectedFolder,
+  selectedSemester,
+  folders = [],
+  semesters = [],
   onCreateCourse,
 }: CreateCourseDialogProps) {
   const dict = useDictionary();
@@ -54,6 +64,15 @@ export function CreateCourseDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState(initialFormData);
   const [errors, setErrors] = useState<FormErrors>({});
+  const [folderId, setFolderId] = useState(selectedFolder ?? "planner-1");
+  const [semesterId, setSemesterId] = useState(selectedSemester ?? "");
+
+  useEffect(() => {
+    if (open) {
+      setFolderId(selectedFolder ?? "planner-1");
+      setSemesterId(selectedSemester ?? "");
+    }
+  }, [open, selectedFolder, selectedSemester]);
 
   const handleChange = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -86,15 +105,18 @@ export function CreateCourseDialog({
         id: formData.id,
         title: formData.title,
         credits: formData.credits,
-        status: formData.status,
-        parent: selectedFolder != undefined ? selectedFolder : "planner-1", // Default to root folder if none selected
+        status: "planned" as CourseStatus,
+        parent: folderId,
         order: 0, // This will be updated by the parent component
         dependson: [],
+        semester: semesterId || undefined,
       });
 
       // Reset form
       setFormData(initialFormData);
       setErrors({});
+      setFolderId(selectedFolder ?? "planner-1");
+      setSemesterId(selectedSemester ?? "");
 
       // Close dialog
       onOpenChange(false);
@@ -108,6 +130,8 @@ export function CreateCourseDialog({
   const cancelDialog = () => {
     setFormData(initialFormData);
     setErrors({});
+    setFolderId(selectedFolder ?? "planner-1");
+    setSemesterId(selectedSemester ?? "");
     onOpenChange(false);
   };
 
@@ -159,7 +183,7 @@ export function CreateCourseDialog({
             <p className="text-xs text-red-500">{errors.title}</p>
           )}
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="new-course-credits">{t.credits}</Label>
             <Input
@@ -181,27 +205,53 @@ export function CreateCourseDialog({
             )}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="new-course-status">{t.status}</Label>
-            <Select
-              value={formData.status}
-              onValueChange={(value) => handleChange("status", value)}
-            >
-              <SelectTrigger id="new-course-status" className="border-border">
-                <SelectValue placeholder={t.statusPlaceholder} />
+            <Label htmlFor="new-course-category">
+              {dict.planner.dialogs.edit.category}
+            </Label>
+            <Select value={folderId} onValueChange={setFolderId}>
+              <SelectTrigger id="new-course-category" className="border-border">
+                <SelectValue
+                  placeholder={dict.planner.dialogs.edit.categoryPlaceholder}
+                />
               </SelectTrigger>
               <SelectContent className="border-border">
-                <SelectItem value="completed">
-                  {dict.planner.status.completed}
+                <SelectItem value="planner-1">
+                  {dict.planner.remake.noneCategory}
                 </SelectItem>
-                <SelectItem value="in-progress">
-                  {dict.planner.status.inProgress}
+                {folders
+                  .filter((folder) => folder.id !== "planner-1")
+                  .map((folder) => (
+                    <SelectItem key={folder.id} value={folder.id}>
+                      {folder.title}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label htmlFor="new-course-semester">
+              {dict.planner.dialogs.edit.semester}
+            </Label>
+            <Select
+              value={semesterId || "__none__"}
+              onValueChange={(value) =>
+                setSemesterId(value === "__none__" ? "" : value)
+              }
+            >
+              <SelectTrigger id="new-course-semester" className="border-border">
+                <SelectValue
+                  placeholder={dict.planner.dialogs.edit.semesterPlaceholder}
+                />
+              </SelectTrigger>
+              <SelectContent className="border-border">
+                <SelectItem value="__none__">
+                  {dict.planner.remake.noneTerm}
                 </SelectItem>
-                <SelectItem value="planned">
-                  {dict.planner.status.planned}
-                </SelectItem>
-                <SelectItem value="failed">
-                  {dict.planner.status.failed}
-                </SelectItem>
+                {semesters.map((semester) => (
+                  <SelectItem key={semester.id} value={semester.id}>
+                    {semester.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

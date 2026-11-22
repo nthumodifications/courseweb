@@ -15,9 +15,9 @@ import {
   ItemDocType,
   SemesterDocType,
 } from "@/app/[lang]/(mods-pages)/student/planner/rxdb";
-import { CourseStatus } from "../../types";
 import { ResponsiveDialog } from "@/app/[lang]/(mods-pages)/student/planner/components/responsive-dialog";
 import useDictionary from "@/dictionaries/useDictionary";
+import { decodeCourseText } from "@/lib/course-text";
 
 interface CourseEditDialogProps {
   open: boolean;
@@ -105,13 +105,15 @@ export function CourseEditDialog({
               disabled
               className="bg-muted border-border cursor-not-allowed text-muted-foreground"
             />
-            <p className="text-xs text-muted-foreground">{t.courseIdReadonlyHint}</p>
+            <p className="text-xs text-muted-foreground">
+              {t.courseIdReadonlyHint}
+            </p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="course-title">{t.courseTitle}</Label>
             <Input
               id="course-title"
-              value={editCourseForm.title}
+              value={decodeCourseText(editCourseForm.title)}
               className="bg-muted/50 border-border"
               onChange={(e) =>
                 setEditCourseForm({
@@ -166,40 +168,6 @@ export function CourseEditDialog({
               </SelectContent>
             </Select>
           </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="course-status">{t.status}</Label>
-          <Select
-            value={editCourseForm.status ?? ""}
-            onValueChange={(value) =>
-              setEditCourseForm({
-                ...editCourseForm,
-                status: value as CourseStatus,
-              })
-            }
-          >
-            <SelectTrigger
-              id="course-status"
-              className="bg-muted/50 border-border"
-            >
-              <SelectValue placeholder={t.statusPlaceholder} />
-            </SelectTrigger>
-            <SelectContent className="bg-muted/50 border-border">
-              <SelectItem value="completed">
-                {dict.planner.status.completed}
-              </SelectItem>
-              <SelectItem value="in-progress">
-                {dict.planner.status.inProgress}
-              </SelectItem>
-              <SelectItem value="planned">
-                {dict.planner.status.planned}
-              </SelectItem>
-              <SelectItem value="failed">
-                {dict.planner.status.failed}
-              </SelectItem>
-            </SelectContent>
-          </Select>
         </div>
 
         <div className="space-y-2">
