@@ -452,34 +452,6 @@ paths:
                 items:
                   $ref: "#/components/schemas/GitHubIssue"
 
-  /ccxp/auth/login:
-    post:
-      tags:
-        - CCXP Authentication
-      summary: Login to CCXP
-      description: Authenticate with CCXP system
-      requestBody:
-        required: true
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              properties:
-                studentid:
-                  type: string
-                password:
-                  type: string
-              required:
-                - studentid
-                - password
-      responses:
-        "200":
-          description: Login successful
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/CCXPLoginResponse"
-
   /ccxp/courses:
     post:
       tags:
@@ -881,32 +853,6 @@ components:
           items:
             type: string
 
-    CCXPLoginResponse:
-      type: object
-      properties:
-        ACIXSTORE:
-          type: string
-        passwordExpired:
-          type: boolean
-        data:
-          $ref: "#/components/schemas/UserDetails"
-
-    UserDetails:
-      type: object
-      properties:
-        studentid:
-          type: string
-        name_zh:
-          type: string
-        name_en:
-          type: string
-        department:
-          type: string
-        grade:
-          type: string
-        email:
-          type: string
-
     StudentCoursesResponse:
       type: object
       properties:
@@ -1074,8 +1020,6 @@ tags:
     description: Utility services like short links
   - name: Issues
     description: Issue tracking and management
-  - name: CCXP Authentication
-    description: CCXP system authentication
   - name: CCXP Courses
     description: CCXP course data retrieval
   - name: CCXP Grades

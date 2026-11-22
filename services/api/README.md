@@ -92,7 +92,6 @@ TURNSTILE_SECRET_KEY=cloudflare_turnstile_secret
 CLOUDFLARE_WORKER_ACCOUNT_ID=cf_account_id
 CLOUDFLARE_KV_SHORTLINKS_NAMESPACE=kv_namespace_id
 CLOUDFLARE_KV_API_TOKEN=kv_api_token
-NTHUMODS_OCR_BASE_URL=https://ocr.nthumods.com
 ```
 
 `DB`, `AI`, `VENUE_RATE_LIMITER`, and `AI_RATE_LIMITER` are Wrangler bindings
@@ -423,14 +422,8 @@ GET /issue?tag=bug
 
 CCXP (Course and Curriculum eXchange Platform) integration provides access to official NTHU systems.
 
-#### Authentication
-
-```http
-POST /ccxp/auth/login
-Content-Type: application/x-www-form-urlencoded
-
-studentid=your_student_id&password=your_password
-```
+These endpoints act on a school session the caller already holds
+(`ACIXSTORE`). The API does not accept a student ID and password.
 
 #### Get Student Courses
 
@@ -460,7 +453,6 @@ Returns comprehensive grade information including GPA, rankings, and course grad
 - `POST /ccxp/courses/latest-enrollment` - Current enrollment data
 - `POST /ccxp/courses/hidden-course-selection` - Hidden course selection data
 - `POST /ccxp/courses/class-detailed` - Detailed class information
-- `POST /ccxp/eeclass/login` - EEClass OAuth login
 - `POST /ccxp/inthu/code` - iNTHU service code generation
 - `POST /ccxp/inthu/token` - iNTHU token management
 - `POST /ccxp/inthu/door-access-qr` - Door access QR code
