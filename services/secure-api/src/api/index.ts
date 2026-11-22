@@ -11,6 +11,7 @@ import { resolveUserStorageMode } from "../storage/userStore";
 import reviewsHandler from "./reviews";
 import pushHandler from "./push";
 import courseShortNamesHandler from "./course-short-names";
+import plannerTemplatesHandler from "./planner-templates";
 
 const userStorageMode = resolveUserStorageMode();
 
@@ -44,6 +45,7 @@ const app = new Hono()
   .route("/reviews", reviewsHandler)
   .route("/push", pushHandler)
   .route("/course-short-names", courseShortNamesHandler)
+  .route("/planner-templates", plannerTemplatesHandler)
   .route("/admin", adminHandler);
 
 export default app;

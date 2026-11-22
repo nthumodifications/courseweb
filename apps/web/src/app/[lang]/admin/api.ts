@@ -197,6 +197,34 @@ export type AdminCourseReview = {
   }[];
 };
 
+export type AdminPlannerTemplateReport = {
+  id: string;
+  templateId: string;
+  reason: string;
+  note: string | null;
+  reporterId: string;
+  createdAt: string;
+  resolvedAt: string | null;
+  resolvedById: string | null;
+};
+export type AdminPlannerTemplate = {
+  id: string;
+  authorId: string;
+  title: string;
+  description: string;
+  department: string;
+  entranceYear: string;
+  requiredCredits: number;
+  folderCount: number;
+  courseCount: number;
+  official: boolean;
+  status: "visible" | "hidden";
+  useCount: number;
+  updatedAt: string;
+  openReportCount: number;
+  reports: AdminPlannerTemplateReport[];
+};
+
 export type AdminAuditEntry = {
   id: string;
   actorId: string;
@@ -290,6 +318,49 @@ const courseShortNamesClient = () =>
     }
   )["course-short-names"];
 
+type PlannerTemplatesAdminClient = {
+  $get: (
+    input: {},
+    options: { headers: ReturnType<typeof authHeaders> },
+  ) => Promise<unknown>;
+  ":id": {
+    status: {
+      $post: (
+        input: {
+          param: { id: string };
+          json: { status: "VISIBLE" | "HIDDEN"; reason: string };
+        },
+        options: { headers: ReturnType<typeof authHeaders> },
+      ) => Promise<unknown>;
+    };
+    official: {
+      $post: (
+        input: {
+          param: { id: string };
+          json: { official: boolean; reason: string };
+        },
+        options: { headers: ReturnType<typeof authHeaders> },
+      ) => Promise<unknown>;
+    };
+  };
+  reports: {
+    ":reportId": {
+      resolve: {
+        $post: (
+          input: { param: { reportId: string } },
+          options: { headers: ReturnType<typeof authHeaders> },
+        ) => Promise<unknown>;
+      };
+    };
+  };
+};
+const plannerTemplatesAdminClient = () =>
+  (
+    authClient.api.admin as unknown as {
+      "planner-templates": PlannerTemplatesAdminClient;
+    }
+  )["planner-templates"];
+
 /**
  * Turn a non-2xx admin response into an Error carrying the server's own
  * explanation. The API answers with `error_description` for anything a person
@@ -326,6 +397,7 @@ export const adminKeys = {
   reviews: (status: ReviewModerationStatus) =>
     ["admin", "reviews", status] as const,
   courseShortNames: ["admin", "course-short-names"] as const,
+  plannerTemplates: ["admin", "planner-templates"] as const,
 };
 
 /**
@@ -962,6 +1034,92 @@ export const useRevertCourseShortName = () => {
       return unwrap<{ entry: AdminCourseShortName }>(
         response as unknown as Response,
       );
+    },
+    onSuccess: invalidate,
+  });
+};
+
+export const useAdminPlannerTemplates = () => {
+  const token = useAdminToken();
+  return useQuery<{ templates: AdminPlannerTemplate[] }>({
+    queryKey: adminKeys.plannerTemplates,
+    enabled: Boolean(token),
+    queryFn: async () => {
+      const response = await plannerTemplatesAdminClient().$get(
+        {},
+        { headers: authHeaders(requireToken(token)) },
+      );
+      return unwrap<{ templates: AdminPlannerTemplate[] }>(
+        response as unknown as Response,
+      );
+    },
+  });
+};
+
+export const useSetPlannerTemplateStatus = () => {
+  const token = useAdminToken();
+  const invalidate = useInvalidateAdmin();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      status,
+      reason,
+    }: {
+      id: string;
+      status: "VISIBLE" | "HIDDEN";
+      reason: string;
+    }) => {
+      const response = await plannerTemplatesAdminClient()[":id"].status.$post(
+        { param: { id }, json: { status, reason } },
+        { headers: authHeaders(requireToken(token)) },
+      );
+      return unwrap<{ ok: true; status: string }>(
+        response as unknown as Response,
+      );
+    },
+    onSuccess: invalidate,
+  });
+};
+
+export const useSetPlannerTemplateOfficial = () => {
+  const token = useAdminToken();
+  const invalidate = useInvalidateAdmin();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      official,
+      reason,
+    }: {
+      id: string;
+      official: boolean;
+      reason: string;
+    }) => {
+      const response = await plannerTemplatesAdminClient()[
+        ":id"
+      ].official.$post(
+        { param: { id }, json: { official, reason } },
+        { headers: authHeaders(requireToken(token)) },
+      );
+      return unwrap<{ ok: true; official: boolean }>(
+        response as unknown as Response,
+      );
+    },
+    onSuccess: invalidate,
+  });
+};
+
+export const useResolvePlannerTemplateReport = () => {
+  const token = useAdminToken();
+  const invalidate = useInvalidateAdmin();
+  return useMutation({
+    mutationFn: async (reportId: string) => {
+      const response = await plannerTemplatesAdminClient().reports[
+        ":reportId"
+      ].resolve.$post(
+        { param: { reportId } },
+        { headers: authHeaders(requireToken(token)) },
+      );
+      return unwrap<{ ok: true }>(response as unknown as Response);
     },
     onSuccess: invalidate,
   });

@@ -19,9 +19,17 @@ interface ConfirmOptions {
   destructive?: boolean;
 }
 
+export interface ConfirmChoiceOptions {
+  title: string;
+  description?: string;
+  cancelLabel?: string;
+  choices: { value: string; label: string; destructive?: boolean }[];
+}
+
 interface ConfirmState {
   options: ConfirmOptions;
-  resolve: (value: boolean) => void;
+  choices?: ConfirmChoiceOptions["choices"];
+  resolve: (value: boolean | string | null) => void;
 }
 
 export function useConfirm() {
@@ -30,11 +38,21 @@ export function useConfirm() {
 
   const confirm = useCallback((options: ConfirmOptions) => {
     return new Promise<boolean>((resolve) => {
-      setState({ options, resolve });
+      setState({ options, resolve: (value) => resolve(value === true) });
     });
   }, []);
 
-  const settle = (value: boolean) => {
+  const choose = useCallback((options: ConfirmChoiceOptions) => {
+    return new Promise<string | null>((resolve) => {
+      setState({
+        options,
+        choices: options.choices,
+        resolve: (value) => resolve(typeof value === "string" ? value : null),
+      });
+    });
+  }, []);
+
+  const settle = (value: boolean | string | null) => {
     setState((current) => {
       current?.resolve(value);
       return null;
@@ -45,7 +63,7 @@ export function useConfirm() {
     <AlertDialog
       open={state !== null}
       onOpenChange={(open) => {
-        if (!open) settle(false);
+        if (!open) settle(null);
       }}
     >
       <AlertDialogContent>
@@ -58,23 +76,46 @@ export function useConfirm() {
           )}
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={() => settle(false)}>
-            {state?.options.cancelLabel ?? dict.planner.common.cancel}
-          </AlertDialogCancel>
-          <AlertDialogAction
-            onClick={() => settle(true)}
-            className={
-              state?.options.destructive
-                ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                : undefined
-            }
-          >
-            {state?.options.confirmLabel ?? dict.planner.common.confirm}
-          </AlertDialogAction>
+          {state?.choices ? (
+            <>
+              <AlertDialogCancel onClick={() => settle(null)}>
+                {state.options.cancelLabel ?? dict.planner.common.cancel}
+              </AlertDialogCancel>
+              {state.choices.map((choice) => (
+                <AlertDialogAction
+                  key={choice.value}
+                  onClick={() => settle(choice.value)}
+                  className={
+                    choice.destructive
+                      ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      : undefined
+                  }
+                >
+                  {choice.label}
+                </AlertDialogAction>
+              ))}
+            </>
+          ) : (
+            <>
+              <AlertDialogCancel onClick={() => settle(false)}>
+                {state?.options.cancelLabel ?? dict.planner.common.cancel}
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => settle(true)}
+                className={
+                  state?.options.destructive
+                    ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    : undefined
+                }
+              >
+                {state?.options.confirmLabel ?? dict.planner.common.confirm}
+              </AlertDialogAction>
+            </>
+          )}
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
   );
 
-  return { confirm, ConfirmDialog };
+  return { confirm, choose, ConfirmDialog };
 }
