@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { allowedCorsOrigin } from "./cors-origins";
-import { logger } from "hono/logger";
+import { logger } from "./utils/request-logger";
 import type { Ai, RateLimit } from "@cloudflare/workers-types";
 
 import acaCalendar from "./aca-calendar";

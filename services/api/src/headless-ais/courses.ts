@@ -129,7 +129,6 @@ const app = new Hono()
       const stu_no = (
         doc1.querySelector("input[name=stu_no]") as HTMLInputElement
       ).value;
-      console.log(semester, phase, stu_no);
 
       const html = await fetch(
         "https://www.ccxp.nthu.edu.tw/ccxp/COURSE/JH/7/7.2/7.2.1/JH721003.php",
@@ -295,7 +294,6 @@ const app = new Hono()
         .then((arrayBuffer) =>
           new TextDecoder("big5").decode(new Uint8Array(arrayBuffer)),
         );
-      console.log(html);
       const window = parseHTML(html);
       const doc = window.document;
       const buttons = doc.querySelectorAll(
@@ -391,7 +389,6 @@ const app = new Hono()
         'td[height="30"] font[color="#0180FE"]',
       );
       const targetText = targetElement?.textContent?.trim() ?? "Text not found";
-      console.log(doc.documentElement.innerHTML);
       let degreeType = "";
       let year = "";
       let department = "";
