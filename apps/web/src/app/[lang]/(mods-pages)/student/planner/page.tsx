@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Button,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
   Tabs,
   TabsList,
@@ -21,6 +22,7 @@ import {
 } from "@dnd-kit/core";
 import {
   CalendarRange,
+  CircleHelp,
   FolderCog,
   Grid2X2,
   ListChecks,
@@ -59,6 +61,9 @@ import { PlannerSettings } from "./planner-settings";
 import { CourseDetailsDialog } from "./components/dialogs/course-details-dialog";
 import { CourseEditDialog } from "./components/dialogs/course-edit-dialog";
 import { PlannerAddCourseDialog } from "./components/dialogs/planner-add-course-dialog";
+import { PlannerSetupWizard } from "./components/setup/planner-setup-wizard";
+import { PlannerTour } from "./components/setup/planner-tour";
+import { TimetableImportDialog } from "./components/setup/timetable-import-dialog";
 
 type PlannerView = "checklist" | "board" | "matrix";
 
@@ -86,7 +91,10 @@ function PlannerProgressStrip({
     required > 0 ? Math.min(100, Math.max(0, (value / required) * 100)) : 0;
 
   return (
-    <div className="border-b border-border px-4 py-2 md:px-6">
+    <div
+      data-tour="progress"
+      className="border-b border-border px-4 py-2 md:px-6"
+    >
       <div className="flex flex-wrap items-center gap-3">
         <span className="shrink-0 text-sm font-bold">
           {formatPlannerText(t.requiredProgress, { done, required })}
@@ -133,9 +141,11 @@ function PlannerProgressStrip({
 function EmptyPlanner({
   onImportTemplate,
   onOpenAddCourse,
+  onStartSetup,
 }: {
   onImportTemplate: () => void;
   onOpenAddCourse: () => void;
+  onStartSetup: () => void;
 }) {
   const dict = useDictionary();
   const t = dict.planner.remake;
@@ -152,6 +162,9 @@ function EmptyPlanner({
           <Button type="button" onClick={onOpenAddCourse}>
             <Plus className="mr-2 h-4 w-4" />
             {t.addCourse}
+          </Button>
+          <Button type="button" variant="outline" onClick={onStartSetup}>
+            {t.startSetup}
           </Button>
         </div>
       </div>
@@ -185,6 +198,12 @@ function GraduationPlanner() {
   const [folderManagementOpen, setFolderManagementOpen] = useState(false);
   const [semesterManagementOpen, setSemesterManagementOpen] = useState(false);
   const [plannerSettingsOpen, setPlannerSettingsOpen] = useState(false);
+  const [timetableImportOpen, setTimetableImportOpen] = useState(false);
+  const [setupDismissed, setSetupDismissed] = useState(false);
+  const [setupPreferenceReady, setSetupPreferenceReady] = useState(false);
+  const [plannerDataReady, setPlannerDataReady] = useState(false);
+  const [tourActive, setTourActive] = useState(false);
+  const [tourPending, setTourPending] = useState(false);
   const contentRef = useRef<HTMLDivElement | null>(null);
 
   const foldersCol = useRxCollection<FolderDocType>("folders");
@@ -210,6 +229,17 @@ function GraduationPlanner() {
   }, []);
 
   useEffect(() => {
+    try {
+      setSetupDismissed(
+        window.localStorage.getItem("planner:setup-dismissed") === "true",
+      );
+    } catch {
+      setSetupDismissed(false);
+    }
+    setSetupPreferenceReady(true);
+  }, []);
+
+  useEffect(() => {
     if (!viewPreferenceReady) return;
     try {
       window.localStorage.setItem("planner:view", view);
@@ -224,12 +254,16 @@ function GraduationPlanner() {
     const foldersSubscription = foldersCol.find().$.subscribe((folders) => {
       const nextFolders = folders.map((folder) => folder.toMutableJSON());
       setFolderData(nextFolders);
-      if (!nextFolders.some((folder) => folder.id === "_unsorted")) {
+      if (
+        !nextFolders.some((folder) => folder.id === "_unsorted") &&
+        nextFolders.some((folder) => folder.id !== "planner-1")
+      ) {
         void ensureUnsortedFolder(foldersCol);
       }
     });
     const coursesSubscription = coursesCol.find().$.subscribe((courses) => {
       setCourseData(courses.map((course) => course.toMutableJSON()));
+      if (courses.length > 0) void ensureUnsortedFolder(foldersCol);
     });
     const semestersSubscription = semestersCol
       .find()
@@ -239,8 +273,9 @@ function GraduationPlanner() {
     const plannerSubscription = plannerCol.find().$.subscribe((planners) => {
       const planner = planners[0]?.toMutableJSON() ?? null;
       setPlannerInfo(planner);
-      if (!planner) setPlannerSettingsOpen(true);
     });
+
+    setPlannerDataReady(true);
 
     return () => {
       foldersSubscription.unsubscribe();
@@ -249,6 +284,47 @@ function GraduationPlanner() {
       plannerSubscription.unsubscribe();
     };
   }, [coursesCol, foldersCol, plannerCol, semestersCol]);
+
+  const dismissSetup = useCallback(() => {
+    setSetupDismissed(true);
+    try {
+      window.localStorage.setItem("planner:setup-dismissed", "true");
+    } catch {
+      // The dismissed state is kept for this page session.
+    }
+  }, []);
+
+  const finishSetup = useCallback((nextView: PlannerView) => {
+    setView(nextView);
+    setSetupDismissed(true);
+    let tourWasCompleted = false;
+    try {
+      window.localStorage.setItem("planner:setup-dismissed", "true");
+      tourWasCompleted =
+        window.localStorage.getItem("planner:tour-done") === "true";
+    } catch {
+      // Continue with the in-memory setup and tour state.
+    }
+    if (!tourWasCompleted) setTourPending(true);
+  }, []);
+
+  useEffect(() => {
+    if (!tourPending || !plannerInfo) return;
+    const frame = window.requestAnimationFrame(() => {
+      setTourPending(false);
+      setTourActive(true);
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [courseData, folderData, plannerInfo, tourPending]);
+
+  const finishTour = useCallback(() => {
+    setTourActive(false);
+    try {
+      window.localStorage.setItem("planner:tour-done", "true");
+    } catch {
+      // The tour remains dismissible for this page session.
+    }
+  }, []);
 
   const handleFoldersUpdated = async () => {
     if (foldersCol) setFolderData(await getFolders(foldersCol));
@@ -339,6 +415,11 @@ function GraduationPlanner() {
     !folderData.some(
       (folder) => folder.id !== "planner-1" && folder.id !== "_unsorted",
     );
+  const showSetupWizard =
+    plannerDataReady &&
+    setupPreferenceReady &&
+    hasEmptyPlanner &&
+    !setupDismissed;
 
   const openAddCourse = (folderId?: string, semesterId?: string) => {
     setAddFolderTarget(folderId);
@@ -529,7 +610,10 @@ function GraduationPlanner() {
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
       <div className="-mt-4 flex h-[calc(100vh-var(--header-height))] min-h-0 w-full flex-col overflow-hidden">
-        <header className="flex shrink-0 flex-col gap-2 border-b border-border px-4 py-3 md:flex-row md:items-center md:justify-between md:gap-3 md:px-6">
+        <header
+          style={{ display: showSetupWizard ? "none" : undefined }}
+          className="flex shrink-0 flex-col gap-2 border-b border-border px-4 py-3 md:flex-row md:items-center md:justify-between md:gap-3 md:px-6"
+        >
           <div className="flex min-w-0 items-start justify-between gap-2 md:block">
             <div className="min-w-0">
               <h1 className="truncate text-lg font-bold md:text-xl">
@@ -555,6 +639,15 @@ function GraduationPlanner() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setTimetableImportOpen(true)}>
+                  <CalendarRange className="mr-2 h-4 w-4" />
+                  {t.importFromTimetable}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTourActive(true)}>
+                  <CircleHelp className="mr-2 h-4 w-4" />
+                  {t.useTutorial}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => setFolderManagementOpen(true)}>
                   <FolderCog className="mr-2 h-4 w-4" />
                   {t.manageCategories}
@@ -574,6 +667,7 @@ function GraduationPlanner() {
           </div>
           <div className="flex w-full min-w-0 items-center gap-2 md:w-auto md:flex-nowrap">
             <Tabs
+              data-tour="views"
               className="min-w-0 flex-1 md:flex-none"
               value={view}
               onValueChange={(value) => setView(value as PlannerView)}
@@ -622,6 +716,7 @@ function GraduationPlanner() {
               type="button"
               className="h-9 shrink-0 px-3 md:h-10"
               onClick={() => openAddCourse()}
+              data-tour="add-course"
             >
               <Plus className="h-4 w-4 md:mr-1.5" />
               <span className="md:hidden">{t.addCourseCompact}</span>
@@ -641,6 +736,15 @@ function GraduationPlanner() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setTimetableImportOpen(true)}>
+                  <CalendarRange className="mr-2 h-4 w-4" />
+                  {t.importFromTimetable}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTourActive(true)}>
+                  <CircleHelp className="mr-2 h-4 w-4" />
+                  {t.useTutorial}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => setFolderManagementOpen(true)}>
                   <FolderCog className="mr-2 h-4 w-4" />
                   {t.manageCategories}
@@ -672,7 +776,10 @@ function GraduationPlanner() {
 
         {pendingCount > 0 && (
           <div className="shrink-0 px-4 pt-2 md:px-6">
-            <div className="flex min-w-0 items-center gap-2 overflow-x-auto whitespace-nowrap rounded-md bg-muted/40 px-2 py-1.5 text-xs">
+            <div
+              data-tour="pending"
+              className="flex min-w-0 items-center gap-2 overflow-x-auto whitespace-nowrap rounded-md bg-muted/40 px-2 py-1.5 text-xs"
+            >
               <TriangleAlert className="h-3.5 w-3.5 shrink-0 text-amber-500" />
               <span className="shrink-0 font-medium text-muted-foreground">
                 {formatPlannerText(t.pendingNotice, { count: pendingCount })}
@@ -721,10 +828,24 @@ function GraduationPlanner() {
           ref={contentRef}
           className="flex min-h-0 flex-1 flex-col overflow-hidden"
         >
-          {hasEmptyPlanner ? (
+          {showSetupWizard ? (
+            <PlannerSetupWizard
+              currentSemesterId={normalizedNow}
+              onDismiss={dismissSetup}
+              onComplete={finishSetup}
+            />
+          ) : hasEmptyPlanner ? (
             <EmptyPlanner
               onImportTemplate={() => setFolderManagementOpen(true)}
               onOpenAddCourse={() => openAddCourse()}
+              onStartSetup={() => {
+                setSetupDismissed(false);
+                try {
+                  window.localStorage.removeItem("planner:setup-dismissed");
+                } catch {
+                  // The wizard can still open for this page session.
+                }
+              }}
             />
           ) : view === "checklist" ? (
             <ChecklistView {...viewProps} />
@@ -798,6 +919,20 @@ function GraduationPlanner() {
           isOpen={plannerSettingsOpen}
           onClose={() => setPlannerSettingsOpen(false)}
           onSettingsUpdated={handlePlannerUpdated}
+        />
+        <TimetableImportDialog
+          open={timetableImportOpen}
+          onOpenChange={setTimetableImportOpen}
+          planner={plannerInfo}
+          folders={folderData}
+          items={courseData}
+          currentSemesterId={normalizedNow}
+        />
+        <PlannerTour
+          open={tourActive}
+          showProgress={!hasEmptyPlanner}
+          showPending={pendingCount > 0}
+          onDone={finishTour}
         />
       </div>
     </DndContext>

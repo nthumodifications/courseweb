@@ -51,6 +51,7 @@ import useDictionary from "@/dictionaries/useDictionary";
 import { ResponsiveDialog } from "./components/responsive-dialog";
 import { useConfirm } from "./lib/use-confirm";
 import { activateOnKey } from "@/lib/activate-on-key";
+import { parseFolderTemplate } from "./lib/folder-template";
 
 interface FolderManagementProps {
   isOpen: boolean;
@@ -463,24 +464,10 @@ export function FolderManagement({
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
-        const importedData = JSON.parse(event.target?.result as string);
-
-        // Basic validation
-        if (
-          !Array.isArray(importedData) ||
-          !importedData.every(
-            (item) =>
-              item.id &&
-              item.title &&
-              typeof item.min === "number" &&
-              typeof item.max === "number" &&
-              item.parent,
-          )
-        ) {
-          throw new Error("Invalid template file format");
-        }
-
-        setImportPreview(importedData);
+        const importedData = parseFolderTemplate(
+          event.target?.result as string,
+        );
+        setImportPreview(importedData as FolderDocType[]);
         setImportMode(true);
       } catch (error) {
         console.error("Error parsing template:", error);

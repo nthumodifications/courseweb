@@ -34,22 +34,23 @@ import { decodeCourseText } from "@/lib/course-text";
 import { FolderDocType, ItemDocType, SemesterDocType } from "../../rxdb";
 import { CreateCourseDialog } from "./create-course-dialog";
 import { effectiveStatus, normalizeSemesterId } from "../../lib/progress";
+import {
+  courseCodeFromRawId,
+  normalizePlannerCourseCode,
+} from "../../lib/setup";
 import { formatPlannerSemester, formatPlannerText } from "../remake/shared";
 import type { CourseStatus } from "../../types";
 
 const NONE_VALUE = "__none__";
 const ALL_VALUE = "__all__";
 
-const courseCodeKey = (value?: string | null) => {
-  if (!value) return "";
-  const stripped = value.replace(/^\d{3}(?:[1-3]0|-[1-3])\s*/, "").trim();
-  return stripped.toLowerCase().replace(/\s+/g, " ");
-};
+const courseCodeKey = normalizePlannerCourseCode;
 
 const courseCodeFromHit = (hit: CourseSyllabusView) => {
   const rawId = hit.raw_id ?? "";
-  if (/^\d{5}/.test(rawId)) return rawId.slice(5).trim();
-  if (/^\d{3}-[1-3]/.test(rawId)) return rawId.slice(5).trim();
+  if (/^\d{5}/.test(rawId) || /^\d{3}-[1-3]/.test(rawId)) {
+    return courseCodeFromRawId(rawId);
+  }
   return `${hit.department ?? ""} ${hit.course ?? ""}${hit.class ?? ""}`.trim();
 };
 
