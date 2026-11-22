@@ -16,6 +16,7 @@ import useDictionary from "@/dictionaries/useDictionary";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import type { FolderDocType } from "../../rxdb";
 import {
+  detectDepartmentTag,
   dedupeTimetableCourses,
   enumerateTermsFromEnrollment,
   guessCourseCategory,
@@ -91,6 +92,7 @@ interface TimetableCourseSelectionProps {
   currentSemesterId: string;
   folders: Pick<FolderDocType, "id" | "title" | "order">[];
   department: string;
+  enrollmentYear: string;
   selectedTermIds: Set<string>;
   onToggleTerm: (termId: string, selected: boolean) => void;
   assignments: Record<string, string>;
@@ -103,6 +105,7 @@ export function TimetableCourseSelection({
   currentSemesterId,
   folders,
   department,
+  enrollmentYear,
   selectedTermIds,
   onToggleTerm,
   assignments,
@@ -126,6 +129,7 @@ export function TimetableCourseSelection({
     [folders],
   );
   const selectedCourses = selectedHistoryCourses(terms, selectedTermIds);
+  const departmentTag = detectDepartmentTag(selectedCourses, enrollmentYear);
   const selectedCredits = selectedCourses.reduce(
     (sum, course) => sum + (course.credits ?? 0),
     0,
@@ -144,6 +148,11 @@ export function TimetableCourseSelection({
 
   return (
     <div className="space-y-3">
+      {departmentTag && (
+        <p className="text-xs text-muted-foreground">
+          {formatPlannerText(t.departmentTagHint, { tag: departmentTag })}
+        </p>
+      )}
       <p className="text-sm font-medium">
         {formatPlannerText(t.importSummary, {
           courses: selectedCourses.length,
@@ -212,6 +221,8 @@ export function TimetableCourseSelection({
                       course,
                       department,
                       folders,
+                      enrollmentYear,
+                      departmentTag,
                     );
                     const folderId = assignments[rawId] ?? guessedFolder;
                     const title = [course.name_zh, course.name_en]

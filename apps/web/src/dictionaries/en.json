@@ -2783,6 +2783,7 @@
       "termSummary": "{courses} courses · {credits} credits",
       "creditUnit": "credits",
       "categoryForCourse": "Course category",
+      "departmentTagHint": "Major courses are identified by “{tag}”.",
       "importFromTimetableTitle": "Import from timetable",
       "importFromTimetableDescription": "Add courses from your timetable history that are not already in this planner.",
       "importSelected": "Import {count} courses",

@@ -71,6 +71,7 @@ import {
 import {
   defaultGraduationYear,
   dedupeTimetableCourses,
+  detectDepartmentTag,
   enumerateTermsFromEnrollment,
   guessCourseCategory,
   mergeTemplateAndTimetableItems,
@@ -336,6 +337,10 @@ export function PlannerSetupWizard({
       dedupeTimetableCourses(selectedHistoryCourses(terms, selectedTermIds)),
     [selectedTermIds, terms],
   );
+  const detectedDepartmentTag = useMemo(
+    () => detectDepartmentTag(selectedCourses, enrollmentYear),
+    [enrollmentYear, selectedCourses],
+  );
 
   const selectHistoryTerm = (termId: string, checked: boolean) =>
     setSelectedTerms((previous) => ({ ...previous, [termId]: checked }));
@@ -538,6 +543,8 @@ export function PlannerSetupWizard({
           course,
           department,
           folderDocs,
+          enrollmentYear,
+          detectedDepartmentTag,
         );
         const title = [course.name_zh, course.name_en]
           .filter(Boolean)
@@ -979,6 +986,7 @@ export function PlannerSetupWizard({
                   currentSemesterId={currentSemesterId}
                   folders={activeFolders}
                   department={department}
+                  enrollmentYear={enrollmentYear}
                   selectedTermIds={selectedTermIds}
                   onToggleTerm={selectHistoryTerm}
                   assignments={assignments}

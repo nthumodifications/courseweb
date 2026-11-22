@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import {
   defaultGraduationYear,
   dedupeTimetableCourses,
+  detectDepartmentTag,
   enumerateTermsFromEnrollment,
   guessCourseCategory,
   mergeTemplateAndTimetableItems,
@@ -46,6 +47,7 @@ describe("planner first-run setup helpers", () => {
         { ge_type: "core", compulsory_for: null, elective_for: null },
         "CS",
         folders,
+        "112",
       ),
     ).toBe("setup-general-education");
     expect(
@@ -53,6 +55,8 @@ describe("planner first-run setup helpers", () => {
         { ge_type: null, compulsory_for: ["CS112A"], elective_for: null },
         "CS",
         folders,
+        "112",
+        "CS",
       ),
     ).toBe("setup-major-required");
     expect(
@@ -60,6 +64,8 @@ describe("planner first-run setup helpers", () => {
         { ge_type: null, compulsory_for: null, elective_for: ["CS112A"] },
         "CS",
         folders,
+        "112",
+        "CS",
       ),
     ).toBe("setup-major-elective");
     expect(
@@ -67,8 +73,92 @@ describe("planner first-run setup helpers", () => {
         { ge_type: null, compulsory_for: ["EE"], elective_for: null },
         "CS",
         folders,
+        "112",
+        "CS",
       ),
     ).toBe("_unsorted");
+  });
+
+  test("detects department tags from real audience tag shapes", () => {
+    expect(
+      detectDepartmentTag(
+        [
+          { compulsory_for: ["資工系112B"], elective_for: null },
+          { compulsory_for: ["資工系112BA"], elective_for: null },
+          { compulsory_for: ["資工系115BA"], elective_for: null },
+          { compulsory_for: ["原科院學士班112B"], elective_for: null },
+          { compulsory_for: ["原科院學士班115B"], elective_for: null },
+          { compulsory_for: ["原科院學士班115BA"], elective_for: null },
+          { compulsory_for: ["原科院學士班115BB"], elective_for: null },
+        ],
+        "112",
+      ),
+    ).toBe("資工系");
+    expect(
+      detectDepartmentTag(
+        [{ compulsory_for: ["CS112A"], elective_for: null }],
+        112,
+      ),
+    ).toBe("CS");
+    expect(
+      detectDepartmentTag(
+        [
+          { compulsory_for: ["資工系112B"], elective_for: null },
+          {
+            compulsory_for: ["原科院學士班112B"],
+            elective_for: ["資工系112A"],
+          },
+        ],
+        "112",
+      ),
+    ).toBe("資工系");
+    expect(
+      detectDepartmentTag(
+        [
+          { compulsory_for: ["資工系112B"], elective_for: null },
+          { compulsory_for: ["原科院學士班112B"], elective_for: null },
+        ],
+        "112",
+      ),
+    ).toBeUndefined();
+    expect(
+      detectDepartmentTag(
+        [{ compulsory_for: ["資工系112B"], elective_for: null }],
+        "114",
+      ),
+    ).toBe("資工系");
+  });
+
+  test("categorizes department courses by detected tag and cohort", () => {
+    const folders = [
+      { id: "setup-major-required", title: "系必修" },
+      { id: "setup-major-elective", title: "系選修" },
+    ];
+    const category = (
+      compulsory_for: string[] | null,
+      elective_for: string[] | null = null,
+      department = "資訊工程學系",
+      year = "112",
+      tag: string | undefined = "資工系",
+    ) =>
+      guessCourseCategory(
+        { ge_type: null, compulsory_for, elective_for },
+        department,
+        folders,
+        year,
+        tag,
+      );
+
+    expect(category(["資工系112B"])).toBe("setup-major-required");
+    expect(category(["資訊工程學系"])).toBe("setup-major-required");
+    expect(category(null, ["資工系115BA"])).toBe("setup-major-elective");
+    expect(category(["資工系115BA"], ["資工系112B"])).toBe("_unsorted");
+    expect(category(["資工系112B"], null, "資訊工程學系", "115")).toBe(
+      "_unsorted",
+    );
+    expect(category(["EE"], null, "EE", "112", undefined)).toBe(
+      "setup-major-required",
+    );
   });
 
   test("dedupes raw ids and merges against existing raw ids or course codes", () => {
@@ -84,6 +174,17 @@ describe("planner first-run setup helpers", () => {
     expect(
       mergeTimetableCourses(incoming, [
         { raw_id: "11410CS1010", id: "CS1010" },
+      ]),
+    ).toEqual([incoming[2]]);
+    expect(
+      mergeTimetableCourses(incoming, [
+        { raw_id: "11410CS1010", id: "CS1010", status: "failed" },
+      ]),
+    ).toEqual([incoming[0], incoming[2]]);
+    expect(
+      mergeTimetableCourses(incoming, [
+        { raw_id: "11310CS1010", id: "CS1010", status: "failed" },
+        { raw_id: null, id: "CS1010", status: "completed" },
       ]),
     ).toEqual([incoming[2]]);
     expect(normalizePlannerCourseCode("11410 CS1010 ")).toBe("cs1010");

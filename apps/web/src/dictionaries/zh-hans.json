@@ -2777,6 +2777,7 @@
       "termSummary": "{courses} 门 · {credits} 学分",
       "creditUnit": "学分",
       "categoryForCourse": "课程类别",
+      "departmentTagHint": "系上课程以「{tag}」辨识",
       "importFromTimetableTitle": "从课表导入",
       "importFromTimetableDescription": "导入课表纪录中尚未加入这份规划的课程。",
       "importSelected": "导入 {count} 门课",

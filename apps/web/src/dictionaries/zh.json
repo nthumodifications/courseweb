@@ -2777,6 +2777,7 @@
       "termSummary": "{courses} 門 · {credits} 學分",
       "creditUnit": "學分",
       "categoryForCourse": "課程類別",
+      "departmentTagHint": "系上課程以「{tag}」辨識",
       "importFromTimetableTitle": "從課表匯入",
       "importFromTimetableDescription": "匯入課表紀錄中尚未加入這份規劃的課程。",
       "importSelected": "匯入 {count} 門課",

@@ -11,7 +11,11 @@ import type {
   PlannerDataDocType,
 } from "../../rxdb";
 import { createCourseItem } from "../../data/courses";
-import { mergeTimetableCourses, guessCourseCategory } from "../../lib/setup";
+import {
+  detectDepartmentTag,
+  mergeTimetableCourses,
+  guessCourseCategory,
+} from "../../lib/setup";
 import { normalizeSemesterId } from "../../lib/progress";
 import { formatPlannerText } from "../remake/shared";
 import { ResponsiveDialog } from "../responsive-dialog";
@@ -84,6 +88,10 @@ export function TimetableImportDialog({
     () => selectedHistoryCourses(terms, selectedTermIds),
     [selectedTermIds, terms],
   );
+  const detectedDepartmentTag = useMemo(
+    () => detectDepartmentTag(selectedCourses, startYear),
+    [selectedCourses, startYear],
+  );
 
   const importCourses = async () => {
     if (!itemsCol || selectedCourses.length === 0 || isImporting) return;
@@ -104,7 +112,13 @@ export function TimetableImportDialog({
           requestedCategoryId === "_unsorted" ||
           folders.some((folder) => folder.id === requestedCategoryId)
             ? requestedCategoryId
-            : guessCourseCategory(course, planner?.department ?? "", folders);
+            : guessCourseCategory(
+                course,
+                planner?.department ?? "",
+                folders,
+                startYear,
+                detectedDepartmentTag,
+              );
         const id = rawId
           ? rawId.replace(/^\d{5}/, "").trim()
           : `${course.department} ${course.course}${course.class}`.trim();
@@ -186,6 +200,7 @@ export function TimetableImportDialog({
             currentSemesterId={currentSemesterId}
             folders={folders}
             department={planner?.department ?? ""}
+            enrollmentYear={startYear}
             selectedTermIds={selectedTermIds}
             onToggleTerm={(termId, checked) =>
               setSelectedTerms((previous) => ({

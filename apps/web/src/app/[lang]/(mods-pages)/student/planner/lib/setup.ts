@@ -58,19 +58,27 @@ type CourseIdentity = {
   raw_id?: string | null;
   id?: string | null;
   semester?: string | null;
+  status?: string | null;
 };
 
-/** Dedupe timetable rows, then omit courses already present in the planner. */
+/** Dedupe timetable rows, then omit courses with a non-failed planner copy. */
 export function mergeTimetableCourses<T extends CourseIdentity>(
   incoming: T[],
   existing: CourseIdentity[],
 ): T[] {
+  const existingActiveCourses = existing.filter(
+    (course) => course.status !== "failed",
+  );
   const existingRawIds = new Set(
-    existing.map((course) => course.raw_id).filter(Boolean),
+    existingActiveCourses.map((course) => course.raw_id).filter(Boolean),
   );
   const existingCodes = new Set(
-    existing
-      .map((course) => normalizePlannerCourseCode(course.id))
+    existingActiveCourses
+      .map((course) =>
+        normalizePlannerCourseCode(
+          course.id || courseCodeFromRawId(course.raw_id),
+        ),
+      )
       .filter(Boolean),
   );
   const seenRawIds = new Set<string>();
@@ -105,25 +113,96 @@ const CATEGORY_TITLES: Record<SetupCategoryKey, string[]> = {
   "setup-major-elective": ["系選修", "Major elective"],
 };
 
+type CourseAudience = Pick<CourseDefinition, "compulsory_for" | "elective_for">;
+
+type DepartmentTagEntry = { prefix: string; year?: string };
+
+function parseDepartmentTagEntry(entry: string): DepartmentTagEntry {
+  const match = entry.match(/^(.+?)(\d{3})([A-Z]*)$/);
+  return match ? { prefix: match[1]!, year: match[2]! } : { prefix: entry };
+}
+
+/**
+ * Infer the department abbreviation used by course audience tags. Prefer the
+ * student's cohort, then fall back to the most common tag across all cohorts.
+ */
+export function detectDepartmentTag(
+  courses: CourseAudience[],
+  enrollmentYear: string | number,
+): string | undefined {
+  const allCompulsory = courses.flatMap((course) =>
+    (course.compulsory_for ?? []).map((entry) => ({
+      entry,
+      parsed: parseDepartmentTagEntry(entry),
+    })),
+  );
+  const matchingYear = String(enrollmentYear).padStart(3, "0");
+  const cohortEntries = allCompulsory.filter(
+    ({ parsed }) => parsed.year === matchingYear,
+  );
+  const candidates = cohortEntries.length ? cohortEntries : allCompulsory;
+  const counts = new Map<string, number>();
+  for (const { parsed } of candidates) {
+    // Only audience tags carrying a ROC year are useful for inferring a tag.
+    if (!parsed.year) continue;
+    counts.set(parsed.prefix, (counts.get(parsed.prefix) ?? 0) + 1);
+  }
+  if (counts.size === 0) return undefined;
+
+  const highestCount = Math.max(...counts.values());
+  const mostFrequent = [...counts.entries()]
+    .filter(([, count]) => count === highestCount)
+    .map(([prefix]) => prefix);
+  if (mostFrequent.length === 1) return mostFrequent[0];
+
+  const electivePrefixes = new Set(
+    courses.flatMap((course) =>
+      (course.elective_for ?? [])
+        .map((entry) => parseDepartmentTagEntry(entry))
+        .map((entry) => entry.prefix),
+    ),
+  );
+  const tieBreak = mostFrequent.filter((prefix) =>
+    electivePrefixes.has(prefix),
+  );
+  return tieBreak.length === 1 ? tieBreak[0] : undefined;
+}
+
 /** Conservatively map only known metadata to a category that actually exists. */
 export function guessCourseCategory(
   course: Pick<CourseDefinition, "ge_type" | "compulsory_for" | "elective_for">,
   department: string,
   folders: Pick<FolderDocType, "id" | "title">[],
+  enrollmentYear: string | number,
+  detectedTag?: string,
 ): string {
-  const matchesDepartment = (departments: string[] | null) =>
-    Boolean(
-      department &&
-        departments?.some(
-          (entry) => entry === department || entry.includes(department),
-        ),
-    );
+  const matchingDepartmentEntries = (entries: string[] | null) =>
+    (entries ?? []).filter((entry) => {
+      const { prefix } = parseDepartmentTagEntry(entry);
+      return Boolean(
+        (detectedTag && prefix === detectedTag) ||
+          (department && prefix === department),
+      );
+    });
   let key: SetupCategoryKey | undefined;
   if (course.ge_type) key = "setup-general-education";
-  else if (matchesDepartment(course.compulsory_for)) {
-    key = "setup-major-required";
-  } else if (matchesDepartment(course.elective_for)) {
-    key = "setup-major-elective";
+  else {
+    const matchingCompulsory = matchingDepartmentEntries(course.compulsory_for);
+    const year = String(enrollmentYear).padStart(3, "0");
+    const currentOrUnspecifiedCohort = matchingCompulsory.some((entry) => {
+      const parsed = parseDepartmentTagEntry(entry);
+      return !parsed.year || parsed.year === year;
+    });
+    const otherCohortCompulsory = matchingCompulsory.some((entry) => {
+      const parsed = parseDepartmentTagEntry(entry);
+      return Boolean(parsed.year && parsed.year !== year);
+    });
+
+    if (currentOrUnspecifiedCohort) key = "setup-major-required";
+    else if (otherCohortCompulsory) return "_unsorted";
+    else if (matchingDepartmentEntries(course.elective_for).length) {
+      key = "setup-major-elective";
+    }
   }
   if (!key) return "_unsorted";
 
