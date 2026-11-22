@@ -1,5 +1,6 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
+import type { Context } from "hono";
 import { z } from "zod";
 import { auth } from "./utils/auth";
 import { HTTPException } from "hono/http-exception";
@@ -148,6 +149,79 @@ const withParsedShare = <T extends StoredShare>(share: T) => {
   };
 };
 
+type StoredGroupMember = {
+  userId: string;
+  sharedTimetableId: string;
+  label: string;
+  joinedAt: string;
+};
+
+type StoredGroup = {
+  createdBy: string;
+  members: string;
+};
+
+/**
+ * A share as shown to anyone other than its owner.
+ *
+ * `ownerId` is the owner's student ID. It stays on the server: a shared
+ * timetable is identified to viewers by its display name only, which is the
+ * whole point of `isAnonymous`.
+ */
+const toPublicShare = <
+  T extends StoredShare & { ownerId: string; gradeContext: string | null },
+>(
+  share: T,
+) => {
+  const { ownerId: _ownerId, ...publicShare } = withParsedShare(share);
+  return {
+    ...publicShare,
+    gradeContext: share.gradeContext ? JSON.parse(share.gradeContext) : null,
+  };
+};
+
+/**
+ * A group as shown to a viewer.
+ *
+ * Members and the creator are stored by student ID. Those never leave the
+ * server; the viewer is told only which entry is their own and whether they
+ * created the group. `sharedTimetableId` is unique per member, so clients use
+ * it as the member key.
+ */
+const toPublicGroup = <T extends StoredGroup, S = never>(
+  group: T,
+  viewerId: string | undefined,
+  shares?: S[],
+) => {
+  const { createdBy, members, ...publicGroup } = group;
+  const storedMembers: StoredGroupMember[] = JSON.parse(members);
+  return {
+    ...publicGroup,
+    isCreator: viewerId !== undefined && createdBy === viewerId,
+    members: storedMembers.map(({ userId, ...member }, index) => ({
+      ...member,
+      isSelf: viewerId !== undefined && userId === viewerId,
+      ...(shares ? { share: shares[index] } : {}),
+    })),
+  };
+};
+
+/**
+ * Who is asking, on a route that also serves signed-out visitors.
+ *
+ * A missing, expired or otherwise unusable token means "anonymous", not an
+ * error: the invite link must still open for someone who is not signed in.
+ */
+const optionalViewerId = async (c: Context<{ Bindings: Bindings }>) => {
+  if (!c.req.header("Authorization")) return undefined;
+  try {
+    await auth()(c, async () => {});
+    return c.get("user")?.sub;
+  } catch {
+    return undefined;
+  }
+};
+
 const app = new Hono<{ Bindings: Bindings }>()
 
   // ── Public: get a shared timetable ──────────────────────────────────────────
@@ -158,10 +232,7 @@ const app = new Hono<{ Bindings: Bindings }>()
       where: { id, deletedAt: null },
     });
     if (!share) throw new HTTPException(404, { message: "Not found" });
-    return c.json({
-      ...withParsedShare(share),
-      gradeContext: share.gradeContext ? JSON.parse(share.gradeContext) : null,
-    });
+    return c.json(toPublicShare(share));
   })
 
   // ── Public: community gallery ────────────────────────────────────────────────
@@ -194,10 +265,7 @@ const app = new Hono<{ Bindings: Bindings }>()
         : all;
 
       const hasMore = filtered.length > limit;
-      const items = filtered.slice(0, limit).map((s) => ({
-        ...withParsedShare(s),
-        gradeContext: s.gradeContext ? JSON.parse(s.gradeContext) : null,
-      }));
+      const items = filtered.slice(0, limit).map(toPublicShare);
 
       return c.json({ items, hasMore });
     },
@@ -212,35 +280,18 @@ const app = new Hono<{ Bindings: Bindings }>()
     });
     if (!group) throw new HTTPException(404, { message: "Group not found" });
 
-    const members: Array<{
-      userId: string;
-      sharedTimetableId: string;
-      label: string;
-      joinedAt: string;
-    }> = JSON.parse(group.members);
+    const members: StoredGroupMember[] = JSON.parse(group.members);
 
     // Resolve each member's share
     const shares = await Promise.all(
       members.map((m) =>
         prisma.sharedTimetable
           .findFirst({ where: { id: m.sharedTimetableId, deletedAt: null } })
-          .then((s) =>
-            s
-              ? {
-                  ...withParsedShare(s),
-                  gradeContext: s.gradeContext
-                    ? JSON.parse(s.gradeContext)
-                    : null,
-                }
-              : null,
-          ),
+          .then((s) => (s ? toPublicShare(s) : null)),
       ),
     );
 
-    return c.json({
-      ...group,
-      members: members.map((m, i) => ({ ...m, share: shares[i] })),
-    });
+    return c.json(toPublicGroup(group, await optionalViewerId(c), shares));
   })
 
   // ── Auth: list own shares ────────────────────────────────────────────────────
@@ -406,14 +457,7 @@ const app = new Hono<{ Bindings: Bindings }>()
         return {
           ...s,
           savedCourses: s.savedCourses ? JSON.parse(s.savedCourses) : null,
-          share: share
-            ? {
-                ...withParsedShare(share),
-                gradeContext: share.gradeContext
-                  ? JSON.parse(share.gradeContext)
-                  : null,
-              }
-            : null,
+          share: share ? toPublicShare(share) : null,
         };
       }),
     );
@@ -534,9 +578,7 @@ const app = new Hono<{ Bindings: Bindings }>()
       return members.some((m) => m.userId === userId);
     });
 
-    return c.json(
-      myGroups.map((g) => ({ ...g, members: JSON.parse(g.members) })),
-    );
+    return c.json(myGroups.map((g) => toPublicGroup(g, userId)));
   })
 
   // ── Auth: delete group (creator only) ─────────────────────────────────────────
@@ -610,10 +652,7 @@ const app = new Hono<{ Bindings: Bindings }>()
         },
       });
 
-      return c.json(
-        { ...group, members: JSON.parse(group.members), inviteCode },
-        201,
-      );
+      return c.json(toPublicGroup(group, userId), 201);
     },
   )
 
@@ -673,7 +712,7 @@ const app = new Hono<{ Bindings: Bindings }>()
         data: { members: JSON.stringify(members) },
       });
 
-      return c.json({ ...updated, members: JSON.parse(updated.members) });
+      return c.json(toPublicGroup(updated, userId));
     },
   )
 
@@ -696,7 +735,7 @@ const app = new Hono<{ Bindings: Bindings }>()
       },
     });
 
-    return c.json({ ...updated, members: JSON.parse(updated.members) });
+    return c.json(toPublicGroup(updated, userId));
   });
 
 export default app;

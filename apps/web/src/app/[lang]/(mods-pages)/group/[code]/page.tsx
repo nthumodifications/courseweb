@@ -63,7 +63,7 @@ const GroupViewPage = () => {
   const { lang } = useParams<{ lang: string }>();
   const navigate = useNavigate();
   const dict = useDictionary();
-  const { isAuthenticated, user: authUser } = useAuth();
+  const { isAuthenticated } = useAuth();
   const { courses: userCourses } = useUserTimetable();
   const {
     getGroup,
@@ -79,7 +79,8 @@ const GroupViewPage = () => {
   const [displayName, setDisplayName] = useState("");
 
   const { data: group, isLoading } = useQuery({
-    queryKey: ["group", code],
+    // Keyed on sign-in state: the response says which entry is the viewer's.
+    queryKey: ["group", code, isAuthenticated],
     queryFn: () => getGroup(code!),
     enabled: !!code,
   });
@@ -156,18 +157,16 @@ const GroupViewPage = () => {
       }),
   });
 
-  const toggleMember = (userId: string) => {
+  const toggleMember = (memberKey: string) => {
     setVisibleMembers((prev) => {
       const next = new Set(prev);
-      if (next.has(userId)) next.delete(userId);
-      else next.add(userId);
+      if (next.has(memberKey)) next.delete(memberKey);
+      else next.add(memberKey);
       return next;
     });
   };
 
-  const currentUserId = authUser?.profile?.sub;
-  const isAlreadyMember =
-    !!group && group.members.some((m) => m.userId === currentUserId);
+  const isAlreadyMember = !!group && group.members.some((m) => m.isSelf);
 
   const copyInviteUrl = () => {
     const url = `${window.location.origin}/${lang}/timetable/group/${code}`;
@@ -210,7 +209,7 @@ const GroupViewPage = () => {
   })[] = [];
 
   group.members.forEach((member, i) => {
-    if (!visibleMembers.has(member.userId)) return;
+    if (!visibleMembers.has(member.sharedTimetableId)) return;
     const memberCourseIds = member.share?.courses[semester] ?? [];
     const memberCourses = courses.filter((c) =>
       memberCourseIds.includes((c as MinimalCourse).raw_id),
@@ -264,22 +263,20 @@ const GroupViewPage = () => {
               <LogOut className="h-4 w-4 mr-1" /> {dict.group.leave}
             </Button>
           )}
-          {isAuthenticated &&
-            currentUserId &&
-            group.createdBy === currentUserId && (
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => {
-                  if (window.confirm(dict.group.delete_confirm)) {
-                    deleteMutation.mutate();
-                  }
-                }}
-                disabled={deleteMutation.isPending}
-              >
-                <Trash2 className="h-4 w-4 mr-1" /> {dict.group.delete_group}
-              </Button>
-            )}
+          {isAuthenticated && group.isCreator && (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => {
+                if (window.confirm(dict.group.delete_confirm)) {
+                  deleteMutation.mutate();
+                }
+              }}
+              disabled={deleteMutation.isPending}
+            >
+              <Trash2 className="h-4 w-4 mr-1" /> {dict.group.delete_group}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -298,16 +295,18 @@ const GroupViewPage = () => {
             <h3 className="text-sm font-medium">{dict.group.members}</h3>
             {group.members.map((member, i) => {
               const memberColor = MEMBER_COLORS[i % MEMBER_COLORS.length];
-              const isVisible = visibleMembers.has(member.userId);
+              const isVisible = visibleMembers.has(member.sharedTimetableId);
               const courseIds = member.share?.courses[semester] ?? [];
               return (
                 <div
-                  key={member.userId}
+                  key={member.sharedTimetableId}
                   className={`flex items-center gap-4 p-2 rounded-lg border cursor-pointer transition-all ${
                     isVisible ? "border-primary" : ""
                   }`}
-                  onClick={() => toggleMember(member.userId)}
-                  onKeyDown={activateOnKey(() => toggleMember(member.userId))}
+                  onClick={() => toggleMember(member.sharedTimetableId)}
+                  onKeyDown={activateOnKey(() =>
+                    toggleMember(member.sharedTimetableId),
+                  )}
                   role="button"
                   tabIndex={0}
                 >
@@ -335,7 +334,7 @@ const GroupViewPage = () => {
                     }
                     onClick={(e) => {
                       e.stopPropagation();
-                      toggleMember(member.userId);
+                      toggleMember(member.sharedTimetableId);
                     }}
                   >
                     {isVisible ? (
