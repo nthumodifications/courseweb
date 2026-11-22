@@ -78,6 +78,7 @@ describe("planner progress derivation", () => {
       min: 5,
       max: 20,
       remaining: 0,
+      unset: false,
       satisfied: true,
     });
     expect(progress.get("root")).toEqual({
@@ -87,7 +88,61 @@ describe("planner progress derivation", () => {
       min: 2,
       max: 4,
       remaining: 0,
+      unset: false,
       satisfied: true,
+    });
+  });
+
+  test("marks unset leaves and parents whose requirements are all unset", () => {
+    const folders = [
+      folder({ id: "root", min: 0, max: 0 }),
+      folder({ id: "english", parent: "root", min: 0, max: 0 }),
+      folder({ id: "pe", parent: "root", min: 0, max: null }),
+      folder({ id: "configured", parent: "root", min: 3, max: 0 }),
+      folder({ id: "max-only", parent: "root", min: 0, max: 20 }),
+    ];
+    const items: ProgressItem[] = [
+      { parent: "english", credits: 3, semester: "11310" },
+      { parent: "english", credits: 2, semester: "11410" },
+    ];
+    const progress = deriveFolderProgress(folders, items, "11410");
+
+    expect(progress.get("english")).toEqual({
+      done: 3,
+      inProgress: 2,
+      planned: 0,
+      min: 0,
+      max: 0,
+      remaining: 0,
+      unset: true,
+      satisfied: false,
+    });
+    expect(progress.get("pe")?.unset).toBe(true);
+    expect(progress.get("root")?.unset).toBe(false);
+    expect(progress.get("root")?.remaining).toBe(0);
+    expect(progress.get("root")?.satisfied).toBe(true);
+    expect(progress.get("configured")?.unset).toBe(false);
+    expect(progress.get("configured")?.remaining).toBe(3);
+    expect(progress.get("max-only")?.unset).toBe(false);
+  });
+
+  test("a parent with only unset children is unset when it has no requirement", () => {
+    const folders = [
+      folder({ id: "root", min: 0, max: 0 }),
+      folder({ id: "one", parent: "root", min: 0, max: 0 }),
+      folder({ id: "two", parent: "root", min: 0, max: 0 }),
+    ];
+    const progress = deriveFolderProgress(folders, [], "11410");
+
+    expect(progress.get("root")).toEqual({
+      done: 0,
+      inProgress: 0,
+      planned: 0,
+      min: 0,
+      max: 0,
+      remaining: 0,
+      unset: true,
+      satisfied: false,
     });
   });
 
@@ -104,6 +159,7 @@ describe("planner progress derivation", () => {
 
     expect(progress.get("root")?.remaining).toBe(0);
     expect(progress.get("root")?.satisfied).toBe(false);
+    expect(progress.get("root")?.unset).toBe(false);
     expect(progress.get("leaf")?.remaining).toBe(1);
   });
 
@@ -119,6 +175,7 @@ describe("planner progress derivation", () => {
     const progress = deriveFolderProgress(folders, items, "11410");
 
     expect(progress.get("root")?.satisfied).toBe(true);
+    expect(progress.get("root")?.unset).toBe(false);
     expect(progress.get("grandchild")?.satisfied).toBe(false);
   });
 });

@@ -134,7 +134,11 @@ export function MatrixView(props: MatrixViewProps) {
                 {items.length}
               </span>
             ) : (
-              <RequirementSummary folder={folder} progress={progress} />
+              <RequirementSummary
+                folder={folder}
+                progress={progress}
+                onOpenFolderManagement={props.onOpenFolderManagement}
+              />
             )}
           </div>
         </div>
@@ -360,38 +364,45 @@ export function MatrixView(props: MatrixViewProps) {
                 id={folder.id === "_unsorted" ? "planner-unsorted" : undefined}
                 className="px-4 py-2"
               >
-                <button
-                  type="button"
-                  className="flex w-full items-center gap-2 text-left"
-                  aria-expanded={expandedMobileFolders[folder.id] === true}
-                  onClick={() =>
-                    setExpandedMobileFolders((previous) => ({
-                      ...previous,
-                      [folder.id]: !previous[folder.id],
-                    }))
-                  }
-                >
-                  {expandedMobileFolders[folder.id] ? (
-                    <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  ) : (
-                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  )}
-                  <span
-                    className={`h-2 w-2 shrink-0 rounded-full ${getCategoryColorClass(folder)}`}
-                  />
-                  <span className="min-w-0 flex-1 truncate font-medium">
-                    {folder.id === "_unsorted"
-                      ? t.uncategorizedCourses
-                      : folder.title}
-                  </span>
-                  {folder.id === "_unsorted" ? (
-                    <span className="text-xs text-muted-foreground">
-                      {folderItems(folder.id).length}
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    className="flex min-w-0 flex-1 items-center gap-2 text-left"
+                    aria-expanded={expandedMobileFolders[folder.id] === true}
+                    onClick={() =>
+                      setExpandedMobileFolders((previous) => ({
+                        ...previous,
+                        [folder.id]: !previous[folder.id],
+                      }))
+                    }
+                  >
+                    {expandedMobileFolders[folder.id] ? (
+                      <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    )}
+                    <span
+                      className={`h-2 w-2 shrink-0 rounded-full ${getCategoryColorClass(folder)}`}
+                    />
+                    <span className="min-w-0 flex-1 truncate font-medium">
+                      {folder.id === "_unsorted"
+                        ? t.uncategorizedCourses
+                        : folder.title}
                     </span>
-                  ) : (
-                    <RequirementSummary folder={folder} progress={progress} />
+                    {folder.id === "_unsorted" && (
+                      <span className="text-xs text-muted-foreground">
+                        {folderItems(folder.id).length}
+                      </span>
+                    )}
+                  </button>
+                  {folder.id !== "_unsorted" && (
+                    <RequirementSummary
+                      folder={folder}
+                      progress={progress}
+                      onOpenFolderManagement={props.onOpenFolderManagement}
+                    />
                   )}
-                </button>
+                </div>
                 {mobileStrip(folder)}
                 {expandedMobileFolders[folder.id] && mobileCourseGroups(folder)}
               </section>

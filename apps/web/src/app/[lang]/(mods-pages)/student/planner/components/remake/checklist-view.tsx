@@ -73,6 +73,7 @@ export function ChecklistView(props: PlannerViewProps) {
             <RequirementSummary
               folder={folder}
               progress={props.progress.get(folder.id)}
+              onOpenFolderManagement={props.onOpenFolderManagement}
             />
           </div>
         )}
@@ -119,19 +120,28 @@ export function ChecklistView(props: PlannerViewProps) {
       {rootFolders.length > 0 && (
         <div className="flex shrink-0 gap-2 overflow-x-auto border-b border-border px-4 py-2 lg:hidden">
           {rootFolders.map((folder) => (
-            <Button
+            <div
               key={folder.id}
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-8 shrink-0 gap-2"
-              onClick={() => scrollToCategory(folder.id)}
+              className="flex h-8 shrink-0 items-center gap-2 rounded-md border border-border px-2"
             >
-              <span
-                className={`h-2 w-2 rounded-full ${getFolderColorDotClass(folder.color)}`}
-              />
-              {folder.title}
-            </Button>
+              <button
+                type="button"
+                className="flex min-w-0 items-center gap-2 text-sm"
+                onClick={() => scrollToCategory(folder.id)}
+              >
+                <span
+                  className={`h-2 w-2 rounded-full ${getFolderColorDotClass(folder.color)}`}
+                />
+                <span className="whitespace-nowrap">{folder.title}</span>
+              </button>
+              {props.progress.get(folder.id)?.unset && (
+                <RequirementSummary
+                  folder={folder}
+                  progress={props.progress.get(folder.id)}
+                  onOpenFolderManagement={props.onOpenFolderManagement}
+                />
+              )}
+            </div>
           ))}
         </div>
       )}
@@ -142,28 +152,42 @@ export function ChecklistView(props: PlannerViewProps) {
               const progress = props.progress.get(folder.id);
               const remaining = progress?.remaining ?? 0;
               return (
-                <button
+                <div
                   key={folder.id}
-                  type="button"
                   className="flex min-h-10 w-full items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-muted"
-                  onClick={() => scrollToCategory(folder.id)}
                 >
-                  <span
-                    className={`h-2 w-2 shrink-0 rounded-full ${getFolderColorDotClass(folder.color)}`}
-                  />
-                  <span className="min-w-0 flex-1 whitespace-normal break-words font-medium leading-snug">
-                    {folder.title}
-                  </span>
-                  <span
-                    className={`shrink-0 text-xs ${remaining ? "text-red-500" : "text-muted-foreground"}`}
+                  <button
+                    type="button"
+                    className="flex min-w-0 flex-1 items-center gap-2 text-left"
+                    onClick={() => scrollToCategory(folder.id)}
                   >
-                    {remaining
-                      ? formatPlannerText(t.remainingShort, {
-                          count: remaining,
-                        })
-                      : t.satisfied}
-                  </span>
-                </button>
+                    <span
+                      className={`h-2 w-2 shrink-0 rounded-full ${getFolderColorDotClass(folder.color)}`}
+                    />
+                    <span className="min-w-0 flex-1 whitespace-normal break-words font-medium leading-snug">
+                      {folder.title}
+                    </span>
+                  </button>
+                  {progress?.unset ? (
+                    <RequirementSummary
+                      folder={folder}
+                      progress={progress}
+                      onOpenFolderManagement={props.onOpenFolderManagement}
+                    />
+                  ) : (
+                    <span
+                      className={`shrink-0 text-xs ${remaining ? "text-red-500" : "text-muted-foreground"}`}
+                    >
+                      {remaining
+                        ? formatPlannerText(t.remainingShort, {
+                            count: remaining,
+                          })
+                        : progress?.satisfied
+                          ? t.satisfied
+                          : t.plannedCoverage}
+                    </span>
+                  )}
+                </div>
               );
             })}
             {rootFolders.length === 0 && (
@@ -193,7 +217,11 @@ export function ChecklistView(props: PlannerViewProps) {
                     className={`h-2 w-2 shrink-0 rounded-full ${getFolderColorDotClass(folder.color)}`}
                   />
                   <h2 className="text-base font-bold">{folder.title}</h2>
-                  <RequirementSummary folder={folder} progress={progress} />
+                  <RequirementSummary
+                    folder={folder}
+                    progress={progress}
+                    onOpenFolderManagement={props.onOpenFolderManagement}
+                  />
                 </div>
                 {renderFolderContents(folder, true)}
                 <Button

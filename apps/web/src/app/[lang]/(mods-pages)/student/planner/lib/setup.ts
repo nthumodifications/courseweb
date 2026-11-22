@@ -115,6 +115,9 @@ const CATEGORY_TITLES: Record<SetupCategoryKey, string[]> = {
 
 type CourseAudience = Pick<CourseDefinition, "compulsory_for" | "elective_for">;
 
+type SetupFolder = Pick<FolderDocType, "id" | "title"> &
+  Partial<Pick<FolderDocType, "parent">>;
+
 type DepartmentTagEntry = { prefix: string; year?: string };
 
 function parseDepartmentTagEntry(entry: string): DepartmentTagEntry {
@@ -170,12 +173,37 @@ export function detectDepartmentTag(
 
 /** Conservatively map only known metadata to a category that actually exists. */
 export function guessCourseCategory(
-  course: Pick<CourseDefinition, "ge_type" | "compulsory_for" | "elective_for">,
+  course: Pick<
+    CourseDefinition,
+    "ge_type" | "compulsory_for" | "elective_for"
+  > &
+    Partial<Pick<CourseDefinition, "course">>,
   department: string,
-  folders: Pick<FolderDocType, "id" | "title">[],
+  folders: SetupFolder[],
   enrollmentYear: string | number,
   detectedTag?: string,
 ): string {
+  const courseCode = course.course?.trim().toUpperCase() ?? "";
+  const prefixCategory = courseCode.startsWith("LANG")
+    ? ["英文", "English"]
+    : courseCode.startsWith("PE")
+      ? ["體育", "PE", "Physical Education"]
+      : courseCode.startsWith("CL")
+        ? ["大學中文"]
+        : undefined;
+  if (prefixCategory) {
+    const matchingChild = folders.find((folder) => {
+      if (!folder.parent || folder.parent === "planner-1") return false;
+      const titleParts = folder.title
+        .split(/\s*(?:\/|｜|\|)\s*/)
+        .map((part) => part.trim().toLowerCase());
+      return prefixCategory.some((title) =>
+        titleParts.includes(title.toLowerCase()),
+      );
+    });
+    if (matchingChild) return matchingChild.id;
+  }
+
   const matchingDepartmentEntries = (entries: string[] | null) =>
     (entries ?? []).filter((entry) => {
       const { prefix } = parseDepartmentTagEntry(entry);

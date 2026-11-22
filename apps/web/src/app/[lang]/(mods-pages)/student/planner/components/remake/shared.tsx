@@ -83,6 +83,7 @@ export interface PlannerViewProps {
   };
   progress: Map<string, RequirementProgress>;
   pendingOnly: boolean;
+  onOpenFolderManagement: () => void;
   onOpenAddCourse: (folderId?: string, semesterId?: string) => void;
   onViewDetails: (item: ItemDocType) => void;
   onEdit: (item: ItemDocType) => void;
@@ -354,9 +355,11 @@ export function PlannerCourseRow({
 export const RequirementSummary = ({
   folder,
   progress,
+  onOpenFolderManagement,
 }: {
   folder: FolderDocType;
   progress?: RequirementProgress;
+  onOpenFolderManagement: () => void;
 }) => {
   const dict = useDictionary();
   const t = dict.planner.remake;
@@ -372,6 +375,21 @@ export const RequirementSummary = ({
       ? dict.planner.sidebar.coursesUnit
       : dict.course.credits;
   const remaining = progress?.remaining ?? Math.max(0, min - covered);
+
+  if (progress?.unset) {
+    return (
+      <span className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+        <span>{formatPlannerText(t.unsetRequirementProgress, { done })}</span>
+        <button
+          type="button"
+          className="font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+          onClick={onOpenFolderManagement}
+        >
+          {t.unsetCredits}
+        </button>
+      </span>
+    );
+  }
 
   return (
     <span className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">

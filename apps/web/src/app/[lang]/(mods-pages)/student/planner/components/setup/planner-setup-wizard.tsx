@@ -318,17 +318,20 @@ export function PlannerSetupWizard({
       return (selectedHostedTemplate?.payload.folders ?? []).map((folder) => ({
         id: folder.key,
         title: folder.title,
+        parent: folder.parentKey ?? "planner-1",
         order: folder.order,
       }));
     if (categoryChoice === "file")
       return (templateFolders ?? []).map((folder, index) => ({
         id: folder.id,
         title: folder.title,
+        parent: folder.parent,
         order: folder.order ?? index,
       }));
     return categoryDrafts.map((folder, index) => ({
       id: folder.id,
       title: folder.title,
+      parent: folder.parent,
       order: index,
     }));
   }, [categoryChoice, categoryDrafts, selectedHostedTemplate, templateFolders]);
@@ -442,7 +445,7 @@ export function PlannerSetupWizard({
           : defaultGraduationYear(safeEnrollmentYear);
       const planner: PlannerDataDocType = {
         id: "planner-1",
-        title: department.trim() || t.defaultPlannerTitle,
+        title: t.defaultPlannerTitle,
         department: department.trim(),
         enrollmentYear: safeEnrollmentYear,
         graduationYear: safeGraduationYear,
@@ -814,157 +817,166 @@ export function PlannerSetupWizard({
                   { value: "file" as const, label: "template" },
                   { value: "none" as const, label: "none" },
                 ].map(({ value: choice, label }) => (
-                  <Label
+                  <div
                     key={choice}
-                    htmlFor={`planner-setup-category-${choice}`}
-                    className="flex cursor-pointer items-start gap-3 rounded-md border border-border p-3"
+                    className="rounded-md border border-border px-3"
+                    style={{ paddingBlock: "0.625rem" }}
                   >
-                    <RadioGroupItem
-                      id={`planner-setup-category-${choice}`}
-                      value={choice}
-                      className="mt-1"
-                    />
-                    <span className="min-w-0">
-                      <span className="block text-sm font-medium">
-                        {t[`categoryChoice_${label}`]}
-                      </span>
-                      <span className="block text-xs leading-relaxed text-muted-foreground">
-                        {t[`categoryChoice_${label}_description`]}
-                      </span>
-                    </span>
-                  </Label>
-                ))}
-              </RadioGroup>
-
-              {categoryChoice === "default" && (
-                <div className="space-y-3 rounded-md border border-border p-3">
-                  {requirementPdf && (
-                    <a
-                      href={requirementPdf.pdfUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 text-sm text-primary underline underline-offset-4"
+                    <Label
+                      htmlFor={`planner-setup-category-${choice}`}
+                      className="flex cursor-pointer items-start gap-3"
                     >
-                      <FileText className="h-4 w-4" />
-                      {t.categoryPdf}
-                    </a>
-                  )}
-                  <div className="space-y-2">
-                    {categoryDrafts.map((folder) => (
-                      <div
-                        key={folder.id}
-                        className={`flex min-w-0 items-center gap-2 ${folder.parent !== "planner-1" ? "ml-4" : ""}`}
-                      >
-                        <span
-                          className={`h-2.5 w-2.5 shrink-0 rounded-full ${getFolderColorDotClass(folder.color)}`}
-                        />
-                        <Input
-                          value={folder.title}
+                      <RadioGroupItem
+                        id={`planner-setup-category-${choice}`}
+                        value={choice}
+                        className="mt-1"
+                      />
+                      <span className="min-w-0">
+                        <span className="block text-sm font-medium">
+                          {t[`categoryChoice_${label}`]}
+                        </span>
+                        <span className="block text-xs leading-relaxed text-muted-foreground">
+                          {t[`categoryChoice_${label}_description`]}
+                        </span>
+                      </span>
+                    </Label>
+
+                    {categoryChoice === choice && choice === "default" && (
+                      <div className="ml-6 mt-2 space-y-3 border-t border-border pt-2">
+                        {requirementPdf && (
+                          <a
+                            href={requirementPdf.pdfUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 text-sm text-primary underline underline-offset-4"
+                          >
+                            <FileText className="h-4 w-4" />
+                            {t.categoryPdf}
+                          </a>
+                        )}
+                        <div className="space-y-2">
+                          {categoryDrafts.map((folder) => (
+                            <div
+                              key={folder.id}
+                              className={`flex min-w-0 items-center gap-2 ${folder.parent !== "planner-1" ? "ml-4" : ""}`}
+                            >
+                              <span
+                                className={`h-2.5 w-2.5 shrink-0 rounded-full ${getFolderColorDotClass(folder.color)}`}
+                              />
+                              <Input
+                                value={folder.title}
+                                onChange={(event) =>
+                                  changeDraft(folder.id, {
+                                    title: event.target.value,
+                                  })
+                                }
+                                aria-label={t.categoryNameLabel}
+                                className="h-8 min-w-0 flex-1"
+                              />
+                              <Input
+                                type="number"
+                                min="0"
+                                value={folder.min}
+                                onChange={(event) =>
+                                  changeDraft(folder.id, {
+                                    min: event.target.value,
+                                  })
+                                }
+                                aria-label={t.minimumCreditsLabel}
+                                placeholder={t.minimumCreditsPlaceholder}
+                                className="h-8 w-24 shrink-0"
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 shrink-0"
+                                onClick={() => removeCategory(folder.id)}
+                                aria-label={t.removeCategory}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={addCategory}
+                        >
+                          <Plus className="mr-1.5 h-4 w-4" />
+                          {t.addCategory}
+                        </Button>
+                      </div>
+                    )}
+
+                    {categoryChoice === choice && choice === "hosted" && (
+                      <div className="ml-6 mt-2 space-y-2 border-t border-border pt-2">
+                        {selectedHostedTemplate ? (
+                          <p className="text-sm text-muted-foreground">
+                            {formatPlannerText(t.hostedTemplateSelected, {
+                              name: selectedHostedTemplate.title,
+                            })}
+                          </p>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">
+                            {t.hostedTemplateNotSelected}
+                          </p>
+                        )}
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setTemplateGalleryOpen(true)}
+                        >
+                          {selectedHostedTemplate
+                            ? t.changeHostedTemplate
+                            : t.chooseHostedTemplate}
+                        </Button>
+                        {templateError && !selectedHostedTemplate && (
+                          <p className="text-xs text-red-500">
+                            {t.hostedTemplateRequired}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {categoryChoice === choice && choice === "file" && (
+                      <div className="ml-6 mt-2 space-y-2 border-t border-border pt-2">
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept=".json,application/json"
+                          className="hidden"
                           onChange={(event) =>
-                            changeDraft(folder.id, {
-                              title: event.target.value,
-                            })
+                            void selectTemplateFile(event.target.files?.[0])
                           }
-                          aria-label={t.categoryNameLabel}
-                          className="h-8 min-w-0 flex-1"
-                        />
-                        <Input
-                          type="number"
-                          min="0"
-                          value={folder.min}
-                          onChange={(event) =>
-                            changeDraft(folder.id, { min: event.target.value })
-                          }
-                          aria-label={t.minimumCreditsLabel}
-                          placeholder={t.minimumCreditsPlaceholder}
-                          className="h-8 w-24 shrink-0"
                         />
                         <Button
                           type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 shrink-0"
-                          onClick={() => removeCategory(folder.id)}
-                          aria-label={t.removeCategory}
+                          variant="outline"
+                          onClick={() => fileInputRef.current?.click()}
                         >
-                          <Trash2 className="h-4 w-4" />
+                          {t.chooseTemplateFile}
                         </Button>
+                        {templateName && (
+                          <p className="text-xs text-muted-foreground">
+                            {formatPlannerText(t.templateLoaded, {
+                              name: templateName,
+                              count: templateFolders?.length ?? 0,
+                            })}
+                          </p>
+                        )}
+                        {templateError && (
+                          <p className="text-xs text-red-500">
+                            {t.templateError}
+                          </p>
+                        )}
                       </div>
-                    ))}
+                    )}
                   </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={addCategory}
-                  >
-                    <Plus className="mr-1.5 h-4 w-4" />
-                    {t.addCategory}
-                  </Button>
-                </div>
-              )}
-
-              {categoryChoice === "hosted" && (
-                <div className="space-y-2 rounded-md border border-border p-3">
-                  {selectedHostedTemplate ? (
-                    <p className="text-sm text-muted-foreground">
-                      {formatPlannerText(t.hostedTemplateSelected, {
-                        name: selectedHostedTemplate.title,
-                      })}
-                    </p>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      {t.hostedTemplateNotSelected}
-                    </p>
-                  )}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setTemplateGalleryOpen(true)}
-                  >
-                    {selectedHostedTemplate
-                      ? t.changeHostedTemplate
-                      : t.chooseHostedTemplate}
-                  </Button>
-                  {templateError && !selectedHostedTemplate && (
-                    <p className="text-xs text-red-500">
-                      {t.hostedTemplateRequired}
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {categoryChoice === "file" && (
-                <div className="space-y-2 rounded-md border border-border p-3">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".json,application/json"
-                    className="hidden"
-                    onChange={(event) =>
-                      void selectTemplateFile(event.target.files?.[0])
-                    }
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    {t.chooseTemplateFile}
-                  </Button>
-                  {templateName && (
-                    <p className="text-xs text-muted-foreground">
-                      {formatPlannerText(t.templateLoaded, {
-                        name: templateName,
-                        count: templateFolders?.length ?? 0,
-                      })}
-                    </p>
-                  )}
-                  {templateError && (
-                    <p className="text-xs text-red-500">{t.templateError}</p>
-                  )}
-                </div>
-              )}
+                ))}
+              </RadioGroup>
             </div>
           )}
 

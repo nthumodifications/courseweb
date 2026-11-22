@@ -594,6 +594,7 @@ function GraduationPlanner() {
     overall,
     progress: folderProgress,
     pendingOnly,
+    onOpenFolderManagement: () => setFolderManagementOpen(true),
     onOpenAddCourse: openAddCourse,
     onViewDetails: openDetails,
     onEdit: openEdit,
@@ -602,8 +603,11 @@ function GraduationPlanner() {
     onChangeSemester: handleChangeSemester,
     onSetFailed: handleSetFailed,
   };
+  const plannerTitle = plannerInfo?.title || t.titleFallback;
   const subtitleParts = [
-    plannerInfo?.department,
+    plannerInfo?.department && plannerInfo.department !== plannerTitle
+      ? plannerInfo.department
+      : undefined,
     plannerInfo?.enrollmentYear
       ? formatPlannerText(t.subtitleEnrollment, {
           enrollmentYear: plannerInfo.enrollmentYear,
@@ -626,7 +630,7 @@ function GraduationPlanner() {
           <div className="flex min-w-0 items-start justify-between gap-2 md:block">
             <div className="min-w-0">
               <h1 className="truncate text-lg font-bold md:text-xl">
-                {plannerInfo?.title || t.titleFallback}
+                {plannerTitle}
               </h1>
               {subtitleParts.length > 0 && (
                 <p className="whitespace-normal text-xs text-muted-foreground sm:text-sm">

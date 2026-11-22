@@ -2653,6 +2653,8 @@
       "remainingPlan": "還差 {count} 學分還沒排進計畫",
       "remainingShort": "還差 {count}",
       "satisfied": "已修畢",
+      "unsetRequirementProgress": "{done} 學分",
+      "unsetCredits": "未設定學分",
       "plannedCoverage": "已排滿",
       "requirement": "{covered} / {range} {unit}",
       "missingCount": "還差 {count}",

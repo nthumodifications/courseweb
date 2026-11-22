@@ -253,6 +253,7 @@ export function SemesterBoardView(props: SemesterBoardViewProps) {
               <RequirementSummary
                 folder={folder}
                 progress={props.progress.get(folder.id)}
+                onOpenFolderManagement={props.onOpenFolderManagement}
               />
             </div>
           ))}

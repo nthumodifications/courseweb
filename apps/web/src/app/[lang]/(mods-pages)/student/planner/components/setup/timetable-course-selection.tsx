@@ -90,7 +90,7 @@ export function selectedHistoryCourses(
 interface TimetableCourseSelectionProps {
   terms: TimetableHistoryTerm[];
   currentSemesterId: string;
-  folders: Pick<FolderDocType, "id" | "title" | "order">[];
+  folders: Pick<FolderDocType, "id" | "title" | "order" | "parent">[];
   department: string;
   enrollmentYear: string;
   selectedTermIds: Set<string>;

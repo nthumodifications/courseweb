@@ -15,7 +15,7 @@ export interface ProgressFolder {
   id: string;
   parent: string | null;
   min: number;
-  max: number;
+  max: number | null;
   metric: "credits" | "courses";
   requireChildValidation: boolean;
 }
@@ -25,8 +25,9 @@ export interface RequirementProgress {
   inProgress: number;
   planned: number;
   min: number;
-  max: number;
+  max: number | null;
   remaining: number;
+  unset: boolean;
   satisfied: boolean;
 }
 
@@ -134,7 +135,8 @@ export const deriveFolderProgress = (
         min: folder.min,
         max: folder.max,
         remaining: Math.max(0, folder.min),
-        satisfied: folder.min <= 0,
+        unset: false,
+        satisfied: false,
       };
     }
 
@@ -162,10 +164,21 @@ export const deriveFolderProgress = (
       else planned += amount;
     }
 
-    const remaining = Math.max(0, folder.min - done - inProgress - planned);
+    const childFolders = childrenByParent.get(folder.id) ?? [];
+    const noConfiguredMinimumOrMaximum =
+      folder.min <= 0 && (folder.max == null || folder.max <= 0);
+    const allChildrenUnset =
+      childFolders.length > 0 &&
+      childFolders.every((child) => derive(child).unset);
+    const unset =
+      noConfiguredMinimumOrMaximum &&
+      (childFolders.length === 0 || allChildrenUnset);
+    const remaining = unset
+      ? 0
+      : Math.max(0, folder.min - done - inProgress - planned);
     const childValidationPassed =
       !folder.requireChildValidation ||
-      (childrenByParent.get(folder.id) ?? []).every(
+      childFolders.every(
         (child) => derive(foldersById.get(child.id) ?? child).satisfied,
       );
     const progress = {
@@ -175,7 +188,8 @@ export const deriveFolderProgress = (
       min: folder.min,
       max: folder.max,
       remaining,
-      satisfied: remaining === 0 && childValidationPassed,
+      unset,
+      satisfied: !unset && remaining === 0 && childValidationPassed,
     };
 
     visiting.delete(folder.id);

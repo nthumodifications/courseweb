@@ -165,7 +165,7 @@ export function PlannerTour({
     <>
       <button
         type="button"
-        aria-label={t.skip}
+        aria-label={dict.planner.common.close}
         className="fixed inset-0 z-[80] cursor-default bg-black/35"
         onClick={onDone}
       />

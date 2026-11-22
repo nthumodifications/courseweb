@@ -79,6 +79,54 @@ describe("planner first-run setup helpers", () => {
     ).toBe("_unsorted");
   });
 
+  test("maps language, PE, and college Chinese course codes to existing child categories", () => {
+    const folders = [
+      { id: "core", title: "共同必修", parent: "planner-1" },
+      { id: "english", title: "英文 / English", parent: "core" },
+      { id: "pe", title: "PE", parent: "core" },
+      { id: "chinese", title: "大學中文", parent: "core" },
+      { id: "root-english", title: "English", parent: "planner-1" },
+    ];
+    const noDepartmentTags = {
+      ge_type: null,
+      compulsory_for: null,
+      elective_for: null,
+    };
+
+    expect(
+      guessCourseCategory(
+        { ...noDepartmentTags, course: "LANG1101" },
+        "CS",
+        folders,
+        "112",
+      ),
+    ).toBe("english");
+    expect(
+      guessCourseCategory(
+        { ...noDepartmentTags, course: "PE1001" },
+        "CS",
+        folders,
+        "112",
+      ),
+    ).toBe("pe");
+    expect(
+      guessCourseCategory(
+        { ...noDepartmentTags, course: "CL1001" },
+        "CS",
+        folders,
+        "112",
+      ),
+    ).toBe("chinese");
+    expect(
+      guessCourseCategory(
+        { ...noDepartmentTags, course: "LANG1101" },
+        "CS",
+        [folders[0]!, folders[4]!],
+        "112",
+      ),
+    ).toBe("_unsorted");
+  });
+
   test("detects department tags from real audience tag shapes", () => {
     expect(
       detectDepartmentTag(
