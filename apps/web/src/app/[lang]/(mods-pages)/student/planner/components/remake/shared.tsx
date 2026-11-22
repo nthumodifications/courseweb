@@ -308,7 +308,7 @@ export function PlannerCourseRow({
               type="button"
               variant="ghost"
               size={compact ? "icon" : "sm"}
-              className={`${compact ? "h-7 w-7 px-1" : "h-7 min-w-[4.5rem] gap-1 px-2"} text-xs ${!item.semester && !compact ? "text-destructive" : status === "in-progress" ? "text-primary" : "text-muted-foreground"}`}
+              className={`${compact ? "h-7 w-7 px-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 [@media(hover:none)]:opacity-100" : "h-7 min-w-[4.5rem] gap-1 px-2"} text-xs ${!item.semester && !compact ? "text-destructive" : status === "in-progress" ? "text-primary" : "text-muted-foreground"}`}
               aria-label={`${t.changeTerm}: ${term}`}
               title={`${t.changeTerm}: ${term}`}
             >

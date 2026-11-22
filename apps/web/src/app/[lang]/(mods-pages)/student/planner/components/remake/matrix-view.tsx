@@ -1,4 +1,3 @@
-import { Button } from "@courseweb/ui";
 import { useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import type { ReactNode } from "react";
@@ -18,6 +17,10 @@ import { effectiveStatus, normalizeSemesterId } from "../../lib/progress";
 interface MatrixViewProps extends PlannerViewProps {
   termIds: string[];
 }
+
+const MATRIX_LABEL_COLUMN_WIDTH = 250;
+const MATRIX_TERM_COLUMN_WIDTH = 128;
+const MATRIX_END_PADDING = 16;
 
 export function MatrixView(props: MatrixViewProps) {
   const dict = useDictionary();
@@ -94,7 +97,10 @@ export function MatrixView(props: MatrixViewProps) {
         : visibleItems.filter((item) => item.parent === folder.id);
     const progress = props.progress.get(folder.id);
     const rowStyle = {
-      gridTemplateColumns: `250px repeat(${props.termIds.length}, 100px) 128px`,
+      gridTemplateColumns: `${MATRIX_LABEL_COLUMN_WIDTH}px repeat(${props.termIds.length}, ${MATRIX_TERM_COLUMN_WIDTH}px) ${MATRIX_TERM_COLUMN_WIDTH}px`,
+      width:
+        MATRIX_LABEL_COLUMN_WIDTH +
+        (props.termIds.length + 1) * MATRIX_TERM_COLUMN_WIDTH,
     };
     return (
       <div
@@ -153,7 +159,7 @@ export function MatrixView(props: MatrixViewProps) {
                   <button
                     key={item.uuid}
                     type="button"
-                    className={`mb-1 block w-full truncate rounded px-1.5 py-1 text-left text-xs ${status === "failed" ? "border border-destructive/60 bg-destructive text-destructive-foreground line-through" : status === "planned" ? "border border-dashed border-primary/40 bg-primary/5" : "bg-muted/50 hover:bg-muted"}`}
+                    className={`mb-1 block w-full truncate rounded px-1.5 py-1 text-left text-xs ${status === "failed" ? "border border-destructive/30 bg-destructive/10 text-destructive line-through" : status === "planned" ? "border border-dashed border-primary/40 bg-primary/5" : "bg-muted/50 hover:bg-muted"}`}
                     title={decodeCourseText(item.title)}
                     onClick={() => props.onViewDetails(item)}
                   >
@@ -179,7 +185,7 @@ export function MatrixView(props: MatrixViewProps) {
                 <button
                   key={item.uuid}
                   type="button"
-                  className={`mb-1 block w-full truncate rounded px-1.5 py-1 text-left text-xs ${status === "failed" ? "border border-destructive/60 bg-destructive text-destructive-foreground line-through" : "border border-destructive/30 bg-destructive/10 text-foreground"}`}
+                  className={`mb-1 block w-full truncate rounded px-1.5 py-1 text-left text-xs ${status === "failed" ? "border border-destructive/30 bg-destructive/10 text-destructive line-through" : "border border-dashed border-border bg-muted/20 text-foreground"}`}
                   title={decodeCourseText(item.title)}
                   onClick={() => props.onViewDetails(item)}
                 >
@@ -195,7 +201,12 @@ export function MatrixView(props: MatrixViewProps) {
   const mobileStrip = (folder: FolderDocType) => {
     const items = folderItems(folder.id);
     return (
-      <div className="mt-1.5 grid grid-flow-col auto-cols-fr gap-1 overflow-x-auto">
+      <div
+        className="mt-1.5 grid min-w-0 gap-1"
+        style={{
+          gridTemplateColumns: `repeat(${props.termIds.length + 1}, minmax(0, 1fr))`,
+        }}
+      >
         {props.termIds.map((termId) => {
           const count = items.filter(
             (item) =>
@@ -209,7 +220,7 @@ export function MatrixView(props: MatrixViewProps) {
             <button
               key={termId}
               type="button"
-              className={`flex h-6 min-w-8 items-center justify-center rounded text-xs ${count ? (current ? "bg-primary/60 text-primary-foreground" : "bg-primary text-primary-foreground") : "bg-muted"}`}
+              className={`flex h-6 min-w-0 items-center justify-center rounded text-xs ${count ? (current ? "bg-primary/60 text-primary-foreground" : "bg-primary text-primary-foreground") : "bg-muted"}`}
               title={formatPlannerSemester(termId)}
               aria-label={`${formatPlannerSemester(termId)}: ${count}`}
               onClick={() => {
@@ -229,7 +240,7 @@ export function MatrixView(props: MatrixViewProps) {
         })}
         <button
           type="button"
-          className={`flex h-6 min-w-8 items-center justify-center rounded text-xs ${items.some((item) => !item.semester) ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"}`}
+          className={`flex h-6 min-w-0 items-center justify-center rounded text-xs ${items.some((item) => !item.semester) ? "border border-dashed border-border bg-muted/20 text-muted-foreground" : "bg-muted text-muted-foreground"}`}
           title={t.noneTerm}
           aria-label={`${t.noneTerm}: ${items.filter((item) => !item.semester).length}`}
           onClick={() =>
@@ -271,7 +282,7 @@ export function MatrixView(props: MatrixViewProps) {
                 <button
                   key={item.uuid}
                   type="button"
-                  className="block w-full rounded px-2 py-1 text-left text-sm hover:bg-muted"
+                  className={`block w-full rounded px-2 py-1 text-left text-sm ${effectiveStatus(item, props.now) === "failed" ? "bg-destructive/10 text-destructive" : "hover:bg-muted"}`}
                   title={decodeCourseText(item.title)}
                   onClick={() => props.onViewDetails(item)}
                 >
@@ -293,11 +304,12 @@ export function MatrixView(props: MatrixViewProps) {
             </div>
             {unscheduled.map((item) => {
               const title = splitCourseTitle(item.title);
+              const status = effectiveStatus(item, props.now);
               return (
                 <button
                   key={item.uuid}
                   type="button"
-                  className="block w-full rounded bg-destructive/5 px-2 py-1 text-left text-sm hover:bg-destructive/10"
+                  className={`block w-full rounded px-2 py-1 text-left text-sm ${status === "failed" ? "bg-destructive/10 text-destructive" : "border border-dashed border-border bg-muted/20 hover:bg-muted/40"}`}
                   title={decodeCourseText(item.title)}
                   onClick={() => props.onViewDetails(item)}
                 >
@@ -319,17 +331,22 @@ export function MatrixView(props: MatrixViewProps) {
   if (isPhone) {
     return (
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <div id="planner-matrix-scroll" className="overflow-x-auto px-4 pt-2">
-          <div className="grid min-w-[400px] grid-flow-col auto-cols-fr gap-1">
+        <div id="planner-matrix-scroll" className="px-4 pt-2">
+          <div
+            className="grid min-w-0 gap-1"
+            style={{
+              gridTemplateColumns: `repeat(${props.termIds.length + 1}, minmax(0, 1fr))`,
+            }}
+          >
             {props.termIds.map((termId) => (
               <span
                 key={termId}
-                className={`text-center text-[10px] ${normalizeSemesterId(termId) === normalizeSemesterId(props.now) ? "font-medium text-primary" : "text-muted-foreground"}`}
+                className={`min-w-0 whitespace-nowrap text-center text-[9px] ${normalizeSemesterId(termId) === normalizeSemesterId(props.now) ? "font-medium text-primary" : "text-muted-foreground"}`}
               >
                 {formatPlannerSemester(termId)}
               </span>
             ))}
-            <span className="text-center text-[10px] text-muted-foreground">
+            <span className="min-w-0 whitespace-nowrap text-center text-[9px] text-muted-foreground">
               {t.noneTerm}
             </span>
           </div>
@@ -381,15 +398,6 @@ export function MatrixView(props: MatrixViewProps) {
             );
           })}
         </div>
-        <div className="px-4 py-3">
-          <Button
-            type="button"
-            size="sm"
-            onClick={() => props.onOpenAddCourse()}
-          >
-            {t.addCourse}
-          </Button>
-        </div>
       </div>
     );
   }
@@ -409,11 +417,22 @@ export function MatrixView(props: MatrixViewProps) {
         id="planner-matrix-scroll"
         className="h-full overflow-auto overscroll-contain"
       >
-        <div className="min-w-max pr-4">
+        <div
+          className="min-w-max"
+          style={{
+            width:
+              MATRIX_LABEL_COLUMN_WIDTH +
+              (props.termIds.length + 1) * MATRIX_TERM_COLUMN_WIDTH +
+              MATRIX_END_PADDING,
+          }}
+        >
           <div
             className="sticky top-0 z-10 grid h-10 border-b border-border bg-background"
             style={{
-              gridTemplateColumns: `250px repeat(${props.termIds.length}, 100px) 128px`,
+              gridTemplateColumns: `${MATRIX_LABEL_COLUMN_WIDTH}px repeat(${props.termIds.length}, ${MATRIX_TERM_COLUMN_WIDTH}px) ${MATRIX_TERM_COLUMN_WIDTH}px`,
+              width:
+                MATRIX_LABEL_COLUMN_WIDTH +
+                (props.termIds.length + 1) * MATRIX_TERM_COLUMN_WIDTH,
             }}
           >
             <div className="sticky left-0 z-20 flex items-center bg-background px-3 text-xs font-medium text-muted-foreground">
@@ -442,7 +461,10 @@ export function MatrixView(props: MatrixViewProps) {
           <div
             className="sticky bottom-0 z-10 grid h-10 border-t border-border bg-muted"
             style={{
-              gridTemplateColumns: `250px repeat(${props.termIds.length}, 100px) 128px`,
+              gridTemplateColumns: `${MATRIX_LABEL_COLUMN_WIDTH}px repeat(${props.termIds.length}, ${MATRIX_TERM_COLUMN_WIDTH}px) ${MATRIX_TERM_COLUMN_WIDTH}px`,
+              width:
+                MATRIX_LABEL_COLUMN_WIDTH +
+                (props.termIds.length + 1) * MATRIX_TERM_COLUMN_WIDTH,
             }}
           >
             <div className="sticky left-0 z-20 flex items-center bg-muted px-3 text-xs font-medium">

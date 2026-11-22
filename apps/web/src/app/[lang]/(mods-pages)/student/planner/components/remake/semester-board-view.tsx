@@ -152,7 +152,7 @@ function UnscheduledCourse({
 >) {
   const category = getPlannerItemCategory(item, props.folders);
   return (
-    <div className="rounded-md bg-muted/50 px-2">
+    <div className="min-w-0 rounded-md bg-muted/50 px-2">
       <PlannerCourseRow
         item={item}
         now={props.now}
@@ -210,7 +210,7 @@ export function SemesterBoardView(props: SemesterBoardViewProps) {
   const renderPendingRail = (mobile: boolean) => (
     <aside
       id={mobile ? "planner-unscheduled-mobile" : "planner-unscheduled"}
-      className={`${mobile ? "mb-2 border-b border-border pb-3 lg:hidden" : "hidden w-60 shrink-0 border-l border-border p-4 lg:block"}`}
+      className={`${mobile ? "mb-2 border-b border-border pb-3 lg:hidden" : "hidden w-[280px] shrink-0 border-l border-border p-4 lg:block"}`}
     >
       <div className="mb-1 flex items-center gap-2">
         <h2 className="font-medium">{t.unscheduled}</h2>
@@ -219,7 +219,7 @@ export function SemesterBoardView(props: SemesterBoardViewProps) {
         </span>
       </div>
       <p className="mb-2 text-xs text-muted-foreground">{t.dragHint}</p>
-      <div className="space-y-1.5">
+      <div className="min-w-0 space-y-1.5">
         {unscheduledItems.map((item) => (
           <UnscheduledCourse key={item.uuid} item={item} {...props} />
         ))}
