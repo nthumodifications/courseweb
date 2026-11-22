@@ -49,6 +49,7 @@ export async function validateApiKey(
           userId: true,
           name: true,
           email: true,
+          banned: true,
         },
       },
     },
@@ -67,6 +68,14 @@ export async function validateApiKey(
   // Check if the API key has expired
   if (apiKeyRecord.expiresAt && apiKeyRecord.expiresAt < new Date()) {
     throw new HTTPException(401, { message: "API key has expired" });
+  }
+
+  // A suspension covers every credential the account holds, not only the
+  // OAuth tokens that are deleted when it is applied.
+  if (apiKeyRecord.user.banned) {
+    throw new HTTPException(403, {
+      message: "This account has been suspended",
+    });
   }
 
   // Check if the API key has the required scope (if specified)

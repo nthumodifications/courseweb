@@ -822,6 +822,7 @@ const getVerifiedCalendarShareToken = async (
       user: {
         select: {
           userId: true,
+          banned: true,
         },
       },
     },
@@ -830,6 +831,8 @@ const getVerifiedCalendarShareToken = async (
   if (!shareToken) rejectUnauthorized(c);
   const verifiedShareToken = shareToken as NonNullable<typeof shareToken>;
   if (verifiedShareToken.revokedAt) rejectUnauthorized(c);
+  // Feed links outlive sessions, so a suspension has to be checked here too.
+  if (verifiedShareToken.user.banned) rejectUnauthorized(c);
   if (
     verifiedShareToken.expiresAt &&
     verifiedShareToken.expiresAt < new Date()

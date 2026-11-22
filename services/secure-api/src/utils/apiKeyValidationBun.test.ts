@@ -195,3 +195,42 @@ test("should reject API key with insufficient scope", async () => {
     expect((error as HTTPException).message).toContain("scope");
   }
 });
+
+test("should reject an API key that belongs to a suspended account", async () => {
+  mockFindUnique.mockResolvedValue({
+    id: "test-id",
+    key: "test-key",
+    name: "Test API Key",
+    scopes: ["calendar:read"],
+    isRevoked: false,
+    expiresAt: null,
+    userId: "user-1",
+    user: {
+      userId: "user-1",
+      name: "Test User",
+      email: "test@example.com",
+      banned: true,
+    },
+    createdAt: new Date(),
+  });
+
+  const error = await validateApiKey("test-key", "calendar:read").then(
+    () => null,
+    (thrown: unknown) => thrown,
+  );
+
+  expect(error).toBeInstanceOf(HTTPException);
+  expect((error as HTTPException).status).toBe(403);
+  // A refused key must not look recently used.
+  expect(mockUpdate).not.toHaveBeenCalled();
+});
+
+test("should ask the database whether the owner of the key is suspended", async () => {
+  mockFindUnique.mockResolvedValue(null);
+
+  await validateApiKey("test-key").catch(() => undefined);
+
+  expect(mockFindUnique.mock.calls[0]?.[0]).toMatchObject({
+    include: { user: { select: { banned: true } } },
+  });
+});
