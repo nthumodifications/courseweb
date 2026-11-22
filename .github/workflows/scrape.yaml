@@ -9,6 +9,10 @@ on:
         description: "Semester to sync; leave empty for automatic selection"
         required: false
 
+# Jobs get a read-only token unless they ask for more below.
+permissions:
+  contents: read
+
 env:
   IMAGE_NAME: ghcr.io/${{ github.repository }}
 
@@ -24,7 +28,7 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
-          bun-version: latest
+          bun-version-file: package.json
 
       - name: Install dependencies
         run: bun install --frozen-lockfile --ignore-scripts
