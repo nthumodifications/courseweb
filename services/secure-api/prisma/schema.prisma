@@ -43,6 +43,10 @@ model User {
   shortNameRevisions    CourseShortNameRevision[]
   reviewReports         CourseReviewReport[] @relation("CourseReviewReportReporter")
   resolvedReviewReports CourseReviewReport[] @relation("CourseReviewReportResolver")
+  plannerTemplates                PlannerTemplate[]       @relation("PlannerTemplateAuthor")
+  plannerTemplateReports          PlannerTemplateReport[] @relation("PlannerTemplateReportReporter")
+  plannerTemplateUses             PlannerTemplateUse[]
+  resolvedPlannerTemplateReports  PlannerTemplateReport[] @relation("PlannerTemplateReportResolver")
   pushSubscriptions     PushSubscription[]
 }
 
@@ -300,6 +304,62 @@ model CourseReviewReport {
   @@index([resolvedAt])
 }
 
+enum PlannerTemplateStatus {
+  VISIBLE
+  HIDDEN
+}
+
+enum PlannerTemplateReportReason {
+  WRONG_INFO
+  SPAM
+  OFFENSIVE
+  OTHER
+}
+
+model PlannerTemplate {
+  id              String                  @id @default(uuid())
+  authorId        String
+  title           String
+  description     String                  @default("")
+  department      String
+  entranceYear    String
+  requiredCredits Int
+  payload         Json
+  folderCount     Int
+  courseCount     Int
+  official        Boolean                 @default(false)
+  status          PlannerTemplateStatus   @default(VISIBLE)
+  useCount        Int                     @default(0)
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+  author          User                    @relation("PlannerTemplateAuthor", fields: [authorId], references: [userId], onDelete: Cascade)
+  reports         PlannerTemplateReport[]
+  uses            PlannerTemplateUse[]
+
+  @@index([department, entranceYear])
+  @@index([authorId])
+  @@map("planner_templates")
+}
+
+model PlannerTemplateReport {
+  id           String                      @id @default(uuid())
+  templateId   String
+  reason       PlannerTemplateReportReason
+  note         String?
+  reporterId   String
+  createdAt    DateTime                    @default(now())
+  resolvedAt   DateTime?
+  resolvedById String?
+  template     PlannerTemplate             @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  reporter     User                        @relation("PlannerTemplateReportReporter", fields: [reporterId], references: [userId], onDelete: Cascade)
+  resolvedBy   User?                       @relation("PlannerTemplateReportResolver", fields: [resolvedById], references: [userId], onDelete: SetNull)
+
+  @@unique([templateId, reporterId])
+  @@index([templateId])
+  @@index([resolvedAt])
+  @@map("planner_template_reports")
+}
+
 enum CourseShortNameIdentityType {
   MODULE
   COURSE_CODE
@@ -343,4 +403,18 @@ model CourseShortNameRevision {
   @@index([entryId, createdAt])
   @@index([editorId, createdAt])
   @@map("course_short_name_revisions")
+}
+
+// One row per signed-in user who applied a template, so useCount (which ranks
+// templates) cannot be inflated by repeated or anonymous requests.
+model PlannerTemplateUse {
+  templateId String
+  userId     String
+  createdAt  DateTime        @default(now())
+  template   PlannerTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  user       User            @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@id([templateId, userId])
+  @@index([userId])
+  @@map("planner_template_uses")
 }

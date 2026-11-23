@@ -180,6 +180,9 @@ const AdminReviewsPage = lazyWithRetry(
 const AdminCourseShortNamesPage = lazyWithRetry(
   () => import("@/app/[lang]/admin/course-short-names/page"),
 );
+const AdminPlannerTemplatesPage = lazyWithRetry(
+  () => import("@/app/[lang]/admin/planner-templates/page"),
+);
 
 // Separate layout page
 const WaitlistPage = lazyWithRetry(() => import("@/app/[lang]/waitlist/page"));
@@ -695,6 +698,10 @@ export const appRoutes = [
               {
                 path: "course-short-names",
                 element: <AdminCourseShortNamesPage />,
+              },
+              {
+                path: "planner-templates",
+                element: <AdminPlannerTemplatesPage />,
               },
               { path: "clients", element: <AdminClientsPage /> },
               { path: "audit", element: <AdminAuditPage /> },

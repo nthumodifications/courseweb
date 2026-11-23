@@ -1,16 +1,17 @@
-import { useState, useEffect } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@courseweb/ui";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Button,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  Tabs,
+  TabsList,
+  TabsTrigger,
 } from "@courseweb/ui";
 import { v4 as uuidv4 } from "uuid";
 import { useRxCollection } from "rxdb-hooks";
-import { useMediaQuery } from "usehooks-ts";
-import useDictionary from "@/dictionaries/useDictionary";
 import {
   DndContext,
   PointerSensor,
@@ -19,96 +20,203 @@ import {
   useSensors,
   type DragEndEvent,
 } from "@dnd-kit/core";
-import { FolderTree, BookOpen, CalendarDays } from "lucide-react";
-
-// Import data functions
-import { ensureUnsortedFolder, getFolders } from "./data/folders";
 import {
-  updateCourseItem,
-  updateCourseStatus,
-  updateCourseSemester,
-} from "./data/courses";
-import { getSemesters } from "./data/semesters";
-import {
-  getPlannerData,
-  calculateCompletedCredits,
-  calculateInProgressCredits,
-  calculatePlannedCredits,
-  calculateProgressPercentage,
-} from "./data/planner";
-
-// Import types
+  CalendarRange,
+  CircleHelp,
+  FolderCog,
+  Grid2X2,
+  ListChecks,
+  Plus,
+  Settings2,
+  TriangleAlert,
+  FileText,
+} from "lucide-react";
+import useDictionary from "@/dictionaries/useDictionary";
+import { useDefaultSemesterId } from "@/hooks/useSemesters";
+import { toPrettySemester } from "@/helpers/semester";
+import type { CourseSyllabusView } from "@/config/supabase";
+import type { CourseStatus } from "./types";
 import {
   FolderDocType,
   ItemDocType,
   PlannerDataDocType,
   SemesterDocType,
 } from "./rxdb";
-import { CourseStatus } from "./types";
-import { MinimalCourse } from "@/types/courses";
-
-// Import components
-import { FolderNavigation } from "./components/sidebar/folder-navigation";
-import { CourseList } from "./components/course-list";
-import { CourseListHeader } from "./components/course-list/course-list-header";
-import { CourseListEmpty } from "./components/course-list/course-list-empty";
-import { SemesterHeader } from "./components/semester/semester-header";
-import { SemesterPlanning } from "./SemesterPlanning";
+import { ensureUnsortedFolder, getFolders } from "./data/folders";
+import { getSemesters } from "./data/semesters";
+import { getPlannerData } from "./data/planner";
+import { updateCourseItem, updateCourseSemester } from "./data/courses";
+import {
+  effectiveStatus,
+  deriveFolderProgress,
+  deriveOverallProgress,
+} from "./lib/progress";
+import { formatPlannerText } from "./components/remake/shared";
+import { ChecklistView } from "./components/remake/checklist-view";
+import { SemesterBoardView } from "./components/remake/semester-board-view";
+import { MatrixView } from "./components/remake/matrix-view";
 import { FolderManagement } from "./folder-management";
 import { SemesterManagement } from "./semester-management";
 import { PlannerSettings } from "./planner-settings";
 import { CourseDetailsDialog } from "./components/dialogs/course-details-dialog";
 import { CourseEditDialog } from "./components/dialogs/course-edit-dialog";
-import { BulkActionsMenu } from "./components/bulk-actions/bulk-actions-menu";
-import { CourseSearchDialog } from "./components/dialogs/course-search-dialog";
+import { TemplateGalleryDialog } from "./components/dialogs/template-gallery-dialog";
+import { PlannerAddCourseDialog } from "./components/dialogs/planner-add-course-dialog";
+import { PlannerSetupWizard } from "./components/setup/planner-setup-wizard";
+import { PlannerTour } from "./components/setup/planner-tour";
+import { TimetableImportDialog } from "./components/setup/timetable-import-dialog";
+
+type PlannerView = "checklist" | "board" | "matrix";
+
+const normalizeTermId = (id: string) => {
+  const match = id.match(/^(\d{3})-([1-3])$/);
+  return match ? `${match[1]}${match[2]}0` : id;
+};
+
+function PlannerProgressStrip({
+  done,
+  inProgress,
+  planned,
+  required,
+  remaining,
+}: {
+  done: number;
+  inProgress: number;
+  planned: number;
+  required: number;
+  remaining: number;
+}) {
+  const dict = useDictionary();
+  const t = dict.planner.remake;
+  const percentage = (value: number) =>
+    required > 0 ? Math.min(100, Math.max(0, (value / required) * 100)) : 0;
+
+  return (
+    <div
+      data-tour="progress"
+      className="border-b border-border px-4 py-2 md:px-6"
+    >
+      <div className="flex flex-wrap items-center gap-3">
+        <span className="shrink-0 text-sm font-bold">
+          {formatPlannerText(t.requiredProgress, { done, required })}
+        </span>
+        <div
+          className="flex h-2 min-w-32 flex-1 overflow-hidden rounded-full bg-muted"
+          role="img"
+          aria-label={formatPlannerText(t.requiredProgress, { done, required })}
+        >
+          <span
+            className="h-full bg-primary"
+            style={{ width: `${percentage(done)}%` }}
+          />
+          <span
+            className="h-full bg-primary/55"
+            style={{ width: `${percentage(inProgress)}%` }}
+          />
+          <span
+            className="h-full"
+            style={{
+              width: `${percentage(planned)}%`,
+              backgroundImage:
+                "repeating-linear-gradient(135deg, hsl(var(--primary) / .35) 0 4px, transparent 4px 7px)",
+            }}
+          />
+        </div>
+        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          <span>{formatPlannerText(t.doneLegend, { count: done })}</span>
+          <span>
+            {formatPlannerText(t.inProgressLegend, { count: inProgress })}
+          </span>
+          <span>{formatPlannerText(t.plannedLegend, { count: planned })}</span>
+        </div>
+        {remaining > 0 && (
+          <span className="ml-auto text-xs font-medium text-red-500">
+            {formatPlannerText(t.remainingPlan, { count: remaining })}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function EmptyPlanner({
+  onImportTemplate,
+  onOpenTemplates,
+  onOpenAddCourse,
+  onStartSetup,
+}: {
+  onImportTemplate: () => void;
+  onOpenTemplates: () => void;
+  onOpenAddCourse: () => void;
+  onStartSetup: () => void;
+}) {
+  const dict = useDictionary();
+  const t = dict.planner.remake;
+  return (
+    <div className="flex min-h-0 flex-1 items-center justify-center overflow-y-auto p-6">
+      <div className="w-full max-w-lg space-y-4 text-center">
+        <h2 className="text-xl font-bold">{t.emptyTitle}</h2>
+        <p className="text-sm text-muted-foreground">{t.emptyDescription}</p>
+        <div className="flex flex-wrap justify-center gap-2">
+          <Button type="button" variant="outline" onClick={onImportTemplate}>
+            <FolderCog className="mr-2 h-4 w-4" />
+            {t.importTemplate}
+          </Button>
+          <Button type="button" onClick={onOpenAddCourse}>
+            <Plus className="mr-2 h-4 w-4" />
+            {t.addCourse}
+          </Button>
+          <Button type="button" variant="outline" onClick={onOpenTemplates}>
+            {dict.planner.templates.navLabel}
+          </Button>
+          <Button type="button" variant="outline" onClick={onStartSetup}>
+            {t.startSetup}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function GraduationPlanner() {
   const dict = useDictionary();
-  const isDesktop = useMediaQuery("(min-width: 1024px)");
-  const [mobileView, setMobileView] = useState<
-    "folders" | "courses" | "semester"
-  >("folders");
-  const [statusFilter, setStatusFilter] = useState<CourseStatus | "all">("all");
-
+  const t = dict.planner.remake;
+  const currentSemesterId = useDefaultSemesterId();
+  const [view, setView] = useState<PlannerView>("checklist");
+  const [viewPreferenceReady, setViewPreferenceReady] = useState(false);
   const [folderData, setFolderData] = useState<FolderDocType[]>([]);
   const [courseData, setCourseData] = useState<ItemDocType[]>([]);
   const [semesterData, setSemesterData] = useState<SemesterDocType[]>([]);
   const [plannerInfo, setPlannerInfo] = useState<PlannerDataDocType | null>(
     null,
   );
-  const [expandedFolders, setExpandedFolders] = useState<
-    Record<string, boolean>
-  >({});
-
-  const [currentSemester, setCurrentSemester] = useState<string>();
   const [selectedCourse, setSelectedCourse] = useState<ItemDocType | null>(
     null,
   );
-  const [selectedFolder, setSelectedFolder] = useState<string>();
-  const [courseDetailsOpen, setCourseDetailsOpen] = useState(false);
-  const [editCourseOpen, setEditCourseOpen] = useState(false);
-  const [courseSearchOpen, setCourseSearchOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
-  const [createCourseOpen, setCreateCourseOpen] = useState(false);
-
-  // Management dialogs
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [addCourseOpen, setAddCourseOpen] = useState(false);
+  const [addFolderTarget, setAddFolderTarget] = useState<string | undefined>();
+  const [addSemesterTarget, setAddSemesterTarget] = useState<
+    string | undefined
+  >();
+  const [pendingOnly, setPendingOnly] = useState(false);
   const [folderManagementOpen, setFolderManagementOpen] = useState(false);
   const [semesterManagementOpen, setSemesterManagementOpen] = useState(false);
   const [plannerSettingsOpen, setPlannerSettingsOpen] = useState(false);
+  const [timetableImportOpen, setTimetableImportOpen] = useState(false);
+  const [templateGalleryOpen, setTemplateGalleryOpen] = useState(false);
+  const [setupDismissed, setSetupDismissed] = useState(false);
+  const [setupPreferenceReady, setSetupPreferenceReady] = useState(false);
+  const [plannerDataReady, setPlannerDataReady] = useState(false);
+  const [tourActive, setTourActive] = useState(false);
+  const [tourPending, setTourPending] = useState(false);
+  const contentRef = useRef<HTMLDivElement | null>(null);
 
-  // Progress stats
-  const [completedCredits, setCompletedCredits] = useState(0);
-  const [inProgressCredits, setInProgressCredits] = useState(0);
-  const [plannedCredits, setPlannedCredits] = useState(0);
-  const [progressPercentage, setProgressPercentage] = useState(0);
-
-  // Multi-selection
-  const [selectedCourses, setSelectedCourses] = useState<
-    Record<string, boolean>
-  >({});
-  const [lastSelectedCourseUuid, setLastSelectedCourseUuid] = useState<
-    string | null
-  >(null);
+  const foldersCol = useRxCollection<FolderDocType>("folders");
+  const coursesCol = useRxCollection<ItemDocType>("items");
+  const plannerCol = useRxCollection<PlannerDataDocType>("plannerdata");
+  const semestersCol = useRxCollection<SemesterDocType>("semesters");
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -117,746 +225,750 @@ function GraduationPlanner() {
     }),
   );
 
-  // RxDB collections
-  const foldersCol = useRxCollection<FolderDocType>("folders");
-  const coursesCol = useRxCollection<ItemDocType>("items");
-  const plannerCol = useRxCollection<PlannerDataDocType>("plannerdata");
-  const semestersCol = useRxCollection<SemesterDocType>("semesters");
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem("planner:view");
+      if (stored === "board" || stored === "matrix") setView(stored);
+    } catch {
+      // Keep the default checklist view when storage is unavailable.
+    }
+    setViewPreferenceReady(true);
+  }, []);
 
   useEffect(() => {
-    if (!coursesCol) return;
-    if (!plannerCol) return;
-
-    const updatePlannerStats = async () => {
-      // recalculate progress when courses change
-      const courseData = await coursesCol!.find().exec();
-      const completed = calculateCompletedCredits(courseData);
-      const inProgress = calculateInProgressCredits(courseData);
-      const planned = calculatePlannedCredits(courseData);
-      const percentage = await calculateProgressPercentage(
-        plannerCol!,
-        completed,
+    try {
+      setSetupDismissed(
+        window.localStorage.getItem("planner:setup-dismissed") === "true",
       );
-      setCompletedCredits(completed);
-      setInProgressCredits(inProgress);
-      setPlannedCredits(planned);
-      setProgressPercentage(percentage);
-    };
-    void updatePlannerStats();
-    const unsub = coursesCol?.$.subscribe(updatePlannerStats);
-    return () => {
-      unsub?.unsubscribe();
-    };
-  }, [coursesCol, plannerCol]);
+    } catch {
+      setSetupDismissed(false);
+    }
+    setSetupPreferenceReady(true);
+  }, []);
 
-  // Load initial data
+  useEffect(() => {
+    if (!viewPreferenceReady) return;
+    try {
+      window.localStorage.setItem("planner:view", view);
+    } catch {
+      // Keep the selected view for this page session when storage is unavailable.
+    }
+  }, [view, viewPreferenceReady]);
+
   useEffect(() => {
     if (!foldersCol || !coursesCol || !plannerCol || !semestersCol) return;
 
-    // Set up subscriptions to collections
-    const foldersSub = foldersCol.find().$.subscribe(async (folders) => {
-      await ensureUnsortedFolder(foldersCol);
-      const folderData = folders.map((doc) => doc.toMutableJSON());
-      setFolderData(folderData);
-
-      // Initialize expanded folders if needed
-      const expanded: Record<string, boolean> = {};
-      folderData.forEach((folder) => {
-        // Preserve existing expansion state or use folder's default
-        expanded[folder.id] =
-          expandedFolders[folder.id] !== undefined
-            ? expandedFolders[folder.id]
-            : folder.expanded || false;
-      });
-      setExpandedFolders(expanded);
-    });
-
-    const coursesSub = coursesCol.find().$.subscribe((courses) => {
-      const courseData = courses.map((doc) => doc.toMutableJSON());
-      setCourseData(courseData);
-    });
-
-    const semestersSub = semestersCol.find().$.subscribe((semesters) => {
-      setSemesterData(semesters.map((doc) => doc.toMutableJSON()));
-    });
-
-    const plannerSub = plannerCol.find().$.subscribe((planners) => {
-      const planner = planners.length > 0 ? planners[0].toMutableJSON() : null;
-      if (planner == null) {
-        setPlannerSettingsOpen(true);
+    const foldersSubscription = foldersCol.find().$.subscribe((folders) => {
+      const nextFolders = folders.map((folder) => folder.toMutableJSON());
+      setFolderData(nextFolders);
+      if (
+        !nextFolders.some((folder) => folder.id === "_unsorted") &&
+        nextFolders.some((folder) => folder.id !== "planner-1")
+      ) {
+        void ensureUnsortedFolder(foldersCol);
       }
+    });
+    const coursesSubscription = coursesCol.find().$.subscribe((courses) => {
+      setCourseData(courses.map((course) => course.toMutableJSON()));
+      if (courses.length > 0) void ensureUnsortedFolder(foldersCol);
+    });
+    const semestersSubscription = semestersCol
+      .find()
+      .$.subscribe((semesters) => {
+        setSemesterData(semesters.map((semester) => semester.toMutableJSON()));
+      });
+    const plannerSubscription = plannerCol.find().$.subscribe((planners) => {
+      const planner = planners[0]?.toMutableJSON() ?? null;
       setPlannerInfo(planner);
     });
 
-    // Clean up subscriptions when component unmounts
+    setPlannerDataReady(true);
+
     return () => {
-      foldersSub.unsubscribe();
-      coursesSub.unsubscribe();
-      semestersSub.unsubscribe();
-      plannerSub.unsubscribe();
+      foldersSubscription.unsubscribe();
+      coursesSubscription.unsubscribe();
+      semestersSubscription.unsubscribe();
+      plannerSubscription.unsubscribe();
     };
-  }, [foldersCol, coursesCol, plannerCol, semestersCol]);
+  }, [coursesCol, foldersCol, plannerCol, semestersCol]);
 
-  // Toggle folder expansion (local UI state only — not persisted)
-  const handleToggleFolder = (folderId: string) => {
-    setExpandedFolders((prev) => ({
-      ...prev,
-      [folderId]: !prev[folderId],
-    }));
-  };
-
-  // Get child folders
-  const getChildFoldersFromState = (parentId: string | null) => {
-    return folderData
-      .filter((folder) => folder.parent === parentId)
-      .sort((a, b) => a.order - b.order);
-  };
-
-  // Filter courses by folder
-  const getCoursesByFolder = (folderId: string | undefined) => {
-    if (!folderId) return [];
-    // Get direct courses in this folder
-    let courses = courseData.filter((course) => course.parent === folderId);
-
-    // If this is a parent folder, also include courses from child folders
-    const childFolders = getChildFoldersFromState(folderId);
-    if (childFolders.length > 0) {
-      childFolders.forEach((childFolder) => {
-        courses = [...courses, ...getCoursesByFolder(childFolder.id)];
-      });
+  const dismissSetup = useCallback(() => {
+    setSetupDismissed(true);
+    try {
+      window.localStorage.setItem("planner:setup-dismissed", "true");
+    } catch {
+      // The dismissed state is kept for this page session.
     }
+  }, []);
 
-    return courses;
-  };
-
-  // Filter courses by folder, then further by the selected status filter
-  const getFilteredCoursesByFolder = (folderId: string | undefined) => {
-    const courses = getCoursesByFolder(folderId);
-    if (statusFilter === "all") return courses;
-    return courses.filter((course) => course.status === statusFilter);
-  };
-
-  // Get courses by semester
-  const getCoursesBySemester = (semester: string) => {
-    return courseData.filter((course) => course.semester === semester);
-  };
-
-  // Calculate total credits by semester
-  const getTotalCreditsBySemester = (semester: string) => {
-    return getCoursesBySemester(semester).reduce(
-      (total, course) => total + course.credits,
-      0,
-    );
-  };
-
-  // Calculate folder completion
-  const getFolderCompletion = (folderId: string) => {
-    const folder = folderData.find((f) => f.id === folderId);
-    if (!folder) return { completed: 0, inProgress: 0, pending: 0, total: 0 };
-
-    // Get courses in this folder and child folders
-    const folderCourses = getCoursesByFolder(folderId);
-
-    // Track both counts and credits in a single pass
-    const stats = folderCourses.reduce(
-      (acc, course) => {
-        // Increment the count for the appropriate status
-        if (!course.status) return acc;
-
-        // Type-safe access with type assertion
-        const status = course.status as CourseStatus;
-
-        // Use a type-safe mapping
-        if (status === "completed") {
-          acc.counts.completed += 1;
-          acc.credits.completed += course.credits;
-        } else if (status === "in-progress") {
-          acc.counts["in-progress"] += 1;
-          acc.credits["in-progress"] += course.credits;
-        } else if (status === "planned") {
-          acc.counts.planned += 1;
-          acc.credits.planned += course.credits;
-        }
-
-        return acc;
-      },
-      {
-        counts: { completed: 0, "in-progress": 0, planned: 0 },
-        credits: { completed: 0, "in-progress": 0, planned: 0 },
-      },
-    );
-
-    // Based on folder metric, return the appropriate values
-    const useCredits = folder.metric === "credits";
-    const values = useCredits ? stats.credits : stats.counts;
-
-    // The denominator should reflect the actual target: `max` when a max
-    // requirement is configured, otherwise `min`. A target of 0 means "no
-    // requirement configured" — callers must treat that as "not applicable",
-    // not "already complete".
-    const total = folder.max && folder.max > 0 ? folder.max : folder.min;
-
-    return {
-      completed: values["completed"],
-      inProgress: values["in-progress"],
-      pending: values["planned"],
-      total,
-    };
-  };
-
-  // Update course status
-  const handleUpdateCourseStatus = async (
-    uuid: string,
-    newStatus: CourseStatus,
-  ) => {
-    await updateCourseStatus(coursesCol!, uuid, newStatus);
-  };
-
-  // Update course semester
-  const handleUpdateCourseSemester = async (
-    uuid: string,
-    newSemester: string | undefined,
-  ) => {
-    await updateCourseSemester(coursesCol!, uuid, newSemester);
-  };
-
-  // Update course
-  const handleUpdateCourse = async (updatedCourse: ItemDocType) => {
-    await updateCourseItem(coursesCol!, updatedCourse);
-    setEditCourseOpen(false);
-  };
-
-  // Handle course selection
-  const handleCourseSelect = (uuid: string, isShiftKey: boolean) => {
-    if (isShiftKey && lastSelectedCourseUuid) {
-      // Get all courses in the current view
-      const currentCourses = selectedFolder
-        ? getCoursesByFolder(selectedFolder)
-        : courseData;
-
-      // Find indices of the last selected and current course
-      const lastIndex = currentCourses.findIndex(
-        (course) => course.uuid === lastSelectedCourseUuid,
-      );
-      const currentIndex = currentCourses.findIndex(
-        (course) => course.uuid === uuid,
-      );
-
-      if (lastIndex !== -1 && currentIndex !== -1) {
-        // Determine start and end indices
-        const startIdx = Math.min(lastIndex, currentIndex);
-        const endIdx = Math.max(lastIndex, currentIndex);
-
-        // Select all courses between start and end
-        const newSelectedCourses = { ...selectedCourses };
-        for (let i = startIdx; i <= endIdx; i++) {
-          newSelectedCourses[currentCourses[i].uuid] = true;
-        }
-        setSelectedCourses(newSelectedCourses);
-      }
-    } else {
-      // Toggle selection for a single course
-      setSelectedCourses((prev) => {
-        const newSelection = { ...prev };
-        if (newSelection[uuid]) {
-          delete newSelection[uuid];
-        } else {
-          newSelection[uuid] = true;
-        }
-        return newSelection;
-      });
+  const finishSetup = useCallback((nextView: PlannerView) => {
+    setView(nextView);
+    setSetupDismissed(true);
+    let tourWasCompleted = false;
+    try {
+      window.localStorage.setItem("planner:setup-dismissed", "true");
+      tourWasCompleted =
+        window.localStorage.getItem("planner:tour-done") === "true";
+    } catch {
+      // Continue with the in-memory setup and tour state.
     }
+    if (!tourWasCompleted) setTourPending(true);
+  }, []);
 
-    // Update last selected course
-    setLastSelectedCourseUuid(uuid);
-  };
+  useEffect(() => {
+    if (!tourPending || !plannerInfo) return;
+    const frame = window.requestAnimationFrame(() => {
+      setTourPending(false);
+      setTourActive(true);
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [courseData, folderData, plannerInfo, tourPending]);
 
-  // Data update handlers
+  const finishTour = useCallback(() => {
+    setTourActive(false);
+    try {
+      window.localStorage.setItem("planner:tour-done", "true");
+    } catch {
+      // The tour remains dismissible for this page session.
+    }
+  }, []);
+
   const handleFoldersUpdated = async () => {
-    const updatedFolders = await getFolders(foldersCol!);
-    setFolderData(updatedFolders);
+    if (foldersCol) setFolderData(await getFolders(foldersCol));
   };
-
   const handleSemestersUpdated = async () => {
-    const updatedSemesters = await getSemesters(semestersCol!);
-    setSemesterData(updatedSemesters);
+    if (semestersCol) setSemesterData(await getSemesters(semestersCol));
   };
-
   const handlePlannerUpdated = async () => {
-    const updatedPlanner = await getPlannerData(plannerCol!);
-    setPlannerInfo(updatedPlanner ?? null);
+    if (plannerCol) setPlannerInfo((await getPlannerData(plannerCol)) ?? null);
   };
 
-  // Course operations
-  const handleCourseAdded = async (
-    newCourse: MinimalCourse,
-    keepSemester?: boolean,
-  ) => {
-    const order =
-      courseData.length > 0
-        ? Math.max(...courseData.map((c) => c.order)) + 1
-        : 0;
+  const normalizedNow = normalizeTermId(currentSemesterId);
+  const includedTermIds = plannerInfo?.includedSemesters ?? [];
+  const termIds = useMemo(() => {
+    const actualIdByNormalized = new Map<string, string>();
+    for (const semester of semesterData) {
+      actualIdByNormalized.set(normalizeTermId(semester.id), semester.id);
+    }
+    const ordered: string[] = [];
+    const seen = new Set<string>();
+    const append = (id: string) => {
+      const normalized = normalizeTermId(id);
+      if (seen.has(normalized)) return;
+      seen.add(normalized);
+      ordered.push(actualIdByNormalized.get(normalized) ?? normalized);
+    };
+    for (const id of includedTermIds) append(id);
+    for (const semester of [...semesterData].sort((left, right) => {
+      const orderDifference =
+        (left.order ?? Number.MAX_SAFE_INTEGER) -
+        (right.order ?? Number.MAX_SAFE_INTEGER);
+      return (
+        orderDifference ||
+        normalizeTermId(left.id).localeCompare(normalizeTermId(right.id))
+      );
+    })) {
+      append(semester.id);
+    }
+    return ordered;
+  }, [includedTermIds, semesterData]);
 
-    await coursesCol!.insert({
+  const availableSemesters = useMemo(() => {
+    const result = [...semesterData];
+    const known = new Set(
+      result.map((semester) => normalizeTermId(semester.id)),
+    );
+    for (const termId of [...termIds, currentSemesterId]) {
+      const normalized = normalizeTermId(termId);
+      if (known.has(normalized)) continue;
+      known.add(normalized);
+      result.push({
+        id: normalized,
+        name: toPrettySemester(normalized),
+        status: "planned",
+        year: normalized.slice(0, 3),
+        term: normalized.slice(3, 4),
+        startDate: null,
+        endDate: null,
+        isActive: true,
+        order: null,
+      } as SemesterDocType);
+    }
+    return result.sort((left, right) =>
+      normalizeTermId(left.id).localeCompare(normalizeTermId(right.id)),
+    );
+  }, [currentSemesterId, semesterData, termIds]);
+
+  const requiredCredits = plannerInfo?.requiredCredits ?? 128;
+  const overall = deriveOverallProgress(
+    courseData,
+    normalizedNow,
+    requiredCredits,
+  );
+  const folderProgress = deriveFolderProgress(
+    folderData.filter((folder) => folder.id !== "_unsorted"),
+    courseData,
+    normalizedNow,
+  );
+  const unscheduledCount = courseData.filter(
+    (item) => !item.semester && item.status !== "failed",
+  ).length;
+  const unsortedCount = courseData.filter(
+    (item) => item.parent === "_unsorted",
+  ).length;
+  const pendingCount = unscheduledCount + unsortedCount;
+  const hasEmptyPlanner =
+    courseData.length === 0 &&
+    !folderData.some(
+      (folder) => folder.id !== "planner-1" && folder.id !== "_unsorted",
+    );
+  const showSetupWizard =
+    plannerDataReady &&
+    setupPreferenceReady &&
+    hasEmptyPlanner &&
+    !setupDismissed;
+
+  const openAddCourse = (folderId?: string, semesterId?: string) => {
+    setAddFolderTarget(folderId);
+    setAddSemesterTarget(semesterId);
+    setAddCourseOpen(true);
+  };
+
+  const openTemplateGallery = () => setTemplateGalleryOpen(true);
+
+  const updateCourse = async (
+    item: ItemDocType,
+    updates: Partial<ItemDocType>,
+  ) => {
+    if (!coursesCol) return;
+    await updateCourseItem(coursesCol, { ...item, ...updates });
+  };
+
+  const handleMoveCategory = (item: ItemDocType, folderId: string) =>
+    updateCourse(item, { parent: folderId });
+  const handleChangeSemester = (item: ItemDocType, semesterId?: string) =>
+    coursesCol
+      ? updateCourseSemester(coursesCol, item.uuid, semesterId)
+      : Promise.resolve(undefined);
+  const handleSetFailed = (item: ItemDocType, failed: boolean) =>
+    updateCourse(item, { status: failed ? "failed" : null });
+  const handleDelete = async (item: ItemDocType) => {
+    const doc = await coursesCol
+      ?.findOne({ selector: { uuid: item.uuid } })
+      .exec();
+    if (doc) await doc.remove();
+  };
+  const openDetails = (item: ItemDocType) => {
+    setSelectedCourse(item);
+    setDetailsOpen(true);
+  };
+  const openEdit = (item: ItemDocType) => {
+    setSelectedCourse(item);
+    setEditOpen(true);
+  };
+  const scrollToPendingTarget = (kind: "unscheduled" | "unsorted") => {
+    setPendingOnly(true);
+    if (view === "matrix" && kind === "unscheduled") {
+      const matrix = document.getElementById("planner-matrix-scroll");
+      matrix?.scrollTo({ left: matrix.scrollWidth, behavior: "smooth" });
+      return;
+    }
+
+    const isWideBoard = window.matchMedia("(min-width: 1024px)").matches;
+    const targetId =
+      view === "checklist"
+        ? kind === "unscheduled"
+          ? "planner-unscheduled"
+          : "planner-unsorted"
+        : view === "matrix"
+          ? "planner-unsorted"
+          : kind === "unscheduled"
+            ? isWideBoard
+              ? "planner-unscheduled"
+              : "planner-unscheduled-mobile"
+            : "planner-unsorted";
+    requestAnimationFrame(() => {
+      const target =
+        document.getElementById(targetId) ??
+        (view === "board"
+          ? document.getElementById(
+              isWideBoard
+                ? "planner-unscheduled"
+                : "planner-unscheduled-mobile",
+            )
+          : null);
+      target?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+        inline: "nearest",
+      });
+    });
+  };
+  const handleCourseSave = async (item: ItemDocType) => {
+    await updateCourse(item, { ...item });
+    setEditOpen(false);
+  };
+
+  const handleAddSearchCourse = async (
+    course: CourseSyllabusView,
+    folderId: string,
+    semesterId?: string,
+  ) => {
+    if (!coursesCol) return;
+    const rawId = course.raw_id ?? "";
+    const code = /^\d{5}/.test(rawId)
+      ? rawId.slice(5).trim()
+      : `${course.department ?? ""} ${course.course ?? ""}${course.class ?? ""}`.trim();
+    const title = [course.name_zh, course.name_en].filter(Boolean).join(" ");
+    const order = courseData.length
+      ? Math.max(...courseData.map((item) => item.order)) + 1
+      : 0;
+    await coursesCol.insert({
       uuid: uuidv4(),
-      id: newCourse.raw_id.slice(5),
-      raw_id: newCourse.raw_id,
-      title: newCourse.name_zh,
-      credits: newCourse.credits,
-      parent: selectedFolder || "planner-1",
+      id: code,
+      raw_id: rawId || null,
+      title,
+      credits: course.credits ?? 0,
+      parent: folderId === "planner-1" ? "_unsorted" : folderId || "_unsorted",
       status: "planned",
-      order: order,
+      order,
       dependson: [],
-      semester: keepSemester ? newCourse.semester : undefined,
+      semester: semesterId || undefined,
     });
   };
 
-  const handleCourseRemoved = async (course: MinimalCourse) => {
-    const courseToRemove = await coursesCol!
-      .findOne({ selector: { raw_id: course.raw_id } })
-      .exec();
-
-    if (courseToRemove) {
-      await courseToRemove.remove();
-    } else {
-      // course not found by raw_id, find by name
-      const courseToRemoveByName = await coursesCol!
-        .findOne({ selector: { title: course.name_zh } })
-        .exec();
-
-      if (courseToRemoveByName) {
-        await courseToRemoveByName.remove();
-      } else {
-        console.error("Course not found for removal");
-      }
-    }
-  };
-
-  const handleItemRemove = async (item: ItemDocType) => {
-    const courseToRemove = await coursesCol!
-      .findOne({ selector: { uuid: item.uuid } })
-      .exec();
-
-    if (courseToRemove) {
-      await courseToRemove.remove();
-    }
-  };
-
-  // Handle manual course creation
-  const handleCreateCourse = async (newCourse: {
+  const handleCreateCourse = async (course: {
     uuid: string;
     id: string;
     title: string;
     credits: number;
     status: CourseStatus;
-    parent: string;
+    parent: string | null;
     order: number;
     dependson: string[];
-  }): Promise<void> => {
-    const order =
-      courseData.length > 0
-        ? Math.max(...courseData.map((c) => c.order)) + 1
-        : 0;
-
-    const courseToInsert = {
-      ...newCourse,
+    semester?: string;
+  }) => {
+    if (!coursesCol) return;
+    const order = courseData.length
+      ? Math.max(...courseData.map((item) => item.order)) + 1
+      : 0;
+    await coursesCol.insert({
+      ...course,
       order,
-    };
-
-    try {
-      await coursesCol!.insert(courseToInsert);
-    } catch (error) {
-      console.error("Error creating course:", error);
-    }
+      parent:
+        course.parent === "planner-1"
+          ? "_unsorted"
+          : (course.parent ?? "_unsorted"),
+      semester: course.semester || undefined,
+    });
   };
 
-  // Clear selections
-  const clearSelections = () => {
-    setSelectedCourses({});
-  };
-
-  // Get selected course count
-  const getSelectedCount = () => Object.keys(selectedCourses).length;
-
-  // Whether the bulk action menu should be visible - derived directly from
-  // selection state during render rather than mirrored into its own state.
-  const showBulkMenu = getSelectedCount() > 0;
-
-  // Bulk actions
-  const handleBulkStatusChange = async (status: CourseStatus) => {
-    const selectedIds = Object.keys(selectedCourses);
-    for (const courseId of selectedIds) {
-      await handleUpdateCourseStatus(courseId, status);
-    }
-    clearSelections();
-  };
-
-  const handleBulkSemesterChange = async (semesterId: string) => {
-    const selectedIds = Object.keys(selectedCourses);
-    for (const courseId of selectedIds) {
-      await handleUpdateCourseSemester(courseId, semesterId);
-    }
-    clearSelections();
-  };
-
-  const handleBulkDelete = async () => {
-    const selectedIds = Object.keys(selectedCourses);
-    for (const courseId of selectedIds) {
-      const courseToDelete = courseData.find((c) => c.uuid === courseId);
-      if (courseToDelete) {
-        await handleItemRemove(courseToDelete);
-      }
-    }
-    clearSelections();
-  };
-
-  // Get all leaf folders (folders with no children)
-  const getLeafFolders = () => {
-    const folderWithChildren = new Set(
-      folderData.map((folder) => folder.parent).filter(Boolean),
-    );
-    return folderData.filter((folder) => !folderWithChildren.has(folder.id));
-  };
-
-  // Determine empty state type
-  const getEmptyStateType = () => {
-    if (!selectedFolder) return "noFolderSelected";
-
-    const childFolders = getChildFoldersFromState(selectedFolder);
-    if (
-      childFolders.length > 0 &&
-      getCoursesByFolder(selectedFolder).length === 0
-    ) {
-      return "hasChildFolders";
-    }
-
-    if (
-      childFolders.length === 0 &&
-      getCoursesByFolder(selectedFolder).length === 0
-    ) {
-      return "noCoursesInFolder";
-    }
-
-    return null;
-  };
-
-  // dnd-kit drag end handler - single source of truth for all drag
-  // interactions across the folder sidebar, course list, and semester pane.
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    // Dropped outside any valid target - explicit no-op, nothing is
-    // unscheduled or deleted (unlike the old HTML5 dropEffect check).
     if (!over) return;
-
     const activeData = active.data.current as
       | { type?: string; course?: ItemDocType }
       | undefined;
     const overData = over.data.current as
-      | { type?: string; semesterId?: string; folderId?: string }
+      | { type?: string; semesterId?: string }
       | undefined;
-
-    if (activeData?.type !== "course" || !activeData.course) return;
-
-    if (overData?.type === "semester" && overData.semesterId !== undefined) {
-      void handleUpdateCourseSemester(
+    if (
+      activeData?.type === "course" &&
+      activeData.course &&
+      overData?.type === "semester" &&
+      overData.semesterId
+    ) {
+      void updateCourseSemester(
+        coursesCol!,
         activeData.course.uuid,
         overData.semesterId,
       );
-    } else if (overData?.type === "folder" && overData.folderId !== undefined) {
-      void updateCourseItem(coursesCol!, {
-        ...activeData.course,
-        parent: overData.folderId,
-      });
     }
   };
 
-  const showFolders = isDesktop || mobileView === "folders";
-  const showCourses = isDesktop || mobileView === "courses";
-  const showSemester = isDesktop || mobileView === "semester";
+  const viewProps = {
+    folders: folderData,
+    items: courseData,
+    semesters: availableSemesters,
+    now: normalizedNow,
+    overall,
+    progress: folderProgress,
+    pendingOnly,
+    onOpenFolderManagement: () => setFolderManagementOpen(true),
+    onOpenAddCourse: openAddCourse,
+    onViewDetails: openDetails,
+    onEdit: openEdit,
+    onDelete: handleDelete,
+    onMoveCategory: handleMoveCategory,
+    onChangeSemester: handleChangeSemester,
+    onSetFailed: handleSetFailed,
+  };
+  const plannerTitle = plannerInfo?.title || t.titleFallback;
+  const subtitleParts = [
+    plannerInfo?.department && plannerInfo.department !== plannerTitle
+      ? plannerInfo.department
+      : undefined,
+    plannerInfo?.enrollmentYear
+      ? formatPlannerText(t.subtitleEnrollment, {
+          enrollmentYear: plannerInfo.enrollmentYear,
+        })
+      : undefined,
+    plannerInfo?.graduationYear
+      ? formatPlannerText(t.subtitleGraduation, {
+          graduationYear: plannerInfo.graduationYear,
+        })
+      : undefined,
+  ].filter(Boolean);
 
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-      <div className="flex overflow-hidden -mt-4 md:-mb-0 md:-ml-2 h-[calc(100vh-var(--header-height))]">
-        {/* Left Sidebar - Folder Navigation */}
-        {showFolders && (
-          <FolderNavigation
-            plannerInfo={plannerInfo}
-            completedCredits={completedCredits}
-            inProgressCredits={inProgressCredits}
-            plannedCredits={plannedCredits}
-            progressPercentage={progressPercentage}
-            folderData={folderData}
-            courseData={courseData}
-            expandedFolders={expandedFolders}
-            selectedFolder={selectedFolder}
-            onToggleFolder={handleToggleFolder}
-            onSelectFolder={setSelectedFolder}
-            getFolderCompletion={getFolderCompletion}
-            getChildFolders={getChildFoldersFromState}
-            onOpenFolderManagement={() => setFolderManagementOpen(true)}
-            onOpenPlannerSettings={() => setPlannerSettingsOpen(true)}
+      <div className="-mt-4 flex h-[calc(100vh-var(--header-height))] min-h-0 w-full flex-col overflow-hidden">
+        <header
+          style={{ display: showSetupWizard ? "none" : undefined }}
+          className="flex shrink-0 flex-col gap-2 border-b border-border px-4 py-3 md:flex-row md:items-center md:justify-between md:gap-3 md:px-6"
+        >
+          <div className="flex min-w-0 items-start justify-between gap-2 md:block">
+            <div className="min-w-0">
+              <h1 className="truncate text-lg font-bold md:text-xl">
+                {plannerTitle}
+              </h1>
+              {subtitleParts.length > 0 && (
+                <p className="whitespace-normal text-xs text-muted-foreground sm:text-sm">
+                  {subtitleParts.join(` ${t.subtitleSeparator} `)}
+                </p>
+              )}
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-9 w-9 shrink-0 md:hidden"
+                  aria-label={t.settingsAriaLabel}
+                  title={t.settingsMenu}
+                >
+                  <Settings2 className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={openTemplateGallery}>
+                  <FolderCog className="mr-2 h-4 w-4" />
+                  {dict.planner.templates.navLabel}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTimetableImportOpen(true)}>
+                  <CalendarRange className="mr-2 h-4 w-4" />
+                  {t.importFromTimetable}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTourActive(true)}>
+                  <CircleHelp className="mr-2 h-4 w-4" />
+                  {t.useTutorial}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setFolderManagementOpen(true)}>
+                  <FolderCog className="mr-2 h-4 w-4" />
+                  {t.manageCategories}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setSemesterManagementOpen(true)}
+                >
+                  <CalendarRange className="mr-2 h-4 w-4" />
+                  {t.manageSemesters}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setPlannerSettingsOpen(true)}>
+                  <Settings2 className="mr-2 h-4 w-4" />
+                  {t.plannerSettings}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          <div className="flex w-full min-w-0 items-center gap-2 md:w-auto md:flex-nowrap">
+            <Tabs
+              data-tour="views"
+              className="min-w-0 flex-1 md:flex-none"
+              value={view}
+              onValueChange={(value) => setView(value as PlannerView)}
+            >
+              <TabsList className="h-10 w-full md:w-auto">
+                <TabsTrigger
+                  value="checklist"
+                  className="h-8 flex-1 gap-1.5 px-2 md:flex-initial md:px-3"
+                >
+                  <ListChecks className="h-4 w-4" />
+                  <span>{t.viewChecklist}</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="board"
+                  className="h-8 flex-1 gap-1.5 px-2 md:flex-initial md:px-3"
+                >
+                  <CalendarRange className="h-4 w-4" />
+                  <span>{t.viewBoard}</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="matrix"
+                  className="h-8 flex-1 gap-1.5 px-2 md:flex-initial md:px-3"
+                >
+                  <Grid2X2 className="h-4 w-4" />
+                  <span>{t.viewMatrix}</span>
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="hidden h-10 lg:inline-flex"
+              asChild
+            >
+              <a
+                href="https://registra.site.nthu.edu.tw/p/412-1211-1826.php?Lang=zh-tw"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <FileText className="mr-1.5 h-4 w-4" />
+                {dict.planner.sidebar.creditsPdfLink}
+              </a>
+            </Button>
+            <Button
+              type="button"
+              className="h-9 shrink-0 px-3 md:h-10"
+              onClick={() => openAddCourse()}
+              data-tour="add-course"
+            >
+              <Plus className="h-4 w-4 md:mr-1.5" />
+              <span className="md:hidden">{t.addCourseCompact}</span>
+              <span className="hidden md:inline">{t.addCourse}</span>
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="hidden h-10 w-10 md:inline-flex"
+                  aria-label={t.settingsAriaLabel}
+                  title={t.settingsMenu}
+                >
+                  <Settings2 className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={openTemplateGallery}>
+                  <FolderCog className="mr-2 h-4 w-4" />
+                  {dict.planner.templates.navLabel}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTimetableImportOpen(true)}>
+                  <CalendarRange className="mr-2 h-4 w-4" />
+                  {t.importFromTimetable}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTourActive(true)}>
+                  <CircleHelp className="mr-2 h-4 w-4" />
+                  {t.useTutorial}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setFolderManagementOpen(true)}>
+                  <FolderCog className="mr-2 h-4 w-4" />
+                  {t.manageCategories}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setSemesterManagementOpen(true)}
+                >
+                  <CalendarRange className="mr-2 h-4 w-4" />
+                  {t.manageSemesters}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setPlannerSettingsOpen(true)}>
+                  <Settings2 className="mr-2 h-4 w-4" />
+                  {t.plannerSettings}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </header>
+
+        {!hasEmptyPlanner && (
+          <PlannerProgressStrip
+            done={overall.done}
+            inProgress={overall.inProgress}
+            planned={overall.planned}
+            required={overall.required}
+            remaining={overall.remaining}
           />
         )}
 
-        {/* Middle Pane - Course List */}
-        {showCourses && (
-          <div className="w-full lg:flex-1 lg:min-w-0 flex flex-col min-h-0 lg:border-r lg:border-border">
-            <CourseListHeader
-              selectedFolder={selectedFolder}
-              folderData={folderData}
-              courseCount={
-                selectedFolder ? getCoursesByFolder(selectedFolder).length : 0
-              }
-              hasChildren={
-                selectedFolder
-                  ? getChildFoldersFromState(selectedFolder).length > 0
-                  : false
-              }
-              onOpenCourseSearch={() => setCourseSearchOpen(true)}
-              createCourseOpen={createCourseOpen}
-              setCreateCourseOpen={setCreateCourseOpen}
-              onCreateCourse={handleCreateCourse}
-            />
-
-            <Tabs
-              value={viewMode}
-              className="flex-1 flex flex-col min-h-0"
-              onValueChange={(value) => setViewMode(value as "list" | "grid")}
+        {pendingCount > 0 && (
+          <div className="shrink-0 px-4 pt-2 md:px-6">
+            <div
+              data-tour="pending"
+              className="flex min-w-0 items-center gap-2 overflow-x-auto whitespace-nowrap rounded-md bg-muted/40 px-2 py-1.5 text-xs"
             >
-              <div className="p-2 border-b border-border flex items-center justify-between shrink-0">
-                <TabsList className="border-border">
-                  <TabsTrigger value="list">
-                    {dict.planner.courseList.viewModeList}
-                  </TabsTrigger>
-                  <TabsTrigger value="grid">
-                    {dict.planner.courseList.viewModeGrid}
-                  </TabsTrigger>
-                </TabsList>
-
-                <Select
-                  value={statusFilter}
-                  onValueChange={(value) =>
-                    setStatusFilter(value as CourseStatus | "all")
-                  }
+              <TriangleAlert className="h-3.5 w-3.5 shrink-0 text-amber-500" />
+              <span className="shrink-0 font-medium text-muted-foreground">
+                {formatPlannerText(t.pendingNotice, { count: pendingCount })}
+              </span>
+              {unscheduledCount > 0 && (
+                <button
+                  type="button"
+                  className="shrink-0 text-muted-foreground hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  onClick={() => scrollToPendingTarget("unscheduled")}
                 >
-                  <SelectTrigger className="w-[180px] border-border">
-                    <SelectValue
-                      placeholder={dict.planner.courseList.statusFilterLabel}
-                    />
-                  </SelectTrigger>
-                  <SelectContent className="border-border">
-                    <SelectItem value="all">
-                      {dict.planner.courseList.statusFilterAll}
-                    </SelectItem>
-                    <SelectItem value="completed">
-                      {dict.planner.status.completed}
-                    </SelectItem>
-                    <SelectItem value="in-progress">
-                      {dict.planner.status.inProgress}
-                    </SelectItem>
-                    <SelectItem value="planned">
-                      {dict.planner.status.planned}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Empty States */}
-              {getEmptyStateType() && (
-                <CourseListEmpty
-                  type={getEmptyStateType() as any}
-                  courseData={courseData}
-                  selectedFolder={selectedFolder}
-                  childFolders={
-                    selectedFolder
-                      ? getChildFoldersFromState(selectedFolder)
-                      : []
-                  }
-                  onSelectFolder={setSelectedFolder}
-                  onOpenFolderManagement={() => setFolderManagementOpen(true)}
-                  onOpenSemesterManagement={() =>
-                    setSemesterManagementOpen(true)
-                  }
-                  onOpenCourseSearch={() => setCourseSearchOpen(true)}
-                  createCourseOpen={createCourseOpen}
-                  setCreateCourseOpen={setCreateCourseOpen}
-                  onCreateCourse={handleCreateCourse}
-                />
+                  {formatPlannerText(t.pendingUnscheduled, {
+                    count: unscheduledCount,
+                  })}
+                </button>
               )}
-
-              {/* Course List/Grid */}
-              {selectedFolder &&
-                getFilteredCoursesByFolder(selectedFolder).length > 0 && (
-                  <TabsContent value={viewMode} className="m-0 flex-1 min-h-0">
-                    <CourseList
-                      viewMode={viewMode}
-                      courses={getFilteredCoursesByFolder(selectedFolder)}
-                      selectedCourse={selectedCourse}
-                      selectedCourses={selectedCourses}
-                      folders={folderData}
-                      semesters={semesterData}
-                      onCourseClick={setSelectedCourse}
-                      onCourseSelect={handleCourseSelect}
-                      onViewDetails={(course) => {
-                        setSelectedCourse(course);
-                        setCourseDetailsOpen(true);
-                      }}
-                      onEdit={(course) => {
-                        setSelectedCourse(course);
-                        setEditCourseOpen(true);
-                      }}
-                      onStatusChange={handleUpdateCourseStatus}
-                      onSemesterChange={handleUpdateCourseSemester}
-                      onDeleteCourse={handleItemRemove}
-                    />
-                  </TabsContent>
-                )}
-            </Tabs>
+              {unscheduledCount > 0 && unsortedCount > 0 && (
+                <span className="text-muted-foreground/60">
+                  {t.subtitleSeparator}
+                </span>
+              )}
+              {unsortedCount > 0 && (
+                <button
+                  type="button"
+                  className="shrink-0 text-muted-foreground hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  onClick={() => scrollToPendingTarget("unsorted")}
+                >
+                  {formatPlannerText(t.pendingUnsorted, {
+                    count: unsortedCount,
+                  })}
+                </button>
+              )}
+              {pendingOnly && (
+                <button
+                  type="button"
+                  className="ml-auto shrink-0 font-medium text-primary"
+                  onClick={() => setPendingOnly(false)}
+                >
+                  {t.clearPendingFilter}
+                </button>
+              )}
+            </div>
           </div>
         )}
 
-        {/* Right Pane - Semester Planning */}
-        {showSemester && (
-          <div className="w-full lg:w-96 lg:shrink-0 lg:max-w-[28rem] flex flex-col min-h-0">
-            <SemesterHeader
+        <main
+          ref={contentRef}
+          className="flex min-h-0 flex-1 flex-col overflow-hidden"
+        >
+          {showSetupWizard ? (
+            <PlannerSetupWizard
+              currentSemesterId={normalizedNow}
+              onDismiss={dismissSetup}
+              onComplete={finishSetup}
+            />
+          ) : hasEmptyPlanner ? (
+            <EmptyPlanner
+              onImportTemplate={() => setFolderManagementOpen(true)}
+              onOpenTemplates={openTemplateGallery}
+              onOpenAddCourse={() => openAddCourse()}
+              onStartSetup={() => {
+                setSetupDismissed(false);
+                try {
+                  window.localStorage.removeItem("planner:setup-dismissed");
+                } catch {
+                  // The wizard can still open for this page session.
+                }
+              }}
+            />
+          ) : view === "checklist" ? (
+            <ChecklistView {...viewProps} />
+          ) : view === "board" ? (
+            <SemesterBoardView
+              {...viewProps}
+              planner={plannerInfo}
+              termIds={termIds}
               onOpenSemesterManagement={() => setSemesterManagementOpen(true)}
             />
+          ) : (
+            <MatrixView {...viewProps} termIds={termIds} />
+          )}
+        </main>
 
-            <SemesterPlanning
-              folders={folderData}
-              semesters={semesterData}
-              currentSemester={currentSemester}
-              setCurrentSemester={setCurrentSemester}
-              getCoursesBySemester={getCoursesBySemester}
-              getTotalCreditsBySemester={getTotalCreditsBySemester}
-              onViewDetails={(course) => {
-                setSelectedCourse(course);
-                setCourseDetailsOpen(true);
-              }}
-              onEdit={(course) => {
-                setSelectedCourse(course);
-                setEditCourseOpen(true);
-              }}
-              onDelete={handleItemRemove}
-              onStatusChange={handleUpdateCourseStatus}
-              onSemesterChange={handleUpdateCourseSemester}
-              onCreateCourse={handleCreateCourse}
-            />
-          </div>
-        )}
+        <PlannerAddCourseDialog
+          open={addCourseOpen}
+          onOpenChange={setAddCourseOpen}
+          folders={folderData}
+          items={courseData}
+          semesters={availableSemesters}
+          now={normalizedNow}
+          initialFolderId={addFolderTarget}
+          initialSemesterId={addSemesterTarget}
+          onAddCourse={handleAddSearchCourse}
+          onCreateCourse={handleCreateCourse}
+        />
 
-        {/* Mobile/tablet pane switcher - sits directly above the global
-            BottomNav (which itself disappears at md/768px). Visible for the
-            whole <1024px range required by the responsive spec; the bottom
-            offset collapses to 0 once the global nav is gone at md+. */}
-        {!isDesktop && (
-          <div className="fixed inset-x-0 bottom-[5rem] md:bottom-0 lg:hidden z-40 bg-background border-t border-border grid grid-cols-3">
-            <button
-              type="button"
-              className={`flex flex-col items-center justify-center gap-1 py-2 min-h-[44px] ${
-                mobileView === "folders" ? "text-primary" : "text-muted-foreground"
-              }`}
-              onClick={() => setMobileView("folders")}
-            >
-              <FolderTree className="h-5 w-5" />
-              <span className="text-xs font-medium">
-                {dict.planner.mobileNav.folders}
-              </span>
-            </button>
-            <button
-              type="button"
-              className={`flex flex-col items-center justify-center gap-1 py-2 min-h-[44px] ${
-                mobileView === "courses" ? "text-primary" : "text-muted-foreground"
-              }`}
-              onClick={() => setMobileView("courses")}
-            >
-              <BookOpen className="h-5 w-5" />
-              <span className="text-xs font-medium">
-                {dict.planner.mobileNav.courses}
-              </span>
-            </button>
-            <button
-              type="button"
-              className={`flex flex-col items-center justify-center gap-1 py-2 min-h-[44px] ${
-                mobileView === "semester" ? "text-primary" : "text-muted-foreground"
-              }`}
-              onClick={() => setMobileView("semester")}
-            >
-              <CalendarDays className="h-5 w-5" />
-              <span className="text-xs font-medium">
-                {dict.planner.mobileNav.semesters}
-              </span>
-            </button>
-          </div>
-        )}
-
-        {/* Dialogs */}
         {selectedCourse && (
           <>
             <CourseDetailsDialog
-              open={courseDetailsOpen}
-              onOpenChange={setCourseDetailsOpen}
+              open={detailsOpen}
+              onOpenChange={setDetailsOpen}
               selectedCourse={selectedCourse}
               folderData={folderData}
-              semesterData={semesterData}
+              semesterData={availableSemesters}
+              displayStatus={effectiveStatus(selectedCourse, normalizedNow)}
               onEdit={() => {
-                setCourseDetailsOpen(false);
-                setEditCourseOpen(true);
+                setDetailsOpen(false);
+                setEditOpen(true);
               }}
             />
-
             <CourseEditDialog
-              open={editCourseOpen}
-              onOpenChange={setEditCourseOpen}
+              open={editOpen}
+              onOpenChange={setEditOpen}
               selectedCourse={selectedCourse}
-              semesterData={semesterData}
-              leafFolders={getLeafFolders()}
-              onSave={handleUpdateCourse}
+              semesterData={availableSemesters}
+              leafFolders={folderData.filter(
+                (folder) =>
+                  folder.id !== "_unsorted" &&
+                  !folderData.some(
+                    (candidate) => candidate.parent === folder.id,
+                  ),
+              )}
+              onSave={handleCourseSave}
             />
           </>
         )}
 
-        {/* Course Search Dialog */}
-        <CourseSearchDialog
-          open={courseSearchOpen}
-          onOpenChange={setCourseSearchOpen}
-          selectedFolder={selectedFolder}
-          folderData={folderData}
-          onAddCourse={handleCourseAdded}
-          onRemoveCourse={handleCourseRemoved}
-          courseData={courseData}
-        />
-
-        {/* Management Dialogs */}
         <FolderManagement
           isOpen={folderManagementOpen}
           onClose={() => setFolderManagementOpen(false)}
           onFoldersUpdated={handleFoldersUpdated}
         />
-
         <SemesterManagement
           isOpen={semesterManagementOpen}
           onClose={() => setSemesterManagementOpen(false)}
           onSemestersUpdated={handleSemestersUpdated}
         />
-
         <PlannerSettings
           isOpen={plannerSettingsOpen}
           onClose={() => setPlannerSettingsOpen(false)}
           onSettingsUpdated={handlePlannerUpdated}
         />
-
-        {/* Bulk Action Menu */}
-        {showBulkMenu && (
-          <BulkActionsMenu
-            selectedCount={getSelectedCount()}
-            semesterData={semesterData}
-            onStatusChange={handleBulkStatusChange}
-            onSemesterChange={handleBulkSemesterChange}
-            onDelete={handleBulkDelete}
-            onClearSelections={clearSelections}
-          />
-        )}
+        <TimetableImportDialog
+          open={timetableImportOpen}
+          onOpenChange={setTimetableImportOpen}
+          planner={plannerInfo}
+          folders={folderData}
+          items={courseData}
+          currentSemesterId={normalizedNow}
+        />
+        <TemplateGalleryDialog
+          open={templateGalleryOpen}
+          onOpenChange={setTemplateGalleryOpen}
+          planner={plannerInfo}
+          folders={folderData}
+          items={courseData}
+          semesters={semesterData}
+          onApplied={() => {
+            void handlePlannerUpdated();
+            void handleFoldersUpdated();
+            void handleSemestersUpdated();
+          }}
+        />
+        <PlannerTour
+          open={tourActive}
+          showProgress={!hasEmptyPlanner}
+          showPending={pendingCount > 0}
+          onDone={finishTour}
+        />
       </div>
     </DndContext>
   );
