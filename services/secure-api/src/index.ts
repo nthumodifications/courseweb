@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import oidc from "./oidc";
-import { logger } from "hono/logger";
+import { logger } from "./utils/requestLogger";
 import api from "./api";
 import { getVapidConfig } from "./config/push";
 import { startPushNotifier } from "./push/notifier";
