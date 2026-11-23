@@ -4,10 +4,12 @@ import { ScrollArea } from "@radix-ui/react-scroll-area";
 import { Button, ErrorState } from "@courseweb/ui";
 
 import "@react-pdf-viewer/core/lib/styles/index.css";
-import packageJson from "../../../package.json";
+// Served from our own origin, built from the installed pdfjs-dist, so the
+// worker always matches the library version and no third-party CDN can change
+// the code that parses the PDF.
+import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.js?url";
 import useDictionary from "@/dictionaries/useDictionary";
-
-const pdfjsVersion = packageJson.dependencies["pdfjs-dist"];
+import { hardenPdfDocumentParams } from "./pdfDocumentParams";
 
 const PDFViewer = ({ file }: { file: string }) => {
   const [error, setError] = useState<string | null>(null);
@@ -28,11 +30,12 @@ const PDFViewer = ({ file }: { file: string }) => {
   }
 
   return (
-    <Worker
-      workerUrl={`https://unpkg.com/pdfjs-dist@${pdfjsVersion}/build/pdf.worker.min.js`}
-    >
+    <Worker workerUrl={pdfWorkerUrl}>
       <ScrollArea className="max-h-screen overflow-y-auto">
-        <Viewer fileUrl={file} />
+        <Viewer
+          fileUrl={file}
+          transformGetDocumentParams={hardenPdfDocumentParams}
+        />
       </ScrollArea>
     </Worker>
   );

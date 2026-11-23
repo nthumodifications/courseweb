@@ -48,9 +48,14 @@ export default defineConfig(({ mode }) => ({
         clientsClaim: true,
         skipWaiting: true,
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
-        // Keep the optional Three.js experience out of the PWA install path.
-        // The route remains available online and is cached by the browser after use.
-        globIgnores: ["**/campus-map-*.js", "**/push-sw.js"],
+        // Keep the optional Three.js experience and the PDF.js worker (only
+        // needed when a syllabus PDF is opened) out of the PWA install path.
+        // Both remain available online and are cached by the browser after use.
+        globIgnores: [
+          "**/campus-map-*.js",
+          "**/pdf.worker*.js",
+          "**/push-sw.js",
+        ],
         importScripts: ["/push-sw.js"],
         runtimeCaching: [
           {
