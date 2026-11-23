@@ -3,19 +3,24 @@ import { useParams } from "react-router-dom";
 import Footer from "@/components/Footer";
 import useDictionary from "@/dictionaries/useDictionary";
 import { localizedRoutePath } from "@/types/locale";
+import { appendMermaidScript } from "./mermaidScript";
+
+type MermaidGlobal = {
+  initialize: (config: { startOnLoad: boolean }) => void;
+  run: () => Promise<void>;
+};
 
 const useMermaid = () => {
   useEffect(() => {
-    const script = document.createElement("script");
-    script.type = "module";
-    script.textContent = `
-      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.esm.min.mjs";
-      mermaid.initialize({startOnLoad: true});
-      mermaid.contentLoaded();
-    `;
-    document.body.appendChild(script);
+    const script = appendMermaidScript(document, () => {
+      const mermaid = (window as typeof window & { mermaid?: MermaidGlobal })
+        .mermaid;
+      if (!mermaid) return;
+      mermaid.initialize({ startOnLoad: false });
+      void mermaid.run();
+    });
     return () => {
-      document.body.removeChild(script);
+      script.remove();
     };
   }, []);
 };
