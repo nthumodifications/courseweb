@@ -9,6 +9,7 @@ import {
   parseHTML,
 } from "linkedom/worker";
 import { z } from "zod";
+import { acixStoreSchema } from "./session-params";
 
 const app = new Hono()
   .post(
@@ -16,7 +17,7 @@ const app = new Hono()
     zValidator(
       "form",
       z.object({
-        ACIXSTORE: z.string(),
+        ACIXSTORE: acixStoreSchema,
       }),
     ),
     async (c) => {
@@ -81,7 +82,7 @@ const app = new Hono()
     zValidator(
       "form",
       z.object({
-        ACIXSTORE: z.string(),
+        ACIXSTORE: acixStoreSchema,
       }),
     ),
     async (c) => {
@@ -180,7 +181,7 @@ const app = new Hono()
     zValidator(
       "form",
       z.object({
-        ACIXSTORE: z.string(),
+        ACIXSTORE: acixStoreSchema,
         dept: z.string(),
       }),
     ),
@@ -205,7 +206,7 @@ const app = new Hono()
             "sec-fetch-user": "?1",
             "upgrade-insecure-requests": "1",
           },
-          body: `ACIXSTORE=${ACIXSTORE}&select=${dept}&act=1&Submit=%BDT%A9w+go`,
+          body: `ACIXSTORE=${ACIXSTORE}&select=${encodeURIComponent(dept)}&act=1&Submit=%BDT%A9w+go`,
           method: "POST",
           mode: "cors",
           credentials: "include",
@@ -259,7 +260,7 @@ const app = new Hono()
     zValidator(
       "form",
       z.object({
-        ACIXSTORE: z.string(),
+        ACIXSTORE: acixStoreSchema,
         dept: z.string(),
       }),
     ),
@@ -284,7 +285,7 @@ const app = new Hono()
             "sec-fetch-user": "?1",
             "upgrade-insecure-requests": "1",
           },
-          body: `ACIXSTORE=${ACIXSTORE}&toChk=1&new_dept=${dept}&new_class=EECS111B++&chks=%A5%B2%BF%EF%AD%D7&aspr=&ckey=&code=&div=&real=&cred=&ctime=&num=&glimit=&type=&pre=&range=&chkbtn=`,
+          body: `ACIXSTORE=${ACIXSTORE}&toChk=1&new_dept=${encodeURIComponent(dept)}&new_class=EECS111B++&chks=%A5%B2%BF%EF%AD%D7&aspr=&ckey=&code=&div=&real=&cred=&ctime=&num=&glimit=&type=&pre=&range=&chkbtn=`,
           method: "POST",
           mode: "cors",
           credentials: "include",
@@ -349,7 +350,7 @@ const app = new Hono()
     zValidator(
       "form",
       z.object({
-        ACIXSTORE: z.string(),
+        ACIXSTORE: acixStoreSchema,
       }),
     ),
     async (c) => {

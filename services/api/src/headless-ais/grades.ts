@@ -2,13 +2,14 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { HTMLDivElement, HTMLTableElement, parseHTML } from "linkedom/worker";
 import { z } from "zod";
+import { acixStoreSchema } from "./session-params";
 
 const app = new Hono().post(
   "/",
   zValidator(
     "form",
     z.object({
-      ACIXSTORE: z.string(),
+      ACIXSTORE: acixStoreSchema,
     }),
   ),
   async (c) => {
