@@ -926,43 +926,62 @@ describe("Calendar API", () => {
     },
   );
 
+  // The upstream answers once with one event and fails from then on. The feed
+  // is read at `startAt` (the real clock if omitted) and again at `later()`,
+  // and must serve the first answer both times.
+  const expectStaleAcademicDataAfterFailure = async (clock: {
+    startAt?: Date;
+    later: () => Date;
+  }) => {
+    clearAcademicCalendarCache();
+    const feedUrl = await prepareTimetableFeed();
+    let academicRequests = 0;
+    mockTimetableFetch.mockImplementation(async (input: URL) => {
+      if (!input.pathname.endsWith("/acacalendar")) {
+        return new Response("BEGIN:VCALENDAR\r\nEND:VCALENDAR\r\n");
+      }
+      academicRequests += 1;
+      return academicRequests === 1
+        ? new Response(
+            JSON.stringify([
+              { id: "stale-success", summary: "Stale", date: "2026-10-20" },
+            ]),
+            { status: 200 },
+          )
+        : new Response("unavailable", { status: 503 });
+    });
+    const readFeed = async () =>
+      (await calendarHandler.request(`${feedUrl}&include=academic`)).text();
+
+    if (clock.startAt) setSystemTime(clock.startAt);
+    try {
+      expect(await readFeed()).toContain("UID:aca-stale-success");
+
+      setSystemTime(clock.later());
+      expect(await readFeed()).toContain("UID:aca-stale-success");
+      expect(academicRequests).toBe(2);
+    } finally {
+      setSystemTime();
+    }
+  };
+
   serialTest(
     "serves the last successful academic data during a later failure",
-    async () => {
-      clearAcademicCalendarCache();
-      const feedUrl = await prepareTimetableFeed();
-      let academicRequests = 0;
-      mockTimetableFetch.mockImplementation(async (input: URL) => {
-        if (!input.pathname.endsWith("/acacalendar")) {
-          return new Response("BEGIN:VCALENDAR\r\nEND:VCALENDAR\r\n");
-        }
-        academicRequests += 1;
-        return academicRequests === 1
-          ? new Response(
-              JSON.stringify([
-                { id: "stale-success", summary: "Stale", date: "2026-10-20" },
-              ]),
-              { status: 200 },
-            )
-          : new Response("unavailable", { status: 503 });
-      });
+    () =>
+      expectStaleAcademicDataAfterFailure({
+        later: () => new Date(Date.now() + 60 * 60 * 1000 + 1),
+      }),
+  );
 
-      const first = await calendarHandler.request(
-        `${feedUrl}&include=academic`,
-      );
-      expect(await first.text()).toContain("UID:aca-stale-success");
-
-      setSystemTime(new Date(Date.now() + 60 * 60 * 1000 + 1));
-      try {
-        const second = await calendarHandler.request(
-          `${feedUrl}&include=academic`,
-        );
-        expect(await second.text()).toContain("UID:aca-stale-success");
-        expect(academicRequests).toBe(2);
-      } finally {
-        setSystemTime();
-      }
-    },
+  // 23:30 in Taipei, then 00:30 the next day: the request window, and so the
+  // cache entry, is a different one by the time the upstream fails.
+  serialTest(
+    "serves the last successful academic data when the failure falls on the next Taipei date",
+    () =>
+      expectStaleAcademicDataAfterFailure({
+        startAt: new Date("2026-10-14T15:30:00.000Z"),
+        later: () => new Date("2026-10-14T16:30:00.000Z"),
+      }),
   );
 
   serialTest(
