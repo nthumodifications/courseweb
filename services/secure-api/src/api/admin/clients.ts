@@ -5,6 +5,7 @@ import { z } from "zod";
 import { requireAdmin } from "../../middleware/requireAdmin";
 import { recordAdminAction } from "../../utils/adminAudit";
 import { VALID_SCOPES } from "../../const/scopes";
+import { clientUriSchema, redirectUriSchema } from "../../utils/clientUrls";
 import type { AdminEnv } from "./env";
 
 const prisma = new PrismaClient();
@@ -46,10 +47,10 @@ const clientBody = z.object({
     .max(64)
     .regex(/^[a-zA-Z0-9._-]+$/, "clientId may use letters, digits, . _ and -"),
   name: z.string().trim().max(100).nullish(),
-  clientUri: z.string().trim().url().nullish(),
+  clientUri: clientUriSchema.nullish(),
   firstParty: z.boolean().default(false),
-  redirectUris: z.array(z.string().trim().url()).min(1).max(20),
-  logoutUris: z.array(z.string().trim().url()).max(20).default([]),
+  redirectUris: z.array(redirectUriSchema).min(1).max(20),
+  logoutUris: z.array(redirectUriSchema).max(20).default([]),
   scopes: z.array(clientScope).min(1),
   confidential: z.boolean().default(false),
 });
