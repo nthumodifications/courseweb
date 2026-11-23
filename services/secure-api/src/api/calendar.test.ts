@@ -368,6 +368,27 @@ describe("Calendar API", () => {
     );
   });
 
+  serialTest("refuses the calendar feed of a suspended account", async () => {
+    mockCalendarShareFindUnique.mockResolvedValueOnce({
+      id: "share-id",
+      revokedAt: null,
+      expiresAt: null,
+      includeFullDetails: false,
+      user: { userId: "test-user-id", banned: true },
+    });
+    mockCalendarShareUpdate.mockClear();
+
+    const response = await calendarHandler.request(
+      "http://test/ics/test-user-id?token=share-token",
+    );
+
+    expect(response.status).toBe(403);
+    expect(response.headers.get("Content-Type") ?? "").not.toContain(
+      "text/calendar",
+    );
+    expect(mockCalendarShareUpdate).not.toHaveBeenCalled();
+  });
+
   serialTest(
     "creates an idempotent timetable feed and returns webcal URL",
     async () => {

@@ -905,6 +905,13 @@ const app = new Hono()
         });
         if (!user) return c.json({ error: "server_error" }, 500);
 
+        // A code issued moments before a ban must not become a session after
+        // it. The code is spent either way.
+        if (user.banned) {
+          await prisma.authCode.delete({ where: { code: form.code } });
+          return c.json({ error: "invalid_grant" }, 400);
+        }
+
         // Generate refresh token and access token string, save to prisma
         const refreshToken = crypto.randomUUID();
         const accessToken = crypto.randomUUID();
@@ -1002,6 +1009,12 @@ const app = new Hono()
           });
           if (!user) return c.json({ error: "server_error" }, 500);
 
+          // A suspended account gets no new tokens, and loses this one.
+          if (user.banned) {
+            await prisma.token.delete({ where: { token: refresh_token } });
+            return c.json({ error: "invalid_grant" }, 400);
+          }
+
           // Generate new refresh token and access token string, save to prisma
           const newRefreshToken = crypto.randomUUID();
           const newAccessToken = crypto.randomUUID();
@@ -1069,6 +1082,7 @@ const app = new Hono()
         where: { userId: token.userId },
       });
       if (!user) return c.json({ error: "server_error" }, 500);
+      if (user.banned) return c.json({ error: "account_suspended" }, 403);
       return c.json({
         sub: user.userId,
         ...(token.scopes.includes("profile") && {
@@ -1306,6 +1320,16 @@ const app = new Hono()
       // Check if client has the required scope
       const introspectionScope = `introspect:${tokenData.clientId}`;
       if (!client.scopes.includes(introspectionScope)) {
+        return c.json({ active: false }, 200);
+      }
+      // Resource servers decide access from this answer alone, so a suspended
+      // account's tokens are reported inactive here rather than trusted to
+      // have been deleted when the ban was applied.
+      const owner = await prisma.user.findUnique({
+        where: { userId: tokenData.userId },
+        select: { banned: true },
+      });
+      if (!owner || owner.banned) {
         return c.json({ active: false }, 200);
       }
       return c.json({
