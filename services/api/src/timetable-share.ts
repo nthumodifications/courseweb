@@ -6,6 +6,16 @@ import { auth } from "./utils/auth";
 import { HTTPException } from "hono/http-exception";
 import prismaClients from "./prisma/client";
 import type { Bindings } from "./index";
+import { rateLimitMiddleware } from "./utils/rate-limit";
+
+// A share ID is 8 hex characters and an invite code 6 characters, and the two
+// lookup routes below answer anyone who presents one. Without a limit they can
+// be guessed at whatever rate the caller likes. The key is the caller's IP
+// alone, so every code tried counts against the same budget.
+const shareLookupRateLimit = rateLimitMiddleware({
+  limiter: "SHARE_LOOKUP_RATE_LIMITER",
+  errorMessage: "Too many requests. Please try again in a minute.",
+});
 
 function generateShareId(): string {
   return crypto.randomUUID().replaceAll("-", "").slice(0, 8);
@@ -225,7 +235,7 @@ const optionalViewerId = async (c: Context<{ Bindings: Bindings }>) => {
 const app = new Hono<{ Bindings: Bindings }>()
 
   // ── Public: get a shared timetable ──────────────────────────────────────────
-  .get("/view/:id", async (c) => {
+  .get("/view/:id", shareLookupRateLimit, async (c) => {
     const { id } = c.req.param();
     const prisma = await prismaClients.fetch(c.env.DB);
     const share = await prisma.sharedTimetable.findFirst({
@@ -272,7 +282,7 @@ const app = new Hono<{ Bindings: Bindings }>()
   )
 
   // ── Public: get group by invite code ─────────────────────────────────────────
-  .get("/group/:code", async (c) => {
+  .get("/group/:code", shareLookupRateLimit, async (c) => {
     const { code } = c.req.param();
     const prisma = await prismaClients.fetch(c.env.DB);
     const group = await prisma.timetableGroup.findUnique({

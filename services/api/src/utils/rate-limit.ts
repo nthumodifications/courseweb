@@ -17,6 +17,7 @@ export interface RateLimitOptions {
     | "SHORTLINK_RATE_LIMITER"
     | "ISSUE_RATE_LIMITER"
     | "CONTRIBUTE_RATE_LIMITER"
+    | "SHARE_LOOKUP_RATE_LIMITER"
   >;
 
   /**
