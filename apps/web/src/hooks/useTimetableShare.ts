@@ -6,7 +6,8 @@ const API_BASE = import.meta.env.VITE_COURSEWEB_API_URL as string;
 
 export type SharedTimetable = {
   id: string;
-  ownerId: string;
+  /** The owner's student ID. Only present on the signed-in user's own shares. */
+  ownerId?: string;
   displayName?: string;
   semesters: string[];
   courses: Record<string, string[]>;
@@ -41,12 +42,15 @@ export type TimetableGroup = {
   name: string;
   inviteCode: string;
   semester: string;
-  createdBy: string;
+  /** Whether the signed-in user created this group. */
+  isCreator: boolean;
   members: Array<{
-    userId: string;
+    /** Unique per member; use it as the member key. */
     sharedTimetableId: string;
     label: string;
     joinedAt: string;
+    /** Whether this entry is the signed-in user's own. */
+    isSelf: boolean;
     share?: SharedTimetable | null;
   }>;
   createdAt: string;
@@ -95,10 +99,14 @@ export function useTimetableShare() {
 
   const getGroup = useCallback(
     async (code: string): Promise<TimetableGroup> => {
-      const res = await fetch(`${API_BASE}/timetable-share/group/${code}`);
+      // The link opens signed out too; the token only lets the API mark which
+      // member entry is the viewer's own.
+      const res = await fetch(`${API_BASE}/timetable-share/group/${code}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
       return parseResponse<TimetableGroup>(res);
     },
-    [],
+    [token],
   );
 
   const listOwnShares = useCallback(async (): Promise<SharedTimetable[]> => {
