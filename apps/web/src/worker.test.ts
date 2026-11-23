@@ -871,3 +871,84 @@ describe("Worker asset and shell caching", () => {
     }
   });
 });
+
+describe("Worker security headers", () => {
+  const htmlAsset = async () =>
+    new Response("<!doctype html><html>app</html>", {
+      headers: { "Content-Type": "text/html; charset=utf-8" },
+    });
+
+  test("a page cannot be framed by another site", async () => {
+    const response = await worker.fetch(
+      new Request("https://example.test/zh/timetable"),
+      testEnv(htmlAsset),
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("X-Frame-Options")).toBe("SAMEORIGIN");
+    expect(response.headers.get("Content-Security-Policy")).toBe(
+      "frame-ancestors 'self'",
+    );
+  });
+
+  test("a page tells browsers not to sniff, leak the full URL, or downgrade", async () => {
+    const response = await worker.fetch(
+      new Request("https://example.test/zh/timetable"),
+      testEnv(htmlAsset),
+    );
+
+    expect(response.headers.get("X-Content-Type-Options")).toBe("nosniff");
+    expect(response.headers.get("Referrer-Policy")).toBe(
+      "strict-origin-when-cross-origin",
+    );
+    expect(response.headers.get("Strict-Transport-Security")).toBe(
+      "max-age=15552000",
+    );
+    // The existing cache policy is untouched.
+    expect(response.headers.get("Cache-Control")).toBe(
+      "no-cache, must-revalidate",
+    );
+  });
+
+  test("the app shell requested directly is covered too", async () => {
+    const response = await worker.fetch(
+      new Request("https://example.test/index.html"),
+      testEnv(htmlAsset),
+    );
+
+    expect(response.headers.get("X-Frame-Options")).toBe("SAMEORIGIN");
+    expect(response.headers.get("X-Content-Type-Options")).toBe("nosniff");
+  });
+
+  test("a script is served with nosniff and keeps its cache policy", async () => {
+    const response = await worker.fetch(
+      new Request("https://example.test/assets/index-abc123.js"),
+      testEnv(
+        async () =>
+          new Response("console.log(1)", {
+            headers: { "Content-Type": "text/javascript" },
+          }),
+      ),
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("X-Content-Type-Options")).toBe("nosniff");
+    expect(response.headers.get("Cache-Control")).toBe(
+      "public, max-age=31536000, immutable",
+    );
+    expect(await response.text()).toBe("console.log(1)");
+  });
+
+  test("a revalidated asset stays a bodiless 304", async () => {
+    const response = await worker.fetch(
+      new Request("https://example.test/assets/index-abc123.js", {
+        headers: { "If-None-Match": '"abc"' },
+      }),
+      testEnv(async () => new Response(null, { status: 304 })),
+    );
+
+    expect(response.status).toBe(304);
+    expect(response.headers.get("X-Content-Type-Options")).toBe("nosniff");
+    expect(await response.text()).toBe("");
+  });
+});

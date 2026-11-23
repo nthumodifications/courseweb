@@ -1,8 +1,24 @@
 import { Hono } from "hono";
+import type { Bindings } from "../index";
+import { rateLimitMiddleware } from "../utils/rate-limit";
 import { scrapeAllColleges, findRequirementsPDF } from "./scraper";
-import { getCachedRequirements, setCachedRequirements } from "./cache";
+import {
+  getCachedRequirements,
+  getRequirementsCacheAgeMs,
+  setCachedRequirements,
+} from "./cache";
 
-const graduation = new Hono()
+// A refresh re-scrapes every college page on the registrar's site. The route
+// is open, so it is limited per caller and refuses to run again while the
+// cache is this fresh, whoever is asking.
+const REFRESH_MIN_INTERVAL_MS = 5 * 60 * 1000;
+
+const refreshRateLimit = rateLimitMiddleware({
+  limiter: "VENUE_RATE_LIMITER",
+  errorMessage: "Too many refresh requests. Please try again in a minute.",
+});
+
+const graduation = new Hono<{ Bindings: Bindings }>()
   // Get all colleges and departments
   .get("/colleges", async (c) => {
     // Try cache first
@@ -51,7 +67,12 @@ const graduation = new Hono()
   })
 
   // Force refresh cache
-  .post("/refresh", async (c) => {
+  .post("/refresh", refreshRateLimit, async (c) => {
+    const cacheAgeMs = await getRequirementsCacheAgeMs(c);
+    if (cacheAgeMs !== null && cacheAgeMs < REFRESH_MIN_INTERVAL_MS) {
+      return c.json({ error: "Cache was refreshed recently" }, 429);
+    }
+
     const colleges = await scrapeAllColleges();
     await setCachedRequirements(c, colleges);
 

@@ -34,6 +34,20 @@ export async function getCachedRequirements(
   }
 }
 
+/** How long ago the cache was last written, or null if there is none. */
+export async function getRequirementsCacheAgeMs(
+  c: Context,
+): Promise<number | null> {
+  const prisma = await prismaClients.fetch(c.env.DB);
+
+  const result = await prisma.cache.findUnique({
+    where: { key: CACHE_KEY },
+  });
+
+  if (!result) return null;
+  return Date.now() - new Date(result.updatedAt).getTime();
+}
+
 export async function setCachedRequirements(
   c: Context,
   colleges: College[],
