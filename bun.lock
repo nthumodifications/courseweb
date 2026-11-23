@@ -59,7 +59,7 @@
         "focus-trap-react": "^11.0.3",
         "framer-motion": "^12.10.1",
         "fuse.js": "^6.6.2",
-        "hono": "^4.13.13",
+        "hono": "^4.13.18",
         "html-entities": "^2.5.2",
         "html-to-image": "^1.11.11",
         "iconv-lite": "^0.6.3",
@@ -478,7 +478,7 @@
     "fast-uri": "3.1.8",
     "fast-xml-parser": "4.5.7",
     "flatted": "3.4.4",
-    "hono": "^4.13.13",
+    "hono": "^4.13.18",
     "js-yaml": "4.3.2",
     "jsonwebtoken": "^9.0.3",
     "jws": "4.0.1",
@@ -2386,7 +2386,7 @@
 
     "hoist-non-react-statics": ["hoist-non-react-statics@3.3.2", "", { "dependencies": { "react-is": "^16.7.0" } }, "sha512-/gGivxi8JPKWNm/W0jSmzcMPpfpPLc3dY/6GxhX2hQ9iGj3aDfklV4ET7NjKpSinLpJ5vafa9iiGIEZg10SfBw=="],
 
-    "hono": ["hono@4.13.13", "", {}, "sha512-CQ46U0ZkAGmbT/4UxdzzGJpacP2IeKgY4a5/tOI9AABbpOMfK739wfDXmv1usCk+3RkKj1hQy4/fjhiwa2xlrA=="],
+    "hono": ["hono@4.13.18", "", {}, "sha512-H9q/E1XizaWstJxUW881dmLxEj+t/TrGGnyxINkm4+sK0qUwsMtFdo2BWI9Vs3cIS19MU6b6iCijoUoEf4f3DA=="],
 
     "htm": ["htm@3.1.1", "", {}, "sha512-983Vyg8NwUE7JkZ6NmOqpCZ+sh1bKv2iYTlUkzlWmA5JD2acKoxd4KVxbMmxX/85mtfdnDmTFoNKcg5DGAvxNQ=="],
 
