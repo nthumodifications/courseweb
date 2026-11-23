@@ -19,6 +19,7 @@ const chat = new Hono<{ Bindings: Bindings }>()
     "/*",
     rateLimitMiddleware({
       limiter: "AI_RATE_LIMITER",
+      whenUnavailable: "block",
       keyGenerator: userIdKeyGenerator,
       errorMessage: "Too many AI requests. Please try again in a minute.",
     }),
