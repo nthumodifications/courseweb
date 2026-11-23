@@ -30,6 +30,7 @@ import {
   type RecruitmentApplication,
   type RecruitmentStatus,
 } from "../api";
+import { applicationLinks } from "./links";
 
 /**
  * Recruitment review.
@@ -114,9 +115,7 @@ const ApplicationCard = ({
     }
   };
 
-  const links = Object.entries(application.links ?? {}).filter(
-    ([, value]) => typeof value === "string" && value,
-  );
+  const links = applicationLinks(application.links);
 
   return (
     <Card>
