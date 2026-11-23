@@ -3372,7 +3372,8 @@
   },
   "proxy_login": {
     "title": "NTHUMods 代理登录说明",
-    "updated_at": "更新时间：2025/03/04",
+    "updated_at": "更新时间：2026/11/23",
+    "retired_notice": "NTHUMods 已禁用代理登录。我们的服务器不会再代替你登录校务资讯系统，也不会收到你的校务系统密码。以下内容说明的是先前的运作方式，仅供参考。",
     "what_is": {
       "title": "什么是 NTHUMods 代理登录",
       "before_link": "NTHUMods 代理登录是一个帮助用户在 NTHUMods 平台上安全登录清华大学校务资讯系统（CCXP）的工具。它使用加密技术来保护用户的帐户和密码，确保用户的信息安全。这是使用",
