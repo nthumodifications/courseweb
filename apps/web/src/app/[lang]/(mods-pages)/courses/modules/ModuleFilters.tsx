@@ -146,8 +146,11 @@ const CreditsRangeFilter = ({
         disabled={!canRefine || stops.length < 2}
         aria-label={dict.course.module.filters.credits}
       />
-      {/* px-2.5 puts each label under a thumb centre (thumbs are 20px). */}
-      <div className="flex justify-between px-2.5 text-xs tabular-nums text-muted-foreground">
+      {/* Inset by the thumb radius (20px thumbs) so labels sit under thumb centres. */}
+      <div
+        className="flex justify-between text-xs tabular-nums text-muted-foreground"
+        style={{ paddingInline: 10 }}
+      >
         {stops.map((stop) => (
           <span key={stop} className="flex w-0 justify-center">
             {stop}
