@@ -6,6 +6,7 @@ import { ModuleTermAvailability } from "@/components/Courses/ModuleTermAvailabil
 import type { ModuleSearchResult } from "@/lib/modules";
 import { contentLanguage } from "@/helpers/contentLanguage";
 import type { Language } from "@/types/settings";
+import { useFillViewportHeight } from "@/hooks/useFillViewportHeight";
 import ModuleSearchContainer, {
   type ModuleSearchHit,
 } from "./ModuleSearchContainer";
@@ -76,6 +77,7 @@ const ModuleSearchResultRow = ({
 const ModulesSearchPage = () => {
   const dict = useDictionary();
   const { lang: rawLang } = useParams<{ lang: string }>();
+  const { ref, height } = useFillViewportHeight<HTMLDivElement>();
   const lang = rawLang === "en" || rawLang === "zh-cn" ? rawLang : "zh";
 
   return (
@@ -83,7 +85,12 @@ const ModulesSearchPage = () => {
       <Helmet>
         <title>{`${dict.course.module.search_title} | NTHUMods`}</title>
       </Helmet>
-      <div className="max-h-[calc(var(--content-height)-36px)]">
+      <div
+        ref={ref}
+        data-module-search-viewport
+        className="min-w-0 md:min-h-0 md:overflow-hidden md:pb-4"
+        style={height == null ? undefined : { height }}
+      >
         <ModuleSearchContainer
           renderRow={(hit: ModuleSearchHit) => (
             <ModuleSearchResultRow result={hit} lang={lang} />

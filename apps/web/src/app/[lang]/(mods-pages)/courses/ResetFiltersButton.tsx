@@ -18,9 +18,7 @@ const ResetFiltersButton = ({
   const { indexUiState, setIndexUiState } = useInstantSearch();
   const dict = useDictionary();
   const defaultSemester = useDefaultSemesterId();
-  const canReset = hasCourseSearchRefinements(
-    resetToIndexUiState ?? indexUiState,
-  );
+  const canReset = hasCourseSearchRefinements(indexUiState);
 
   const handleReset = () => {
     setIndexUiState((prev) => {

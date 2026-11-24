@@ -52,7 +52,7 @@ const ModuleSearchSort = () => {
   return (
     <Select value={selectedSort} onValueChange={refine}>
       <SelectTrigger
-        className="w-44"
+        className="w-32 shrink-0 sm:w-44"
         aria-label={dict.course.module.sort.label}
       >
         <SelectValue />

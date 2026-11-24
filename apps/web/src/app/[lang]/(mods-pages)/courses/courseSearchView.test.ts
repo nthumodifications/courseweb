@@ -50,5 +50,8 @@ describe("active course filter counts", () => {
         refinementList: { department: ["MATH"] },
       }),
     ).toBe(true);
+    expect(hasCourseSearchRefinements({ range: { credits: "2:3" } })).toBe(
+      true,
+    );
   });
 });
