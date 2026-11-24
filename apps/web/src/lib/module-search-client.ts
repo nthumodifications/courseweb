@@ -93,6 +93,80 @@ const getFacetFilterGroups = (value: unknown): string[][] => {
   );
 };
 
+type NumericFilterCondition = {
+  attribute: string;
+  operator: ">=" | "<=" | ">" | "<" | "=" | ":";
+  value: number;
+};
+
+const parseNumericFilter = (value: unknown): NumericFilterCondition | null => {
+  if (typeof value !== "string") return null;
+  const match = /^([\w.]+)\s*(>=|<=|>|<|=|:)\s*(-?\d+(?:\.\d+)?)$/.exec(value);
+  if (!match) return null;
+  return {
+    attribute: match[1]!,
+    operator: match[2]! as NumericFilterCondition["operator"],
+    value: Number(match[3]),
+  };
+};
+
+const getNumericFilterGroups = (value: unknown) => {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((group) =>
+      (Array.isArray(group) ? group : [group])
+        .map(parseNumericFilter)
+        .filter(
+          (condition): condition is NumericFilterCondition =>
+            condition !== null,
+        ),
+    )
+    .filter((group) => group.length > 0);
+};
+
+const matchesNumericCondition = (
+  value: number,
+  condition: NumericFilterCondition,
+) => {
+  switch (condition.operator) {
+    case ">=":
+      return value >= condition.value;
+    case "<=":
+      return value <= condition.value;
+    case ">":
+      return value > condition.value;
+    case "<":
+      return value < condition.value;
+    case "=":
+    case ":":
+      return value === condition.value;
+  }
+};
+
+const matchesNumericFilters = (
+  result: ModuleSearchResult,
+  groups: readonly NumericFilterCondition[][],
+  excludedAttribute?: string,
+) => {
+  const applicableGroups = groups
+    .map((group) =>
+      group.filter((condition) => condition.attribute !== excludedAttribute),
+    )
+    .filter((group) => group.length > 0);
+  const creditGroups = applicableGroups
+    .map((group) =>
+      group.filter((condition) => condition.attribute === "credits"),
+    )
+    .filter((group) => group.length > 0);
+
+  if (creditGroups.length === 0) return true;
+  return result.credits.some((credit) =>
+    creditGroups.every((group) =>
+      group.some((condition) => matchesNumericCondition(credit, condition)),
+    ),
+  );
+};
+
 const matchesFacetFilter = (
   result: ModuleSearchResult,
   filter: string,
@@ -128,19 +202,24 @@ const getFacetCounts = (
   results: readonly ModuleSearchResult[],
   latestSemesters: readonly string[],
   facetFilterGroups: readonly string[][],
+  numericFilterGroups: readonly NumericFilterCondition[][],
 ) => {
   const facets: Record<string, Record<string, number>> = {};
   for (const facet of MODULE_SEARCH_FACETS) {
     const counts: Record<string, number> = {};
-    const facetResults = results.filter((result) =>
-      facetFilterGroups.every(
-        (group) =>
-          group.some((filter) => getFacetName(filter) === facet) ||
-          group.some((filter) =>
-            matchesFacetFilter(result, filter, latestSemesters),
-          ),
-      ),
-    );
+    const facetResults = results
+      .filter((result) =>
+        facetFilterGroups.every(
+          (group) =>
+            group.some((filter) => getFacetName(filter) === facet) ||
+            group.some((filter) =>
+              matchesFacetFilter(result, filter, latestSemesters),
+            ),
+        ),
+      )
+      .filter((result) =>
+        matchesNumericFilters(result, numericFilterGroups, facet),
+      );
     for (const result of facetResults) {
       for (const value of getModuleSearchFacetValues(
         result,
@@ -184,19 +263,21 @@ export const createModuleSearchClient = (
       const query = typeof params.query === "string" ? params.query : "";
       const latestSemesters = getLatestSemesters(results);
       const facetFilterGroups = getFacetFilterGroups(params.facetFilters);
+      const numericFilterGroups = getNumericFilterGroups(params.numericFilters);
       const queryResults = results.filter((result) =>
         matchesModuleSearchQuery(result, query),
       );
-      const filteredResults = queryResults.filter((result) =>
-        facetFilterGroups.every((group) =>
-          group.some((filter) =>
-            matchesFacetFilter(result, filter, latestSemesters),
-          ),
-        ),
+      const filteredQueryResults = queryResults.filter(
+        (result) =>
+          facetFilterGroups.every((group) =>
+            group.some((filter) =>
+              matchesFacetFilter(result, filter, latestSemesters),
+            ),
+          ) && matchesNumericFilters(result, numericFilterGroups),
       );
       const sort = getSort(request.indexName);
       const sortedResults = filterAndSortModuleSearchResults(
-        filteredResults,
+        filteredQueryResults,
         query,
         {},
         sort,
@@ -228,7 +309,33 @@ export const createModuleSearchClient = (
           queryResults,
           latestSemesters,
           facetFilterGroups,
+          numericFilterGroups,
         ),
+        facets_stats: (() => {
+          const values = queryResults
+            .filter((result) =>
+              facetFilterGroups.every((group) =>
+                group.some((filter) =>
+                  matchesFacetFilter(result, filter, latestSemesters),
+                ),
+              ),
+            )
+            .filter((result) =>
+              matchesNumericFilters(result, numericFilterGroups, "credits"),
+            )
+            .flatMap((result) => result.credits)
+            .filter(Number.isFinite);
+          if (values.length === 0) return {};
+          const sum = values.reduce((total, value) => total + value, 0);
+          return {
+            credits: {
+              min: Math.min(...values),
+              max: Math.max(...values),
+              avg: sum / values.length,
+              sum,
+            },
+          };
+        })(),
       };
     });
     return {

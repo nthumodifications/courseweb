@@ -1,12 +1,6 @@
-import { useState, type ReactNode } from "react";
-import { useClearRefinements, useRefinementList } from "react-instantsearch";
+import { useState } from "react";
+import { useRefinementList } from "react-instantsearch";
 import { departments, GETargetCodes } from "@courseweb/shared";
-import {
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-  Button,
-} from "@courseweb/ui";
 import ExpandableClassFilter from "../student/planner/course-picker/ExpandableClassFilter";
 import ExpandableFilter from "../student/planner/course-picker/ExpandableFilter";
 import InlineCheckboxFilter from "../student/planner/course-picker/InlineCheckboxFilter";
@@ -55,14 +49,15 @@ export const MORE_FILTER_SECTION_IDS = [
 ] as const satisfies readonly FilterSectionId[];
 
 export type FilterSectionCounts = Record<FilterSectionId, number>;
-type SectionPreferences = Partial<Record<FilterSectionId, boolean>>;
+type SectionPreferences<T extends string> = Partial<Record<T, boolean>>;
 
-const FILTER_OPEN_KEY = "courseSearchFilterSections";
-
-const readSectionPreferences = (): SectionPreferences => {
+const readSectionPreferences = <T extends string>(
+  sectionIds: readonly T[],
+  storageKey: string,
+): SectionPreferences<T> => {
   try {
     const parsed: unknown = JSON.parse(
-      window.localStorage.getItem(FILTER_OPEN_KEY) ?? "{}",
+      window.localStorage.getItem(storageKey) ?? "{}",
     );
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
       return {};
@@ -70,18 +65,20 @@ const readSectionPreferences = (): SectionPreferences => {
     return Object.fromEntries(
       Object.entries(parsed).filter(
         ([key, value]) =>
-          FILTER_SECTION_IDS.includes(key as FilterSectionId) &&
-          typeof value === "boolean",
+          sectionIds.includes(key as T) && typeof value === "boolean",
       ),
-    ) as SectionPreferences;
+    ) as SectionPreferences<T>;
   } catch {
     return {};
   }
 };
 
-const persistSectionPreferences = (preferences: SectionPreferences) => {
+const persistSectionPreferences = <T extends string>(
+  storageKey: string,
+  preferences: SectionPreferences<T>,
+) => {
   try {
-    window.localStorage.setItem(FILTER_OPEN_KEY, JSON.stringify(preferences));
+    window.localStorage.setItem(storageKey, JSON.stringify(preferences));
   } catch {
     // Keep the accordion usable when storage is unavailable.
   }
@@ -166,21 +163,24 @@ const useRefinementCount = (attribute: string) => {
   return countActiveRefinementValues(items);
 };
 
-export const countMoreFilterValues = (counts: FilterSectionCounts) =>
-  MORE_FILTER_SECTION_IDS.reduce((total, id) => total + counts[id], 0);
-
-export const useFilterSectionPreferences = (counts: FilterSectionCounts) => {
-  const [preferences, setPreferences] = useState(readSectionPreferences);
-  const openSections = MORE_FILTER_SECTION_IDS.filter(
+export const useFilterSectionPreferences = <T extends string>(
+  sectionIds: readonly T[],
+  counts: Record<T, number>,
+  storageKey: string,
+) => {
+  const [preferences, setPreferences] = useState(() =>
+    readSectionPreferences(sectionIds, storageKey),
+  );
+  const openSections = sectionIds.filter(
     (id) => preferences[id] ?? counts[id] > 0,
   );
   const onOpenChange = (values: string[]) => {
     const next = Object.fromEntries(
-      MORE_FILTER_SECTION_IDS.map((id) => [id, values.includes(id)]),
-    ) as SectionPreferences;
+      sectionIds.map((id) => [id, values.includes(id)]),
+    ) as SectionPreferences<T>;
     const updated = { ...preferences, ...next };
     setPreferences(updated);
-    persistSectionPreferences(updated);
+    persistSectionPreferences(storageKey, updated);
   };
 
   return { openSections, onOpenChange };
@@ -293,61 +293,3 @@ export const CourseFilterBody = ({
       );
   }
 };
-
-export const ClearFilterSectionButton = ({
-  id,
-  count,
-}: {
-  id: FilterSectionId;
-  count: number;
-}) => {
-  const dict = useDictionary();
-  const { refine } = useClearRefinements({
-    includedAttributes: [FILTER_ATTRIBUTES[id]],
-  });
-
-  if (count === 0) return null;
-
-  return (
-    <Button
-      type="button"
-      variant="ghost"
-      size="sm"
-      className="h-8 px-3 text-muted-foreground"
-      onClick={() => refine()}
-    >
-      {dict.course.refine.clear_section}
-    </Button>
-  );
-};
-
-export const AccordionFilterSection = ({
-  id,
-  label,
-  count,
-  children,
-}: {
-  id: FilterSectionId;
-  label: string;
-  count: number;
-  children: ReactNode;
-}) => (
-  <AccordionItem value={id} className="rounded-md border-0 bg-surface">
-    <AccordionTrigger className="min-h-10 px-3 py-2 text-left text-sm font-medium hover:no-underline">
-      <span className="flex min-w-0 items-center gap-2">
-        <span>{label}</span>
-        {count > 0 && (
-          <span className="text-xs text-muted-foreground">{count}</span>
-        )}
-      </span>
-    </AccordionTrigger>
-    <AccordionContent className="flex flex-col gap-2 px-3 pb-3">
-      {count > 0 && (
-        <div className="flex justify-end">
-          <ClearFilterSectionButton id={id} count={count} />
-        </div>
-      )}
-      {children}
-    </AccordionContent>
-  </AccordionItem>
-);

@@ -57,6 +57,7 @@ export const hasCourseSearchRefinements = (uiState: {
   menu?: Record<string, unknown>;
   toggle?: Record<string, unknown>;
   numericMenu?: Record<string, unknown>;
+  range?: Record<string, unknown>;
   configure?: { filters?: unknown };
 }) => {
   const hasRefinementValues = [
@@ -80,6 +81,9 @@ export const hasCourseSearchRefinements = (uiState: {
   return (
     hasRefinementValues ||
     hasMenuRefinement ||
+    Object.values(uiState.range ?? {}).some(
+      (value) => typeof value === "string" && value.trim().length > 0,
+    ) ||
     (typeof uiState.configure?.filters === "string" &&
       uiState.configure.filters.trim().length > 0)
   );
