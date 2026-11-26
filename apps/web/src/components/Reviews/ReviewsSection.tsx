@@ -884,6 +884,16 @@ export const ReviewsSection = ({
       ),
     [instructor],
   );
+  // The timetable dialog links here with #reviews; the section mounts after
+  // the course loads, so the browser's own anchor jump has already missed it.
+  const scrolledToHash = useRef(false);
+  useEffect(() => {
+    if (scrolledToHash.current || window.location.hash !== "#reviews") return;
+    const target = document.getElementById("reviews");
+    if (!target) return;
+    scrolledToHash.current = true;
+    target.scrollIntoView({ block: "start" });
+  }, [isSuccess]);
 
   const sortedReviews = useMemo(() => {
     const merged = mergeReviewRows(

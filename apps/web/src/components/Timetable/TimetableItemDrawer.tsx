@@ -162,6 +162,11 @@ const TimetableCourseQuickAccess = ({ course }: { course: MinimalCourse }) => {
   const campusMapHref = getCampusMapHref(lang, course.venues);
   const courseColor =
     colorMap[course.raw_id] ?? currentColors[0] ?? "hsl(var(--muted))";
+  const hasCustomColor =
+    /^#[0-9a-f]{6}$/i.test(courseColor) &&
+    !currentColors.some(
+      (color) => color.toLowerCase() === courseColor.toLowerCase(),
+    );
   const hasCourseTimes = hasTimes(course);
   const meetingGroups = hasCourseTimes
     ? getCourseMeetingGroups(course.times, course.venues)
@@ -209,14 +214,14 @@ const TimetableCourseQuickAccess = ({ course }: { course: MinimalCourse }) => {
           background: `color-mix(in srgb, ${courseColor} 35%, hsl(var(--background)))`,
         }}
       >
-        <div className="mb-1 flex max-w-[calc(100%_-_2rem)] flex-wrap items-baseline gap-2 text-xs">
+        <div className="mb-1 flex max-w-[calc(100%_-_2rem)] flex-wrap items-baseline text-xs">
           <span className="font-medium">
             {course.department} {course.course}-{course.class.padStart(2, "0")}
           </span>
           <span className="text-muted-foreground">
-            {dialogDict.metadata_separator} {course.credits}{" "}
-            {dict.course.credits}
-            {dialogDict.metadata_separator}{" "}
+            {dialogDict.metadata_separator}
+            {`${course.credits} ${dict.course.credits}`}
+            {dialogDict.metadata_separator}
             {isEnglishCourseLanguage(course.language)
               ? dict.course.tags.english
               : dict.course.tags.chinese}
@@ -245,7 +250,7 @@ const TimetableCourseQuickAccess = ({ course }: { course: MinimalCourse }) => {
                   {meeting.end}
                 </span>
                 <span className="text-muted-foreground">
-                  {dialogDict.meeting_separator}{" "}
+                  {dialogDict.meeting_separator}
                   {meeting.venue
                     ? localizeData(meeting.venue)
                     : dict.course.details.no_venues}
@@ -257,7 +262,7 @@ const TimetableCourseQuickAccess = ({ course }: { course: MinimalCourse }) => {
               <div key={`${venue}-${index}`} className="text-sm">
                 <span className="text-muted-foreground">
                   {localizeData(venue)}
-                  {dialogDict.meeting_separator}{" "}
+                  {dialogDict.meeting_separator}
                   {dict.course.details.missing_time}
                 </span>
               </div>
@@ -281,13 +286,18 @@ const TimetableCourseQuickAccess = ({ course }: { course: MinimalCourse }) => {
             onClick={() => setColor(course.raw_id, color)}
           />
         ))}
-        <label className="relative flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-full border border-dashed border-muted-foreground text-muted-foreground">
-          <Plus className="h-3 w-3" aria-hidden="true" />
+        <label
+          className={`relative flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground ${hasCustomColor ? "outline outline-2 outline-foreground outline-offset-2" : "border border-dashed border-muted-foreground"}`}
+          style={hasCustomColor ? { backgroundColor: courseColor } : undefined}
+        >
+          {!hasCustomColor && <Plus className="h-3 w-3" aria-hidden="true" />}
           <input
             type="color"
             aria-label={dialogDict.custom_color}
             className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-            value={courseColor}
+            value={
+              /^#[0-9a-f]{6}$/i.test(courseColor) ? courseColor : "#000000"
+            }
             onChange={(event) => setColor(course.raw_id, event.target.value)}
           />
         </label>
@@ -309,7 +319,7 @@ const TimetableCourseQuickAccess = ({ course }: { course: MinimalCourse }) => {
               {getWeekdayName(nextMeeting.dayOfWeek)} {nextMeeting.start}
             </span>
             <span className="text-muted-foreground">
-              {dialogDict.meeting_separator}{" "}
+              {dialogDict.meeting_separator}
               {nextMeeting.venue
                 ? localizeData(nextMeeting.venue)
                 : dict.course.details.no_venues}
@@ -432,7 +442,12 @@ export const TimetableItemDrawer = ({
     return (
       <Dialog>
         <DialogTrigger asChild>{children}</DialogTrigger>
-        <DialogContent className="w-[420px] max-w-[calc(100vw_-_2rem)] gap-0 overflow-hidden p-0 sm:max-w-[420px]">
+        <DialogContent
+          className="w-[420px] max-w-[calc(100vw_-_2rem)] gap-0 overflow-hidden p-0 sm:max-w-[420px]"
+          // Focusing the first colour swatch on open draws a ring that reads
+          // as the selected colour; keep focus on the dialog itself.
+          onOpenAutoFocus={(event) => event.preventDefault()}
+        >
           <DialogTitle className="sr-only">
             {localizeData(course.name_zh)} -{" "}
             {course.teacher_zh.map(localizeData).join(",")}
