@@ -118,7 +118,10 @@ const FavouriteCourseListItem = ({
         actionsAfterTags
         timeConflict={
           conflictNames.length > 0
-            ? `${dict.timetable.conflict}: ${conflictNames.join(", ")}`
+            ? dict.timetable.conflict_with.replace(
+                "{courses}",
+                conflictNames.join(language === "en" ? ", " : "、"),
+              )
             : undefined
         }
         leading={

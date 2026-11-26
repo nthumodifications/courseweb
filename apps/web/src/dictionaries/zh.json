@@ -230,7 +230,12 @@
         "S": "週六",
         "U": "週日"
       }
-    }
+    },
+    "conflict_with": "與「{courses}」衝堂",
+    "courses_heading": "課程",
+    "course_count": "{count} 課",
+    "credit_count": "{count} 學分",
+    "drag_to_reorder": "拖曳排序"
   },
   "course": {
     "credits": "學分",

@@ -2,7 +2,6 @@ import {
   Search,
   Trash,
   AlertTriangle,
-  Copy,
   GripVertical,
   Loader2,
   Settings,
@@ -13,19 +12,15 @@ import { useSettings } from "@/hooks/contexts/settings";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { useNavigate } from "react-router-dom";
 import useDictionary from "@/dictionaries/useDictionary";
-import { Suspense, useMemo } from "react";
+import { Suspense, useMemo, type ReactNode } from "react";
 import useSyncedStorage from "@/hooks/useSyncedStorage";
-import { hasConflictingTimeslots, hasSameCourse } from "@/helpers/courses";
+import { hasSameCourse } from "@/helpers/courses";
 import { MinimalCourse } from "@/types/courses";
 import {
   Button,
   Popover,
   PopoverContent,
   PopoverTrigger,
-  Separator,
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
   Switch,
   Label,
   Select,
@@ -59,12 +54,14 @@ import {
   restrictToVerticalAxis,
   restrictToWindowEdges,
 } from "@dnd-kit/modifiers";
-import Compact from "@uiw/react-color-compact";
 import { TimetableItemDrawer } from "./TimetableItemDrawer";
 import { isCourseHidden } from "@/helpers/timetableVisibility";
 import { UnresolvedCoursesNotice } from "./UnresolvedCoursesNotice";
 import CourseListItem from "@/components/Courses/CourseListItem";
 import type { CourseDefinition } from "@/config/supabase";
+import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
+import { decodeCourseText } from "@/lib/course-text";
+import { getFavouriteCourseConflicts } from "@/app/[lang]/(mods-pages)/courses/favouriteCourseConflicts";
 import { lazyWithRetry } from "@/lib/chunk-recovery";
 
 const DownloadTimetableDialogLazy = lazyWithRetry(
@@ -165,29 +162,78 @@ interface DisplaySettings {
   lockOrder: boolean;
 }
 
+// Ghost icon buttons used on every row and in the toolbar, so the panel has
+// one button style.
+export const TIMETABLE_ICON_BUTTON =
+  "h-8 w-8 text-muted-foreground hover:bg-surface hover:text-foreground";
+
+/**
+ * The course colour doubles as the drag handle: it shows the colour, and
+ * turns into a grip while the row is hovered or the handle is focused.
+ * Colour itself is changed inside the course dialog.
+ */
+const ColorDragHandle = ({
+  color,
+  draggable,
+  label,
+  handleProps,
+}: {
+  color?: string;
+  draggable: boolean;
+  label: string;
+  handleProps: Record<string, unknown>;
+}) => {
+  const dot = (
+    <span
+      className="block h-3 w-3 rounded-full"
+      style={{ backgroundColor: color }}
+      aria-hidden="true"
+    />
+  );
+  if (!draggable)
+    return (
+      <span className="flex h-6 w-6 shrink-0 items-center justify-center">
+        {dot}
+      </span>
+    );
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      className="group/handle flex h-6 w-6 shrink-0 cursor-grab touch-none items-center justify-center rounded-md text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:cursor-grabbing"
+      onClick={(event) => event.stopPropagation()}
+      {...handleProps}
+    >
+      <span className="group-hover/row:hidden group-focus-visible/handle:hidden">
+        {dot}
+      </span>
+      <GripVertical
+        className="hidden h-4 w-4 group-hover/row:block group-focus-visible/handle:block"
+        aria-hidden="true"
+      />
+    </button>
+  );
+};
+
 const TimetableCourseListItem = ({
   course,
-  hasConflict,
+  conflictNames,
   isDuplicate,
   priority,
   displaySettings,
 }: {
   course: MinimalCourse;
-  hasConflict: boolean;
+  conflictNames: string[];
   isDuplicate: boolean;
   priority: number;
   displaySettings: DisplaySettings;
 }) => {
   const dict = useDictionary();
+  const { language } = useSettings();
 
-  const {
-    deleteCourse,
-    colorMap,
-    setColor,
-    currentColors,
-    preferences,
-    setPreferences,
-  } = useUserTimetable();
+  const { deleteCourse, colorMap, preferences, setPreferences } =
+    useUserTimetable();
   const isHidden = isCourseHidden(course.raw_id, preferences.hiddenCourses);
 
   const { attributes, listeners, setNodeRef, transform, transition } =
@@ -197,10 +243,13 @@ const TimetableCourseListItem = ({
     transform: CSS.Translate.toString(transform),
     transition,
   };
+  const visibilityLabel = isHidden
+    ? dict.timetable.course_actions.show_course
+    : dict.timetable.course_actions.hide_course;
 
   return (
     <div
-      className={`min-w-0 max-w-3xl ${isHidden ? "text-muted-foreground" : ""}`}
+      className={`group/row min-w-0 max-w-3xl py-2 ${isHidden ? "text-muted-foreground" : ""}`}
       ref={setNodeRef}
       style={style}
     >
@@ -219,115 +268,67 @@ const TimetableCourseListItem = ({
             showChevron={false}
             compact
             alignSideItemsTop
+            actionsAfterTags
             priority={priority}
             missingTimeLabel={dict.course.details.missing_time}
             dimmed={isHidden}
             onCourseClick={() => undefined}
+            timeConflict={
+              conflictNames.length > 0
+                ? dict.timetable.conflict_with.replace(
+                    "{courses}",
+                    conflictNames.join(language === "en" ? ", " : "、"),
+                  )
+                : undefined
+            }
+            notice={isDuplicate ? dict.timetable.duplicate : undefined}
             leading={
-              <div
-                className="flex shrink-0 flex-row items-center gap-2"
-                onClick={(event) => event.stopPropagation()}
-                onKeyDown={(event) => event.stopPropagation()}
-              >
-                {!displaySettings.lockOrder && (
-                  <GripVertical
-                    className="w-4 h-4 text-muted-foreground"
-                    {...attributes}
-                    {...listeners}
-                  />
-                )}
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <div className="p-1 rounded-md hover:outline outline-1 outline-border">
-                      <div
-                        className="w-4 h-4 rounded-full"
-                        style={{ backgroundColor: colorMap[course.raw_id] }}
-                      ></div>
-                    </div>
-                  </PopoverTrigger>
-                  <PopoverContent className="p-0">
-                    <Compact
-                      color={colorMap[course.raw_id]}
-                      onChange={(color) => {
-                        setColor(course.raw_id, color.hex);
-                      }}
-                      colors={currentColors}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
+              <ColorDragHandle
+                color={colorMap[course.raw_id]}
+                draggable={!displaySettings.lockOrder}
+                label={dict.timetable.drag_to_reorder}
+                handleProps={{ ...attributes, ...listeners }}
+              />
             }
             actions={
               <div
-                className="flex flex-row space-x-2 items-center"
+                className="flex flex-row items-center"
                 onClick={(event) => event.stopPropagation()}
                 onKeyDown={(event) => event.stopPropagation()}
               >
-                {hasConflict && (
-                  <HoverCard>
-                    <HoverCardTrigger asChild>
-                      <AlertTriangle className="w-6 h-6 text-red-500" />
-                    </HoverCardTrigger>
-                    <HoverCardContent>
-                      <span>{dict.timetable.conflict}</span>
-                    </HoverCardContent>
-                  </HoverCard>
-                )}
-                {isDuplicate && (
-                  <HoverCard>
-                    <HoverCardTrigger asChild>
-                      <Copy className="w-6 h-6 text-yellow-500" />
-                    </HoverCardTrigger>
-                    <HoverCardContent>
-                      <span>{dict.timetable.duplicate}</span>
-                    </HoverCardContent>
-                  </HoverCard>
-                )}
-                <div className="flex flex-row">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    title={
-                      isHidden
-                        ? dict.timetable.course_actions.show_course
-                        : dict.timetable.course_actions.hide_course
-                    }
-                    aria-label={
-                      isHidden
-                        ? dict.timetable.course_actions.show_course
-                        : dict.timetable.course_actions.hide_course
-                    }
-                    aria-pressed={isHidden}
-                    onClick={() =>
-                      setPreferences((previous) => {
-                        const hiddenCourses = { ...previous.hiddenCourses };
-                        if (isCourseHidden(course.raw_id, hiddenCourses)) {
-                          delete hiddenCourses[course.raw_id];
-                        } else {
-                          hiddenCourses[course.raw_id] = true;
-                        }
-                        return { ...previous, hiddenCourses };
-                      })
-                    }
-                  >
-                    {isHidden ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </Button>
-                  <Button
-                    className="rounded-l-none"
-                    variant="outline"
-                    size="icon"
-                    aria-label={dict.a11y.delete}
-                    onClick={() => deleteCourse(course.raw_id)}
-                  >
-                    <Trash className="w-4 h-4" />
-                  </Button>
-                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className={TIMETABLE_ICON_BUTTON}
+                  title={visibilityLabel}
+                  aria-label={visibilityLabel}
+                  aria-pressed={isHidden}
+                  onClick={() =>
+                    setPreferences((previous) => {
+                      const hiddenCourses = { ...previous.hiddenCourses };
+                      if (isCourseHidden(course.raw_id, hiddenCourses)) {
+                        delete hiddenCourses[course.raw_id];
+                      } else {
+                        hiddenCourses[course.raw_id] = true;
+                      }
+                      return { ...previous, hiddenCourses };
+                    })
+                  }
+                >
+                  {isHidden ? <EyeOff /> : <Eye />}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className={`${TIMETABLE_ICON_BUTTON} hover:text-destructive`}
+                  title={dict.course.item.remove_from_semester}
+                  aria-label={dict.course.item.remove_from_semester}
+                  onClick={() => deleteCourse(course.raw_id)}
+                >
+                  <Trash />
+                </Button>
               </div>
             }
           />
@@ -340,9 +341,15 @@ const TimetableCourseListItem = ({
 export const TimetableCourseList = ({
   semester,
   vertical = true,
+  toolbar,
+  afterList,
 }: {
   semester: string;
   vertical?: boolean;
+  /** Extra icon buttons for the bottom toolbar, after display settings. */
+  toolbar?: ReactNode;
+  /** A section shown between the course list and the toolbar. */
+  afterList?: ReactNode;
 }) => {
   const { language } = useSettings();
   const dict = useDictionary();
@@ -393,10 +400,20 @@ export const TimetableCourseList = ({
     [displayCourseData],
   );
 
-  const timeConflicts = useMemo(
-    () => hasConflictingTimeslots(displayCourseData as MinimalCourse[]),
-    [displayCourseData],
-  );
+  const localizeData = useLocalizedZhData();
+  const conflictNamesById = useMemo(() => {
+    const semesterCourses = displayCourseData as MinimalCourse[];
+    return new Map(
+      semesterCourses.map((course) => [
+        course.raw_id,
+        getFavouriteCourseConflicts(course, semesterCourses).map((conflict) =>
+          language === "en"
+            ? decodeCourseText(conflict.name_en)
+            : localizeData(decodeCourseText(conflict.name_zh)),
+        ),
+      ]),
+    );
+  }, [displayCourseData, language, localizeData]);
   const sensors = useSensors(
     useSensor(MouseSensor, {
       activationConstraint: {
@@ -449,12 +466,30 @@ export const TimetableCourseList = ({
 
   return (
     <div className="flex flex-col gap-2">
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="text-xs font-medium text-muted-foreground">
+          {dict.timetable.courses_heading}
+        </span>
+        {displayCourseData.length > 0 && (
+          <span className="text-xs text-muted-foreground">
+            {dict.timetable.course_count.replace(
+              "{count}",
+              String(displayCourseData.length),
+            )}
+            {"・"}
+            {dict.timetable.credit_count.replace(
+              "{count}",
+              String(totalCredits),
+            )}
+          </span>
+        )}
+      </div>
       <div
-        className={`${
+        className={
           !vertical
-            ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 "
-            : "flex flex-col"
-        } gap-4`}
+            ? "grid grid-cols-1 gap-x-4 sm:grid-cols-2 lg:grid-cols-3"
+            : "flex flex-col divide-y divide-border"
+        }
       >
         <DndContext
           sensors={sensors}
@@ -474,9 +509,7 @@ export const TimetableCourseList = ({
               <TimetableCourseListItem
                 key={course.raw_id}
                 course={course as MinimalCourse}
-                hasConflict={timeConflicts.some(
-                  (ts) => ts.course.raw_id == course.raw_id,
-                )}
+                conflictNames={conflictNamesById.get(course.raw_id) ?? []}
                 isDuplicate={duplicates.includes(course.raw_id)}
                 priority={peAndGeAllocation.indexOf(course.raw_id) + 1}
                 displaySettings={displaySettings}
@@ -515,7 +548,8 @@ export const TimetableCourseList = ({
             </span>
             <div className="flex flex-row gap-2">
               <Button
-                variant="outline"
+                variant="ghost"
+                className="bg-surface hover:bg-muted"
                 onClick={() => navigate(`/${language}/courses`)}
               >
                 <Search className="w-4 h-4" /> {dict.timetable.all_courses}
@@ -524,16 +558,21 @@ export const TimetableCourseList = ({
           </div>
         )}
       </div>
-      <Separator orientation="horizontal" />
-      <div className="flex flex-row justify-between items-center">
+      {afterList}
+      <div className="flex items-center gap-1 border-t pt-2">
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="ghost" size="sm" className="flex gap-1">
-              <Settings className="h-4 w-4" />
-              {dict.timetable.display_settings}
+            <Button
+              variant="ghost"
+              size="icon"
+              className={TIMETABLE_ICON_BUTTON}
+              aria-label={dict.timetable.display_settings}
+              title={dict.timetable.display_settings}
+            >
+              <Settings />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-80">
+          <PopoverContent className="w-80" align="start">
             <div className="flex flex-col gap-4 p-2">
               <div className="flex items-center justify-between space-x-2">
                 <Label htmlFor="english-names">
@@ -636,8 +675,9 @@ export const TimetableCourseList = ({
                 />
               </div>
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
+                className="bg-surface hover:bg-muted"
                 onClick={() => setDisplaySettings(defaultSettings)}
               >
                 {dict.timetable.reset_default}
@@ -645,20 +685,7 @@ export const TimetableCourseList = ({
             </div>
           </PopoverContent>
         </Popover>
-        <div className="flex flex-row gap-4">
-          <div className="space-x-2">
-            <span className="font-bold">{displayCourseData.length}</span>
-            <span className="text-muted-foreground">
-              {dict.timetable.course}
-            </span>
-          </div>
-          <div className="space-x-2">
-            <span className="font-bold">{totalCredits}</span>
-            <span className="text-muted-foreground">
-              {dict.timetable.credits}
-            </span>
-          </div>
-        </div>
+        {toolbar}
       </div>
     </div>
   );

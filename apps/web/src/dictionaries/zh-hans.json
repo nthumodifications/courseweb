@@ -230,7 +230,12 @@
         "S": "周六",
         "U": "周日"
       }
-    }
+    },
+    "conflict_with": "与「{courses}」冲堂",
+    "courses_heading": "课程",
+    "course_count": "{count} 课",
+    "credit_count": "{count} 学分",
+    "drag_to_reorder": "拖曳排序"
   },
   "course": {
     "credits": "学分",
