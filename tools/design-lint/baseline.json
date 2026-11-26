@@ -41,7 +41,19 @@
       "files": {}
     },
     "overlay-shadow": {
-      "files": {}
+      "files": {
+        "apps/web/src/components/Calendar/CalendarMonthContainer.tsx": 2,
+        "apps/web/src/components/Calendar/CalendarPage.tsx": 1,
+        "apps/web/src/components/Calendar/CalendarWeekContainer.tsx": 2,
+        "apps/web/src/components/Calendar/CurrentTimePointer.tsx": 3,
+        "apps/web/src/components/Calendar/EventForm.tsx": 1,
+        "apps/web/src/components/Calendar/calendar_hook.tsx": 1,
+        "apps/web/src/components/Courses/ModuleDemandChart.tsx": 1,
+        "apps/web/src/components/Widgets/WidgetShell.tsx": 1,
+        "apps/web/src/pages/DesignSystem.tsx": 2,
+        "packages/ui/src/components/ui/card.tsx": 1,
+        "packages/ui/src/components/ui/custom_timeselect.tsx": 1
+      }
     },
     "centered-layout": {
       "files": {
