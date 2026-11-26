@@ -48,10 +48,14 @@ It defaults to `firestore`, which preserves the existing behavior. Set it to
 `dual` to keep Firestore as the only request read source and source of truth.
 Dual mode lazily shadow-copies Firestore records into Postgres with the guarded
 last-write-wins comparison; Postgres failures are logged without affecting the
-request. Set it to `postgres` only after the backfill and dual-mode verification
-are complete; this mode does not contact Firestore for key-value storage.
+request. `postgres-primary` is the cutover step: Postgres is read and written as
+the source of truth, and every write is copied back to Firestore in the
+background, so switching back to `dual` or `firestore` loses nothing. Set it to
+`postgres` only after `postgres-primary` has run cleanly in production; this
+mode does not contact Firestore for key-value storage.
 
-The supported values are exactly `firestore`, `dual`, and `postgres`. Any
+The supported values are exactly `firestore`, `dual`, `postgres-primary`, and
+`postgres`. Any
 other non-empty value prevents the service from serving requests. The Docker
 Compose default is also `firestore`.
 
