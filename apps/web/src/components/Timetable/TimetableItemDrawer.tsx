@@ -121,6 +121,15 @@ const ImportantDates = ({ courseId }: { courseId: RawCourseID }) => {
   );
 };
 
+/** The dialog header (and the mobile drawer top) wear the course's colour. */
+const courseTint = (color: string) =>
+  `color-mix(in srgb, ${color} 35%, hsl(var(--background)))`;
+
+const useCourseColor = (raw_id: RawCourseID) => {
+  const { colorMap, currentColors } = useUserTimetable();
+  return colorMap[raw_id] ?? currentColors[0] ?? "hsl(var(--muted))";
+};
+
 const InformationRow = ({
   label,
   action,
@@ -146,8 +155,7 @@ const WEEKDAY_KEY = {
 } as const;
 
 const TimetableCourseQuickAccess = ({ course }: { course: MinimalCourse }) => {
-  const { deleteCourse, colorMap, setColor, currentColors } =
-    useUserTimetable();
+  const { deleteCourse, setColor, currentColors } = useUserTimetable();
   const { openCourse } = useCourseLink();
   const dict = useDictionary();
   const dialogDict = dict.timetable.item_dialog;
@@ -160,8 +168,7 @@ const TimetableCourseQuickAccess = ({ course }: { course: MinimalCourse }) => {
     (semester) => semester.id === defaultSemesterId,
   );
   const campusMapHref = getCampusMapHref(lang, course.venues);
-  const courseColor =
-    colorMap[course.raw_id] ?? currentColors[0] ?? "hsl(var(--muted))";
+  const courseColor = useCourseColor(course.raw_id);
   const hasCustomColor =
     /^#[0-9a-f]{6}$/i.test(courseColor) &&
     !currentColors.some(
@@ -211,7 +218,7 @@ const TimetableCourseQuickAccess = ({ course }: { course: MinimalCourse }) => {
       <div
         className="relative p-4"
         style={{
-          background: `color-mix(in srgb, ${courseColor} 35%, hsl(var(--background)))`,
+          background: courseTint(courseColor),
         }}
       >
         <div className="mb-1 flex max-w-[calc(100%_-_2rem)] flex-wrap items-baseline text-xs">
@@ -274,158 +281,162 @@ const TimetableCourseQuickAccess = ({ course }: { course: MinimalCourse }) => {
           )}
         </div>
       </div>
-      <div className="flex items-center gap-1.5 px-4 pb-3 pt-3">
-        {currentColors.map((color) => (
-          <button
-            key={color}
-            type="button"
-            aria-label={dialogDict.color_option.replace("{color}", color)}
-            aria-pressed={courseColor === color}
-            className={`h-5 w-5 shrink-0 rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary ${courseColor === color ? "outline outline-2 outline-foreground outline-offset-2" : ""}`}
-            style={{ backgroundColor: color }}
-            onClick={() => setColor(course.raw_id, color)}
-          />
-        ))}
-        <label
-          className={`relative flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground ${hasCustomColor ? "outline outline-2 outline-foreground outline-offset-2" : "border border-dashed border-muted-foreground"}`}
-          style={hasCustomColor ? { backgroundColor: courseColor } : undefined}
-        >
-          {!hasCustomColor && <Plus className="h-3 w-3" aria-hidden="true" />}
-          <input
-            type="color"
-            aria-label={dialogDict.custom_color}
-            className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-            value={
-              /^#[0-9a-f]{6}$/i.test(courseColor) ? courseColor : "#000000"
-            }
-            onChange={(event) => setColor(course.raw_id, event.target.value)}
-          />
-        </label>
-        <span className="ml-1 text-xs text-muted-foreground">
-          {dialogDict.custom_color}
-        </span>
-      </div>
-      <div className="divide-y divide-border border-t px-4">
-        {nextMeeting && (
-          <InformationRow
-            label={dialogDict.next_class}
-            action={
-              <span className="shrink-0 rounded-full bg-primary/10 px-2 text-xs font-medium leading-[22px] text-primary">
-                {getRelativeDayLabel(nextMeeting.daysFromToday)}
-              </span>
+      <div className="bg-background">
+        <div className="flex items-center gap-1.5 px-4 pb-3 pt-3">
+          {currentColors.map((color) => (
+            <button
+              key={color}
+              type="button"
+              aria-label={dialogDict.color_option.replace("{color}", color)}
+              aria-pressed={courseColor === color}
+              className={`h-5 w-5 shrink-0 rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary ${courseColor === color ? "outline outline-2 outline-foreground outline-offset-2" : ""}`}
+              style={{ backgroundColor: color }}
+              onClick={() => setColor(course.raw_id, color)}
+            />
+          ))}
+          <label
+            className={`relative flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground ${hasCustomColor ? "outline outline-2 outline-foreground outline-offset-2" : "border border-dashed border-muted-foreground"}`}
+            style={
+              hasCustomColor ? { backgroundColor: courseColor } : undefined
             }
           >
-            <span className="font-medium">
-              {getWeekdayName(nextMeeting.dayOfWeek)} {nextMeeting.start}
-            </span>
-            <span className="text-muted-foreground">
-              {dialogDict.meeting_separator}
-              {nextMeeting.venue
-                ? localizeData(nextMeeting.venue)
-                : dict.course.details.no_venues}
-            </span>
-          </InformationRow>
-        )}
-        <ImportantDates courseId={course.raw_id} />
-        <InformationRow
-          label={dialogDict.my_review}
-          action={
-            ownReview ? (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 shrink-0 px-1"
-                onClick={openReviews}
-              >
-                {dialogDict.edit_review}
-                <ChevronRight className="h-4 w-4" aria-hidden="true" />
-              </Button>
-            ) : (
-              <Button
-                variant="ghost"
-                className="h-8 shrink-0 rounded-md bg-primary/10 px-3 text-sm font-medium text-primary hover:bg-primary/15"
-                onClick={openReviews}
-              >
-                <Star className="h-4 w-4" aria-hidden="true" />
-                {dialogDict.write_review}
-              </Button>
-            )
-          }
-        >
-          {ownReview ? (
-            <>
-              <div className="flex flex-wrap gap-2">
-                <span>
-                  <span className="text-muted-foreground">
-                    {dialogDict.coolness}
-                  </span>{" "}
-                  <strong className="font-bold">
-                    {ownReview.coolness ?? "—"}
-                  </strong>
+            {!hasCustomColor && <Plus className="h-3 w-3" aria-hidden="true" />}
+            <input
+              type="color"
+              aria-label={dialogDict.custom_color}
+              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+              value={
+                /^#[0-9a-f]{6}$/i.test(courseColor) ? courseColor : "#000000"
+              }
+              onChange={(event) => setColor(course.raw_id, event.target.value)}
+            />
+          </label>
+          <span className="ml-1 text-xs text-muted-foreground">
+            {dialogDict.custom_color}
+          </span>
+        </div>
+        <div className="divide-y divide-border border-t px-4">
+          {nextMeeting && (
+            <InformationRow
+              label={dialogDict.next_class}
+              action={
+                <span className="shrink-0 rounded-full bg-primary/10 px-2 text-xs font-medium leading-[22px] text-primary">
+                  {getRelativeDayLabel(nextMeeting.daysFromToday)}
                 </span>
-                <span>
-                  <span className="text-muted-foreground">
-                    {dialogDict.sweetness}
-                  </span>{" "}
-                  <strong className="font-bold">
-                    {ownReview.sweetness ?? "—"}
-                  </strong>
-                </span>
-                <span>
-                  <span className="text-muted-foreground">
-                    {dialogDict.learning}
-                  </span>{" "}
-                  <strong className="font-bold">
-                    {ownReview.learning ?? "—"}
-                  </strong>
-                </span>
-              </div>
-              <div className="text-xs text-muted-foreground">
-                {format(new Date(ownReview.updatedAt), "M/d")}
-              </div>
-            </>
-          ) : (
-            <span className="text-muted-foreground">
-              {dialogDict.not_reviewed}
-            </span>
+              }
+            >
+              <span className="font-medium">
+                {getWeekdayName(nextMeeting.dayOfWeek)} {nextMeeting.start}
+              </span>
+              <span className="text-muted-foreground">
+                {dialogDict.meeting_separator}
+                {nextMeeting.venue
+                  ? localizeData(nextMeeting.venue)
+                  : dict.course.details.no_venues}
+              </span>
+            </InformationRow>
           )}
-        </InformationRow>
-      </div>
-      <div className="flex items-center gap-2 border-t px-4 pb-4 pt-3">
-        <Button
-          variant="secondary"
-          size="sm"
-          className="h-8 px-3"
-          onClick={() => openCourse(course.raw_id)}
-        >
-          <ExternalLink className="h-4 w-4" aria-hidden="true" />
-          {dialogDict.details}
-        </Button>
-        <Button
-          variant="secondary"
-          size="sm"
-          className="h-8 px-3"
-          disabled={!campusMapHref}
-          title={
-            !campusMapHref
-              ? dict.timetable.course_actions.location_unavailable
-              : undefined
-          }
-          onClick={() => campusMapHref && navigate(campusMapHref)}
-        >
-          <MapPin className="h-4 w-4" aria-hidden="true" />
-          {dialogDict.location}
-        </Button>
-        <div className="flex-1" />
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
-          aria-label={dict.course.item.remove_from_semester}
-          onClick={() => deleteCourse(course.raw_id)}
-        >
-          <Trash className="h-4 w-4" aria-hidden="true" />
-        </Button>
+          <ImportantDates courseId={course.raw_id} />
+          <InformationRow
+            label={dialogDict.my_review}
+            action={
+              ownReview ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 shrink-0 px-1"
+                  onClick={openReviews}
+                >
+                  {dialogDict.edit_review}
+                  <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                </Button>
+              ) : (
+                <Button
+                  variant="ghost"
+                  className="h-8 shrink-0 rounded-md bg-primary/10 px-3 text-sm font-medium text-primary hover:bg-primary/15"
+                  onClick={openReviews}
+                >
+                  <Star className="h-4 w-4" aria-hidden="true" />
+                  {dialogDict.write_review}
+                </Button>
+              )
+            }
+          >
+            {ownReview ? (
+              <>
+                <div className="flex flex-wrap gap-2">
+                  <span>
+                    <span className="text-muted-foreground">
+                      {dialogDict.coolness}
+                    </span>{" "}
+                    <strong className="font-bold">
+                      {ownReview.coolness ?? "—"}
+                    </strong>
+                  </span>
+                  <span>
+                    <span className="text-muted-foreground">
+                      {dialogDict.sweetness}
+                    </span>{" "}
+                    <strong className="font-bold">
+                      {ownReview.sweetness ?? "—"}
+                    </strong>
+                  </span>
+                  <span>
+                    <span className="text-muted-foreground">
+                      {dialogDict.learning}
+                    </span>{" "}
+                    <strong className="font-bold">
+                      {ownReview.learning ?? "—"}
+                    </strong>
+                  </span>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {format(new Date(ownReview.updatedAt), "M/d")}
+                </div>
+              </>
+            ) : (
+              <span className="text-muted-foreground">
+                {dialogDict.not_reviewed}
+              </span>
+            )}
+          </InformationRow>
+        </div>
+        <div className="flex items-center gap-2 border-t px-4 pb-4 pt-3">
+          <Button
+            variant="secondary"
+            size="sm"
+            className="h-8 px-3"
+            onClick={() => openCourse(course.raw_id)}
+          >
+            <ExternalLink className="h-4 w-4" aria-hidden="true" />
+            {dialogDict.details}
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            className="h-8 px-3"
+            disabled={!campusMapHref}
+            title={
+              !campusMapHref
+                ? dict.timetable.course_actions.location_unavailable
+                : undefined
+            }
+            onClick={() => campusMapHref && navigate(campusMapHref)}
+          >
+            <MapPin className="h-4 w-4" aria-hidden="true" />
+            {dialogDict.location}
+          </Button>
+          <div className="flex-1" />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
+            aria-label={dict.course.item.remove_from_semester}
+            onClick={() => deleteCourse(course.raw_id)}
+          >
+            <Trash className="h-4 w-4" aria-hidden="true" />
+          </Button>
+        </div>
       </div>
     </>
   );
@@ -437,6 +448,7 @@ export const TimetableItemDrawer = ({
 }: PropsWithChildren<{ course: MinimalCourse }>) => {
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const localizeData = useLocalizedZhData();
+  const courseColor = useCourseColor(course.raw_id);
 
   if (isDesktop)
     return (
@@ -459,7 +471,12 @@ export const TimetableItemDrawer = ({
   return (
     <Drawer>
       <DrawerTrigger asChild>{children}</DrawerTrigger>
-      <DrawerContent>
+      {/* Tint the whole drawer top so the grab handle sits on the course
+          colour instead of a white strip above the header. */}
+      <DrawerContent
+        className="overflow-hidden [&>div:first-child]:bg-foreground/20"
+        style={{ background: courseTint(courseColor) }}
+      >
         <DrawerTitle className="sr-only">
           {localizeData(course.name_zh)} -{" "}
           {course.teacher_zh.map(localizeData).join(",")}
