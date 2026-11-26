@@ -24,6 +24,14 @@ export {
   getSemesterTerm,
   normalizeCourseTitle,
 } from "../../../../services/api/src/module-search-index";
+
+export const safeCreateModuleKey = (department: string, course: string) => {
+  try {
+    return createModuleKey(department, course);
+  } catch {
+    return "";
+  }
+};
 export type {
   ModuleLanguage,
   ModuleSearchResult,

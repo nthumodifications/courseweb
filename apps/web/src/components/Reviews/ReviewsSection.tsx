@@ -956,7 +956,11 @@ export const ReviewsSection = ({
 
   if (error) {
     return (
-      <section aria-labelledby="native-reviews" className="flex flex-col gap-2">
+      <section
+        id="reviews"
+        aria-labelledby="native-reviews"
+        className="flex flex-col gap-2"
+      >
         <h3 id="native-reviews" className="font-bold">
           {dict.course.details.native_reviews.title}
         </h3>
@@ -973,7 +977,11 @@ export const ReviewsSection = ({
   }
   if (isPending || !isSuccess) {
     return (
-      <section aria-labelledby="native-reviews" className="flex flex-col gap-2">
+      <section
+        id="reviews"
+        aria-labelledby="native-reviews"
+        className="flex flex-col gap-2"
+      >
         <h3 id="native-reviews" className="font-bold">
           {dict.course.details.native_reviews.title}
         </h3>
@@ -987,7 +995,11 @@ export const ReviewsSection = ({
 
   const summary = data?.summary;
   return (
-    <section aria-labelledby="native-reviews" className="flex flex-col gap-2">
+    <section
+      id="reviews"
+      aria-labelledby="native-reviews"
+      className="flex flex-col gap-2"
+    >
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h3 id="native-reviews" className="font-bold">
           {dict.course.details.native_reviews.title}
