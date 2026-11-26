@@ -55,6 +55,8 @@ type CourseListItemProps = {
   syllabusFullWidth?: boolean;
   actionsAfterTags?: boolean;
   timeConflict?: ReactNode;
+  /** A muted status line under the venue, e.g. "duplicate course". */
+  notice?: ReactNode;
   priority?: number;
   missingTimeLabel?: string;
   dimmed?: boolean;
@@ -103,6 +105,7 @@ const CourseListItem: FC<CourseListItemProps> = memo((props) => {
     syllabusFullWidth = false,
     actionsAfterTags = false,
     timeConflict,
+    notice,
     priority,
     missingTimeLabel,
     dimmed = false,
@@ -243,6 +246,7 @@ const CourseListItem: FC<CourseListItemProps> = memo((props) => {
       {timeConflict && (
         <div className="text-xs text-destructive">{timeConflict}</div>
       )}
+      {notice && <div className="text-xs text-muted-foreground">{notice}</div>}
       {actionsAfterTags ? (
         <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
           {courseTags}

@@ -230,7 +230,12 @@
         "S": "Sat",
         "U": "Sun"
       }
-    }
+    },
+    "conflict_with": "Clashes with {courses}",
+    "courses_heading": "Courses",
+    "course_count": "{count} courses",
+    "credit_count": "{count} credits",
+    "drag_to_reorder": "Drag to reorder"
   },
   "course": {
     "credits": "Credits",

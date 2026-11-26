@@ -85,7 +85,12 @@ mock.module("@/dictionaries/useDictionary", () => ({
     timetable: {
       all_courses: "All courses",
       conflict: "Conflict",
+      conflict_with: "Clashes with {courses}",
       course: "course",
+      course_count: "{count} courses",
+      courses_heading: "Courses",
+      credit_count: "{count} credits",
+      drag_to_reorder: "Drag to reorder",
       course_actions: {
         hide_course: "Hide course",
         show_course: "Show course",
@@ -579,7 +584,10 @@ describe("timetable provider render stability", () => {
       () => fixture.container.textContent?.includes(course.name_zh) ?? false,
     );
 
-    const text = fixture.container.textContent ?? "";
+    // The list header shows the semester total; check only the course row.
+    const row = fixture.container.querySelector('[class*="group/row"]');
+    expect(row).not.toBeNull();
+    const text = row?.textContent ?? "";
     expect(text).not.toContain("DELTA台達217 M9MaMb");
     expect(text).not.toContain("2 credits");
     await fixture.cleanup();

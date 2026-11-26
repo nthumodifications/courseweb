@@ -9,7 +9,7 @@ import {
   ChevronRight,
   Download,
   CalendarClock,
-  Trash2,
+  Trash,
 } from "lucide-react";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { useNavigate, useParams } from "react-router-dom";
@@ -35,6 +35,7 @@ import {
   ShareTimetableDialogDynamic,
   CourseSearchContainerDynamic,
   TimetableCourseList,
+  TIMETABLE_ICON_BUTTON,
 } from "./TimetableCourseList";
 import CalendarSubscriptionLinks from "./CalendarSubscriptionLinks";
 import OpenCollectiveSponsorBanner from "../Sponsorship/OpenCollectiveSponsorBanner";
@@ -42,10 +43,13 @@ import { useAuth } from "react-oidc-context";
 import { useQuery } from "@tanstack/react-query";
 import { useTimetableShare } from "@/hooks/useTimetableShare";
 import { toPrettySemester } from "@/helpers/semester";
-import Compact from "@uiw/react-color-compact";
 import { useMemo } from "react";
 import { TimetableCustomItemDrawer } from "./TimetableItemDrawer";
-import { CustomTimetableItem } from "@/types/timetable";
+import {
+  CUSTOM_TIMETABLE_DAYS,
+  type CustomTimetableDay,
+  CustomTimetableItem,
+} from "@/types/timetable";
 import {
   canSortTimetableCourses,
   reorderStoredCourseIdsByCredits,
@@ -63,6 +67,20 @@ const createEmptyCustomItem = (color: string): CustomTimetableItem => ({
   color,
   slots: [{ day: 0, start: "08:00", end: "08:50" }],
 });
+
+// Filled controls, matching the course search toolbar.
+const PRIMARY_ACTION = "h-9 w-full bg-surface hover:bg-muted";
+
+const formatCustomItemSlots = (
+  item: CustomTimetableItem,
+  dayLabels: Record<CustomTimetableDay, string>,
+) =>
+  item.slots
+    .map((slot) => {
+      const day = CUSTOM_TIMETABLE_DAYS[slot.day];
+      return `${day ? dayLabels[day] : ""} ${slot.start}–${slot.end}`.trim();
+    })
+    .join("、");
 
 const TimetableSidebar = ({
   vertical,
@@ -84,7 +102,6 @@ const TimetableSidebar = ({
     addCustomItem,
     updateCustomItem,
     deleteCustomItem,
-    setCustomItemColor,
     isLoading,
     isFetchingCourses,
     error,
@@ -144,11 +161,11 @@ const TimetableSidebar = ({
   return (
     <div className="flex flex-col gap-3">
       {/* Primary actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-2">
         <Dialog>
           <DialogTrigger asChild>
-            <Button variant="outline" className="w-full">
-              <Plus className="w-4 h-4 mr-2" />
+            <Button variant="ghost" className={PRIMARY_ACTION}>
+              <Plus aria-hidden="true" />
               {dict.course.item.add_to_semester}
             </Button>
           </DialogTrigger>
@@ -163,78 +180,197 @@ const TimetableSidebar = ({
           item={emptyCustomItem}
           onSave={addCustomItem}
         >
-          <Button variant="outline" className="w-full">
-            <CalendarClock className="w-4 h-4 mr-2" />
+          <Button variant="ghost" className={PRIMARY_ACTION}>
+            <CalendarClock aria-hidden="true" />
             {dict.timetable.custom_items.add}
           </Button>
         </TimetableCustomItemDrawer>
       </div>
 
-      {semesterCustomItems.length > 0 && (
-        <div className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-muted-foreground tracking-wide px-1">
-            {dict.timetable.custom_items.title}
-          </span>
-          {semesterCustomItems.map((item) => (
-            <div key={item.id} className="flex items-center gap-1">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <button
-                    type="button"
-                    className="p-1 rounded-md hover:outline outline-1 outline-border"
-                    aria-label={dict.timetable.custom_items.color_label}
-                  >
-                    <span
-                      className="block h-4 w-4 rounded-full"
-                      style={{ backgroundColor: item.color }}
-                    />
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent
-                  className="p-0 w-auto"
-                  aria-label={dict.timetable.custom_items.color_label}
-                >
-                  <Compact
-                    color={item.color}
-                    onChange={(color) => setCustomItemColor(item.id, color.hex)}
-                    colors={currentColors}
-                  />
-                </PopoverContent>
-              </Popover>
-              <TimetableCustomItemDrawer
-                item={item}
-                onSave={updateCustomItem}
-                onDelete={() => deleteCustomItem(item.id)}
-              >
-                <button
-                  type="button"
-                  className="flex-1 min-w-0 text-left rounded-md px-2 py-1.5 hover:bg-accent transition-colors"
-                >
-                  <span className="block text-sm truncate">{item.title}</span>
-                  <span className="block text-xs text-muted-foreground truncate">
-                    {item.shortCode ||
-                      item.venue ||
-                      dict.timetable.custom_items.custom_label}
-                  </span>
-                </button>
-              </TimetableCustomItemDrawer>
+      {/* Course list — the main content; its toolbar holds every utility */}
+      <TimetableCourseList
+        semester={semester}
+        vertical={vertical}
+        afterList={
+          semesterCustomItems.length > 0 && (
+            <div className="flex flex-col">
+              <span className="text-xs font-medium text-muted-foreground">
+                {dict.timetable.custom_items.title}
+              </span>
+              <div className="flex flex-col divide-y divide-border">
+                {semesterCustomItems.map((item) => (
+                  <div key={item.id} className="flex items-start gap-2 py-2">
+                    <TimetableCustomItemDrawer
+                      item={item}
+                      onSave={updateCustomItem}
+                      onDelete={() => deleteCustomItem(item.id)}
+                    >
+                      <button
+                        type="button"
+                        className="flex min-w-0 flex-1 items-start gap-2 text-left"
+                      >
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center">
+                          <span
+                            className="block h-3 w-3 rounded-full"
+                            style={{ backgroundColor: item.color }}
+                            aria-hidden="true"
+                          />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate font-medium leading-6">
+                            {item.title}
+                          </span>
+                          <span className="block truncate text-xs text-muted-foreground">
+                            {[
+                              formatCustomItemSlots(
+                                item,
+                                dict.timetable.custom_items.days,
+                              ),
+                              item.venue,
+                            ]
+                              .filter(Boolean)
+                              .join("・")}
+                          </span>
+                        </span>
+                      </button>
+                    </TimetableCustomItemDrawer>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className={`${TIMETABLE_ICON_BUTTON} hover:text-destructive`}
+                      onClick={() => deleteCustomItem(item.id)}
+                      aria-label={dict.timetable.custom_items.delete}
+                      title={dict.timetable.custom_items.delete}
+                    >
+                      <Trash />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
+        }
+        toolbar={
+          <>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={TIMETABLE_ICON_BUTTON}
+              aria-label={
+                vertical
+                  ? dict.timetable.actions.horizontal_view
+                  : dict.timetable.actions.vertical_view
+              }
+              title={
+                vertical
+                  ? dict.timetable.actions.horizontal_view
+                  : dict.timetable.actions.vertical_view
+              }
+              onClick={() => setVertical(!vertical)}
+            >
+              <Repeat aria-hidden="true" />
+            </Button>
+
+            <DownloadTimetableDialogDynamic icsfileLink={icsfileLink}>
               <Button
-                type="button"
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 shrink-0"
-                onClick={() => deleteCustomItem(item.id)}
-                aria-label={dict.timetable.custom_items.delete}
+                className={TIMETABLE_ICON_BUTTON}
+                aria-label={dict.timetable.sidebar.download_export}
+                title={dict.timetable.sidebar.download_export}
               >
-                <Trash2 className="h-3.5 w-3.5" />
+                <Download aria-hidden="true" />
               </Button>
-            </div>
-          ))}
-        </div>
-      )}
+            </DownloadTimetableDialogDynamic>
 
-      {/* Course list — the main content */}
-      <TimetableCourseList semester={semester} vertical={vertical} />
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={TIMETABLE_ICON_BUTTON}
+                  aria-label={dict.timetable.sidebar.subscribe_calendar}
+                  title={dict.timetable.sidebar.subscribe_calendar}
+                >
+                  <Calendar aria-hidden="true" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                align="start"
+                aria-label={dict.timetable.sidebar.subscribe_calendar}
+              >
+                <div className="flex flex-col gap-4">
+                  <p className="text-sm font-medium">
+                    {dict.timetable.sidebar.subscribe_calendar}
+                  </p>
+                  <div className="flex flex-col space-y-2">
+                    <CalendarSubscriptionLinks feedUrl={webcalLink} />
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            <ShareTimetableDialogDynamic>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={TIMETABLE_ICON_BUTTON}
+                aria-label={dict.timetable.sidebar.share_timetable}
+                title={dict.timetable.sidebar.share_timetable}
+              >
+                <Share2 aria-hidden="true" />
+              </Button>
+            </ShareTimetableDialogDynamic>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={TIMETABLE_ICON_BUTTON}
+                  aria-label={dict.timetable.sidebar.customizations}
+                >
+                  <EllipsisVertical aria-hidden="true" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuLabel>
+                  {dict.timetable.sidebar.customizations}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => handleGroupByDepartment(semester)}
+                >
+                  {dict.timetable.actions.group_dept}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={
+                    !canSortTimetableCourses(
+                      isLoading || isFetchingCourses,
+                      error,
+                    )
+                  }
+                  onClick={() => sortByCredits(semester)}
+                >
+                  {dict.timetable.actions.sort_by_credits}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate(`/${lang}/timetable/community`)}
+              className="ml-auto h-8 gap-1 px-2 text-xs text-muted-foreground hover:bg-surface hover:text-foreground"
+            >
+              <Globe aria-hidden="true" />
+              {dict.timetable.sidebar.community}
+            </Button>
+          </>
+        }
+      />
 
       {/* Groups section — only when signed in */}
       {isAuthenticated && (
@@ -247,10 +383,11 @@ const TimetableSidebar = ({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-6 w-6"
+                className={TIMETABLE_ICON_BUTTON}
                 title={dict.timetable.sidebar.create_group}
+                aria-label={dict.timetable.sidebar.create_group}
               >
-                <Plus className="h-3.5 w-3.5" />
+                <Plus />
               </Button>
             </ShareTimetableDialogDynamic>
           </div>
@@ -289,119 +426,6 @@ const TimetableSidebar = ({
           )}
         </div>
       )}
-
-      {/* Utility action row + community link */}
-      <div className="flex items-center gap-1 pt-1 border-t">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          aria-label={
-            vertical
-              ? dict.timetable.actions.horizontal_view
-              : dict.timetable.actions.vertical_view
-          }
-          title={
-            vertical
-              ? dict.timetable.actions.horizontal_view
-              : dict.timetable.actions.vertical_view
-          }
-          onClick={() => setVertical(!vertical)}
-        >
-          <Repeat className="w-4 h-4" />
-        </Button>
-
-        <DownloadTimetableDialogDynamic icsfileLink={icsfileLink}>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            aria-label={dict.timetable.sidebar.download_export}
-            title={dict.timetable.sidebar.download_export}
-          >
-            <Download className="w-4 h-4" />
-          </Button>
-        </DownloadTimetableDialogDynamic>
-
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              aria-label={dict.timetable.sidebar.subscribe_calendar}
-              title={dict.timetable.sidebar.subscribe_calendar}
-            >
-              <Calendar className="w-4 h-4" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent
-            align="start"
-            aria-label={dict.timetable.sidebar.subscribe_calendar}
-          >
-            <div className="flex flex-col gap-4">
-              <p className="text-sm font-medium">
-                {dict.timetable.sidebar.subscribe_calendar}
-              </p>
-              <div className="flex flex-col space-y-2">
-                <CalendarSubscriptionLinks feedUrl={webcalLink} />
-              </div>
-            </div>
-          </PopoverContent>
-        </Popover>
-
-        <ShareTimetableDialogDynamic>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            aria-label={dict.timetable.sidebar.share_timetable}
-            title={dict.timetable.sidebar.share_timetable}
-          >
-            <Share2 className="w-4 h-4" />
-          </Button>
-        </ShareTimetableDialogDynamic>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              aria-label={dict.timetable.sidebar.customizations}
-            >
-              <EllipsisVertical className="w-4 h-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            <DropdownMenuLabel>
-              {dict.timetable.sidebar.customizations}
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => handleGroupByDepartment(semester)}>
-              {dict.timetable.actions.group_dept}
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              disabled={
-                !canSortTimetableCourses(isLoading || isFetchingCourses, error)
-              }
-              onClick={() => sortByCredits(semester)}
-            >
-              {dict.timetable.actions.sort_by_credits}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <button
-          type="button"
-          onClick={() => navigate(`/${lang}/timetable/community`)}
-          className="ml-auto flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-          aria-label={dict.timetable.sidebar.community}
-        >
-          <Globe className="w-3 h-3" />
-          {dict.timetable.sidebar.community}
-        </button>
-      </div>
 
       <OpenCollectiveSponsorBanner />
     </div>
