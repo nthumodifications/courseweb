@@ -8,7 +8,7 @@ Production course sync is scheduled by `.github/workflows/scrape.yaml` at
 `10 16 * * *` UTC (00:10 in Taipei). It reads semester dates from
 `GET /semesters`, syncs the current semester, then checks upcoming CCXP terms
 sequentially. Each upcoming term gets one department course-listing probe; an
-empty term skips the full scrape, syllabus downloads, and Algolia update. It
+empty term skips the full scrape, syllabus downloads, and Supabase writes. It
 fully syncs at most one published upcoming term per run. The job has a
 90-minute timeout for the current term plus one new term. Manual workflow
 dispatch accepts an optional semester ID for a one-off override; leave it empty
@@ -37,7 +37,6 @@ Before deploying, ensure you have:
 ### Required Services
 
 - **Supabase**: Database and storage backend
-- **Algolia**: Search index service
 - **Container Registry**: GitHub Container Registry (GHCR)
 - **Cloud Platform**: Google Cloud Run, AWS Lambda, Azure Container Instances, etc.
 
@@ -46,8 +45,6 @@ Before deploying, ensure you have:
 ```bash
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-ALGOLIA_APP_ID=your-algolia-app-id
-ALGOLIA_API_KEY=your-algolia-admin-api-key
 ```
 
 ## Build and Registry
@@ -93,7 +90,7 @@ gcloud run deploy courseweb-data-sync \
   --platform managed \
   --region asia-east1 \
   --no-allow-unauthenticated \
-  --set-env-vars SUPABASE_URL=${SUPABASE_URL},SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY},ALGOLIA_APP_ID=${ALGOLIA_APP_ID},ALGOLIA_API_KEY=${ALGOLIA_API_KEY} \
+  --set-env-vars SUPABASE_URL=${SUPABASE_URL},SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY} \
   --max-instances 1 \
   --timeout 3600 \
   --memory 2Gi \
@@ -120,7 +117,7 @@ gcloud scheduler jobs create http courseweb-sync-daily \
 gcloud run jobs create courseweb-data-sync-job \
   --image ghcr.io/nthumodifications/courseweb-data-sync:latest \
   --region asia-east1 \
-  --set-env-vars SUPABASE_URL=${SUPABASE_URL},SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY},ALGOLIA_APP_ID=${ALGOLIA_APP_ID},ALGOLIA_API_KEY=${ALGOLIA_API_KEY} \
+  --set-env-vars SUPABASE_URL=${SUPABASE_URL},SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY} \
   --max-retries 3 \
   --task-timeout 3600 \
   --memory 2Gi \
@@ -163,21 +160,6 @@ resource "google_cloud_run_v2_job" "courseweb_data_sync" {
           value_source {
             secret_key_ref {
               secret  = google_secret_manager_secret.supabase_key.secret_id
-              version = "latest"
-            }
-          }
-        }
-
-        env {
-          name  = "ALGOLIA_APP_ID"
-          value = var.algolia_app_id
-        }
-
-        env {
-          name = "ALGOLIA_API_KEY"
-          value_source {
-            secret_key_ref {
-              secret  = google_secret_manager_secret.algolia_key.secret_id
               version = "latest"
             }
           }
@@ -239,7 +221,7 @@ aws lambda create-function \
   --role arn:aws:iam::123456789012:role/lambda-execution-role \
   --timeout 900 \
   --memory-size 2048 \
-  --environment Variables='{SUPABASE_URL=xxx,SUPABASE_SERVICE_ROLE_KEY=xxx,ALGOLIA_APP_ID=xxx,ALGOLIA_API_KEY=xxx}'
+  --environment Variables='{SUPABASE_URL=xxx,SUPABASE_SERVICE_ROLE_KEY=xxx}'
 ```
 
 #### ECS with Scheduled Tasks
@@ -273,8 +255,6 @@ aws lambda create-function \
           [
             { "name": "SUPABASE_URL", "value": "xxx" },
             { "name": "SUPABASE_SERVICE_ROLE_KEY", "value": "xxx" },
-            { "name": "ALGOLIA_APP_ID", "value": "xxx" },
-            { "name": "ALGOLIA_API_KEY", "value": "xxx" },
           ],
       },
     ],
@@ -298,8 +278,6 @@ az container create \
   --environment-variables \
     SUPABASE_URL=xxx \
     SUPABASE_SERVICE_ROLE_KEY=xxx \
-    ALGOLIA_APP_ID=xxx \
-    ALGOLIA_API_KEY=xxx
 ```
 
 ### Kubernetes
@@ -331,16 +309,6 @@ spec:
                     secretKeyRef:
                       name: courseweb-secrets
                       key: supabase-key
-                - name: ALGOLIA_APP_ID
-                  valueFrom:
-                    secretKeyRef:
-                      name: courseweb-secrets
-                      key: algolia-app-id
-                - name: ALGOLIA_API_KEY
-                  valueFrom:
-                    secretKeyRef:
-                      name: courseweb-secrets
-                      key: algolia-key
               resources:
                 limits:
                   memory: "2Gi"
@@ -362,8 +330,6 @@ spec:
 # Required
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-ALGOLIA_APP_ID=your-algolia-app-id
-ALGOLIA_API_KEY=your-algolia-admin-api-key
 
 # Optional
 COURSEWEB_API_URL=https://api.nthumods.com # Semester dates API
@@ -377,7 +343,6 @@ CRON_PATTERN="10 0 * * *"        # 00:10 Taipei when host TZ is Asia/Taipei
 ```bash
 # Store secrets
 gcloud secrets create supabase-service-role-key --data-file=-
-gcloud secrets create algolia-api-key --data-file=-
 
 # Grant access to service account
 gcloud secrets add-iam-policy-binding supabase-service-role-key \
@@ -394,10 +359,6 @@ aws secretsmanager create-secret \
   --description "Supabase service role key" \
   --secret-string "your-key"
 
-aws secretsmanager create-secret \
-  --name courseweb/algolia-key \
-  --description "Algolia API key" \
-  --secret-string "your-key"
 ```
 
 ## Monitoring and Logging
@@ -421,7 +382,7 @@ Create monitoring dashboards to track:
 - ✅ Execution success/failure rates
 - ⏱️ Execution duration
 - 📊 Courses scraped per run
-- 🔍 Algolia sync performance
+- 🔍 Supabase course and syllabus writes
 - 💾 Memory and CPU usage
 
 ### Log Analysis Queries
@@ -465,7 +426,7 @@ fields @timestamp, @message
 
 ```bash
 # Verify environment in container
-docker run --env-file .env courseweb-data-sync env | grep -E "(SUPABASE|ALGOLIA)"
+docker run --env-file .env courseweb-data-sync env | grep "SUPABASE"
 ```
 
 #### 4. Network Connectivity
@@ -559,7 +520,6 @@ The application includes built-in optimizations:
 ### Backup and Recovery
 
 - 💾 Database backups handled by Supabase
-- 🔍 Algolia index snapshots
 - 📊 Execution logs and metrics retention
 - 🔄 Disaster recovery procedures documented
 

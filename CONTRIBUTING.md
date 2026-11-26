@@ -55,15 +55,15 @@ bun run --cwd services/api test
 
 `services/api/.dev.vars.example` documents only optional AI provider settings.
 The Worker also uses D1/AI/rate-limit bindings from `services/api/wrangler.toml`
-and may need Supabase, Algolia admin for course-index writes and backups, OAuth, weather, calendar, GitHub,
+and may need Supabase service-role access for course and syllabus writes, OAuth, weather, calendar, GitHub,
 Turnstile, KV, or OCR credentials depending on the route.
 
 ### Auth (`services/secure-api`) + data-sync
 
 The secure API is a Bun/Hono service on port 5002. It needs PostgreSQL,
 Prisma-generated clients, signing keys, Firebase, and upstream OAuth settings.
-The data-sync tool mutates course data and search indexes and requires
-service-role/admin credentials. These are maintainer workflows:
+The data-sync tool writes course and syllabus data to Supabase, which supplies
+search data, and requires service-role credentials. These are maintainer workflows:
 
 ```bash
 bun run setup --full

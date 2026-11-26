@@ -4,11 +4,7 @@
  * Provides utilities for syncing course data, syllabus information, and search indices
  */
 
-export {
-  scrapeArchivedCourses,
-  scrapeSyllabus,
-  syncCoursesToAlgolia,
-} from "./scrapers";
+export { scrapeArchivedCourses, scrapeSyllabus } from "./scrapers";
 
 export {
   default as syncCourses,
@@ -24,7 +20,6 @@ export {
   validateEnvironment,
   retryWithBackoff,
   createSupabaseClient,
-  createAlgoliaClient,
   fullWidthToHalfWidth,
   sleep,
   chunkArray,

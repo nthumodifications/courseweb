@@ -76,10 +76,10 @@ export const SEARCH_PROJECTION_FIELDS = [
   ...DERIVED_SEARCH_FIELDS,
 ] as const;
 
-/** Algolia fields that the public search endpoint may return. */
+/** Attributes that the public search endpoint may return. */
 export const SEARCH_ATTRIBUTE_ALLOWLIST = [
   ...SEARCH_PROJECTION_FIELDS,
-  // These fields are present in the Algolia index from course_syllabus.
+  // These syllabus fields are available to the Supabase-backed search paths.
   "brief",
   "keywords",
   "content",

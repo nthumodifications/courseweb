@@ -1,5 +1,4 @@
 import { createClient } from "@supabase/supabase-js";
-import algoliasearch from "algoliasearch";
 import type { SyncEnvironment } from "./types";
 
 export const SCRAPER_USER_AGENT =
@@ -57,13 +56,6 @@ export const createSupabaseClient = (env: SyncEnvironment) => {
 };
 
 /**
- * Create Algolia client with environment variables
- */
-export const createAlgoliaClient = (env: SyncEnvironment) => {
-  return algoliasearch(env.ALGOLIA_APP_ID, env.ALGOLIA_API_KEY);
-};
-
-/**
  * Convert full-width characters to half-width characters
  */
 export const fullWidthToHalfWidth = (str: string): string => {
@@ -78,12 +70,7 @@ export const fullWidthToHalfWidth = (str: string): string => {
  * Validate required environment variables
  */
 export const validateEnvironment = (): SyncEnvironment => {
-  const requiredVars = [
-    "SUPABASE_URL",
-    "SUPABASE_SERVICE_ROLE_KEY",
-    "ALGOLIA_APP_ID",
-    "ALGOLIA_API_KEY",
-  ] as const;
+  const requiredVars = ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"] as const;
 
   const env: Partial<SyncEnvironment> = {};
   const missing: string[] = [];

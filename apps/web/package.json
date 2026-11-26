@@ -42,7 +42,6 @@
     "@tanstack/react-query-persist-client": "^5.39.0",
     "@tanstack/react-virtual": "^3.13.6",
     "@uiw/react-color-compact": "^2.3.0",
-    "algoliasearch": "^4.23.3",
     "autoprefixer": "10.4.19",
     "clsx": "^2.0.0",
     "cmdk": "^1.1.1",

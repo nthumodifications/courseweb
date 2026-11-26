@@ -1,15 +1,11 @@
 /**
  * @fileoverview
  * One-time course synchronization script
- * Syncs archived courses, syllabus data, and Algolia search index
+ * Syncs archived courses and syllabus data to Supabase
  */
 
 import { validateEnvironment } from "./utils";
-import {
-  scrapeArchivedCourses,
-  scrapeSyllabus,
-  syncCoursesToAlgolia,
-} from "./scrapers";
+import { scrapeArchivedCourses, scrapeSyllabus } from "./scrapers";
 import type { SyncResult } from "./types";
 
 export const syncCourses = async (
@@ -37,7 +33,6 @@ export const syncCourses = async (
         stats: {
           coursesScraped: 0,
           syllabusDownloaded: 0,
-          algoliaRecordsUpdated: 0,
         },
       };
     }
@@ -46,11 +41,6 @@ export const syncCourses = async (
     console.log("📝 Scraping syllabus data...");
     await scrapeSyllabus(env, semester, courses);
     console.log("✅ Syllabus scraping completed");
-
-    // Step 3: Sync to Algolia
-    console.log("🔍 Syncing courses to Algolia...");
-    await syncCoursesToAlgolia(env, semester);
-    console.log("✅ Algolia sync completed");
 
     const endTime = Date.now();
     const duration = Math.round((endTime - startTime) / 1000);
@@ -64,7 +54,6 @@ export const syncCourses = async (
       stats: {
         coursesScraped: courses.length,
         syllabusDownloaded: courses.length,
-        algoliaRecordsUpdated: courses.length,
       },
     };
   } catch (error) {

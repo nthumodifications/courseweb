@@ -40,8 +40,6 @@ export interface Course {
 export interface SyncEnvironment {
   SUPABASE_URL: string;
   SUPABASE_SERVICE_ROLE_KEY: string;
-  ALGOLIA_APP_ID: string;
-  ALGOLIA_API_KEY: string;
 }
 
 export interface SyncResult {
@@ -51,6 +49,5 @@ export interface SyncResult {
   stats?: {
     coursesScraped?: number;
     syllabusDownloaded?: number;
-    algoliaRecordsUpdated?: number;
   };
 }

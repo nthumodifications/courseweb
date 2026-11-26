@@ -10,25 +10,25 @@ const searchTestCases = [
     path: "/search?q=machine%20learning&limit=5",
     expectedParams: {
       q: "machine learning",
-      limit: 5
-    }
+      limit: 5,
+    },
   },
   {
     name: "POST search with JSON body",
-    method: "POST", 
+    method: "POST",
     path: "/search",
     body: {
       query: "machine learning",
       limit: 10,
       filters: "department:'Computer Science'",
-      facetFilters: ["language:English"]
+      facetFilters: ["language:English"],
     },
     expectedParams: {
       query: "machine learning",
       limit: 10,
       filters: "department:'Computer Science'",
-      facetFilters: ["language:English"]
-    }
+      facetFilters: ["language:English"],
+    },
   },
   {
     name: "GET search info endpoint",
@@ -37,13 +37,13 @@ const searchTestCases = [
     expectedResponse: {
       name: "CourseWeb Search API",
       endpoints: "object",
-      examples: "object"
-    }
-  }
+      examples: "object",
+    },
+  },
 ];
 
-// Mock Algolia response
-const mockAlgoliaResponse = {
+// Mock the public search response shape
+const mockSearchResponse = {
   hits: [
     {
       course: "CS101",
@@ -52,17 +52,17 @@ const mockAlgoliaResponse = {
       teacher_zh: ["王教授"],
       teacher_en: ["Prof. Wang"],
       credits: 3,
-      department: "Computer Science"
+      department: "Computer Science",
     },
     {
-      course: "CS201", 
+      course: "CS201",
       name_zh: "深度學習",
       name_en: "Deep Learning",
       teacher_zh: ["李教授"],
       teacher_en: ["Prof. Li"],
       credits: 3,
-      department: "Computer Science"
-    }
+      department: "Computer Science",
+    },
   ],
   nbHits: 2,
   page: 0,
@@ -70,7 +70,7 @@ const mockAlgoliaResponse = {
   hitsPerPage: 10,
   processingTimeMS: 5,
   query: "machine learning",
-  params: "query=machine+learning&hitsPerPage=10"
+  params: "query=machine+learning&hitsPerPage=10",
 };
 
 function validateSearchResponse(response, testCase) {
@@ -79,75 +79,76 @@ function validateSearchResponse(response, testCase) {
     console.log(`   ❌ Response missing 'success' field`);
     return false;
   }
-  
+
   if (response.success && !response.data) {
     console.log(`   ❌ Successful response missing 'data' field`);
     return false;
   }
-  
+
   if (response.success && response.data) {
     const data = response.data;
-    const requiredFields = ['hits', 'nbHits', 'page', 'nbPages', 'hitsPerPage'];
-    
+    const requiredFields = ["hits", "nbHits", "page", "nbPages", "hitsPerPage"];
+
     for (const field of requiredFields) {
       if (!(field in data)) {
         console.log(`   ❌ Data missing required field: ${field}`);
         return false;
       }
     }
-    
+
     if (!Array.isArray(data.hits)) {
       console.log(`   ❌ Data.hits is not an array`);
       return false;
     }
   }
-  
+
   return true;
 }
 
 function runSearchTests() {
   console.log("🔍 Running Search API Validation Tests\n");
-  
+
   let passed = 0;
   let total = 0;
-  
-  searchTestCases.forEach(test => {
+
+  searchTestCases.forEach((test) => {
     total++;
     console.log(`📋 Test: ${test.name}`);
-    
+
     // Mock response based on test type
     let mockResponse;
-    
+
     if (test.path === "/search/info") {
       mockResponse = {
         success: true,
         data: {
           name: "CourseWeb Search API",
-          description: "Full-text search API powered by Algolia",
+          description: "Full-text course search powered by Supabase",
           endpoints: {
             search: { get: {}, post: {} },
-            info: { get: {} }
+            info: { get: {} },
           },
           examples: {
-            simpleSearch: "GET /search?q=machine%20learning&limit=5"
-          }
-        }
+            simpleSearch: "GET /search?q=machine%20learning&limit=5",
+          },
+        },
       };
     } else {
       // Mock successful search response
       mockResponse = {
         success: true,
-        data: mockAlgoliaResponse
+        data: mockSearchResponse,
       };
     }
-    
+
     // Validate response
     if (test.path === "/search/info") {
       // Info endpoint validation
-      const validInfo = mockResponse.data?.name &&
-                       mockResponse.data.endpoints &&
-                       mockResponse.data.examples;
-      
+      const validInfo =
+        mockResponse.data?.name &&
+        mockResponse.data.endpoints &&
+        mockResponse.data.examples;
+
       if (validInfo) {
         console.log("✅ Test passed - Info endpoint structure valid");
         passed++;
@@ -160,42 +161,44 @@ function runSearchTests() {
     } else {
       console.log("❌ Test failed - Invalid search response structure");
     }
-    
+
     console.log(`   ${test.method} ${test.path}`);
     if (test.body) {
-      console.log(`   Body: ${JSON.stringify(test.body, null, 2).substring(0, 100)}...`);
+      console.log(
+        `   Body: ${JSON.stringify(test.body, null, 2).substring(0, 100)}...`,
+      );
     }
-    console.log(`   Response valid: ${mockResponse.success ? '✅' : '❌'}\n`);
+    console.log(`   Response valid: ${mockResponse.success ? "✅" : "❌"}\n`);
   });
-  
+
   console.log(`📊 Search API Test Results: ${passed}/${total} tests passed`);
-  
+
   if (passed === total) {
     console.log("🎉 All search API tests passed! Structure is valid.");
   } else {
     console.log("⚠️  Some search API tests failed. Check the implementation.");
   }
-  
+
   // Validate search parameters
   console.log("\n🔧 Validating Search Parameter Support:");
   const searchParams = [
     "query/q (required)",
-    "limit (optional, max 100)", 
+    "limit (optional, max 100)",
     "filters (optional)",
     "facetFilters (optional)",
     "attributesToRetrieve (optional)",
-    "highlightPreTag/highlightPostTag (optional)"
+    "highlightPreTag/highlightPostTag (optional)",
   ];
-  
-  searchParams.forEach(param => {
+
+  searchParams.forEach((param) => {
     console.log(`   ${param}: ✅`);
   });
-  
+
   console.log("\n📚 Search API Features:");
   console.log("   ✅ GET endpoint with query parameters");
   console.log("   ✅ POST endpoint with JSON body");
   console.log("   ✅ Info endpoint with documentation");
-  console.log("   ✅ Algolia integration"); 
+  console.log("   ✅ Supabase search response");
   console.log("   ✅ Error handling");
   console.log("   ✅ Response standardization");
 }

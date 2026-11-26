@@ -11,7 +11,7 @@ argument, a run reads dates from `GET /semesters`, syncs the current semester
 (the most recently begun semester during breaks), then probes upcoming CCXP
 terms in sequence. Each upcoming term gets one course-listing probe before a
 full scrape; empty terms skip the full department scrape, syllabus downloads,
-and Algolia update. The run fully syncs at most the first published upcoming
+and Supabase writes. The run fully syncs at most the first published upcoming
 term, so a nightly run covers the current term plus at most one new term.
 The GitHub Actions job allows 90 minutes for that workload.
 NTHU semester IDs use `10` for fall, `20` for spring, and `30` for summer. The
@@ -21,7 +21,7 @@ bundled date table remains the offline fallback.
 
 - ✅ Direct course data scraping from CCXP system
 - ✅ Syllabus content extraction and PDF handling
-- ✅ Algolia search index synchronization
+- ✅ Course and syllabus writes to Supabase search data
 - ✅ Docker containerization for cloud deployment
 - ✅ GitHub Actions CI/CD pipeline
 - ✅ Comprehensive error handling and retry logic
@@ -92,7 +92,7 @@ gcloud run deploy courseweb-data-sync \
   --image ghcr.io/nthumodifications/courseweb-data-sync:latest \
   --platform managed \
   --region asia-east1 \
-  --set-env-vars SUPABASE_URL=xxx,SUPABASE_SERVICE_ROLE_KEY=xxx,ALGOLIA_APP_ID=xxx,ALGOLIA_API_KEY=xxx \
+  --set-env-vars SUPABASE_URL=xxx,SUPABASE_SERVICE_ROLE_KEY=xxx \
   --max-instances 1 \
   --timeout 3600 \
   --memory 2Gi \
@@ -126,7 +126,7 @@ With no semester argument, this will:
   probed department has no courses
 - Fully sync at most one published upcoming term after the current term
 - Download and process syllabus data
-- Update Algolia search index
+- Write course and syllabus data to Supabase
 - Exit when complete
 
 Pass a semester ID to override automatic selection for a one-off run.
@@ -176,7 +176,6 @@ import {
   startScheduledSync,
   scrapeArchivedCourses,
   scrapeSyllabus,
-  syncCoursesToAlgolia,
   validateEnvironment,
 } from "@courseweb/data-sync";
 
@@ -193,7 +192,6 @@ const job = startScheduledSync("10 0 * * *"); // automatic selection each day
 const env = validateEnvironment();
 const courses = await scrapeArchivedCourses(env, "11510");
 await scrapeSyllabus(env, "11510", courses);
-await syncCoursesToAlgolia(env, "11510");
 ```
 
 ### Direct Function Usage
@@ -202,7 +200,6 @@ await syncCoursesToAlgolia(env, "11510");
 import {
   scrapeArchivedCourses,
   scrapeSyllabus,
-  syncCoursesToAlgolia,
   validateEnvironment,
   type SyncEnvironment,
 } from "@courseweb/data-sync";
@@ -210,8 +207,6 @@ import {
 const env: SyncEnvironment = {
   SUPABASE_URL: "your-url",
   SUPABASE_SERVICE_ROLE_KEY: "your-key",
-  ALGOLIA_APP_ID: "your-app-id",
-  ALGOLIA_API_KEY: "your-api-key",
 };
 
 // Scrape courses and get results
@@ -219,9 +214,6 @@ const courses = await scrapeArchivedCourses(env, "11510");
 
 // Process syllabus with scraped courses
 await scrapeSyllabus(env, "11510", courses);
-
-// Sync to search index
-await syncCoursesToAlgolia(env, "11510");
 ```
 
 ## Environment Variables
@@ -232,8 +224,6 @@ The sync scripts require the following environment variables:
 | --------------------------- | ------------------------- | -------- |
 | `SUPABASE_URL`              | Your Supabase project URL | ✅       |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key | ✅       |
-| `ALGOLIA_APP_ID`            | Algolia application ID    | ✅       |
-| `ALGOLIA_API_KEY`           | Algolia admin API key     | ✅       |
 
 Optional variables:
 
@@ -275,8 +265,7 @@ graph TD
     F --> G[Scrape Syllabus Content]
     G --> H[Process PDF Downloads]
     H --> I[Save Syllabus to Supabase]
-    I --> J[Sync to Algolia]
-    J --> K[Complete]
+    I --> J[Complete]
 ```
 
 ## Error Handling
@@ -341,7 +330,7 @@ The application provides detailed logging:
 - 🚀 Process start/completion
 - 📚 Course scraping progress
 - 📝 Syllabus processing status
-- 🔍 Algolia sync updates
+- 🔍 Supabase course and syllabus writes
 - ❌ Error details with context
 - 📊 Statistics and performance metrics
 
@@ -352,7 +341,6 @@ The application provides detailed logging:
 - `node-schedule`: For scheduled job execution
 - `linkedom`: For HTML parsing in worker environment
 - `@supabase/supabase-js`: Database operations
-- `algoliasearch`: Search index management
 
 ### Development Dependencies
 

@@ -69,10 +69,6 @@ SUPABASE_URL=your_supabase_url
 SUPABASE_SERVICE_ROLE_KEY=your_supabase_key
 
 # Search and external APIs (production values are maintainer-only)
-ALGOLIA_APP_ID=your_algolia_app_id
-ALGOLIA_API_KEY=your_algolia_admin_key
-ALGOLIA_BACKUP_APP_ID=optional_backup_app_id
-ALGOLIA_BACKUP_API_KEY=optional_backup_admin_key
 CALENDAR_API_KEY=optional_google_calendar_api_key
 CWA_API_KEY=optional_taiwan_weather_api_key
 
@@ -271,7 +267,7 @@ GET /venue/{venueId}/courses?semester=11420
 
 ### Search
 
-The website searches locally through `/search/chunk` with Supabase `/search/fallback` as the remote tier. The public `/search` API, MCP, and chat search use Supabase. The scraper still writes the Algolia index, but no runtime search path reads it.
+The website searches locally through `/search/chunk` with Supabase `/search/fallback` as the remote tier. The public `/search` API, MCP, and chat search use Supabase. Course and syllabus sync writes the search data to Supabase.
 
 #### Search Courses (GET)
 
@@ -599,7 +595,7 @@ bun run prisma:migration:apply:local
 
 ```
 src/
-├── config/           # Configuration files (Supabase, Algolia write/sync)
+├── config/           # Configuration files (Supabase)
 ├── headless-ais/     # CCXP system integration
 ├── scheduled/        # Scheduled tasks (syllabus scraping)
 ├── types/            # TypeScript type definitions
@@ -665,11 +661,12 @@ The API uses Prisma with SQLite/D1 for data persistence. Key models include:
 
 The API includes automated tasks for:
 
-- Course data scraping from CCXP
-- Syllabus PDF downloads
-- Algolia search index synchronization
+- PEO opening-time refreshes
+- Selection-date and semester-date refreshes
+- Usage metrics collection
 
-These run via Cloudflare Workers Cron Triggers.
+These run via Cloudflare Workers Cron Triggers. Course and syllabus scraping is
+handled by `tools/data-sync` and writes to Supabase.
 
 ## OpenAPI Documentation
 
