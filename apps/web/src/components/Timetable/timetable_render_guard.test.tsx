@@ -475,7 +475,8 @@ describe("timetable provider render stability", () => {
     expect(text).toContain("Discrete Mathematics - Alice Chen");
     expect(text).toContain("DELTA台達217 M9MaMb / M1M2");
     expect(text).toContain("2 credits");
-    expect(text).toContain("Chinese");
+    // Compact rows only tag English-taught courses.
+    expect(text).not.toContain("Chinese");
     expect(text).not.toContain("30 people");
     expect(text).not.toContain("20 enrolled");
     expect(text).not.toContain("Note that should be hidden");
@@ -519,7 +520,9 @@ describe("timetable provider render stability", () => {
         fixture.container.textContent?.includes(secondCourse.name_zh) ?? false,
     );
 
-    const rows = [...fixture.container.querySelectorAll("div.max-w-3xl")];
+    const rows = [
+      ...fixture.container.querySelectorAll('[class*="group/row"]'),
+    ];
     expect(rows).toHaveLength(2);
 
     const listContainer = rows[0]?.parentElement;
