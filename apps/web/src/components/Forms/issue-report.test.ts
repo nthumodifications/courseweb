@@ -6,7 +6,6 @@ import {
   buildIssueBody,
   findLikelyDuplicates,
   getBrowserFamily,
-  getEnabledLocalFeatureFlags,
   getOsFamily,
   getRoutePatternFromPath,
   getViewportBucket,
@@ -115,20 +114,6 @@ describe("issue report helpers", () => {
     expect(diagnostics.enabledLocalFeatureFlags).toEqual(["local-search"]);
     expect(diagnostics.clientErrorCount).toBe(7);
     expect(diagnostics.clientErrorNames).toEqual(["TypeError", "Other"]);
-  });
-
-  it.each([
-    [undefined, ["local-search"]],
-    ["", ["local-search"]],
-    ["false", []],
-    ["0", []],
-    [" FALSE ", []],
-    ["true", ["local-search"]],
-    [" TRUE ", ["local-search"]],
-  ] as const)("reports effective local-search flag %j", (value, expected) => {
-    expect(
-      getEnabledLocalFeatureFlags({ VITE_ENABLE_LOCAL_SEARCH: value }),
-    ).toEqual(expected);
   });
 
   it("keeps diagnostics opt-in and omits them when opted out", () => {

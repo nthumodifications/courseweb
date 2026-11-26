@@ -1549,13 +1549,8 @@
       "academic_calendar": {
         "title": "清大校历"
       },
-      "experimental_calendar": {
-        "title": "行事历",
-        "badge": "实验"
-      },
       "widget_dashboard": {
         "title": "小工具仪表板",
-        "description": "用可自订的小工具格取代今日页面",
         "columns": "栏数",
         "widgets": "小工具",
         "manage_widgets": "管理小工具",

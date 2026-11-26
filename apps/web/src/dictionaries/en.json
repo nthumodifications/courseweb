@@ -1549,13 +1549,8 @@
       "academic_calendar": {
         "title": "NTHU Academic Calendar"
       },
-      "experimental_calendar": {
-        "title": "Calendar",
-        "badge": "Experimental"
-      },
       "widget_dashboard": {
         "title": "Widget Dashboard",
-        "description": "Replace Today page with a customizable widget grid",
         "columns": "Columns",
         "widgets": "Widgets",
         "manage_widgets": "Manage widgets",

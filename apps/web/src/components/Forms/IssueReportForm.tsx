@@ -38,7 +38,6 @@ import {
   allowlistIssueDiagnostics,
   buildIssueBody,
   findLikelyDuplicates,
-  getEnabledLocalFeatureFlags,
   getBrowserFamily,
   getOsFamily,
   getRoutePatternFromPath,
@@ -298,7 +297,7 @@ export const useIssueReport = ({
       serviceWorker: worker.state,
       serviceWorkerWaiting: worker.waiting,
       signedIn: auth.isAuthenticated,
-      enabledLocalFeatureFlags: getEnabledLocalFeatureFlags(import.meta.env),
+      enabledLocalFeatureFlags: ["local-search"],
       clientErrorCount: clientErrors.count,
       clientErrorNames: clientErrors.names,
     });

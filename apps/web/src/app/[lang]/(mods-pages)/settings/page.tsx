@@ -12,14 +12,12 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-  Badge,
 } from "@courseweb/ui";
 import { Language } from "@/types/settings";
 import Footer from "@/components/Footer";
 import TimetablePreferences from "./TimetablePreferences";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import { useLocalStorage } from "usehooks-ts";
-import { event } from "@/lib/gtag";
 import { AIPreferencesPanel } from "./AIPreferences";
 import { ThemeSection } from "./ThemeSection";
 import { WidgetSection } from "./WidgetSection";
@@ -64,14 +62,6 @@ const SettingsPage = () => {
   } = useSettings();
   const { compactHeader, toggleCompactHeader } = useTheme();
   const { preferences, setPreferences } = useUserTimetable();
-  const [useNewCalendar, setUseNewCalendar] = useLocalStorage(
-    "use_new_calendar",
-    false,
-  );
-  const [useWidgetDashboard, setUseWidgetDashboard] = useLocalStorage(
-    "use_widget_dashboard",
-    false,
-  );
   const [customCSS, setCustomCSS] = useLocalStorage("custom_css", "");
   const [timetableVertical, setTimetableVertical] = useLocalStorage(
     "timetable_vertical",
@@ -109,15 +99,6 @@ const SettingsPage = () => {
       scrollToSection(pendingSection);
     }
   }, [searchQuery, scrollToSection]);
-
-  const handleUseNewCalendar = (v: boolean) => {
-    setUseNewCalendar(v);
-    event({
-      action: "use_new_calendar",
-      category: "settings",
-      label: "calendar_" + (v ? "on" : "off"),
-    });
-  };
 
   const sections = useMemo(
     () => [
@@ -392,49 +373,9 @@ const SettingsPage = () => {
                   }
                 />
 
-                <SettingItem
-                  id="setting-experimental-calendar"
-                  title={
-                    <div className="flex items-center gap-2">
-                      {dict.settings.calendar.experimental_calendar.title}
-                      <Badge
-                        variant="outline"
-                        className="bg-primary/10 text-primary border-primary/20"
-                      >
-                        {dict.settings.calendar.experimental_calendar.badge}
-                      </Badge>
-                    </div>
-                  }
-                  control={
-                    <Switch
-                      checked={useNewCalendar}
-                      onCheckedChange={handleUseNewCalendar}
-                    />
-                  }
-                />
-
-                <SettingItem
-                  id="setting-widget-dashboard"
-                  title={dict.settings.calendar.widget_dashboard.title}
-                  description={
-                    dict.settings.calendar.widget_dashboard.description
-                  }
-                  searchKeywords={Object.values(
-                    dict.settings.calendar.widget_dashboard.widget_options,
-                  ).map((widget) => widget.title)}
-                  control={
-                    <Switch
-                      checked={useWidgetDashboard}
-                      onCheckedChange={setUseWidgetDashboard}
-                    />
-                  }
-                />
-
-                {useWidgetDashboard && (
-                  <SettingsSearchableBlock keywords={widgetSearchKeywords}>
-                    <WidgetSection />
-                  </SettingsSearchableBlock>
-                )}
+                <SettingsSearchableBlock keywords={widgetSearchKeywords}>
+                  <WidgetSection />
+                </SettingsSearchableBlock>
               </SettingsSection>
 
               {/* Timetable Settings */}

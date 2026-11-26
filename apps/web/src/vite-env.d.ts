@@ -4,7 +4,6 @@ interface ImportMetaEnv {
   readonly VITE_SUPABASE_URL: string;
   readonly VITE_SUPABASE_ANON_KEY: string;
   readonly VITE_COURSEWEB_API_URL: string;
-  readonly VITE_ENABLE_LOCAL_SEARCH?: string;
   readonly VITE_NTHUMODS_AUTH_URL: string;
   readonly VITE_AUTH_CLIENT_ID: string;
   readonly VITE_NTHUMODS_AUTH_REDIRECT: string;

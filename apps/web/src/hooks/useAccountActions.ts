@@ -54,7 +54,6 @@ export const useAccountActions = () => {
       const localStorageKeys = [
         "hasVisitedBefore",
         "theme_changable_alert",
-        "use_new_calendar",
         "timetable_vertical",
         "courses",
         "timetable_custom_items",
