@@ -98,7 +98,11 @@ const CourseTagList = ({
           {dict.course.tags.english}
         </HighlightItem>
       ) : (
-        <HighlightItem>{dict.course.tags.chinese}</HighlightItem>
+        // Chinese is the default, so compact lists (timetable, favourites)
+        // only call out English-taught courses.
+        showAdditionalTags && (
+          <HighlightItem>{dict.course.tags.chinese}</HighlightItem>
+        )
       )}
       {showAdditionalTags && course.tags.includes("X-Class") && (
         <HighlightItem className="bg-destructive text-destructive-foreground">

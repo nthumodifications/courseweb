@@ -209,12 +209,17 @@ const TimetableSidebar = ({
                         type="button"
                         className="flex min-w-0 flex-1 items-start gap-2 text-left"
                       >
-                        <span className="flex h-6 w-6 shrink-0 items-center justify-center">
-                          <span
-                            className="block h-3 w-3 rounded-full"
-                            style={{ backgroundColor: item.color }}
-                            aria-hidden="true"
-                          />
+                        {/* Same footprint as the course rows' colour/drag handle, so
+                        titles line up (touch screens add a grip there). */}
+                        <span className="-my-1 -ml-1 flex h-8 shrink-0 items-center gap-1 px-1">
+                          <span className="flex h-4 w-4 items-center justify-center">
+                            <span
+                              className="block h-3 w-3 rounded-full"
+                              style={{ backgroundColor: item.color }}
+                              aria-hidden="true"
+                            />
+                          </span>
+                          <span className="hidden w-4 [@media(hover:none)]:block" />
                         </span>
                         <span className="min-w-0 flex-1">
                           <span className="block truncate font-medium leading-6">
