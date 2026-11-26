@@ -196,7 +196,8 @@ describe("user storage implementations", () => {
 
 describe("user storage mode switch", () => {
   test.each([undefined, ""])(
-    "treats an unset or empty mode as Firestore (%s)", (mode) => {
+    "treats an unset or empty mode as Firestore (%s)",
+    (mode) => {
       expect(resolveUserStorageMode(mode)).toBe("firestore");
     },
   );
@@ -334,6 +335,102 @@ describe("user storage mode switch", () => {
       firestore.records.get("users/user-1/storage/courses")?.value,
     ).toEqual({
       new: true,
+    });
+  });
+
+  test("postgres-primary reads Postgres and copies writes to Firestore", async () => {
+    const firestore = createFirestoreFake();
+    const postgres = createPrismaFake();
+    firestore.records.set(
+      "users/user-1/storage/courses",
+      makeRecord({ source: "firestore-old" }, 10, "f"),
+    );
+    postgres.records.set("user-1\0courses", {
+      userId: "user-1",
+      key: "courses",
+      ...makeRecord({ source: "postgres" }, 20, "p"),
+    });
+    const store = createUserStorageStore({
+      mode: "postgres-primary",
+      getFirestore: () => firestore.adminFirestore,
+      prisma: postgres.db,
+    });
+
+    expect(await store.get("user-1", "courses")).toMatchObject({
+      value: { source: "postgres" },
+    });
+    expect(await store.list("user-1")).toMatchObject([
+      { key: "courses", record: { value: { source: "postgres" } } },
+    ]);
+
+    await expect(
+      store.put(
+        "user-1",
+        "courses",
+        makeRecord({ source: "incoming" }, 30, "incoming"),
+        { merge: false },
+      ),
+    ).resolves.toBe(true);
+    await settleBackgroundWrites();
+
+    expect(
+      await new PostgresUserStore(postgres.db).get("user-1", "courses"),
+    ).toMatchObject({ value: { source: "incoming" }, updatedAt: 30 });
+    expect(firestore.records.get("users/user-1/storage/courses")).toMatchObject(
+      { value: { source: "incoming" }, updatedAt: 30, deviceId: "incoming" },
+    );
+  });
+
+  test("postgres-primary rejects a stale write and keeps Firestore on the winner", async () => {
+    const firestore = createFirestoreFake();
+    const postgres = createPrismaFake();
+    postgres.records.set("user-1\0courses", {
+      userId: "user-1",
+      key: "courses",
+      ...makeRecord({ source: "postgres-new" }, 20, "p"),
+    });
+    const store = createUserStorageStore({
+      mode: "postgres-primary",
+      getFirestore: () => firestore.adminFirestore,
+      prisma: postgres.db,
+    });
+
+    await expect(
+      store.put("user-1", "courses", makeRecord({ stale: true }, 15, "s"), {
+        merge: false,
+      }),
+    ).resolves.toBe(false);
+    await settleBackgroundWrites();
+
+    expect(firestore.records.get("users/user-1/storage/courses")).toMatchObject(
+      { value: { source: "postgres-new" }, updatedAt: 20 },
+    );
+  });
+
+  test("postgres-primary Firestore failures do not fail writes", async () => {
+    const postgres = createPrismaFake();
+    const brokenFirestore: any = {
+      collection: () => {
+        throw new Error("firestore unavailable");
+      },
+      runTransaction: async () => {
+        throw new Error("firestore unavailable");
+      },
+    };
+    const store = createUserStorageStore({
+      mode: "postgres-primary",
+      getFirestore: () => brokenFirestore,
+      prisma: postgres.db,
+    });
+
+    await expect(
+      store.put("user-1", "courses", makeRecord({ new: true }, 11), {
+        merge: false,
+      }),
+    ).resolves.toBe(true);
+    await settleBackgroundWrites();
+    expect(await store.get("user-1", "courses")).toMatchObject({
+      value: { new: true },
     });
   });
 

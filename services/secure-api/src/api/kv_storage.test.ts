@@ -5,10 +5,8 @@ describe("KV timetable custom-item contract", () => {
   test("rejects an invalid KV store mode while constructing the app", async () => {
     const { createKvStorageApp } = await import("./kv_storage");
 
-    expect(() =>
-      createKvStorageApp({ mode: "invalid" } as never),
-    ).toThrow(
-      "Invalid KV_STORE_MODE=invalid; expected firestore, dual, or postgres",
+    expect(() => createKvStorageApp({ mode: "invalid" } as never)).toThrow(
+      "Invalid KV_STORE_MODE=invalid; expected firestore, dual, postgres-primary, or postgres",
     );
   });
 

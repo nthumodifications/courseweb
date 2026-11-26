@@ -22,7 +22,11 @@ export type UserStorageEntry = {
   record: UserStorageRecord;
 };
 
-export type UserStorageMode = "firestore" | "dual" | "postgres";
+export type UserStorageMode =
+  | "firestore"
+  | "dual"
+  | "postgres-primary"
+  | "postgres";
 
 type ComparableUserStorageRecord = Pick<
   UserStorageRecord,
@@ -62,9 +66,8 @@ export const compareUserStorageRecords = (
 
   const candidateDeviceId =
     typeof candidate.deviceId === "string" ? candidate.deviceId : "";
-  const existingDeviceId = existing && typeof existing.deviceId === "string"
-    ? existing.deviceId
-    : "";
+  const existingDeviceId =
+    existing && typeof existing.deviceId === "string" ? existing.deviceId : "";
   if (candidateDeviceId === existingDeviceId) return 0;
   return candidateDeviceId > existingDeviceId ? 1 : -1;
 };
@@ -74,9 +77,11 @@ export const resolveUserStorageMode = (
 ): UserStorageMode => {
   const mode = configuredMode;
   if (!mode || mode === "firestore") return "firestore";
-  if (mode === "dual" || mode === "postgres") return mode;
+  if (mode === "dual" || mode === "postgres-primary" || mode === "postgres") {
+    return mode;
+  }
   throw new Error(
-    `Invalid KV_STORE_MODE=${mode}; expected firestore, dual, or postgres`,
+    `Invalid KV_STORE_MODE=${mode}; expected firestore, dual, postgres-primary, or postgres`,
   );
 };
 
@@ -101,14 +106,11 @@ const nextRecord = (
   incoming: UserStorageWrite,
   merge: boolean,
 ) => {
-  const existingUpdatedAt = recordTimestamp(
-    existing ?? { lastModified: -1 },
-  );
+  const existingUpdatedAt = recordTimestamp(existing ?? { lastModified: -1 });
   const existingDeviceId =
     typeof existing?.deviceId === "string" ? existing.deviceId : "";
   const incomingUpdatedAt = incoming.updatedAt ?? incoming.lastModified;
-  const incomingIsNewer =
-    compareUserStorageRecords(incoming, existing) >= 0;
+  const incomingIsNewer = compareUserStorageRecords(incoming, existing) >= 0;
 
   if (!merge && existing && !incomingIsNewer) {
     return { write: false, record: existing };
@@ -173,9 +175,7 @@ export class FirestoreUserStore implements UserStore {
         record: recordFromFirestore(doc.data()),
       })),
       nextCursor:
-        snapshot.docs.length === pageSize
-          ? lastDocument?.ref.path
-          : undefined,
+        snapshot.docs.length === pageSize ? lastDocument?.ref.path : undefined,
     };
   }
 
@@ -281,6 +281,20 @@ export const createUserStorageStore = ({
   const postgres = new PostgresUserStore(db);
   if (mode === "postgres") return postgres;
 
+  if (mode === "postgres-primary") {
+    // Postgres is the source of truth; every write is copied back to
+    // Firestore so switching back to `dual` or `firestore` loses nothing.
+    return {
+      get: (userId, key) => postgres.get(userId, key),
+      list: (userId) => postgres.list(userId),
+      async put(userId, key, record, options) {
+        const written = await postgres.put(userId, key, record, options);
+        void shadowCurrentPostgresRecord(firestore, postgres, userId, key);
+        return written;
+      },
+    };
+  }
+
   return {
     async get(userId, key) {
       const row = await firestore.get(userId, key);
@@ -329,5 +343,23 @@ const shadowCurrentFirestoreRecord = async (
     await shadowCopy(postgres, userId, key, record);
   } catch (error) {
     console.error("Firestore KV readback failed in dual mode:", error);
+  }
+};
+
+const shadowCurrentPostgresRecord = async (
+  firestore: FirestoreUserStore,
+  postgres: PostgresUserStore,
+  userId: string,
+  key: string,
+) => {
+  try {
+    const record = await postgres.get(userId, key);
+    if (!record) return;
+    await firestore.put(userId, key, record, { merge: false });
+  } catch (error) {
+    console.error(
+      "Firestore KV shadow copy failed in postgres-primary mode:",
+      error,
+    );
   }
 };
