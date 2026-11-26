@@ -32,18 +32,19 @@ import { getFavouriteCourseItems } from "./favouriteCourseItems";
 import type { FavouriteCourseItem } from "./favouriteCourseItems";
 import { FavouriteCourseActions } from "./FavouriteCourseActions";
 import { removeFavourite } from "@/helpers/favourites";
+import { getFavouriteCourseConflicts } from "./favouriteCourseConflicts";
+import { useSettings } from "@/hooks/contexts/settings";
+import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
+import { decodeCourseText } from "@/lib/course-text";
+import type { MinimalCourse } from "@/types/courses";
 
 const FavouriteCourseActionsContainer = ({
   courseId,
 }: {
   courseId: string;
 }) => {
-  const {
-    addCourse,
-    deleteCourse,
-    isCourseSelected,
-    setFavourites,
-  } = useUserTimetable();
+  const { addCourse, deleteCourse, isCourseSelected, setFavourites } =
+    useUserTimetable();
   const dict = useDictionary();
 
   const unfavourite = () => {
@@ -73,6 +74,25 @@ const FavouriteCourseListItem = ({
 }) => {
   const course = "course" in item ? item.course : null;
   const courseId = "course" in item ? item.course.raw_id : item.raw_id;
+  const { getSemesterCourses } = useUserTimetable();
+  const { language } = useSettings();
+  const localizeData = useLocalizedZhData();
+  const dict = useDictionary();
+  const conflicts = useMemo(
+    () =>
+      course
+        ? getFavouriteCourseConflicts(
+            course as unknown as MinimalCourse,
+            getSemesterCourses(course.semester) as MinimalCourse[],
+          )
+        : [],
+    [course, getSemesterCourses],
+  );
+  const conflictNames = conflicts.map((conflict) =>
+    language === "en"
+      ? decodeCourseText(conflict.name_en)
+      : localizeData(decodeCourseText(conflict.name_zh)),
+  );
 
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: courseId });
@@ -83,10 +103,24 @@ const FavouriteCourseListItem = ({
   };
 
   return (
-    <div ref={setNodeRef} style={style}>
+    <div ref={setNodeRef} style={style} className="min-w-0 py-2">
       <CourseListItem
         course={course}
         missingCourseId={!course ? courseId : undefined}
+        englishNames={language === "en" ? "replace" : "add"}
+        showCourseCode={!course}
+        showSyllabusDetails={false}
+        showEnrollment={false}
+        showAdditionalTags={false}
+        showChevron={false}
+        compact
+        alignSideItemsTop
+        actionsAfterTags
+        timeConflict={
+          conflictNames.length > 0
+            ? `${dict.timetable.conflict}: ${conflictNames.join(", ")}`
+            : undefined
+        }
         leading={
           <GripVertical
             className="h-4 w-4 shrink-0 text-muted-foreground"
@@ -172,7 +206,7 @@ export const FavouritesCourseList = ({}: {}) => {
 
   return (
     <div className="flex flex-col">
-      <div className="flex flex-col divide-y divide-border px-4">
+      <div className="flex flex-col divide-y divide-border">
         {isLoading && <CourseListItemSkeleton />}
         <DndContext
           sensors={sensors}
