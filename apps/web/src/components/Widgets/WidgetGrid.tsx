@@ -18,6 +18,8 @@ import { CSS } from "@dnd-kit/utilities";
 import { WidgetConfig } from "@/types/widget";
 import { useDashboardConfig } from "@/hooks/useDashboardConfig";
 import ScheduleWidget from "./ScheduleWidget";
+import WeekAgendaWidget from "./WeekAgendaWidget";
+import NextClassBusWidget from "./NextClassBusWidget";
 import WeatherWidget from "./WeatherWidget";
 import PinnedAppsWidget from "./PinnedAppsWidget";
 import NotepadWidget from "./NotepadWidget";
@@ -67,6 +69,10 @@ const SortableWidget: FC<{
     switch (widget.type) {
       case "schedule":
         return <ScheduleWidget {...commonProps} />;
+      case "week-agenda":
+        return <WeekAgendaWidget {...commonProps} />;
+      case "next-class-bus":
+        return <NextClassBusWidget {...commonProps} />;
       case "weather":
         return <WeatherWidget {...commonProps} />;
       case "pinned-apps":

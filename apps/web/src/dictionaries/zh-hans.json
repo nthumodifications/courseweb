@@ -1169,6 +1169,7 @@
     "campus_transfer_no_bus": "校区转乘：{from} → {to} — 这段转乘已没有可用的校园公车班次。",
     "next_class": "下堂课：{name}",
     "next_class_venue": "上课地点：{venue}",
+    "no_next_class_suggestion": "接下来没有需要搭乘校园公车的课程。",
     "service_over": "末班车已过",
     "red_line": "红线",
     "green_line": "绿线",
@@ -1570,6 +1571,12 @@
         "widget_options": {
           "schedule": {
             "title": "课程表"
+          },
+          "week-agenda": {
+            "title": "五日课程行程"
+          },
+          "next-class-bus": {
+            "title": "下一堂课的校车"
           },
           "weather": {
             "title": "天气"

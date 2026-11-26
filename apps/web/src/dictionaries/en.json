@@ -1169,6 +1169,7 @@
     "campus_transfer_no_bus": "Campus transfer: {from} → {to} — no campus bus remains for this transfer.",
     "next_class": "Next class: {name}",
     "next_class_venue": "Venue: {venue}",
+    "no_next_class_suggestion": "No upcoming class needs a campus bus.",
     "service_over": "Service Over",
     "red_line": "Red Line",
     "green_line": "Green Line",
@@ -1570,6 +1571,12 @@
         "widget_options": {
           "schedule": {
             "title": "Schedule"
+          },
+          "week-agenda": {
+            "title": "Week agenda"
+          },
+          "next-class-bus": {
+            "title": "Bus to next class"
           },
           "weather": {
             "title": "Weather"

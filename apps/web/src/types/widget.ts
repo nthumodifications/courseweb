@@ -1,5 +1,7 @@
 export type WidgetType =
   | "schedule"
+  | "week-agenda"
+  | "next-class-bus"
   | "weather"
   | "pinned-apps"
   | "notepad"
@@ -32,40 +34,47 @@ export const DEFAULT_DASHBOARD_CONFIG: DashboardConfig = {
   version: 1,
   columns: 2,
   widgets: [
-    { id: "schedule-default", type: "schedule", order: 0, enabled: true },
-    { id: "weather-default", type: "weather", order: 1, enabled: true },
-    { id: "apps-default", type: "pinned-apps", order: 2, enabled: true },
-    { id: "notepad-default", type: "notepad", order: 3, enabled: true },
-    { id: "countdown-default", type: "countdown", order: 4, enabled: true },
+    { id: "schedule-default", type: "schedule", order: 2, enabled: false },
+    { id: "weather-default", type: "weather", order: 3, enabled: true },
+    { id: "apps-default", type: "pinned-apps", order: 4, enabled: true },
+    { id: "notepad-default", type: "notepad", order: 5, enabled: true },
+    { id: "countdown-default", type: "countdown", order: 6, enabled: true },
     {
       id: "course-selection-default",
       type: "course-selection",
-      order: 5,
+      order: 7,
       enabled: true,
     },
-    { id: "bus-default", type: "bus", order: 6, enabled: false },
-    { id: "library-default", type: "library", order: 7, enabled: false },
-    { id: "laundry-default", type: "laundry", order: 8, enabled: false },
+    { id: "bus-default", type: "bus", order: 8, enabled: false },
+    { id: "library-default", type: "library", order: 9, enabled: false },
+    { id: "laundry-default", type: "laundry", order: 10, enabled: false },
     {
       id: "sports-venues-default",
       type: "sports-venues",
-      order: 9,
+      order: 11,
       enabled: false,
     },
-    { id: "youbike-default", type: "youbike", order: 10, enabled: false },
-    { id: "shops-default", type: "shops", order: 11, enabled: false },
+    { id: "youbike-default", type: "youbike", order: 12, enabled: false },
+    { id: "shops-default", type: "shops", order: 13, enabled: false },
     {
       id: "upcoming-events-default",
       type: "upcoming-events",
-      order: 12,
+      order: 14,
       enabled: false,
     },
-    { id: "grades-default", type: "grades", order: 13, enabled: false },
+    { id: "grades-default", type: "grades", order: 15, enabled: false },
     {
       id: "announcements-default",
       type: "announcements",
-      order: 14,
+      order: 16,
       enabled: false,
+    },
+    { id: "week-agenda-default", type: "week-agenda", order: 0, enabled: true },
+    {
+      id: "next-class-bus-default",
+      type: "next-class-bus",
+      order: 1,
+      enabled: true,
     },
   ],
 };
@@ -84,6 +93,20 @@ export const WIDGET_DEFINITIONS: WidgetDefinition[] = [
     label: "Schedule",
     labelZh: "課程表",
     description: "Today's class schedule",
+    defaultEnabled: false,
+  },
+  {
+    type: "week-agenda",
+    label: "Week agenda",
+    labelZh: "五日課程行程",
+    description: "Your timetable and events for the next five days",
+    defaultEnabled: true,
+  },
+  {
+    type: "next-class-bus",
+    label: "Bus to next class",
+    labelZh: "下一堂課的校車",
+    description: "Campus bus suggestions and transfer warnings",
     defaultEnabled: true,
   },
   {
@@ -186,6 +209,11 @@ export const WIDGET_DEFINITIONS: WidgetDefinition[] = [
   },
 ];
 
+const disabledWhenAddedToExistingLayout = new Set<WidgetType>([
+  "week-agenda",
+  "next-class-bus",
+]);
+
 const widgetTypes = new Set<WidgetType>(
   DEFAULT_DASHBOARD_CONFIG.widgets.map((widget) => widget.type),
 );
@@ -234,7 +262,9 @@ export const mergeDashboardConfig = (value: unknown): DashboardConfig => {
     .map((widget, index) => ({
       ...widget,
       order: nextOrder + index,
-      enabled: widget.enabled,
+      enabled: disabledWhenAddedToExistingLayout.has(widget.type)
+        ? false
+        : widget.enabled,
     }));
 
   return {

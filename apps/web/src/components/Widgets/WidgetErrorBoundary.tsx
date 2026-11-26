@@ -43,6 +43,18 @@ const WIDGET_METADATA: Record<WidgetType, WidgetMetadata> = {
     title: (dict) => dict.today.schedule_title,
     icon: Calendar,
   },
+  "week-agenda": {
+    title: (dict) =>
+      dict.settings.calendar.widget_dashboard.widget_options["week-agenda"]
+        .title,
+    icon: Calendar,
+  },
+  "next-class-bus": {
+    title: (dict) =>
+      dict.settings.calendar.widget_dashboard.widget_options["next-class-bus"]
+        .title,
+    icon: Bus,
+  },
   weather: {
     title: (dict) => dict.settings.calendar.widget_dashboard.weather.title,
     icon: Cloud,

@@ -1,4 +1,4 @@
-import { FC, useMemo } from "react";
+import { FC, ReactNode, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Route1LineIcon } from "@/components/BusIcons/Route1LineIcon";
 import { Route2LineIcon } from "@/components/BusIcons/Route2LineIcon";
@@ -20,9 +20,13 @@ import {
 
 type CampusBusSuggestionProps = {
   events: readonly UpcomingEvent[];
+  emptyState?: ReactNode;
 };
 
-const CampusBusSuggestion: FC<CampusBusSuggestionProps> = ({ events }) => {
+const CampusBusSuggestion: FC<CampusBusSuggestionProps> = ({
+  events,
+  emptyState,
+}) => {
   const dict = useDictionary();
   const now = useTime(60_000);
   const { homeCampus } = useSettings();
@@ -63,8 +67,8 @@ const CampusBusSuggestion: FC<CampusBusSuggestionProps> = ({ events }) => {
     [classes, data, holidayToday, now],
   );
 
-  if (isLoading || error || (!suggestion && transfers.length === 0))
-    return null;
+  if (isLoading || error) return null;
+  if (!suggestion && transfers.length === 0) return emptyState ?? null;
 
   const nextClassTransfer = suggestion
     ? transfers.find(

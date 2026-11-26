@@ -108,7 +108,6 @@
     "四",
     "日"
   ],
-  "components/Today/TodaySchedule.tsx": ["一", "三", "二", "五", "四"],
   "components/Widgets/ShopsWidget.tsx": [
     "24小時營業",
     "即將開始",
