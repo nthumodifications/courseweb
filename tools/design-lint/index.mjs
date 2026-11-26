@@ -3,10 +3,7 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
-import {
-  compareBaseline,
-  formatStaleBaseline,
-} from "./baseline.mjs";
+import { compareBaseline, formatStaleBaseline } from "./baseline.mjs";
 
 const defaultRoot = fileURLToPath(new URL("../..", import.meta.url));
 const root = path.resolve(process.env.DESIGN_LINT_ROOT ?? defaultRoot);
@@ -234,7 +231,9 @@ function isPageOrPageSection(filePath) {
 }
 
 function isOverlay(filePath) {
-  return /(?:dialog|popover|dropdown|drawer|toast)/i.test(filePath);
+  // Match against the repo-relative path: a checkout directory named like
+  // "wt-item-dialog" must not turn every file into an overlay.
+  return /(?:dialog|popover|dropdown|drawer|toast)/i.test(normalize(filePath));
 }
 
 const classNameAttributePattern =

@@ -884,6 +884,16 @@ export const ReviewsSection = ({
       ),
     [instructor],
   );
+  // The timetable dialog links here with #reviews; the section mounts after
+  // the course loads, so the browser's own anchor jump has already missed it.
+  const scrolledToHash = useRef(false);
+  useEffect(() => {
+    if (scrolledToHash.current || window.location.hash !== "#reviews") return;
+    const target = document.getElementById("reviews");
+    if (!target) return;
+    scrolledToHash.current = true;
+    target.scrollIntoView({ block: "start" });
+  }, [isSuccess]);
 
   const sortedReviews = useMemo(() => {
     const merged = mergeReviewRows(
@@ -956,7 +966,11 @@ export const ReviewsSection = ({
 
   if (error) {
     return (
-      <section aria-labelledby="native-reviews" className="flex flex-col gap-2">
+      <section
+        id="reviews"
+        aria-labelledby="native-reviews"
+        className="flex flex-col gap-2"
+      >
         <h3 id="native-reviews" className="font-bold">
           {dict.course.details.native_reviews.title}
         </h3>
@@ -973,7 +987,11 @@ export const ReviewsSection = ({
   }
   if (isPending || !isSuccess) {
     return (
-      <section aria-labelledby="native-reviews" className="flex flex-col gap-2">
+      <section
+        id="reviews"
+        aria-labelledby="native-reviews"
+        className="flex flex-col gap-2"
+      >
         <h3 id="native-reviews" className="font-bold">
           {dict.course.details.native_reviews.title}
         </h3>
@@ -987,7 +1005,11 @@ export const ReviewsSection = ({
 
   const summary = data?.summary;
   return (
-    <section aria-labelledby="native-reviews" className="flex flex-col gap-2">
+    <section
+      id="reviews"
+      aria-labelledby="native-reviews"
+      className="flex flex-col gap-2"
+    >
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h3 id="native-reviews" className="font-bold">
           {dict.course.details.native_reviews.title}

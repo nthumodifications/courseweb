@@ -9,7 +9,6 @@ import {
   Button,
   ErrorState,
   Separator,
-  Alert,
   Badge,
   ScrollArea,
   Table,
@@ -22,10 +21,8 @@ import {
 } from "@courseweb/ui";
 import { toPrettySemester } from "@/helpers/semester";
 import CourseTagList from "@/components/Courses/CourseTagsList";
-import { MinimalCourse } from "@/types/courses";
 import { getScoreType, getFormattedClassCode } from "@/helpers/courses";
-import { CourseDefinition } from "@/config/supabase";
-import { Fragment, Suspense, useState, type ReactNode } from "react";
+import { Fragment, Suspense, type ReactNode } from "react";
 import { Language } from "@/types/settings";
 import { contentLanguage, intlLocale } from "@/helpers/contentLanguage";
 import { sanitizeCourseHtml } from "@/lib/sanitizeHtml";
@@ -42,9 +39,9 @@ import {
 import { ModuleTermAvailability } from "@/components/Courses/ModuleTermAvailability";
 import { InstructorLink } from "@/components/Courses/InstructorLink";
 import {
-  createModuleKey,
   getModuleHistory,
   getModuleHistoryVariant,
+  safeCreateModuleKey,
 } from "@/lib/modules";
 import { cleanSyllabusFields } from "@/lib/syllabus-text";
 import { serializeJsonLd } from "@/lib/seo";
@@ -74,14 +71,6 @@ import { normaliseInstructorName } from "@/lib/instructors";
 import { parseCourseAudienceTags } from "@courseweb/shared";
 import CourseAudienceTags from "./CourseAudienceTags";
 import ShortNameContributeForm from "./ShortNameContributeForm";
-
-const safeCreateModuleKey = (department: string, course: string) => {
-  try {
-    return createModuleKey(department, course);
-  } catch {
-    return "";
-  }
-};
 
 const PDFViewerDynamic = lazyWithRetry(
   () => import("@/components/CourseDetails/PDFViewer"),

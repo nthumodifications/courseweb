@@ -2,13 +2,20 @@ import {
   CalendarClock,
   Trash,
   ExternalLink,
-  CalendarPlus,
   MapPin,
+  Plus,
+  Star,
+  ChevronRight,
 } from "lucide-react";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
-import { PropsWithChildren, useEffect, useState } from "react";
+import { PropsWithChildren, useEffect, useState, type ReactNode } from "react";
 import { hasTimes } from "@/helpers/courses";
 import { MinimalCourse, RawCourseID } from "@/types/courses";
+import {
+  getCourseMeetingGroups,
+  getNextCourseMeeting,
+} from "@/helpers/nextCourseMeeting";
+import { useDefaultSemesterId, useSemesters } from "@/hooks/useSemesters";
 import {
   Popover,
   PopoverContent,
@@ -19,21 +26,18 @@ import {
   DrawerTrigger,
   Button,
   Input,
-  Badge,
   Dialog,
   DialogContent,
   DialogTitle,
   DialogTrigger,
 } from "@courseweb/ui";
 import Compact from "@uiw/react-color-compact";
-import { format } from "date-fns";
+import { format, isBefore, parseISO, startOfDay } from "date-fns";
 import DateContributeForm from "@/components/CourseDetails/DateContributeForm";
 import { useQuery } from "@tanstack/react-query";
 import useDictionary from "@/dictionaries/useDictionary";
 import { useMediaQuery } from "usehooks-ts";
 import client from "@/config/api";
-import CourseTagList from "@/components/Courses/CourseTagsList";
-import { CourseDefinition } from "@/config/supabase";
 import { useCourseLink } from "@/components/Courses/CourseDialog";
 import {
   CUSTOM_TIMETABLE_DAYS,
@@ -43,139 +47,374 @@ import {
 import { useNavigate, useParams } from "react-router-dom";
 import { getCampusMapHref } from "@/features/campusMap/navigation";
 import { useLocalizedZhData } from "@/hooks/useLocalizedZh";
+import { isEnglishCourseLanguage } from "@/lib/course-language";
+import { safeCreateModuleKey } from "@/lib/modules";
+import { useMyReviews } from "@/lib/reviews";
 
-const ImportantDates = ({ raw_id }: { raw_id: RawCourseID }) => {
-  const { data: dates } = useQuery({
-    queryKey: ["contrib_dates", raw_id],
+const ImportantDates = ({ courseId }: { courseId: RawCourseID }) => {
+  const { data: dates = [] } = useQuery({
+    queryKey: ["contrib_dates", courseId],
     queryFn: async () => {
       const res = await client.course[":courseId"].dates.$get({
         param: {
-          courseId: raw_id,
+          courseId,
         },
       });
+      if (!res.ok) throw new Error("Failed to load course dates");
       const dates = await res.json();
-      const sortedDates = dates?.sort(
-        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
-      );
-      return sortedDates;
+      return (dates ?? []) as { date: string; type: string; title: string }[];
     },
   });
   const dict = useDictionary();
+  const dialogDict = dict.timetable.item_dialog;
+  const today = startOfDay(new Date());
+  const upcomingDates = dates
+    .map((date) => ({ ...date, parsedDate: parseISO(date.date) }))
+    .filter(
+      (date) =>
+        !Number.isNaN(date.parsedDate.getTime()) &&
+        !isBefore(startOfDay(date.parsedDate), today),
+    )
+    .sort(
+      (left, right) => left.parsedDate.getTime() - right.parsedDate.getTime(),
+    )
+    .slice(0, 3);
 
   return (
-    <div className="flex flex-col gap-1 px-4">
-      <div className="flex flex-row justify-between">
-        <h3 className="font-bold text-base">
-          {dict.course.details.important_dates}
-        </h3>
-      </div>
-      {dates && (
+    <InformationRow
+      label={dialogDict.important_dates}
+      action={
+        <DateContributeForm courseId={courseId}>
+          <Button variant="ghost" size="sm" className="h-7 px-1">
+            {dialogDict.add_date}
+          </Button>
+        </DateContributeForm>
+      }
+    >
+      {upcomingDates.length === 0 ? (
+        <span className="text-muted-foreground">{dialogDict.no_dates}</span>
+      ) : (
         <div className="flex flex-col gap-1">
-          {dates.map((m, index) => (
-            <div key={index} className="flex flex-row gap-2">
-              <p className="text-sm min-w-20">
-                {format(new Date(m.date), "yyyy-MM-dd")}
-              </p>
-              <p className="text-sm font-medium">
-                <Badge variant="secondary" className="mr-2">
-                  {
-                    dict.dialogs.DateContributeForm.types[
-                      m.type as keyof typeof dict.dialogs.DateContributeForm.types
-                    ]
-                  }
-                </Badge>
-                {m.title}
-              </p>
-            </div>
-          ))}
+          {upcomingDates.map((date) => {
+            const typeLabels = dict.dialogs.DateContributeForm.types;
+            const typeLabel =
+              typeLabels[date.type as keyof typeof typeLabels] ?? date.type;
+
+            return (
+              <div
+                key={`${date.date}-${date.type}-${date.title}`}
+                className="flex flex-wrap items-baseline gap-2"
+              >
+                <span className="whitespace-nowrap font-medium">
+                  {format(date.parsedDate, "M/d")}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {typeLabel}
+                </span>
+                <span>{date.title}</span>
+              </div>
+            );
+          })}
         </div>
       )}
-    </div>
+    </InformationRow>
   );
 };
 
+/** The dialog header (and the mobile drawer top) wear the course's colour. */
+const courseTint = (color: string) =>
+  `color-mix(in srgb, ${color} 35%, hsl(var(--background)))`;
+
+const useCourseColor = (raw_id: RawCourseID) => {
+  const { colorMap, currentColors } = useUserTimetable();
+  return colorMap[raw_id] ?? currentColors[0] ?? "hsl(var(--muted))";
+};
+
+const InformationRow = ({
+  label,
+  action,
+  children,
+}: PropsWithChildren<{ label: string; action?: ReactNode }>) => (
+  <div className="flex items-center gap-2 py-2">
+    <span className="w-14 shrink-0 text-xs font-medium text-muted-foreground">
+      {label}
+    </span>
+    <div className="min-w-0 flex-1 text-sm">{children}</div>
+    {action}
+  </div>
+);
+
+const WEEKDAY_KEY = {
+  0: "U",
+  1: "M",
+  2: "T",
+  3: "W",
+  4: "R",
+  5: "F",
+  6: "S",
+} as const;
+
 const TimetableCourseQuickAccess = ({ course }: { course: MinimalCourse }) => {
-  const { deleteCourse, colorMap, setColor, currentColors } =
-    useUserTimetable();
+  const { deleteCourse, setColor, currentColors } = useUserTimetable();
   const { openCourse } = useCourseLink();
   const dict = useDictionary();
+  const dialogDict = dict.timetable.item_dialog;
   const localizeData = useLocalizedZhData();
   const navigate = useNavigate();
   const { lang } = useParams<{ lang: string }>();
+  const defaultSemesterId = useDefaultSemesterId();
+  const semesters = useSemesters();
+  const currentSemester = semesters.find(
+    (semester) => semester.id === defaultSemesterId,
+  );
   const campusMapHref = getCampusMapHref(lang, course.venues);
+  const courseColor = useCourseColor(course.raw_id);
+  const hasCustomColor =
+    /^#[0-9a-f]{6}$/i.test(courseColor) &&
+    !currentColors.some(
+      (color) => color.toLowerCase() === courseColor.toLowerCase(),
+    );
+  const hasCourseTimes = hasTimes(course);
+  const meetingGroups = hasCourseTimes
+    ? getCourseMeetingGroups(course.times, course.venues)
+    : [];
+  const now = new Date();
+  const nextMeeting =
+    course.semester === defaultSemesterId &&
+    currentSemester &&
+    now <= currentSemester.ends &&
+    hasCourseTimes
+      ? getNextCourseMeeting(course.times, course.venues, now)
+      : undefined;
+  const moduleKey = safeCreateModuleKey(course.department, course.course);
+  const { data: myReviews } = useMyReviews();
+  const ownReview = myReviews?.reviews
+    .filter((review) => review.moduleKey === moduleKey)
+    .sort(
+      (left, right) =>
+        new Date(right.updatedAt).getTime() -
+        new Date(left.updatedAt).getTime(),
+    )[0];
+
+  const openReviews = () => {
+    navigate(
+      `/${lang ?? "zh"}/courses/${encodeURIComponent(course.raw_id)}#reviews`,
+    );
+  };
+
+  const getWeekdayName = (dayOfWeek: number) =>
+    dict.timetable.custom_items.days[
+      WEEKDAY_KEY[dayOfWeek as keyof typeof WEEKDAY_KEY]
+    ];
+
+  const getRelativeDayLabel = (daysFromToday: number) => {
+    if (daysFromToday === 0) return dialogDict.today;
+    if (daysFromToday === 1) return dialogDict.tomorrow;
+    return dialogDict.days_later.replace("{count}", String(daysFromToday));
+  };
 
   return (
     <>
-      <div className="relative @container">
-        <div className="flex flex-row gap-4 p-4">
-          <Popover>
-            <PopoverTrigger>
-              <div className="p-1 rounded-md hover:outline outline-1 outline-border">
-                <div
-                  className="w-4 h-4 rounded-full"
-                  style={{ backgroundColor: colorMap[course.raw_id] }}
-                ></div>
+      <div
+        className="relative p-4"
+        style={{
+          background: courseTint(courseColor),
+        }}
+      >
+        <div className="mb-1 flex max-w-[calc(100%_-_2rem)] flex-wrap items-baseline text-xs">
+          <span className="font-medium">
+            {course.department} {course.course}-{course.class.padStart(2, "0")}
+          </span>
+          <span className="text-muted-foreground">
+            {dialogDict.metadata_separator}
+            {`${course.credits} ${dict.course.credits}`}
+            {dialogDict.metadata_separator}
+            {isEnglishCourseLanguage(course.language)
+              ? dict.course.tags.english
+              : dict.course.tags.chinese}
+          </span>
+        </div>
+        <div className="flex flex-wrap items-baseline gap-1">
+          <span className="text-base font-bold">
+            {localizeData(course.name_zh)}
+          </span>
+          <span className="font-medium">
+            {course.teacher_zh.map(localizeData).join(", ")}
+          </span>
+        </div>
+        <div className="text-sm text-muted-foreground">
+          {course.name_en} - {course.teacher_en.join(", ")}
+        </div>
+        <div className="mt-1 flex flex-col gap-1">
+          {meetingGroups.length > 0 ? (
+            meetingGroups.map((meeting, index) => (
+              <div
+                key={`${meeting.dayOfWeek}-${meeting.start}-${meeting.venue}-${index}`}
+                className="text-sm"
+              >
+                <span className="font-medium">
+                  {getWeekdayName(meeting.dayOfWeek)} {meeting.start}–
+                  {meeting.end}
+                </span>
+                <span className="text-muted-foreground">
+                  {dialogDict.meeting_separator}
+                  {meeting.venue
+                    ? localizeData(meeting.venue)
+                    : dict.course.details.no_venues}
+                </span>
               </div>
-            </PopoverTrigger>
-            <PopoverContent
-              className="p-0"
-              aria-label={dict.timetable.custom_items.color_label}
-            >
-              <Compact
-                color={colorMap[course.raw_id]}
-                onChange={(color) => {
-                  setColor(course.raw_id, color.hex);
-                }}
-                colors={currentColors}
-              />
-            </PopoverContent>
-          </Popover>
-          <div className="flex-1">
-            <div className="mb-2 space-y-1">
-              <div className="flex flex-row gap-2 items-center">
-              <p className="text-nthu-500 text-sm font-medium">
-                  {course.department} {course.course}-
-                  {course.class.padStart(2, "0")}
-                </p>
+            ))
+          ) : course.venues.length > 0 ? (
+            course.venues.map((venue, index) => (
+              <div key={`${venue}-${index}`} className="text-sm">
+                <span className="text-muted-foreground">
+                  {localizeData(venue)}
+                  {dialogDict.meeting_separator}
+                  {dict.course.details.missing_time}
+                </span>
               </div>
-              <div className="font-medium">
-                {localizeData(course.name_zh)} -{" "}
-                {course.teacher_zh.map(localizeData).join(",")}
-              </div>
-              <div className="text-sm mt-0 break-words">
-                {course.name_en} - {course.teacher_en.join(",")}
-              </div>
-              <div className="space-y-1 self-start w-auto max-w-fit">
-                {course.venues?.map((venue, index) => {
-                  const time = course.times![index];
-                  return (
-                    <div key={index} className="text-muted-foreground text-xs">
-                      {localizeData(venue)} /{" "}
-                      {hasTimes(course as MinimalCourse)
-                        ? time
-                        : dict.course.details.missing_time}
-                    </div>
-                  );
-                }) || (
-                  <div className="text-muted-foreground text-xs">
-                    {dict.course.details.no_venues}
-                  </div>
-                )}
-              </div>
-              <CourseTagList course={course as unknown as CourseDefinition} />
+            ))
+          ) : (
+            <div className="text-sm text-muted-foreground">
+              {dict.course.details.no_venues}
             </div>
-          </div>
+          )}
         </div>
       </div>
-      <ImportantDates raw_id={course.raw_id} />
-      <div className="p-4 flex flex-col gap-4">
-        <div className="grid grid-cols-2 gap-2">
-          <Button variant="outline" onClick={() => openCourse(course.raw_id)}>
-            <ExternalLink className="w-4 h-4 mr-2" />
-            {dict.course.details.dialog_title}
+      <div className="bg-background">
+        <div className="flex items-center gap-1.5 px-4 pb-3 pt-3">
+          {currentColors.map((color) => (
+            <button
+              key={color}
+              type="button"
+              aria-label={dialogDict.color_option.replace("{color}", color)}
+              aria-pressed={courseColor === color}
+              className={`h-5 w-5 shrink-0 rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary ${courseColor === color ? "outline outline-2 outline-foreground outline-offset-2" : ""}`}
+              style={{ backgroundColor: color }}
+              onClick={() => setColor(course.raw_id, color)}
+            />
+          ))}
+          <label
+            className={`relative flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground ${hasCustomColor ? "outline outline-2 outline-foreground outline-offset-2" : "border border-dashed border-muted-foreground"}`}
+            style={
+              hasCustomColor ? { backgroundColor: courseColor } : undefined
+            }
+          >
+            {!hasCustomColor && <Plus className="h-3 w-3" aria-hidden="true" />}
+            <input
+              type="color"
+              aria-label={dialogDict.custom_color}
+              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+              value={
+                /^#[0-9a-f]{6}$/i.test(courseColor) ? courseColor : "#000000"
+              }
+              onChange={(event) => setColor(course.raw_id, event.target.value)}
+            />
+          </label>
+          <span className="ml-1 text-xs text-muted-foreground">
+            {dialogDict.custom_color}
+          </span>
+        </div>
+        <div className="divide-y divide-border border-t px-4">
+          {nextMeeting && (
+            <InformationRow
+              label={dialogDict.next_class}
+              action={
+                <span className="shrink-0 rounded-full bg-primary/10 px-2 text-xs font-medium leading-[22px] text-primary">
+                  {getRelativeDayLabel(nextMeeting.daysFromToday)}
+                </span>
+              }
+            >
+              <span className="font-medium">
+                {getWeekdayName(nextMeeting.dayOfWeek)} {nextMeeting.start}
+              </span>
+              <span className="text-muted-foreground">
+                {dialogDict.meeting_separator}
+                {nextMeeting.venue
+                  ? localizeData(nextMeeting.venue)
+                  : dict.course.details.no_venues}
+              </span>
+            </InformationRow>
+          )}
+          <ImportantDates courseId={course.raw_id} />
+          <InformationRow
+            label={dialogDict.my_review}
+            action={
+              ownReview ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 shrink-0 px-1"
+                  onClick={openReviews}
+                >
+                  {dialogDict.edit_review}
+                  <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                </Button>
+              ) : (
+                <Button
+                  variant="ghost"
+                  className="h-8 shrink-0 rounded-md bg-primary/10 px-3 text-sm font-medium text-primary hover:bg-primary/15"
+                  onClick={openReviews}
+                >
+                  <Star className="h-4 w-4" aria-hidden="true" />
+                  {dialogDict.write_review}
+                </Button>
+              )
+            }
+          >
+            {ownReview ? (
+              <>
+                <div className="flex flex-wrap gap-2">
+                  <span>
+                    <span className="text-muted-foreground">
+                      {dialogDict.coolness}
+                    </span>{" "}
+                    <strong className="font-bold">
+                      {ownReview.coolness ?? "—"}
+                    </strong>
+                  </span>
+                  <span>
+                    <span className="text-muted-foreground">
+                      {dialogDict.sweetness}
+                    </span>{" "}
+                    <strong className="font-bold">
+                      {ownReview.sweetness ?? "—"}
+                    </strong>
+                  </span>
+                  <span>
+                    <span className="text-muted-foreground">
+                      {dialogDict.learning}
+                    </span>{" "}
+                    <strong className="font-bold">
+                      {ownReview.learning ?? "—"}
+                    </strong>
+                  </span>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {format(new Date(ownReview.updatedAt), "M/d")}
+                </div>
+              </>
+            ) : (
+              <span className="text-muted-foreground">
+                {dialogDict.not_reviewed}
+              </span>
+            )}
+          </InformationRow>
+        </div>
+        <div className="flex items-center gap-2 border-t px-4 pb-4 pt-3">
+          <Button
+            variant="secondary"
+            size="sm"
+            className="h-8 px-3"
+            onClick={() => openCourse(course.raw_id)}
+          >
+            <ExternalLink className="h-4 w-4" aria-hidden="true" />
+            {dialogDict.details}
           </Button>
           <Button
-            variant="outline"
+            variant="secondary"
+            size="sm"
+            className="h-8 px-3"
             disabled={!campusMapHref}
             title={
               !campusMapHref
@@ -184,21 +423,18 @@ const TimetableCourseQuickAccess = ({ course }: { course: MinimalCourse }) => {
             }
             onClick={() => campusMapHref && navigate(campusMapHref)}
           >
-            <MapPin className="w-4 h-4 mr-2" />
-            {dict.timetable.course_actions.course_location}
+            <MapPin className="h-4 w-4" aria-hidden="true" />
+            {dialogDict.location}
           </Button>
-          <DateContributeForm courseId={course.raw_id}>
-            <Button variant="outline">
-              <CalendarPlus className="w-4 h-4 mr-2" />
-              {dict.dialogs.DateContributeForm.add_date}
-            </Button>
-          </DateContributeForm>
+          <div className="flex-1" />
           <Button
-            variant="destructive"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
+            aria-label={dict.course.item.remove_from_semester}
             onClick={() => deleteCourse(course.raw_id)}
           >
-            <Trash className="w-4 h-4 mr-2" />
-            {dict.course.item.remove_from_semester}
+            <Trash className="h-4 w-4" aria-hidden="true" />
           </Button>
         </div>
       </div>
@@ -212,12 +448,18 @@ export const TimetableItemDrawer = ({
 }: PropsWithChildren<{ course: MinimalCourse }>) => {
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const localizeData = useLocalizedZhData();
+  const courseColor = useCourseColor(course.raw_id);
 
   if (isDesktop)
     return (
       <Dialog>
         <DialogTrigger asChild>{children}</DialogTrigger>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent
+          className="w-[420px] max-w-[calc(100vw_-_2rem)] gap-0 overflow-hidden p-0 sm:max-w-[420px]"
+          // Focusing the first colour swatch on open draws a ring that reads
+          // as the selected colour; keep focus on the dialog itself.
+          onOpenAutoFocus={(event) => event.preventDefault()}
+        >
           <DialogTitle className="sr-only">
             {localizeData(course.name_zh)} -{" "}
             {course.teacher_zh.map(localizeData).join(",")}
@@ -229,7 +471,12 @@ export const TimetableItemDrawer = ({
   return (
     <Drawer>
       <DrawerTrigger asChild>{children}</DrawerTrigger>
-      <DrawerContent>
+      {/* Tint the whole drawer top so the grab handle sits on the course
+          colour instead of a white strip above the header. */}
+      <DrawerContent
+        className="overflow-hidden [&>div:first-child]:bg-foreground/20"
+        style={{ background: courseTint(courseColor) }}
+      >
         <DrawerTitle className="sr-only">
           {localizeData(course.name_zh)} -{" "}
           {course.teacher_zh.map(localizeData).join(",")}
