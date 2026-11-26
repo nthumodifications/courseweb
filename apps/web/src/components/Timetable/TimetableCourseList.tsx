@@ -168,9 +168,10 @@ export const TIMETABLE_ICON_BUTTON =
   "h-8 w-8 text-muted-foreground hover:bg-surface hover:text-foreground";
 
 /**
- * The course colour doubles as the drag handle: it shows the colour, and
- * turns into a grip while the row is hovered or the handle is focused.
- * Colour itself is changed inside the course dialog.
+ * The course colour doubles as the drag handle. With a mouse it shows the
+ * colour and turns into a grip while the row is hovered (or the handle has
+ * keyboard focus). Touch screens have no hover, so they always show the grip
+ * beside the colour. Colour itself is changed inside the course dialog.
  */
 const ColorDragHandle = ({
   color,
@@ -185,14 +186,14 @@ const ColorDragHandle = ({
 }) => {
   const dot = (
     <span
-      className="block h-3 w-3 rounded-full"
+      className="block h-3 w-3 shrink-0 rounded-full"
       style={{ backgroundColor: color }}
       aria-hidden="true"
     />
   );
   if (!draggable)
     return (
-      <span className="flex h-6 w-6 shrink-0 items-center justify-center">
+      <span className="-my-1 flex h-8 w-6 shrink-0 items-center justify-center">
         {dot}
       </span>
     );
@@ -201,15 +202,15 @@ const ColorDragHandle = ({
       type="button"
       aria-label={label}
       title={label}
-      className="group/handle flex h-6 w-6 shrink-0 cursor-grab touch-none items-center justify-center rounded-md text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:cursor-grabbing"
+      className="group/handle -my-1 -ml-1 flex h-8 shrink-0 cursor-grab touch-none items-center justify-center gap-1 rounded-md px-1 text-muted-foreground hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:cursor-grabbing"
       onClick={(event) => event.stopPropagation()}
       {...handleProps}
     >
-      <span className="group-hover/row:hidden group-focus-visible/handle:hidden">
+      <span className="flex h-4 w-4 items-center justify-center group-hover/row:hidden group-focus-visible/handle:hidden [@media(hover:none)]:!flex">
         {dot}
       </span>
       <GripVertical
-        className="hidden h-4 w-4 group-hover/row:block group-focus-visible/handle:block"
+        className="hidden h-4 w-4 group-hover/row:block group-focus-visible/handle:block [@media(hover:none)]:block"
         aria-hidden="true"
       />
     </button>
@@ -249,7 +250,7 @@ const TimetableCourseListItem = ({
 
   return (
     <div
-      className={`group/row min-w-0 max-w-3xl py-2 ${isHidden ? "text-muted-foreground" : ""}`}
+      className={`group/row min-w-0 py-2 ${isHidden ? "text-muted-foreground" : ""}`}
       ref={setNodeRef}
       style={style}
     >
