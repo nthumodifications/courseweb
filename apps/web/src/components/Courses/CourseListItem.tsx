@@ -53,6 +53,8 @@ type CourseListItemProps = {
   compact?: boolean;
   alignSideItemsTop?: boolean;
   syllabusFullWidth?: boolean;
+  actionsAfterTags?: boolean;
+  timeConflict?: ReactNode;
   priority?: number;
   missingTimeLabel?: string;
   dimmed?: boolean;
@@ -99,6 +101,8 @@ const CourseListItem: FC<CourseListItemProps> = memo((props) => {
     compact = false,
     alignSideItemsTop = false,
     syllabusFullWidth = false,
+    actionsAfterTags = false,
+    timeConflict,
     priority,
     missingTimeLabel,
     dimmed = false,
@@ -190,6 +194,18 @@ const CourseListItem: FC<CourseListItemProps> = memo((props) => {
     </div>
   );
 
+  const actionButtons =
+    actions ?? (course && <SelectCourseButton courseId={course.raw_id} />);
+  const courseTags = course && (
+    <CourseTagList
+      course={course}
+      showCredits={showCredits}
+      showEnrollment={showEnrollment}
+      showAdditionalTags={showAdditionalTags}
+      priority={showPriority && showAdditionalTags ? priority : undefined}
+    />
+  );
+
   const courseMetadata = course ? (
     <div className={`min-w-0 ${compact ? "space-y-0" : "space-y-2"}`}>
       {englishNames === "add" && (
@@ -210,7 +226,10 @@ const CourseListItem: FC<CourseListItemProps> = memo((props) => {
       {showVenue && (
         <div className="flex min-w-0 flex-col gap-1">
           {course.venues.map((vn, i) => (
-            <div key={i} className="text-muted-foreground text-xs">
+            <div
+              key={i}
+              className={`text-xs ${timeConflict ? "text-destructive" : "text-muted-foreground"}`}
+            >
               {`${localizeData(decodeCourseText(vn))} / ${
                 missingTimeLabel &&
                 !hasTimes(course as unknown as MinimalCourse)
@@ -221,14 +240,20 @@ const CourseListItem: FC<CourseListItemProps> = memo((props) => {
           ))}
         </div>
       )}
-      <CourseTagList
-        course={course}
-        showCredits={showCredits}
-        showEnrollment={showEnrollment}
-        showAdditionalTags={showAdditionalTags}
-        priority={showPriority && showAdditionalTags ? priority : undefined}
-      />
+      {timeConflict && (
+        <div className="text-xs text-destructive">{timeConflict}</div>
+      )}
+      {actionsAfterTags ? (
+        <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+          {courseTags}
+          <div className="shrink-0">{actionButtons}</div>
+        </div>
+      ) : (
+        courseTags
+      )}
     </div>
+  ) : actionsAfterTags ? (
+    <div className="flex justify-end">{actionButtons}</div>
   ) : null;
 
   const syllabusDetails =
@@ -288,8 +313,7 @@ const CourseListItem: FC<CourseListItemProps> = memo((props) => {
         alignSideItemsTop || syllabusFullWidth ? " self-start" : ""
       }`}
     >
-      {actions ??
-        (course && <SelectCourseButton courseId={course.raw_id as string} />)}
+      {actionButtons}
     </div>
   );
 
@@ -310,7 +334,7 @@ const CourseListItem: FC<CourseListItemProps> = memo((props) => {
         <div className="min-w-0 flex-1 space-y-2">
           <div className="flex min-w-0 gap-4">
             <div className="min-w-0 flex-1">{courseHeading}</div>
-            {actionColumn}
+            {!actionsAfterTags && actionColumn}
           </div>
           {courseMetadata}
           {syllabusDetails}
@@ -326,7 +350,7 @@ const CourseListItem: FC<CourseListItemProps> = memo((props) => {
             </div>
             {syllabusDetails}
           </div>
-          {actionColumn}
+          {!actionsAfterTags && actionColumn}
         </>
       )}
     </div>

@@ -1,5 +1,5 @@
 import { Button } from "@courseweb/ui";
-import { Heart, Minus, Plus } from "lucide-react";
+import { Check, Heart, Plus } from "lucide-react";
 
 interface FavouriteCourseActionsProps {
   courseId: string;
@@ -23,32 +23,35 @@ export const FavouriteCourseActions = ({
   onUnfavorite,
 }: FavouriteCourseActionsProps) => {
   return (
-    <div className="flex flex-row">
+    <div className="flex flex-row items-center gap-1">
       <Button
-        className="rounded-r-none"
-        variant="outline"
+        className="h-8 w-8"
+        variant="ghost"
         size="icon"
         aria-label={labels.unfavorite}
+        title={labels.unfavorite}
         onClick={onUnfavorite}
       >
-        <Heart className="w-4 h-4 fill-red-500 text-red-500" />
+        <Heart className="h-4 w-4 fill-primary text-primary" />
       </Button>
       {isSelected ? (
         <Button
-          className="rounded-l-none"
-          variant="destructive"
+          className="h-8 w-8 bg-muted text-primary"
+          variant="ghost"
           size="icon"
           aria-label={labels.remove}
+          title={labels.remove}
           onClick={() => onRemove(courseId)}
         >
-          <Minus className="w-4 h-4" />
+          <Check className="h-4 w-4" />
         </Button>
       ) : (
         <Button
-          className="rounded-l-none"
-          variant="outline"
+          className="h-8 w-8 bg-muted"
+          variant="ghost"
           size="icon"
           aria-label={labels.addToTimetable}
+          title={labels.addToTimetable}
           onClick={() => onAdd(courseId)}
         >
           <Plus className="w-4 h-4" />
