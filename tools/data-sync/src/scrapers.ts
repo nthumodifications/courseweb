@@ -1,7 +1,7 @@
 /**
  * @fileoverview
  * Course data scraping functions adapted from API service
- * These functions scrape course data, syllabus information, and sync to Algolia
+ * These functions scrape course data and syllabus information, then sync them to Supabase
  */
 
 import {
@@ -10,7 +10,6 @@ import {
   HTMLTableElement,
   parseHTML,
 } from "linkedom/worker";
-import { courseAudienceFacetValues } from "./course-audience-tags";
 import type { Course, Department, SyncEnvironment } from "./types";
 import {
   diffCourseRows,
@@ -22,7 +21,6 @@ import {
   retryWithBackoff,
   fullWidthToHalfWidth,
   createSupabaseClient,
-  createAlgoliaClient,
   SCRAPER_USER_AGENT,
 } from "./utils";
 
@@ -932,43 +930,6 @@ export const scrapeSyllabus = async (
         `syllabus upsert ${raw_id}`,
       );
 
-      if (cachedCourses) {
-        // sync to algolia as well with retry
-        const algoliaCourse = {
-          ...course,
-          brief,
-          keywords: keywords?.split(",") ?? [],
-          content,
-          objectID: raw_id,
-          for_class: [
-            ...(course.elective_for || []),
-            ...(course.compulsory_for || []),
-          ],
-          separate_times: course.times.flatMap((s: string) =>
-            s.match(/.{1,2}/g),
-          ),
-          courseLevel: course.course[0] + "000",
-          audience: courseAudienceFacetValues({
-            note: course.note,
-            restrictions: course.restrictions,
-          }),
-        };
-
-        const algolia = createAlgoliaClient(env);
-        const index = algolia.initIndex("nthu_courses");
-        await retryWithBackoff(
-          async () => {
-            await index.saveObject(algoliaCourse);
-          },
-          2,
-          1000,
-          `algolia sync ${raw_id}`,
-        ).catch((error) => {
-          console.error(`Failed to sync ${raw_id} to Algolia:`, error);
-          // Don't fail the entire process for Algolia sync failures
-        });
-      }
-
       processedCount++;
       console.log(`Scraped ${raw_id} (${processedCount}/${courses.length})`);
     } catch (error) {
@@ -1000,85 +961,4 @@ export const scrapeSyllabus = async (
   if (failedCount > 0) {
     console.warn(`Failed to process ${failedCount} courses`);
   }
-};
-
-/**
- * Sync courses to Algolia search index
- */
-export const syncCoursesToAlgolia = async (
-  env: SyncEnvironment,
-  semester: string,
-): Promise<void> => {
-  const supabase = createSupabaseClient(env);
-  const query = await retryWithBackoff(
-    async () => {
-      const { data, error } = await supabase
-        .from("courses")
-        .select("*, course_syllabus(brief, keywords)")
-        .eq("semester", semester);
-
-      if (error) throw new Error(`Supabase error: ${error.message}`);
-      if (!data) throw new Error("No data found");
-      return data;
-    },
-    3,
-    2000,
-    "course data fetch for Algolia sync",
-  );
-
-  const chunked = query
-    .map((m) => ({ ...m, ...m.course_syllabus }))
-    .reduce((acc, cur, i) => {
-      const index = Math.floor(i / 500);
-      acc[index] = acc[index] || [];
-      acc[index].push(cur as Course);
-      return acc;
-    }, [] as Course[][]);
-
-  const algolia = createAlgoliaClient(env);
-  let successfulChunks = 0;
-  for (const chunk of chunked) {
-    try {
-      const algoliaChunk = chunk.map(
-        ({ elective_for, compulsory_for, ...course }: any) => ({
-          ...course,
-          for_class: [...(elective_for || []), ...(compulsory_for || [])],
-          objectID: course.raw_id,
-          separate_times: course.times.flatMap((s: string) =>
-            s.match(/.{1,2}/g),
-          ),
-          courseLevel: course.course[0] + "000",
-          audience: courseAudienceFacetValues({
-            note: course.note,
-            restrictions: course.restrictions,
-          }),
-        }),
-      );
-
-      await retryWithBackoff(
-        async () => {
-          const index = algolia.initIndex("nthu_courses");
-          const { taskIDs } = await index.saveObjects(algoliaChunk);
-          console.log(
-            `Saved ${algoliaChunk.length} courses to Algolia, taskID: ${taskIDs}`,
-          );
-        },
-        3,
-        2000,
-        `Algolia chunk ${successfulChunks + 1}/${chunked.length}`,
-      );
-
-      successfulChunks++;
-    } catch (error) {
-      console.error(
-        `Error saving chunk ${successfulChunks + 1}/${chunked.length} to Algolia:`,
-        error,
-      );
-      // Continue with other chunks instead of failing completely
-    }
-  }
-
-  console.log(
-    `Synced ${successfulChunks}/${chunked.length} chunks (${query.length} courses total) to Algolia for semester ${semester}`,
-  );
 };

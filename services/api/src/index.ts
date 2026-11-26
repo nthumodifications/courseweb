@@ -46,10 +46,6 @@ export type Bindings = {
   SUPABASE_URL: string;
   SUPABASE_SERVICE_ROLE_KEY: string;
   CALENDAR_API_KEY?: string;
-  ALGOLIA_APP_ID: string;
-  ALGOLIA_API_KEY: string;
-  ALGOLIA_BACKUP_APP_ID?: string;
-  ALGOLIA_BACKUP_API_KEY?: string;
   GOOGLE_AI_API_KEY?: string;
   GROQ_API_KEY?: string;
   CEREBRAS_API_KEY?: string;

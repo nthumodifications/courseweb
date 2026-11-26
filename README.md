@@ -44,7 +44,7 @@ courseweb/
 
 - **Frontend:** Vite 5, React 18, React Router 6, TypeScript, Tailwind CSS, Radix UI
 - **Backend:** Hono, Cloudflare Workers, Supabase, Firebase, Prisma
-- **Infrastructure:** Turborepo, Cloudflare Workers, DigitalOcean, Algolia index synchronization
+- **Infrastructure:** Turborepo, Cloudflare Workers, DigitalOcean
 
 ## 🌐 Usage
 
@@ -102,7 +102,7 @@ bun run dev:api
 ```
 
 The checked-in `services/api/.dev.vars.example` contains only optional AI
-provider settings. Database, Supabase service-role, Algolia admin, OAuth,
+provider settings. Database, Supabase service-role, OAuth,
 weather, calendar, GitHub, Turnstile, and Cloudflare KV credentials are not
 frontend credentials and must come from a maintainer.
 
@@ -110,9 +110,9 @@ frontend credentials and must come from a maintainer.
 
 The secure API listens on `http://localhost:5002`; it needs PostgreSQL,
 Prisma-generated clients, signing keys, Firebase configuration, and upstream
-OAuth credentials. The data-sync tool writes course data and Algolia indexes;
-it needs a Supabase service-role key and an Algolia admin key. These are
-maintainer-only operations, not part of the frontend quick start.
+OAuth credentials. The data-sync tool writes course and syllabus data to
+Supabase, which supplies the API's search data; it needs a Supabase service-role
+key. These are maintainer-only operations, not part of the frontend quick start.
 
 ```bash
 bun run setup --full
@@ -206,7 +206,7 @@ and is not part of the current Vite deployment workflow.
 ## 📊 Performance & Monitoring
 
 - **Error Tracking:** Sentry integration through the Vite build
-- **Search:** The website searches locally through `/search/chunk` with Supabase `/search/fallback` as the remote tier; the public `/search` API, MCP, and chat search use Supabase. The scraper still writes the Algolia index, but nothing reads it.
+- **Search:** The website searches locally through `/search/chunk` with Supabase `/search/fallback` as the remote tier. The public `/search` API, MCP, and chat search use Supabase. Course and syllabus sync writes the search data to Supabase.
 - **Offline Support:** Service worker and runtime caching through Vite PWA
 - **Production Builds:** Vite bundling with source maps and Turborepo caching
 
@@ -236,7 +236,6 @@ This project is licensed under the **GNU General Public License v3.0**.
 
 **Technology Partners:**
 
-- [Algolia](https://www.algolia.com/) - Course index synchronization
 - [Cerana Technology](https://cerana.tech/) - Sponsoring our infrastructure
 - [Cloudflare](https://www.cloudflare.com/) - API hosting and CDN services
 

@@ -21,7 +21,6 @@
     "test": "bun test src"
   },
   "dependencies": {
-    "@algolia/requester-fetch": "^4.23.3",
     "@cloudflare/workers-types": "^4.20250414.0",
     "@courseweb/database": "*",
     "@courseweb/shared": "*",
@@ -32,7 +31,6 @@
     "@supabase/supabase-js": "^2.49.1",
     "@tsndr/cloudflare-worker-jwt": "^3.1.3",
     "@types/bun": "^1.2.4",
-    "algoliasearch": "^4.23.3",
     "bun-types": "^1.2.4",
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",

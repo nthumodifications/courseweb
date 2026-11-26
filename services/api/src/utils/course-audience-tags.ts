@@ -418,7 +418,7 @@ export const parseCourseAudienceTags = ({
  * Non-year tags use relation:value. A scoped year tag appends its academic
  * level so that "碩三" and "大三" remain distinct; an unscoped year keeps the
  * relation:value form. This is the serialized facet contract shared by the
- * local, fallback, and Algolia indexes.
+ * local search and the Supabase-backed API search paths.
  */
 export const courseAudienceFacetValue = (tag: CourseAudienceTag) =>
   `${tag.relation}:${tag.value}${

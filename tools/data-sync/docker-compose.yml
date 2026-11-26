@@ -10,7 +10,6 @@
 # The service will:
 #   - Run course scraping on a daily schedule (default: 8:00 AM GMT+8)
 #   - Push course data to Supabase database
-#   - Sync search index to Algolia
 #
 # Available modes:
 #   - scheduled (default): Runs on cron schedule
@@ -35,8 +34,6 @@ services:
     environment:
       - SUPABASE_URL=${SUPABASE_URL}
       - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
-      - ALGOLIA_APP_ID=${ALGOLIA_APP_ID}
-      - ALGOLIA_API_KEY=${ALGOLIA_API_KEY}
       - SEMESTER=${SEMESTER:-}
       - CRON_PATTERN=${CRON_PATTERN:-0 0 * * *}
       - TZ=Asia/Taipei
@@ -72,8 +69,6 @@ services:
     environment:
       - SUPABASE_URL=${SUPABASE_URL}
       - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
-      - ALGOLIA_APP_ID=${ALGOLIA_APP_ID}
-      - ALGOLIA_API_KEY=${ALGOLIA_API_KEY}
       - SEMESTER=${SEMESTER:-}
       - TZ=Asia/Taipei
     # Uncomment to use local .env file

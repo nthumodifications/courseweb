@@ -5,10 +5,6 @@ declare namespace Cloudflare {
   interface Env {
     SUPABASE_URL: "";
     SUPABASE_SERVICE_ROLE_KEY: "";
-    ALGOLIA_APP_ID: "";
-    ALGOLIA_API_KEY: "";
-    ALGOLIA_BACKUP_APP_ID?: string;
-    ALGOLIA_BACKUP_API_KEY?: string;
     DB: D1Database;
     AI: Ai;
   }

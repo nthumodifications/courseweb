@@ -100,7 +100,7 @@ run_search_get() {
     echo -e "\n🔎 Test 6: Search API GET"
     local url="$SEARCH_ENDPOINT?q=machine%20learning&limit=5"
     echo "curl '$url'"
-    echo "Expected: Algolia search results"
+    echo "Expected: Supabase-backed search results"
     # curl "$url" | jq '.' 2>/dev/null || echo "❌ Failed or jq not available"
     return 0
 }
