@@ -32,7 +32,7 @@ const NextClassBusWidget: FC<NextClassBusWidgetProps> = ({
         events={events}
         className="px-4"
         emptyState={
-          <div className="px-4 py-2 text-sm text-muted-foreground">
+          <div className="px-4 text-sm text-muted-foreground">
             {dict.bus.no_next_class_suggestion}
           </div>
         }

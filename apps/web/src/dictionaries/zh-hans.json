@@ -72,7 +72,7 @@
       "title": "学期倒数",
       "until_next_semester": "距离下学期还有 {days} 天",
       "semester_ended": "学期已结束",
-      "days_left": "距离学期结束还有",
+      "days_left": "距离学期结束还有 {days} 天",
       "no_data": "无法取得学期信息"
     },
     "current_semester": {

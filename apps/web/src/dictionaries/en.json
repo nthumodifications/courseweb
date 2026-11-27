@@ -72,7 +72,7 @@
       "title": "Semester Countdown",
       "until_next_semester": "{days} days until next semester",
       "semester_ended": "Semester ended",
-      "days_left": "days left in semester",
+      "days_left": "{days} days left in semester",
       "no_data": "No semester data"
     },
     "current_semester": {

@@ -170,20 +170,16 @@ const CountdownWidget: FC<CountdownWidgetProps> = ({
       <div className="flex flex-col gap-3 py-2">
         <NextUpLine event={nextEvent} />
         {!countdownInfo ? (
-          <div className="px-4 py-2 text-sm text-muted-foreground">
+          <div className="px-4 text-sm text-muted-foreground">
             {dict.today.countdown.no_data}
           </div>
         ) : (
           <div className="px-4 text-sm text-muted-foreground">
-            {countdownInfo.type === "active" && (
-              <>
-                {countdownInfo.label}{" "}
-                <span className={dayNumberClass}>{countdownInfo.days}</span>
-              </>
-            )}
-            {countdownInfo.type === "vacation" &&
+            {countdownInfo.type !== "past" &&
               (() => {
-                const [before, after] = countdownInfo.label.split("{days}");
+                const [before, after] = countdownInfo.label.includes("{days}")
+                  ? countdownInfo.label.split("{days}")
+                  : [`${countdownInfo.label} `, ""];
                 return (
                   <>
                     {before}

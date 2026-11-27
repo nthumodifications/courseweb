@@ -54,7 +54,7 @@ const PinnedAppsWidget: FC<PinnedAppsWidgetProps> = ({
     >
       <div className="px-4 py-2">
         {pinnedAppDefs.length === 0 ? (
-          <div className="py-2 text-sm text-muted-foreground">
+          <div className="text-sm text-muted-foreground">
             {dict.applist.pinned_widget_empty}
           </div>
         ) : (

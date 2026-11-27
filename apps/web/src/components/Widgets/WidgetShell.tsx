@@ -125,7 +125,7 @@ export const WidgetShell: FC<WidgetShellProps> = ({
         </div>
       </div>
       {/* Widget body */}
-      <div className="flex-1">{children}</div>
+      <div className="flex-1 pb-2">{children}</div>
     </div>
   );
 };
