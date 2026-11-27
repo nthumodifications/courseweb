@@ -21,6 +21,8 @@ const stubWidget =
 
 const widgetModules = [
   ["./ScheduleWidget", "schedule"],
+  ["./WeekAgendaWidget", "week-agenda"],
+  ["./NextClassBusWidget", "next-class-bus"],
   ["./WeatherWidget", "weather"],
   ["./PinnedAppsWidget", "pinned-apps"],
   ["./NotepadWidget", "notepad"],
@@ -51,6 +53,11 @@ mock.module("@/dictionaries/useDictionary", () => ({
 let WidgetGrid: typeof import("./WidgetGrid").default;
 let activeDom: ReturnType<typeof installTestDom> | undefined;
 let activeRoot: Root | undefined;
+let activeConfig = DEFAULT_DASHBOARD_CONFIG;
+
+mock.module("@/hooks/useDashboardConfig", () => ({
+  useDashboardConfig: () => [activeConfig, () => undefined] as const,
+}));
 
 const installWidgetTestDom = () => {
   const restoreGlobals = captureGlobalState(["StorageEvent", "matchMedia"]);
@@ -87,6 +94,7 @@ afterEach(async () => {
 });
 
 const renderWidgetGrid = async (config: DashboardConfig) => {
+  activeConfig = config;
   activeDom = installWidgetTestDom();
   window.localStorage.setItem("widget_config_v1", JSON.stringify(config));
   const container = document.createElement("div");
@@ -131,6 +139,12 @@ describe("WidgetGrid management", () => {
         expect(container.querySelector("[data-widget]")).toBeNull();
       } else {
         expect(container.querySelector("[data-widget]")).not.toBeNull();
+        expect(
+          container.querySelector('[data-widget="week-agenda"]'),
+        ).not.toBeNull();
+        expect(
+          container.querySelector('[data-widget="next-class-bus"]'),
+        ).not.toBeNull();
       }
     },
   );

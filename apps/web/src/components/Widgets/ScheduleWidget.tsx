@@ -1,7 +1,6 @@
 import { FC, useMemo } from "react";
 import { WidgetShell } from "./WidgetShell";
 import useTime from "@/hooks/useTime";
-import { Calendar } from "lucide-react";
 import { formatInTimeZone } from "date-fns-tz";
 import useDictionary from "@/dictionaries/useDictionary";
 import UpcomingEventList from "@/components/Calendar/UpcomingEventList";
@@ -51,13 +50,10 @@ const ScheduleWidget: FC<ScheduleWidgetProps> = ({
       dragHandleProps={dragHandleProps}
       isDragging={isDragging}
     >
-      <div className="p-4">
+      <div className="px-4 py-2">
         {todayCourses.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-6 text-center">
-            <Calendar className="h-8 w-8 text-muted-foreground/40 mb-2" />
-            <p className="text-sm text-muted-foreground">
-              {dict.today.noclass}
-            </p>
+          <div className="py-2 text-sm text-muted-foreground">
+            {dict.today.noclass}
           </div>
         ) : (
           <div className="flex flex-col gap-2">

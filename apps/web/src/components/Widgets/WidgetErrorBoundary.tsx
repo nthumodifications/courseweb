@@ -43,6 +43,18 @@ const WIDGET_METADATA: Record<WidgetType, WidgetMetadata> = {
     title: (dict) => dict.today.schedule_title,
     icon: Calendar,
   },
+  "week-agenda": {
+    title: (dict) =>
+      dict.settings.calendar.widget_dashboard.widget_options["week-agenda"]
+        .title,
+    icon: Calendar,
+  },
+  "next-class-bus": {
+    title: (dict) =>
+      dict.settings.calendar.widget_dashboard.widget_options["next-class-bus"]
+        .title,
+    icon: Bus,
+  },
   weather: {
     title: (dict) => dict.settings.calendar.widget_dashboard.weather.title,
     icon: Cloud,
@@ -123,8 +135,6 @@ const WidgetErrorFallback: FC<
   Omit<WidgetErrorBoundaryProps, "children" | "widgetId">
 > = ({ widgetType, onRemove, dragHandleProps, isDragging }) => {
   const dict = useDictionary();
-  const Icon = getWidgetIcon(widgetType);
-
   return (
     <WidgetShell
       title={getWidgetTitle(widgetType, dict)}
@@ -132,10 +142,9 @@ const WidgetErrorFallback: FC<
       dragHandleProps={dragHandleProps}
       isDragging={isDragging}
     >
-      <div className="flex flex-col gap-3 p-4">
-        <div className="flex flex-col items-center justify-center py-4 text-muted-foreground">
-          {Icon && <Icon className="mb-2 h-8 w-8 opacity-40" />}
-          <span className="text-xs">{dict.common.load_error}</span>
+      <div className="flex flex-col gap-3 px-4 py-2">
+        <div className="py-2 text-sm text-muted-foreground">
+          {dict.common.load_error}
         </div>
       </div>
     </WidgetShell>

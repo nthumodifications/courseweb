@@ -138,7 +138,7 @@
         "apps/web/src/components/Timetable/TimetableSlotFields.tsx": 1,
         "apps/web/src/components/Timetable/TimetableTimeline.tsx": 2,
         "apps/web/src/components/Timetable/VenueChip.tsx": 1,
-        "apps/web/src/components/Today/TodaySchedule.tsx": 1,
+        "apps/web/src/components/Today/TimetableAgenda.tsx": 1,
         "apps/web/src/components/Venue/UsageForecast.tsx": 5,
         "apps/web/src/components/Widgets/CountdownWidget.tsx": 1,
         "apps/web/src/components/Widgets/WeatherForecast.tsx": 1,

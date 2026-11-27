@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { FC, useEffect, useRef } from "react";
 import { WidgetShell } from "./WidgetShell";
 import { useLocalStorage } from "usehooks-ts";
 import useDictionary from "@/dictionaries/useDictionary";
@@ -16,9 +16,20 @@ const NotepadWidget: FC<NotepadWidgetProps> = ({
 }) => {
   const dict = useDictionary();
   const [notes, setNotes] = useLocalStorage("widget_notepad_content", "");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const title =
     dict.settings.calendar.widget_dashboard.widget_options.notepad.title;
+
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    const maxHeight = 192;
+    textarea.style.height = "auto";
+    textarea.style.height = `${Math.min(textarea.scrollHeight, maxHeight)}px`;
+    textarea.style.overflowY =
+      textarea.scrollHeight > maxHeight ? "auto" : "hidden";
+  }, [notes]);
 
   return (
     <WidgetShell
@@ -28,6 +39,8 @@ const NotepadWidget: FC<NotepadWidgetProps> = ({
       isDragging={isDragging}
     >
       <textarea
+        ref={textareaRef}
+        rows={3}
         aria-label={
           dict.settings.calendar.widget_dashboard.widget_options.notepad.title
         }
@@ -37,7 +50,7 @@ const NotepadWidget: FC<NotepadWidgetProps> = ({
           dict.settings.calendar.widget_dashboard.widget_options.notepad
             .placeholder
         }
-        className="w-full h-36 p-3 text-sm bg-transparent resize-none outline-none placeholder:text-muted-foreground/50 font-mono"
+        className="w-full min-h-[4.5rem] max-h-48 px-4 py-2 text-sm bg-transparent resize-none overflow-y-hidden outline-none placeholder:text-muted-foreground/50 font-mono"
         spellCheck={false}
       />
     </WidgetShell>

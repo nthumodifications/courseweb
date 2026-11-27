@@ -2,7 +2,6 @@ import { FC, useMemo } from "react";
 import { WidgetShell } from "./WidgetShell";
 import type { SemesterInfo } from "@courseweb/shared";
 import useTime from "@/hooks/useTime";
-import { Timer } from "lucide-react";
 import { format, formatDistanceStrict } from "date-fns";
 import { formatInTimeZone } from "date-fns-tz";
 import { Badge, cn } from "@courseweb/ui";
@@ -91,6 +90,7 @@ const CountdownWidget: FC<CountdownWidgetProps> = ({
   const [customDate] = useLocalStorage("widget_countdown_date", "");
   const { nextEvent } = useUpcomingEvents();
   const title = dict.today.countdown.title;
+  const dayNumberClass = "font-[600] tabular-nums text-primary";
 
   const countdownInfo = useMemo(() => {
     if (customDate) {
@@ -115,7 +115,6 @@ const CountdownWidget: FC<CountdownWidgetProps> = ({
             customTitle ||
             dict.settings.calendar.widget_dashboard.widget_settings
               .countdown_default_label,
-          emoji: days <= 14 ? "🔥" : days <= 30 ? "⏰" : "📚",
         };
       }
     }
@@ -137,11 +136,7 @@ const CountdownWidget: FC<CountdownWidgetProps> = ({
         return {
           type: "vacation" as const,
           days: diff,
-          label: dict.today.countdown.until_next_semester.replace(
-            "{days}",
-            String(diff),
-          ),
-          emoji: "🌴",
+          label: dict.today.countdown.until_next_semester,
         };
       }
       return null;
@@ -154,7 +149,6 @@ const CountdownWidget: FC<CountdownWidgetProps> = ({
         type: "past" as const,
         days: 0,
         label: dict.today.countdown.semester_ended,
-        emoji: "🎉",
       };
     }
     return {
@@ -162,7 +156,6 @@ const CountdownWidget: FC<CountdownWidgetProps> = ({
       days: daysLeft,
       semId: current.semester.id,
       label: dict.today.countdown.days_left,
-      emoji: daysLeft <= 14 ? "🔥" : daysLeft <= 30 ? "⏰" : "📚",
     };
   }, [customDate, customTitle, date, dict, semesters]);
 
@@ -174,27 +167,29 @@ const CountdownWidget: FC<CountdownWidgetProps> = ({
       dragHandleProps={dragHandleProps}
       isDragging={isDragging}
     >
-      <div className="flex flex-col gap-3 p-4">
+      <div className="flex flex-col gap-3 py-2">
         <NextUpLine event={nextEvent} />
         {!countdownInfo ? (
-          <div className="flex min-h-[100px] flex-col items-center justify-center text-muted-foreground">
-            <Timer className="h-8 w-8 mb-2 text-muted-foreground/40" />
-            <span className="text-sm">{dict.today.countdown.no_data}</span>
+          <div className="px-4 text-sm text-muted-foreground">
+            {dict.today.countdown.no_data}
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-2 text-center">
-            <span className="text-4xl">{countdownInfo.emoji}</span>
-            {countdownInfo.type === "active" ? (
-              <>
-                <div className="text-4xl font-bold tabular-nums text-primary">
-                  {countdownInfo.days}
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  {countdownInfo.label}
-                </div>
-              </>
-            ) : (
-              <div className="text-sm font-medium">{countdownInfo.label}</div>
+          <div className="px-4 text-sm text-muted-foreground">
+            {countdownInfo.type !== "past" &&
+              (() => {
+                const [before, after] = countdownInfo.label.includes("{days}")
+                  ? countdownInfo.label.split("{days}")
+                  : [`${countdownInfo.label} `, ""];
+                return (
+                  <>
+                    {before}
+                    <span className={dayNumberClass}>{countdownInfo.days}</span>
+                    {after}
+                  </>
+                );
+              })()}
+            {countdownInfo.type === "past" && (
+              <span className="font-medium">{countdownInfo.label}</span>
             )}
           </div>
         )}

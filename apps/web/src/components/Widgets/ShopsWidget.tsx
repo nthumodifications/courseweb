@@ -1,7 +1,6 @@
 import { FC, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useLocalStorage } from "usehooks-ts";
-import { Store } from "lucide-react";
 import { WidgetShell } from "./WidgetShell";
 import { useSettings } from "@/hooks/contexts/settings";
 import useTime from "@/hooks/useTime";
@@ -90,7 +89,7 @@ const ShopsWidget: FC<ShopsWidgetProps> = ({
       dragHandleProps={dragHandleProps}
       isDragging={isDragging}
     >
-      <div className="flex flex-col gap-3 p-4">
+      <div className="flex flex-col gap-3 px-4 py-2">
         <Select value={area} onValueChange={setStoredArea}>
           <SelectTrigger
             className="h-7 w-full text-xs"
@@ -112,9 +111,8 @@ const ShopsWidget: FC<ShopsWidgetProps> = ({
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
           </div>
         ) : error && data.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-4 text-muted-foreground">
-            <Store className="mb-2 h-8 w-8 opacity-40" />
-            <span className="text-xs">{dict.common.load_error}</span>
+          <div className="py-2 text-sm text-muted-foreground">
+            {dict.common.load_error}
           </div>
         ) : (
           <>
@@ -134,17 +132,14 @@ const ShopsWidget: FC<ShopsWidgetProps> = ({
               </div>
             )}
             {openShops.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-4 text-muted-foreground">
-                <Store className="mb-2 h-8 w-8 opacity-40" />
-                <span className="text-xs">
-                  {dict.shops.no_open}
-                  {nextOpening && (
-                    <>
-                      {` ${dict.shops.separator} `}
-                      {getMessageLabel(nextOpening, dict)}
-                    </>
-                  )}
-                </span>
+              <div className="py-2 text-sm text-muted-foreground">
+                {dict.shops.no_open}
+                {nextOpening && (
+                  <>
+                    {` ${dict.shops.separator} `}
+                    {getMessageLabel(nextOpening, dict)}
+                  </>
+                )}
               </div>
             ) : (
               <div className="flex flex-col gap-2">

@@ -1,6 +1,6 @@
 import { FC, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Bike, Star } from "lucide-react";
+import { Star } from "lucide-react";
 import { WidgetShell } from "./WidgetShell";
 import { useSettings } from "@/hooks/contexts/settings";
 import { useYouBikeStations } from "@/hooks/useYouBikeStations";
@@ -62,7 +62,7 @@ const YouBikeWidget: FC<YouBikeWidgetProps> = ({
       dragHandleProps={dragHandleProps}
       isDragging={isDragging}
     >
-      <div className="flex flex-col gap-3 p-4">
+      <div className="flex flex-col gap-3 px-4 py-2">
         {availableToAdd.length > 0 && (
           <Select
             value={stationToAdd}
@@ -93,14 +93,12 @@ const YouBikeWidget: FC<YouBikeWidgetProps> = ({
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
           </div>
         ) : error && stations.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-4 text-muted-foreground">
-            <Bike className="mb-2 h-8 w-8 opacity-40" />
-            <span className="text-xs">{dict.common.load_error}</span>
+          <div className="py-2 text-sm text-muted-foreground">
+            {dict.common.load_error}
           </div>
         ) : pinnedStations.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-4 text-muted-foreground">
-            <Bike className="mb-2 h-8 w-8 opacity-40" />
-            <span className="text-xs">{dict.youbike.no_my_stations}</span>
+          <div className="py-2 text-sm text-muted-foreground">
+            {dict.youbike.no_my_stations}
           </div>
         ) : (
           <div className="flex flex-col gap-2">

@@ -3,137 +3,79 @@ import {
   DEFAULT_DASHBOARD_CONFIG,
   mergeDashboardConfig,
   needsDashboardConfigMigration,
+  WIDGET_DEFINITIONS,
 } from "./widget";
 
 describe("widget dashboard config migration", () => {
-  test("adds missing widget types with their defaults without changing layout", () => {
-    const legacy = {
-      ...DEFAULT_DASHBOARD_CONFIG,
-      widgets: DEFAULT_DASHBOARD_CONFIG.widgets.slice(0, 5),
-    };
+  test("fresh defaults put the five-day agenda and next-class bus first", () => {
+    const enabled = DEFAULT_DASHBOARD_CONFIG.widgets
+      .filter((widget) => widget.enabled)
+      .sort((left, right) => left.order - right.order);
 
-    const migrated = mergeDashboardConfig(legacy);
-
-    expect(migrated.widgets.slice(0, 5)).toEqual(legacy.widgets);
-    expect(migrated.widgets.slice(5)).toEqual([
-      {
-        id: "course-selection-default",
-        type: "course-selection",
-        order: 5,
-        enabled: true,
-      },
-      { id: "bus-default", type: "bus", order: 6, enabled: false },
-      { id: "library-default", type: "library", order: 7, enabled: false },
-      { id: "laundry-default", type: "laundry", order: 8, enabled: false },
-      {
-        id: "sports-venues-default",
-        type: "sports-venues",
-        order: 9,
-        enabled: false,
-      },
-      { id: "youbike-default", type: "youbike", order: 10, enabled: false },
-      { id: "shops-default", type: "shops", order: 11, enabled: false },
-      {
-        id: "upcoming-events-default",
-        type: "upcoming-events",
-        order: 12,
-        enabled: false,
-      },
-      { id: "grades-default", type: "grades", order: 13, enabled: false },
-      {
-        id: "announcements-default",
-        type: "announcements",
-        order: 14,
-        enabled: false,
-      },
+    expect(enabled.slice(0, 2).map((widget) => widget.type)).toEqual([
+      "week-agenda",
+      "next-class-bus",
     ]);
+    expect(
+      WIDGET_DEFINITIONS.filter((widget) =>
+        ["week-agenda", "next-class-bus"].includes(widget.type),
+      ).map((widget) => widget.type),
+    ).toEqual(["week-agenda", "next-class-bus"]);
   });
 
-  test("enables a missing course-selection widget without changing existing widgets", () => {
-    const stored = {
+  test("adds new widgets disabled without changing a saved layout", () => {
+    const saved = {
       ...DEFAULT_DASHBOARD_CONFIG,
-      widgets: DEFAULT_DASHBOARD_CONFIG.widgets.filter(
-        (widget) => widget.type !== "course-selection",
-      ),
-    };
-
-    expect(mergeDashboardConfig(stored)).toEqual({
-      ...stored,
-      widgets: [
-        ...stored.widgets,
-        {
-          id: "course-selection-default",
-          type: "course-selection",
-          order: 15,
-          enabled: true,
-        },
-      ],
-    });
-  });
-
-  test("keeps an already configured new widget unchanged", () => {
-    const existing = mergeDashboardConfig(DEFAULT_DASHBOARD_CONFIG);
-    const configured = {
-      ...existing,
-      widgets: existing.widgets.map((widget) =>
-        widget.type === "library"
-          ? { ...widget, enabled: true, order: 0 }
-          : widget,
-      ),
-    };
-
-    expect(mergeDashboardConfig(configured)).toEqual(configured);
-    expect(needsDashboardConfigMigration(configured)).toBe(false);
-  });
-
-  test("recognizes an old stored config as needing migration", () => {
-    const storedWithoutCourseSelection = {
-      ...DEFAULT_DASHBOARD_CONFIG,
-      widgets: DEFAULT_DASHBOARD_CONFIG.widgets.filter(
-        (widget) => widget.type !== "course-selection",
-      ),
-    };
-
-    expect(needsDashboardConfigMigration(storedWithoutCourseSelection)).toBe(
-      true,
-    );
-    expect(needsDashboardConfigMigration(DEFAULT_DASHBOARD_CONFIG)).toBe(false);
-  });
-
-  test("keeps a pre-slice layout order and appends new widgets disabled", () => {
-    const newTypes = new Set([
-      "shops",
-      "upcoming-events",
-      "grades",
-      "announcements",
-    ]);
-    const stored = {
-      ...DEFAULT_DASHBOARD_CONFIG,
+      columns: 3 as const,
       widgets: DEFAULT_DASHBOARD_CONFIG.widgets
-        .filter((widget) => !newTypes.has(widget.type))
-        .map((widget, index) => ({ ...widget, order: 30 - index })),
+        .filter(
+          (widget) =>
+            widget.type !== "week-agenda" && widget.type !== "next-class-bus",
+        )
+        .map((widget, index) => ({
+          ...widget,
+          id: `custom-${widget.type}`,
+          enabled: index % 2 === 0,
+          order: 30 - index,
+        })),
     };
 
-    const migrated = mergeDashboardConfig(stored);
+    const migrated = mergeDashboardConfig(saved);
 
-    expect(migrated.widgets.slice(0, stored.widgets.length)).toEqual(
-      stored.widgets,
+    expect(migrated.columns).toBe(3);
+    expect(migrated.widgets.slice(0, saved.widgets.length)).toEqual(
+      saved.widgets,
     );
-    expect(migrated.widgets.slice(stored.widgets.length)).toEqual([
-      { id: "shops-default", type: "shops", order: 31, enabled: false },
-      {
-        id: "upcoming-events-default",
-        type: "upcoming-events",
-        order: 32,
-        enabled: false,
-      },
-      { id: "grades-default", type: "grades", order: 33, enabled: false },
-      {
-        id: "announcements-default",
-        type: "announcements",
-        order: 34,
-        enabled: false,
-      },
+    expect(
+      migrated.widgets
+        .slice(saved.widgets.length)
+        .map(({ type, enabled }) => ({ type, enabled })),
+    ).toEqual([
+      { type: "week-agenda", enabled: false },
+      { type: "next-class-bus", enabled: false },
     ]);
+    expect(needsDashboardConfigMigration(migrated)).toBe(false);
+  });
+
+  test("adds newly missing existing widgets using their configured defaults", () => {
+    const saved = {
+      ...DEFAULT_DASHBOARD_CONFIG,
+      widgets: DEFAULT_DASHBOARD_CONFIG.widgets.filter(
+        (widget) => widget.type !== "course-selection",
+      ),
+    };
+
+    const migrated = mergeDashboardConfig(saved);
+
+    expect(migrated.widgets.slice(0, saved.widgets.length)).toEqual(
+      saved.widgets,
+    );
+    expect(migrated.widgets.at(-1)).toEqual({
+      id: "course-selection-default",
+      type: "course-selection",
+      order: 17,
+      enabled: true,
+    });
+    expect(needsDashboardConfigMigration(saved)).toBe(true);
   });
 });

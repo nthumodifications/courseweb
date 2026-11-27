@@ -1,4 +1,4 @@
-import { FC, useMemo } from "react";
+import { FC, ReactNode, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Route1LineIcon } from "@/components/BusIcons/Route1LineIcon";
 import { Route2LineIcon } from "@/components/BusIcons/Route2LineIcon";
@@ -10,6 +10,7 @@ import useDictionary from "@/dictionaries/useDictionary";
 import { getAllBusData } from "@/libs/bus";
 import useTime from "@/hooks/useTime";
 import { useSettings } from "@/hooks/contexts/settings";
+import { cn } from "@/lib/utils";
 import type { UpcomingEvent } from "@/hooks/useUpcomingEvents";
 import {
   findCampusTransfers,
@@ -20,9 +21,15 @@ import {
 
 type CampusBusSuggestionProps = {
   events: readonly UpcomingEvent[];
+  emptyState?: ReactNode;
+  className?: string;
 };
 
-const CampusBusSuggestion: FC<CampusBusSuggestionProps> = ({ events }) => {
+const CampusBusSuggestion: FC<CampusBusSuggestionProps> = ({
+  events,
+  emptyState,
+  className,
+}) => {
   const dict = useDictionary();
   const now = useTime(60_000);
   const { homeCampus } = useSettings();
@@ -63,8 +70,8 @@ const CampusBusSuggestion: FC<CampusBusSuggestionProps> = ({ events }) => {
     [classes, data, holidayToday, now],
   );
 
-  if (isLoading || error || (!suggestion && transfers.length === 0))
-    return null;
+  if (isLoading || error) return null;
+  if (!suggestion && transfers.length === 0) return emptyState ?? null;
 
   const nextClassTransfer = suggestion
     ? transfers.find(
@@ -150,7 +157,7 @@ const CampusBusSuggestion: FC<CampusBusSuggestionProps> = ({ events }) => {
   };
 
   return (
-    <div className="flex flex-col px-2 divide-y divide-border">
+    <div className={cn("flex flex-col divide-y divide-border px-2", className)}>
       {busProps && <BusListingItem {...busProps} refTime={now} />}
       {(showNoBusForFirstClass || transferMessages.length > 0) && (
         <div

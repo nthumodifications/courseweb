@@ -4,7 +4,6 @@ import {
   sanitizeDiagnosticText,
   type ClientErrorName,
 } from "../../lib/client-diagnostics";
-import { isLocalSearchEnabled } from "../../lib/local-search/feature-flags";
 
 export const REPORT_TYPES = [
   "bug",
@@ -193,10 +192,6 @@ export const getViewportBucket = (
 
 export const getViewportSize = (width: number, height: number) =>
   `${Math.max(0, Math.floor(width))}x${Math.max(0, Math.floor(height))}`;
-
-export const getEnabledLocalFeatureFlags = (env: {
-  VITE_ENABLE_LOCAL_SEARCH?: string;
-}): string[] => (isLocalSearchEnabled(env) ? ["local-search"] : []);
 
 const getBrowserLabel = (
   userAgent: string,

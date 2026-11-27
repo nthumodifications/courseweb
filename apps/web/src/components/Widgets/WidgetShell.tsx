@@ -86,13 +86,17 @@ export const WidgetShell: FC<WidgetShellProps> = ({
   return (
     <div
       className={cn(
-        "flex flex-col rounded-xl border border-border bg-card shadow-sm overflow-hidden",
-        isDragging && "shadow-lg ring-2 ring-primary/30 opacity-80",
+        "flex flex-col border-t border-border pt-2",
+        isDragging &&
+          "relative rounded-md shadow-sm ring-2 ring-primary/30 opacity-80",
         className,
       )}
     >
       {/* Widget header */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-card text-card-foreground">
+      <div className="flex items-center justify-between px-4 py-2.5">
+        <h3 className="text-xs font-medium text-muted-foreground tracking-wide">
+          {title}
+        </h3>
         <div className="flex items-center gap-2">
           {dragHandleProps && (
             <button
@@ -101,12 +105,9 @@ export const WidgetShell: FC<WidgetShellProps> = ({
               className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground transition-colors touch-none"
               aria-label={dict.common.drag_to_reorder}
             >
-              <GripVertical className="h-4 w-4" />
+              <GripVertical className="h-3.5 w-3.5" />
             </button>
           )}
-          <h3 className="text-sm font-bold text-card-foreground">{title}</h3>
-        </div>
-        <div className="flex items-center gap-2">
           {SettingsComponent && (
             <WidgetSettingsButton label={settingsLabel}>
               <SettingsComponent />
@@ -124,7 +125,7 @@ export const WidgetShell: FC<WidgetShellProps> = ({
         </div>
       </div>
       {/* Widget body */}
-      <div className="flex-1">{children}</div>
+      <div className="flex-1 pb-2">{children}</div>
     </div>
   );
 };

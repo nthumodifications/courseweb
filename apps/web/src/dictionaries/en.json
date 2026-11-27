@@ -72,7 +72,7 @@
       "title": "Semester Countdown",
       "until_next_semester": "{days} days until next semester",
       "semester_ended": "Semester ended",
-      "days_left": "days left in semester",
+      "days_left": "{days} days left in semester",
       "no_data": "No semester data"
     },
     "current_semester": {
@@ -1169,6 +1169,7 @@
     "campus_transfer_no_bus": "Campus transfer: {from} → {to} — no campus bus remains for this transfer.",
     "next_class": "Next class: {name}",
     "next_class_venue": "Venue: {venue}",
+    "no_next_class_suggestion": "No upcoming class needs a campus bus.",
     "service_over": "Service Over",
     "red_line": "Red Line",
     "green_line": "Green Line",
@@ -1549,13 +1550,8 @@
       "academic_calendar": {
         "title": "NTHU Academic Calendar"
       },
-      "experimental_calendar": {
-        "title": "Calendar",
-        "badge": "Experimental"
-      },
       "widget_dashboard": {
         "title": "Widget Dashboard",
-        "description": "Replace Today page with a customizable widget grid",
         "columns": "Columns",
         "widgets": "Widgets",
         "manage_widgets": "Manage widgets",
@@ -1575,6 +1571,12 @@
         "widget_options": {
           "schedule": {
             "title": "Schedule"
+          },
+          "week-agenda": {
+            "title": "Week agenda"
+          },
+          "next-class-bus": {
+            "title": "Bus to next class"
           },
           "weather": {
             "title": "Weather"

@@ -1,7 +1,6 @@
 import { FC, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useLocalStorage } from "usehooks-ts";
-import { BookOpen } from "lucide-react";
 import { WidgetShell } from "./WidgetShell";
 import { useSettings } from "@/hooks/contexts/settings";
 import useTime from "@/hooks/useTime";
@@ -76,7 +75,7 @@ const LibraryWidget: FC<LibraryWidgetProps> = ({
       dragHandleProps={dragHandleProps}
       isDragging={isDragging}
     >
-      <div className="flex flex-col gap-3 p-4">
+      <div className="flex flex-col gap-3 px-4 py-2">
         <Select
           value={branch}
           onValueChange={(value) => setStoredBranch(value as LibraryBranch)}
@@ -108,14 +107,12 @@ const LibraryWidget: FC<LibraryWidgetProps> = ({
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
           </div>
         ) : error && data.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-4 text-muted-foreground">
-            <BookOpen className="mb-2 h-8 w-8 opacity-40" />
-            <span className="text-xs">{dict.common.load_error}</span>
+          <div className="py-2 text-sm text-muted-foreground">
+            {dict.common.load_error}
           </div>
         ) : data.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-4 text-muted-foreground">
-            <BookOpen className="mb-2 h-8 w-8 opacity-40" />
-            <span className="text-xs">{dict.library.no_results}</span>
+          <div className="py-2 text-sm text-muted-foreground">
+            {dict.library.no_results}
           </div>
         ) : (
           <div className="flex items-center justify-between">

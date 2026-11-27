@@ -1,7 +1,6 @@
 import { describe, expect, jest, test } from "bun:test";
 import {
   createResilientSearchClient,
-  isLocalSearchEnabled,
   type SearchBackend,
 } from "../search-client";
 import {
@@ -1067,17 +1066,6 @@ describe("local-first resilient client", () => {
       JSON.stringify({ success: true, data: fallbackResponse.results[0] }),
       { status: 200 },
     );
-
-  test("enables local search unless its Vite flag opts out", () => {
-    expect(isLocalSearchEnabled({})).toBe(true);
-    expect(isLocalSearchEnabled({ VITE_ENABLE_LOCAL_SEARCH: "false" })).toBe(
-      false,
-    );
-    expect(isLocalSearchEnabled({ VITE_ENABLE_LOCAL_SEARCH: "0" })).toBe(false);
-    expect(isLocalSearchEnabled({ VITE_ENABLE_LOCAL_SEARCH: "true" })).toBe(
-      true,
-    );
-  });
 
   test("slots local ahead of the API fallback and waits during a local build", async () => {
     const { state, cache } = createEngine();

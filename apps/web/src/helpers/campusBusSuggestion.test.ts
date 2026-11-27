@@ -8,6 +8,12 @@ import {
   planNextCampusBus,
   type CampusClass,
 } from "./campusBusSuggestion";
+import {
+  bus,
+  busData,
+  classAt,
+  taipeiDate,
+} from "./campusBusSuggestion.fixtures";
 
 const fallbackNanda = (await Bun.file(
   `${import.meta.dir}/../../public/fallback_data/bus/nanda.json`,
@@ -30,82 +36,6 @@ const fallbackNanda = (await Bun.file(
     NandaBusDepartureDetails,
     "type"
   >[];
-};
-
-const taipeiDate = (value: string) =>
-  fromZonedTime(`${value}:00.000`, "Asia/Taipei");
-
-const bus = (
-  time: string,
-  type: "route1" | "route2",
-  description = "",
-): NandaBusDepartureDetails => ({
-  time,
-  description,
-  route: "南大區間車",
-  type,
-});
-
-const busData = (
-  towardSouthCampus: NandaBusDepartureDetails[] = [],
-  towardMainCampus: NandaBusDepartureDetails[] = [],
-  weekendTowardSouthCampus: NandaBusDepartureDetails[] = [],
-  weekendTowardMainCampus: NandaBusDepartureDetails[] = [],
-): CompleteBusData => ({
-  main: {
-    toward_TSMC_building_info: {
-      direction: "toward TSMC",
-      duration: "15 minutes",
-      route: "campus bus",
-      routeEN: "campus bus",
-    },
-    toward_main_gate_info: {
-      direction: "toward gate",
-      duration: "15 minutes",
-      route: "campus bus",
-      routeEN: "campus bus",
-    },
-    weekday: { toward_TSMC_building: [], toward_main_gate: [] },
-    weekend: { toward_TSMC_building: [], toward_main_gate: [] },
-  },
-  nanda: {
-    toward_south_campus_info: {
-      direction: "toward Nanda",
-      duration: "20 minutes",
-      route: "shuttle",
-      routeEN: "shuttle",
-    },
-    toward_main_campus_info: {
-      direction: "toward main campus",
-      duration: "20 minutes",
-      route: "shuttle",
-      routeEN: "shuttle",
-    },
-    weekday: {
-      toward_south_campus: towardSouthCampus,
-      toward_main_campus: towardMainCampus,
-    },
-    weekend: {
-      toward_south_campus: weekendTowardSouthCampus,
-      toward_main_campus: weekendTowardMainCampus,
-    },
-  },
-});
-
-const classAt = (
-  venue: string,
-  start = "2026-10-08T09:00",
-  end?: string,
-  id = "class-1",
-): CampusClass => {
-  const startDate = taipeiDate(start);
-  return {
-    id,
-    title: id,
-    start: startDate,
-    end: end ? taipeiDate(end) : new Date(startDate.getTime() + 50 * 60 * 1000),
-    venue,
-  };
 };
 
 const fallbackBusData = (): CompleteBusData => {

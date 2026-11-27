@@ -1,5 +1,5 @@
 import { describe, expect, mock, test } from "bun:test";
-import { isLocalSearchEnabled, withCourseText } from "./search-client";
+import { withCourseText } from "./search-client";
 import {
   cleanSyllabusFields,
   normalizeSyllabusKeywords,
@@ -15,20 +15,6 @@ mock.module("dompurify", () => ({ default: { sanitize } }));
 const { sanitizeCourseHtml } = await import("./sanitizeHtml");
 
 describe("search client boundary behavior", () => {
-  test.each([
-    [undefined, true],
-    ["", true],
-    ["false", false],
-    ["0", false],
-    [" FALSE ", false],
-    ["true", true],
-    [" TRUE ", true],
-  ] as const)("reads local-search flag %j", (value, expected) => {
-    expect(isLocalSearchEnabled({ VITE_ENABLE_LOCAL_SEARCH: value })).toBe(
-      expected,
-    );
-  });
-
   test("fills local syllabus text without changing an unchanged hit identity", () => {
     const hit = { raw_id: "11510AES 450100", brief: null, keywords: null };
     const same = withCourseText(hit, { getCourseText: () => undefined });

@@ -6,7 +6,6 @@ import {
 } from "./local-search/client";
 import type { SearchTextRecord } from "./local-search/cache";
 import { fetchJsonWithDeadline, type FetchLike } from "./local-search/deadline";
-import { isLocalSearchEnabled } from "./local-search/feature-flags";
 import { getDefaultSemester } from "@courseweb/shared";
 import { cleanSyllabusFields } from "@/lib/syllabus-text";
 
@@ -82,8 +81,6 @@ const viteEnv =
 
 const API_BASE = (viteEnv.VITE_COURSEWEB_API_URL ?? "").replace(/\/$/, "");
 const AUTH_BASE = (viteEnv.VITE_NTHUMODS_AUTH_URL ?? "").replace(/\/$/, "");
-export { isLocalSearchEnabled } from "./local-search/feature-flags";
-const localSearchEnabled = isLocalSearchEnabled(viteEnv);
 
 const loadPublicShortNames = AUTH_BASE
   ? async () => {
@@ -191,9 +188,7 @@ export const createResilientSearchClient = (
   options: ResilientSearchClientOptions = {},
 ): ResilientSearchClient => {
   const shouldUseLocalSearch =
-    options.localSearch !== undefined
-      ? options.localSearch !== false
-      : localSearchEnabled;
+    options.localSearch !== undefined ? options.localSearch !== false : true;
   const localClient: LocalSearchClient | undefined = shouldUseLocalSearch
     ? createLocalSearchClient({
         defaultSemester: getDefaultSemester().id,

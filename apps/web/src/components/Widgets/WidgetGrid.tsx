@@ -18,6 +18,8 @@ import { CSS } from "@dnd-kit/utilities";
 import { WidgetConfig } from "@/types/widget";
 import { useDashboardConfig } from "@/hooks/useDashboardConfig";
 import ScheduleWidget from "./ScheduleWidget";
+import WeekAgendaWidget from "./WeekAgendaWidget";
+import NextClassBusWidget from "./NextClassBusWidget";
 import WeatherWidget from "./WeatherWidget";
 import PinnedAppsWidget from "./PinnedAppsWidget";
 import NotepadWidget from "./NotepadWidget";
@@ -67,6 +69,10 @@ const SortableWidget: FC<{
     switch (widget.type) {
       case "schedule":
         return <ScheduleWidget {...commonProps} />;
+      case "week-agenda":
+        return <WeekAgendaWidget {...commonProps} />;
+      case "next-class-bus":
+        return <NextClassBusWidget {...commonProps} />;
       case "weather":
         return <WeatherWidget {...commonProps} />;
       case "pinned-apps":
@@ -167,10 +173,10 @@ const WidgetGrid: FC = () => {
 
   const colClass =
     config.columns === 1
-      ? "grid-cols-1"
+      ? "columns-1"
       : config.columns === 3
-        ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-        : "grid-cols-1 md:grid-cols-2";
+        ? "columns-1 sm:columns-2 lg:columns-3"
+        : "columns-1 md:columns-2";
 
   return (
     <DndContext
@@ -182,14 +188,12 @@ const WidgetGrid: FC = () => {
         items={activeWidgets.map((w) => w.id)}
         strategy={rectSortingStrategy}
       >
-        <div className={cn("grid gap-4 p-4", colClass)}>
+        <div className={cn("gap-6 px-4 pt-2", colClass)}>
           {activeWidgets.length > 0 ? (
             activeWidgets.map((widget) => (
-              <SortableWidget
-                key={widget.id}
-                widget={widget}
-                onRemove={handleRemove}
-              />
+              <div className="mb-3 break-inside-avoid" key={widget.id}>
+                <SortableWidget widget={widget} onRemove={handleRemove} />
+              </div>
             ))
           ) : (
             <p className="col-span-full text-sm text-muted-foreground">

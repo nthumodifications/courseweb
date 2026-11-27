@@ -1,5 +1,4 @@
 import { FC } from "react";
-import { Button } from "@courseweb/ui";
 import { WidgetShell } from "./WidgetShell";
 import CourseSelectionScheduleDialog from "@/components/CourseSelection/CourseSelectionScheduleDialog";
 import { CourseSelectionScheduleRows } from "@/components/CourseSelection/CourseSelectionSchedule";
@@ -39,9 +38,9 @@ const CourseSelectionWidget: FC<CourseSelectionWidgetProps> = ({
       dragHandleProps={dragHandleProps}
       isDragging={isDragging}
     >
-      <div className="flex flex-col gap-3 p-4">
+      <div className="flex flex-col gap-3 px-4 py-2">
         {error ? (
-          <div className="py-4 text-sm text-muted-foreground">
+          <div className="text-sm text-muted-foreground">
             {dict.common.load_error}
           </div>
         ) : (
@@ -58,9 +57,12 @@ const CourseSelectionWidget: FC<CourseSelectionWidgetProps> = ({
               nowDateKey={nowDateKey}
               isLoading={isLoading}
             >
-              <Button variant="link" size="sm" className="h-auto justify-start">
+              <button
+                type="button"
+                className="self-start text-sm font-medium text-primary hover:underline"
+              >
                 {dict.course.selection_period.view_schedule}
-              </Button>
+              </button>
             </CourseSelectionScheduleDialog>
           </>
         )}

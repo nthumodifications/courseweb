@@ -135,7 +135,7 @@ describe("WidgetErrorBoundary", () => {
     expect(removeWidget).toHaveBeenCalledTimes(1);
   });
 
-  test("uses each widget type's title and icon in its fallback shell", () => {
+  test("uses each widget type's title and icon metadata in its fallback shell", () => {
     const container = setup();
 
     const cases = [
@@ -206,11 +206,11 @@ describe("WidgetErrorBoundary", () => {
 
       expect(container.querySelector("h3")?.textContent).toBe(title);
       expect(getWidgetIcon(widgetType)).toBe(icon);
-      if (icon) {
-        expect(container.querySelector("svg.mb-2")).not.toBeNull();
-      } else {
-        expect(container.querySelector("svg.mb-2")).toBeNull();
-      }
+      expect(container.querySelector("svg.mb-2")).toBeNull();
+      expect(
+        container.querySelector(".py-2.text-sm.text-muted-foreground")
+          ?.textContent,
+      ).toBe(zh.common.load_error);
     }
   });
 
