@@ -17,6 +17,7 @@ import {
 import client from "@/config/api";
 import useUserTimetable from "@/hooks/contexts/useUserTimetable";
 import CalendarSubscriptionLinks from "./CalendarSubscriptionLinks";
+import { parseShortlinkResponse } from "./shortlinkResponse";
 
 const ComponentSkeleton = () => {
   return (
@@ -66,26 +67,52 @@ const ShareSyncTimetableDialog = ({
       return shareLink;
     }
   }, [customItems, shareLink]);
+  const shortLinkErrorTitle =
+    dict.dialogs.ShareSyncTimetableDialog.short_link_error_title;
+  const shortLinkErrorDescription =
+    dict.dialogs.ShareSyncTimetableDialog.short_link_error_description;
 
   useEffect(() => {
+    let cancelled = false;
+    setLink(null);
+
     if (open) {
       client.shortlink
         .$put({ query: { url: shareLinkWithCustomItems } })
-        .then((res) => res.text())
-        .then((shortLink) => {
-          if (typeof shortLink == "object" && "error" in shortLink) {
+        .then(async (res) => {
+          const shortLink = parseShortlinkResponse(res.ok, await res.text());
+          if (cancelled) return;
+
+          if (!shortLink) {
             toast({
-              title:
-                dict.dialogs.ShareSyncTimetableDialog.short_link_error_title,
-              description:
-                dict.dialogs.ShareSyncTimetableDialog
-                  .short_link_error_description,
+              title: shortLinkErrorTitle,
+              description: shortLinkErrorDescription,
             });
+            setLink(shareLinkWithCustomItems);
+            return;
           }
-          setLink(shortLink as string);
+          setLink(shortLink);
+        })
+        .catch(() => {
+          if (cancelled) return;
+
+          toast({
+            title: shortLinkErrorTitle,
+            description: shortLinkErrorDescription,
+          });
+          setLink(shareLinkWithCustomItems);
         });
     }
-  }, [open, shareLinkWithCustomItems]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    open,
+    shareLinkWithCustomItems,
+    shortLinkErrorTitle,
+    shortLinkErrorDescription,
+  ]);
 
   const handleCopy = (url: string | null) => {
     if (url)
