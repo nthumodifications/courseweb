@@ -131,12 +131,22 @@ export const CourseSelectionScheduleRows = ({
   return (
     <div className="flex flex-col divide-y divide-border">
       {isLoading && (
-        <div className="px-4 py-4 text-sm text-muted-foreground">
+        <div
+          className={cn(
+            "text-sm text-muted-foreground",
+            compact ? "py-2" : "px-4 py-4",
+          )}
+        >
           {dict.common.loading}
         </div>
       )}
       {!isLoading && sortedPeriods.length === 0 && (
-        <div className="px-4 py-4 text-sm text-muted-foreground">
+        <div
+          className={cn(
+            "text-sm text-muted-foreground",
+            compact ? "py-2" : "px-4 py-4",
+          )}
+        >
           {dict.course.selection_period.no_data}
         </div>
       )}
@@ -161,8 +171,8 @@ export const CourseSelectionScheduleRows = ({
           return (
             <div
               className={cn(
-                "relative grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-2 px-4",
-                compact ? "py-2" : "py-4",
+                "relative grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-2",
+                compact ? "py-2" : "px-4 py-4",
                 status === "finished" && "text-muted-foreground",
               )}
               key={period.id}

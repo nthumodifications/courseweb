@@ -39,9 +39,9 @@ const CourseSelectionWidget: FC<CourseSelectionWidgetProps> = ({
       dragHandleProps={dragHandleProps}
       isDragging={isDragging}
     >
-      <div className="flex flex-col gap-3 p-4">
+      <div className="flex flex-col gap-3 px-4 py-2">
         {error ? (
-          <div className="py-4 text-sm text-muted-foreground">
+          <div className="py-2 text-sm text-muted-foreground">
             {dict.common.load_error}
           </div>
         ) : (

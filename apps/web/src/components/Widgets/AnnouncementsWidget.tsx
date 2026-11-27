@@ -93,7 +93,7 @@ const AnnouncementsWidget: FC<AnnouncementsWidgetProps> = (props) => {
 
   return (
     <WidgetShell title={widgetTitle} {...props}>
-      <div className="flex flex-col p-4">
+      <div className="flex flex-col px-4 py-2">
         {isLoading ? (
           <div className="flex flex-col gap-3">
             {Array.from({ length: 3 }, (_, index) => (

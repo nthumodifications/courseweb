@@ -2,7 +2,6 @@ import { FC } from "react";
 import { WidgetShell } from "./WidgetShell";
 import { useSettings } from "@/hooks/contexts/settings";
 import { apps } from "@/const/apps";
-import { LayoutGrid } from "lucide-react";
 import useLaunchApp from "@/hooks/useLaunchApp";
 import useDictionary from "@/dictionaries/useDictionary";
 
@@ -53,13 +52,10 @@ const PinnedAppsWidget: FC<PinnedAppsWidgetProps> = ({
       dragHandleProps={dragHandleProps}
       isDragging={isDragging}
     >
-      <div className="p-3">
+      <div className="px-4 py-2">
         {pinnedAppDefs.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-6 text-center">
-            <LayoutGrid className="h-8 w-8 text-muted-foreground/40 mb-2" />
-            <p className="text-xs text-muted-foreground">
-              {dict.applist.pinned_widget_empty}
-            </p>
+          <div className="py-2 text-sm text-muted-foreground">
+            {dict.applist.pinned_widget_empty}
           </div>
         ) : (
           <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">

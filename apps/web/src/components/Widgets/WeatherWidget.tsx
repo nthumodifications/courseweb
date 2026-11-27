@@ -5,7 +5,6 @@ import client from "@/config/api";
 import { useSettings } from "@/hooks/contexts/settings";
 import useDictionary from "@/dictionaries/useDictionary";
 import WeatherIcon from "@/components/Today/WeatherIcon";
-import { Cloud } from "lucide-react";
 import { useLocalStorage } from "usehooks-ts";
 import WeatherForecast from "./WeatherForecast";
 
@@ -54,15 +53,14 @@ const WeatherWidget: FC<WeatherWidgetProps> = ({
       dragHandleProps={dragHandleProps}
       isDragging={isDragging}
     >
-      <div className="p-4">
+      <div className="px-4 py-2">
         {isLoading ? (
           <div className="flex justify-center py-4">
             <div className="h-8 w-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
           </div>
         ) : !todayWeather ? (
-          <div className="flex flex-col items-center justify-center py-4 text-muted-foreground">
-            <Cloud className="h-8 w-8 mb-2 opacity-40" />
-            <span className="text-xs">{weatherDict.unavailable}</span>
+          <div className="py-2 text-sm text-muted-foreground">
+            {weatherDict.unavailable}
           </div>
         ) : (
           <div className="flex items-center justify-between">

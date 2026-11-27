@@ -145,7 +145,7 @@ const LaundryWidget: FC<LaundryWidgetProps> = ({
       dragHandleProps={dragHandleProps}
       isDragging={isDragging}
     >
-      <div className="flex flex-col gap-3 p-4">
+      <div className="flex flex-col gap-3 px-4 py-2">
         <Select
           value={dorm}
           onValueChange={(value) =>
@@ -172,9 +172,8 @@ const LaundryWidget: FC<LaundryWidgetProps> = ({
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
           </div>
         ) : isError ? (
-          <div className="flex flex-col items-center justify-center py-4 text-muted-foreground">
-            <WashingMachine className="mb-2 h-8 w-8 opacity-40" />
-            <span className="text-xs">{dict.laundry.load_error}</span>
+          <div className="py-2 text-sm text-muted-foreground">
+            {dict.laundry.load_error}
           </div>
         ) : (
           <div className="flex flex-col gap-2 text-sm">

@@ -1,7 +1,6 @@
 import { FC, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "react-oidc-context";
-import { BookOpen } from "lucide-react";
 import { WidgetShell } from "./WidgetShell";
 import { useSettings } from "@/hooks/contexts/settings";
 import useSyncedStorage from "@/hooks/useSyncedStorage";
@@ -96,19 +95,18 @@ const GradesWidget: FC<GradesWidgetProps> = ({
       dragHandleProps={dragHandleProps}
       isDragging={isDragging}
     >
-      <div className="flex flex-col gap-3 p-4">
+      <div className="flex flex-col gap-3 px-4 py-2">
         {isLoading ? (
           <div className="flex justify-center py-4">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
           </div>
         ) : isError ? (
-          <div className="flex flex-col items-center justify-center py-4 text-muted-foreground">
-            <BookOpen className="mb-2 h-8 w-8 opacity-40" />
-            <span className="text-xs">{dict.common.load_error}</span>
+          <div className="py-2 text-sm text-muted-foreground">
+            {dict.common.load_error}
           </div>
         ) : !hasData ? (
           <div className="flex flex-col gap-2">
-            <div className="py-4 text-sm text-muted-foreground">
+            <div className="py-2 text-sm text-muted-foreground">
               {dict.grade.widget_empty}
             </div>
             {fullPageLink}

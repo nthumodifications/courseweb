@@ -10,6 +10,7 @@ import useDictionary from "@/dictionaries/useDictionary";
 import { getAllBusData } from "@/libs/bus";
 import useTime from "@/hooks/useTime";
 import { useSettings } from "@/hooks/contexts/settings";
+import { cn } from "@/lib/utils";
 import type { UpcomingEvent } from "@/hooks/useUpcomingEvents";
 import {
   findCampusTransfers,
@@ -21,11 +22,13 @@ import {
 type CampusBusSuggestionProps = {
   events: readonly UpcomingEvent[];
   emptyState?: ReactNode;
+  className?: string;
 };
 
 const CampusBusSuggestion: FC<CampusBusSuggestionProps> = ({
   events,
   emptyState,
+  className,
 }) => {
   const dict = useDictionary();
   const now = useTime(60_000);
@@ -154,7 +157,7 @@ const CampusBusSuggestion: FC<CampusBusSuggestionProps> = ({
   };
 
   return (
-    <div className="flex flex-col px-2 divide-y divide-border">
+    <div className={cn("flex flex-col divide-y divide-border px-2", className)}>
       {busProps && <BusListingItem {...busProps} refTime={now} />}
       {(showNoBusForFirstClass || transferMessages.length > 0) && (
         <div

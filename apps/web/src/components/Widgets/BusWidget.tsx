@@ -1,7 +1,6 @@
 import { FC, useMemo } from "react";
 import { WidgetShell } from "./WidgetShell";
 import { useQuery } from "@tanstack/react-query";
-import { Bus } from "lucide-react";
 import { getAllBusData } from "@/libs/bus";
 import { isWeekend } from "date-fns";
 import { getCityBusRoutes } from "@/libs/citybus";
@@ -80,18 +79,17 @@ const BusWidget: FC<BusWidgetProps> = ({
       dragHandleProps={dragHandleProps}
       isDragging={isDragging}
     >
-      <div className="flex flex-col gap-3 p-4">
+      <div className="flex flex-col gap-3 px-4 py-2">
         {isLoading || isCityRoutesLoading ? (
           <div className="flex justify-center py-4">
             <div className="h-8 w-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
           </div>
         ) : !hasRows ? (
-          <div className="flex flex-col items-center justify-center py-4 text-muted-foreground">
-            <Bus className="h-8 w-8 mb-2 text-muted-foreground/40" />
-            <span className="text-sm">{dict.bus.no_departures}</span>
+          <div className="py-2 text-sm text-muted-foreground">
+            {dict.bus.no_departures}
           </div>
         ) : (
-          <div className="flex flex-col divide-y divide-border px-2">
+          <div className="flex flex-col divide-y divide-border">
             {campusBuses.map((bus, index) => (
               <BusListingItem
                 key={`${bus.line}:${bus.direction}:${index}`}
