@@ -6,7 +6,9 @@ type CollectionName = keyof typeof plannerMigrationStrategies;
 const migrateFromV0 = (collection: CollectionName, document: unknown) => {
   let migrated = structuredClone(document);
   const strategies = plannerMigrationStrategies[collection];
-  for (const version of Object.keys(strategies).map(Number).sort()) {
+  for (const version of Object.keys(strategies)
+    .map(Number)
+    .sort((a, b) => a - b)) {
     migrated = strategies[version as keyof typeof strategies](migrated);
   }
   return migrated;
